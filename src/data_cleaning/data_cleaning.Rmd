@@ -1,0 +1,11 @@
+---
+title: "Data Cleaning"
+author: "Gina Cuomo-Dannenburg, Anne Cori and Sabine van Elsland on behalf of the Imperial College Priority Pathogen Group"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
