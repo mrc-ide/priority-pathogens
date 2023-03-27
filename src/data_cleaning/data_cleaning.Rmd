@@ -70,4 +70,13 @@ marburg_parameter_type <- marburg_parameter %>%
 ggplot(marburg_parameter, aes(x = parameter_type)) + geom_bar() + theme_bw() + 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+## fix the NAs here
+mapping <- read.csv("data_dictionary.csv")
+marburg_parameter <- right_join(mapping, marburg_parameter, by = "parameter_type")
+
+marburg_parameter$parameter_type[is.na(marburg_parameter$classification)]
+
+ggplot(marburg_parameter, aes(x = classification)) + geom_bar() + theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 ```
