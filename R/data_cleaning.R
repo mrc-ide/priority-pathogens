@@ -104,4 +104,10 @@ get_correct_extracted <- function(df_single, df_match, df_fixed){
   #' input: input the dataframe of single extracted data, matching data with duplicates removed and fixed non-concordants with duplicates removed
   #' process: rbind
   #' output: output complete dataset to be used in analysis steps
+  
+  df_fixed <- df_fixed %>% 
+    dplyr::select(names(df_single))
+  
+  df <- rbind(df_single, df_match, df_fixed)
+  return(df)
 }
