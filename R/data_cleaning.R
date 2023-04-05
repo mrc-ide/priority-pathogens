@@ -58,28 +58,69 @@ add_details <- function(df, detail) {
 get_double_extracted <- function(df_with_detail){
   #' input: data frame
   #' process: gets double extracted articles and identifies if matching
-  #' output: data frame 
+  #' output: data frame
   df <- df %>%
-    dplyr::filter(double_extracted == 1) %>%
-    dplyr::mutate(double_matching = is_matching())
+    dplyr::filter(double_extracted == 1)
 }
 
-is_matching <- function(df, column_name1, column_name2){
+double_matching <- function(df, column_name1, column_name2, id_name1 = "article_id", id_name2){
   #' input: dataframe of double extracted rows, columns that you want to match by
   #' suggested columns:
     #' parameter df: parameter type, population location
     #' article df, NA --> make a separate function for the quality assessment?
     #' outbreaks df: outbreak_date_year, outbreak_country
     #' model df: model type, compartmental model (unsure on this one though)
+  #' suggested ids:
+    #' id1: almost always will be article id
+    #' id 2 is the parameter_data_id/outbreak/model id -- we want to exclude this from checking for duplicates
   #' process: matches the row entries by covidence id and other columns, determines if they differ
-  #' output output 0 if they don't match and 1 if they do
+  #' output: vector of parameter ids that are for 
   df <- df %>%
-    dplyr::group_by(covidence_id, .data[[column_name1]], .data[[column_name2]]) %>%
-    dplyr::summarise(rows = nrow())
-    
+    dplyr::filter(double_extracted == 1) %>%
+    dplyr::group_by(covidence_id) %>%
+    dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
+    dplyr::group_by(.data[[column_name1]], .data[[column_name2]]) %>%
+    dplyr::select(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]])) %>% # exclude columns that will be different for duplicates
+    dplyr::group_by_all() %>%
+    dplyr::mutate(num_rows = sum(n())) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0)) %>%
+    dplyr::filter(matching == 1) %>%
+    dplyr::distinct()
   
+  return(df)
 }
 
+test <- double_matching(df = df, column_name1 = "parameter_type", column_name2 = "population_location", id_name2 = "parameter_data_id")
+
+double_disconcordant <- function(df, column_name1, column_name2, id_name1 = "article_id", id_name2){
+  #' input: dataframe of double extracted rows, columns that you want to match by
+  #' suggested columns:
+  #' parameter df: parameter type, population location
+  #' article df, NA --> make a separate function for the quality assessment?
+  #' outbreaks df: outbreak_date_year, outbreak_country
+  #' model df: model type, compartmental model (unsure on this one though)
+  #' suggested ids:
+  #' id1: almost always will be article id
+  #' id 2 is the parameter_data_id/outbreak/model id -- we want to exclude this from checking for duplicates
+  #' process: matches the row entries by covidence id and other columns, determines if they differ
+  #' output: vector of parameter ids that are for 
+  df <- df %>%
+    dplyr::filter(double_extracted == 1) %>%
+    dplyr::group_by(covidence_id) %>%
+    dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
+    dplyr::group_by(.data[[column_name1]], .data[[column_name2]]) %>%
+    dplyr::select(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]])) %>% # exclude columns that will be different for duplicates
+    dplyr::group_by_all() %>%
+    dplyr::mutate(num_rows = sum(n())) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0)) %>%
+    dplyr::filter(matching == 0)
+  
+  return(df)
+}
+
+test2 <- double_disconcordant(df = df, column_name1 = "parameter_type", column_name2 = "population_location", id_name2 = "parameter_data_id")
 
 get_correct_extracted <- function(){
   #' input: data frame, details df
