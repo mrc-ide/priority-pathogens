@@ -61,14 +61,10 @@ filter_extracted <- function(df, double = FALSE, matching = FALSE,
   #' output: desired data frame based on the parameters
   if(double == FALSE) {
     df <- df %>%
-    dplyr::filter(double_extracted == 0)
+      dplyr::filter(double_extracted == 0)
   } else if(double == TRUE) {
     df <- df %>%
-      dplyr::filter(double_extracted == 1)
-  }
-  
-  if(double == TRUE) {
-    df <- df %>%
+      dplyr::filter(double_extracted == 1) %>%
       dplyr::group_by(covidence_id) %>%
       dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
       dplyr::group_by(across(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]]))) %>%
@@ -84,6 +80,23 @@ filter_extracted <- function(df, double = FALSE, matching = FALSE,
         dplyr::filter(matching == 0)
     }
   }
+  return(df)
+}
+
+needs_fixing <- function(df_disconcordant, df_detail) {
+  #' input: dataframe of disconcordant double-extracted values and the details df
+  #' process: join the duplicated papers in details with df_dis and order to make the fixing process straightforward
+  #' output: rds of the data that needs fixing ordered in a sensible way
+  dis_detail <- df_detail %>%
+    dplyr::filter(double_extracted == FALSE) %>% 
+    dplyr::filter(covidence_id %in% unique(df_disconcordant$covidence_id)) %>%
+    dplyr::arrange(covidence_id)
+  dis_detail$fixed = NA
+  
+  df <- dplyr::full_join(df_disconcordant, dis_detail) %>%
+    dplyr::relocate(c(fixed, covidence_id, name_data_entry)) %>%
+    dplyr::arrange(covidence_id) %>%
+    dplyr::select(-names_combined)
   return(df)
 }
 
