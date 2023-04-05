@@ -41,7 +41,6 @@ get_details <- function(article_df){
   #' input: article data frame
   #' process: pulls out the covidence ID, article ID, and name of extractor and if duplicated
   #' output: df with 4 columns
-  
   df <- article_df %>%
     dplyr::select(c(article_id, covidence_id, name_data_entry)) %>%
     dplyr::mutate(double_extracted = ifelse(duplicated(covidence_id) & !duplicated(article_id), 1, 0)) 
@@ -55,9 +54,17 @@ add_details <- function(df, detail) {
   return(df)
 }
 
-get_double_extracted <- function(df_with_detail){
+get_single_extracted <- function(df_with_detail){
   #' input: data frame
   #' process: gets double extracted articles and identifies if matching
+  #' output: data frame
+  df <- df %>%
+    dplyr::filter(double_extracted == 0)
+}
+
+get_double_extracted <- function(df_with_detail){
+  #' input: data frame
+  #' process: gets double extracted articles
   #' output: data frame
   df <- df %>%
     dplyr::filter(double_extracted == 1)
@@ -65,7 +72,7 @@ get_double_extracted <- function(df_with_detail){
 
 double_matching <- function(df, column_name1, column_name2, id_name1 = "article_id", id_name2){
   #' input: dataframe of double extracted rows, columns that you want to match by
-  #' suggested columns:
+  #' suggested columns: these are what makes the entry unique
     #' parameter df: parameter type, population location
     #' article df, NA --> make a separate function for the quality assessment?
     #' outbreaks df: outbreak_date_year, outbreak_country
@@ -74,7 +81,7 @@ double_matching <- function(df, column_name1, column_name2, id_name1 = "article_
     #' id1: almost always will be article id
     #' id 2 is the parameter_data_id/outbreak/model id -- we want to exclude this from checking for duplicates
   #' process: matches the row entries by covidence id and other columns, determines if they differ
-  #' output: vector of parameter ids that are for 
+  #' output: dataframe of matching values -- TODO currently missing identifiers
   df <- df %>%
     dplyr::filter(double_extracted == 1) %>%
     dplyr::group_by(covidence_id) %>%
@@ -90,8 +97,6 @@ double_matching <- function(df, column_name1, column_name2, id_name1 = "article_
   
   return(df)
 }
-
-test <- double_matching(df = df, column_name1 = "parameter_type", column_name2 = "population_location", id_name2 = "parameter_data_id")
 
 double_disconcordant <- function(df, column_name1, column_name2, id_name1 = "article_id", id_name2){
   #' input: dataframe of double extracted rows, columns that you want to match by
