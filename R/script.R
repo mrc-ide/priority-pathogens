@@ -14,3 +14,26 @@ article_clean <- article_clean %>% add_details(detail = details)
 model_clean <- model_clean %>% add_details(detail = details)
 outbreak_clean <- outbreak_clean %>% add_details(detail = details)
 parameter_clean <- parameter_clean %>% add_details(detail = details)
+
+article_single <- get_single_extracted(df_with_detail = article_clean)
+article_double <- get_double_extracted(df_with_detail = article_clean) 
+
+model_single <- get_single_extracted(df_with_detail = model_clean)
+model_double <- get_double_extracted(df_with_detail = model_clean)
+
+outbreak_single <- get_single_extracted(df_with_detail = outbreak_clean)
+outbreak_double <- get_double_extracted(df_with_detail = outbreak_clean)
+
+parameter_single <- get_single_extracted(df_with_detail = parameter_clean)
+parameter_double <- get_double_extracted(df_with_detail = parameter_clean)
+parameter_double_matching <- double_matching(df = df, 
+                                             column_name1 = "parameter_type", 
+                                             column_name2 = "population_location", 
+                                             id_name2 = "parameter_data_id")
+parameter_double_discordant <- double_disconcordant(df = df, 
+                                                    column_name1 = "parameter_type", 
+                                                    column_name2 = "population_location", 
+                                                    id_name2 = "parameter_data_id")
+
+## sanity check
+(nrow(parameter_double_matching)*2) + nrow(parameter_double_discordant) == nrow(parameter_double)
