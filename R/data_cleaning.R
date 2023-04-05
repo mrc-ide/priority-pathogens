@@ -54,20 +54,17 @@ add_details <- function(df, detail) {
   return(df)
 }
 
-get_single_extracted <- function(df_with_detail){
+get_single_extracted <- function(df_with_detail, double = TRUE, matching = TRUE){
   #' input: data frame
   #' process: gets double extracted articles and identifies if matching
   #' output: data frame
-  df <- df %>%
+  if(double == FALSE){
+    df <- df %>%
     dplyr::filter(double_extracted == 0)
-}
-
-get_double_extracted <- function(df_with_detail){
-  #' input: data frame
-  #' process: gets double extracted articles
-  #' output: data frame
-  df <- df %>%
-    dplyr::filter(double_extracted == 1)
+  } else if(double == TRUE){
+    df <- df %>%
+      dplyr::filter(double_extracted == 1)
+  }
 }
 
 double_matching <- function(df, column_name1, column_name2, id_name1 = "article_id", id_name2){
@@ -83,12 +80,9 @@ double_matching <- function(df, column_name1, column_name2, id_name1 = "article_
   #' process: matches the row entries by covidence id and other columns, determines if they differ
   #' output: dataframe of matching values -- TODO currently missing identifiers
   df <- df %>%
-    dplyr::filter(double_extracted == 1) %>%
     dplyr::group_by(covidence_id) %>%
     dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
-    dplyr::group_by(.data[[column_name1]], .data[[column_name2]]) %>%
-    dplyr::select(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]])) %>% # exclude columns that will be different for duplicates
-    dplyr::group_by_all() %>%
+    dplyr::group_by(across(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]]))) %>%
     dplyr::mutate(num_rows = sum(n())) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0)) %>%
@@ -111,15 +105,12 @@ double_disconcordant <- function(df, column_name1, column_name2, id_name1 = "art
   #' process: matches the row entries by covidence id and other columns, determines if they differ
   #' output: vector of parameter ids that are for 
   df <- df %>%
-    dplyr::filter(double_extracted == 1) %>%
     dplyr::group_by(covidence_id) %>%
     dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
-    dplyr::group_by(.data[[column_name1]], .data[[column_name2]]) %>%
-    dplyr::select(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]])) %>% # exclude columns that will be different for duplicates
-    dplyr::group_by_all() %>%
+    dplyr::group_by(across(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]]))) %>%
     dplyr::mutate(num_rows = sum(n())) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0)) %>%
+    dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0))%>%
     dplyr::filter(matching == 0)
   
   return(df)

@@ -1,7 +1,9 @@
-article_raw <- import('data/marburg/marburg_article.xlsx')
-model_raw <- import('data/marburg/marburg_model.xlsx')
-outbreak_raw <- import('data/marburg/marburg_outbreak.xlsx')
-parameter_raw <- readxl::read_xlsx('data/marburg/marburg_parameter.xlsx')
+source('R/data_cleaning.R')
+
+article_raw <- import('data/marburg/raw/marburg_article.xlsx')
+model_raw <- import('data/marburg/raw/marburg_model.xlsx')
+outbreak_raw <- import('data/marburg/raw/marburg_outbreak.xlsx')
+parameter_raw <- readxl::read_xlsx('data/marburg/raw/marburg_parameter.xlsx')
 
 article_clean <- article_raw %>% clean_dfs(column_name = 'article_title') 
 model_clean <- model_raw %>% clean_dfs(column_name = 'model_type')
