@@ -26,11 +26,11 @@ outbreak_double <- get_double_extracted(df_with_detail = outbreak_clean)
 
 parameter_single <- get_single_extracted(df_with_detail = parameter_clean)
 parameter_double <- get_double_extracted(df_with_detail = parameter_clean)
-parameter_double_matching <- double_matching(df = df, 
+parameter_double_matching <- double_matching(df = parameter_double, 
                                              column_name1 = "parameter_type", 
                                              column_name2 = "population_location", 
                                              id_name2 = "parameter_data_id")
-parameter_double_discordant <- double_disconcordant(df = df, 
+parameter_double_discordant <- double_disconcordant(df = parameter_double, 
                                                     column_name1 = "parameter_type", 
                                                     column_name2 = "population_location", 
                                                     id_name2 = "parameter_data_id")
