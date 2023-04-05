@@ -55,15 +55,14 @@ add_details <- function(df, detail) {
 }
 
 filter_extracted <- function(df, double = FALSE, matching = FALSE,
-                             column_name1 = "NA", column_name2 = "NA",
                              id_name1 = "NA", id_name2 = "NA") {
   #' input: data frame
-  #' process: gets double extracted articles and identifies if matching
-  #' output: data frame
-  if(double == FALSE){
+  #' process: gets the desired dataset -- double = F -> single extracted and then matching determines whether it'll give matches (w/0 duplicates) or disconcordant dfs
+  #' output: desired data frame based on the parameters
+  if(double == FALSE) {
     df <- df %>%
     dplyr::filter(double_extracted == 0)
-  } else if(double == TRUE){
+  } else if(double == TRUE) {
     df <- df %>%
       dplyr::filter(double_extracted == 1)
   }

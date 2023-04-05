@@ -17,29 +17,30 @@ model_clean <- model_clean %>% add_details(detail = details)
 outbreak_clean <- outbreak_clean %>% add_details(detail = details)
 parameter_clean <- parameter_clean %>% add_details(detail = details)
 
-article_single <- filter_extracted(df = article_clean, double == FALSE, matching == FALSE)
-article_double <- article_clean %>% dplyr::filter(double_extracted == 1) 
+article_single <- filter_extracted(df = article_clean, double = FALSE, matching = FALSE)
+article_double <- article_clean %>% dplyr::filter(double_extracted == 1) # filter_extracted doesn't work here -- need specific quality assessment
 
-model_single <- get_single_extracted(df_with_detail = model_clean)
-model_double <- get_double_extracted(df_with_detail = model_clean)
+## I know there isn't a double for models
+model_single <- filter_extracted(df = model_clean, double = FALSE, matching = FALSE)
 
-outbreak_single <- get_single_extracted(df_with_detail = outbreak_clean)
-outbreak_double <- get_double_extracted(df_with_detail = outbreak_clean)
+outbreak_single <- filter_extracted(df = outbreak_clean, double = FALSE, matching = FALSE)
+outbreak_double_matching <- filter_extracted(df = outbreak_clean, double = TRUE, matching = TRUE,
+                                             id_name1 = "article_id",
+                                             id_name2 = "outbreak_id")
+outbreak_double_discordant <- filter_extracted(df = outbreak_clean, double = TRUE, matching = FALSE,
+                                               id_name1 = "article_id",
+                                               id_name2 = "outbreak_id")
 
-parameter_single <- get_single_extracted(df_with_detail = parameter_clean)
-parameter_double <- get_double_extracted(df_with_detail = parameter_clean)
+
+parameter_single <- filter_extracted(df = parameter_clean, double = FALSE, matching = FALSE)
 parameter_double_matching <- filter_extracted(df = parameter_double, 
                                              double = TRUE,
                                              matching = TRUE,
-                                             column_name1 = "parameter_type", 
-                                             column_name2 = "population_location",
                                              id_name1 = "article_id",
                                              id_name2 = "parameter_data_id")
 parameter_double_discordant <- filter_extracted(df = parameter_double, 
                                                 double = TRUE,
                                                 matching = FALSE,
-                                                column_name1 = "parameter_type", 
-                                                column_name2 = "population_location",
                                                 id_name1 = "article_id",
                                                 id_name2 = "parameter_data_id")
 
