@@ -54,7 +54,9 @@ add_details <- function(df, detail) {
   return(df)
 }
 
-get_single_extracted <- function(df_with_detail, double = TRUE, matching = TRUE){
+filter_extracted <- function(df, double = FALSE, matching = FALSE,
+                             column_name1 = "NA", column_name2 = "NA",
+                             id_name1 = "NA", id_name2 = "NA") {
   #' input: data frame
   #' process: gets double extracted articles and identifies if matching
   #' output: data frame
@@ -65,61 +67,29 @@ get_single_extracted <- function(df_with_detail, double = TRUE, matching = TRUE)
     df <- df %>%
       dplyr::filter(double_extracted == 1)
   }
-}
-
-double_matching <- function(df, column_name1, column_name2, id_name1 = "article_id", id_name2){
-  #' input: dataframe of double extracted rows, columns that you want to match by
-  #' suggested columns: these are what makes the entry unique
-    #' parameter df: parameter type, population location
-    #' article df, NA --> make a separate function for the quality assessment?
-    #' outbreaks df: outbreak_date_year, outbreak_country
-    #' model df: model type, compartmental model (unsure on this one though)
-  #' suggested ids:
-    #' id1: almost always will be article id
-    #' id 2 is the parameter_data_id/outbreak/model id -- we want to exclude this from checking for duplicates
-  #' process: matches the row entries by covidence id and other columns, determines if they differ
-  #' output: dataframe of matching values -- TODO currently missing identifiers
-  df <- df %>%
-    dplyr::group_by(covidence_id) %>%
-    dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
-    dplyr::group_by(across(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]]))) %>%
-    dplyr::mutate(num_rows = sum(n())) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0)) %>%
-    dplyr::filter(matching == 1) %>%
-    dplyr::distinct()
   
+  if(double == TRUE) {
+    df <- df %>%
+      dplyr::group_by(covidence_id) %>%
+      dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
+      dplyr::group_by(across(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]]))) %>%
+      dplyr::mutate(num_rows = sum(n())) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0))
+    if(matching == TRUE) {
+      df <- df %>% 
+        dplyr::filter(matching == 1) %>%
+        dplyr::distinct()
+    } else if(matching == FALSE) {
+      df <- df %>%
+        dplyr::filter(matching == 0)
+    }
+  }
   return(df)
 }
 
-double_disconcordant <- function(df, column_name1, column_name2, id_name1 = "article_id", id_name2){
-  #' input: dataframe of double extracted rows, columns that you want to match by
-  #' suggested columns:
-  #' parameter df: parameter type, population location
-  #' article df, NA --> make a separate function for the quality assessment?
-  #' outbreaks df: outbreak_date_year, outbreak_country
-  #' model df: model type, compartmental model (unsure on this one though)
-  #' suggested ids:
-  #' id1: almost always will be article id
-  #' id 2 is the parameter_data_id/outbreak/model id -- we want to exclude this from checking for duplicates
-  #' process: matches the row entries by covidence id and other columns, determines if they differ
-  #' output: vector of parameter ids that are for 
-  df <- df %>%
-    dplyr::group_by(covidence_id) %>%
-    dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
-    dplyr::group_by(across(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]]))) %>%
-    dplyr::mutate(num_rows = sum(n())) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0))%>%
-    dplyr::filter(matching == 0)
-  
-  return(df)
-}
-
-test2 <- double_disconcordant(df = df, column_name1 = "parameter_type", column_name2 = "population_location", id_name2 = "parameter_data_id")
-
-get_correct_extracted <- function(){
-  #' input: data frame, details df
-  #' process: 
-  #' output: 
+get_correct_extracted <- function(df_single, df_match, df_fixed){
+  #' input: input the dataframe of single extracted data, matching data with duplicates removed and fixed non-concordants with duplicates removed
+  #' process: rbind
+  #' output: output complete dataset to be used in analysis steps
 }

@@ -17,8 +17,8 @@ model_clean <- model_clean %>% add_details(detail = details)
 outbreak_clean <- outbreak_clean %>% add_details(detail = details)
 parameter_clean <- parameter_clean %>% add_details(detail = details)
 
-article_single <- get_single_extracted(df_with_detail = article_clean)
-article_double <- get_double_extracted(df_with_detail = article_clean) 
+article_single <- filter_extracted(df = article_clean, double == FALSE, matching == FALSE)
+article_double <- article_clean %>% dplyr::filter(double_extracted == 1) 
 
 model_single <- get_single_extracted(df_with_detail = model_clean)
 model_double <- get_double_extracted(df_with_detail = model_clean)
@@ -28,14 +28,18 @@ outbreak_double <- get_double_extracted(df_with_detail = outbreak_clean)
 
 parameter_single <- get_single_extracted(df_with_detail = parameter_clean)
 parameter_double <- get_double_extracted(df_with_detail = parameter_clean)
-parameter_double_matching <- double_matching(df = parameter_double, 
+parameter_double_matching <- filter_extracted(df = parameter_double, 
+                                             double = TRUE,
+                                             matching = TRUE,
                                              column_name1 = "parameter_type", 
-                                             column_name2 = "population_location", 
+                                             column_name2 = "population_location",
+                                             id_name1 = "article_id",
                                              id_name2 = "parameter_data_id")
-parameter_double_discordant <- double_disconcordant(df = parameter_double, 
-                                                    column_name1 = "parameter_type", 
-                                                    column_name2 = "population_location", 
-                                                    id_name2 = "parameter_data_id")
+parameter_double_discordant <- filter_extracted(df = parameter_double, 
+                                                double = TRUE,
+                                                matching = FALSE,
+                                                column_name1 = "parameter_type", 
+                                                column_name2 = "population_location",
+                                                id_name1 = "article_id",
+                                                id_name2 = "parameter_data_id")
 
-## sanity check
-(nrow(parameter_double_matching)*2) + nrow(parameter_double_discordant) == nrow(parameter_double)
