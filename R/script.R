@@ -33,14 +33,23 @@ outbreak_double_discordant <- filter_extracted(df = outbreak_clean, double = TRU
 
 
 parameter_single <- filter_extracted(df = parameter_clean, double = FALSE, matching = FALSE)
-parameter_double_matching <- filter_extracted(df = parameter_double, 
+parameter_double_matching <- filter_extracted(df = parameter_clean, 
                                              double = TRUE,
                                              matching = TRUE,
                                              id_name1 = "article_id",
                                              id_name2 = "parameter_data_id")
-parameter_double_discordant <- filter_extracted(df = parameter_double, 
+parameter_double_discordant <- filter_extracted(df = parameter_clean, 
                                                 double = TRUE,
                                                 matching = FALSE,
                                                 id_name1 = "article_id",
                                                 id_name2 = "parameter_data_id")
 
+outbreak_fixing <- needs_fixing(outbreak_double_discordant, details)
+parameter_fixing <- needs_fixing(parameter_double_discordant, details)
+
+write.csv(outbreak_fixing, "data/marburg/fixing/outbreak_fixing.csv", row.names = FALSE)
+write.csv(parameter_fixing, "data/marburg/fixing/parameter_fixing.csv", row.names = FALSE)
+
+# ## when data is fixed
+# outbreak_fixed <- import('data/marburg/fixed/outbreak.csv')
+# parameter_fixed <- import('data/marburg/fixed/parameter.csv')
