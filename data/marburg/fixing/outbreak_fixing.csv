@@ -1,0 +1,5 @@
+"fixed","covidence_id","name_data_entry","outbreak_id","article_id","outbreak_start_day","outbreak_start_month","outbreak_start_year","outbreak_end_day","outbreak_end_month","outbreak_date_year","outbreak_duration_months","outbreak_size","outbreak_country","outbreak_location","cases_confirmed","cases_mode_detection","cases_suspected","cases_asymptomatic","asymptomatic_transmission","cases_severe_hospitalised","deaths","double_extracted","num_rows","matching"
+NA,1930,"Joseph",1,14,"17","Sep 09","2014","28","Sep 09","2014",NA,NA,"Uganda","Kampala",1,"Molecular (PCR etc)",0,"0",FALSE,1,1,1,1,0
+NA,1930,"Anne Cori",NA,12,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0,NA,NA
+NA,2032,"Gina",15,50,NA,"Sep 09","2012","13","Nov 11","2012",NA,NA,"Uganda","Ibanda and Kabale",9,"Molecular (PCR etc)",5,NA,FALSE,NA,7,1,1,0
+NA,2032,"Jack Wardle",NA,26,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0,NA,NA
