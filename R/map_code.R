@@ -30,7 +30,7 @@ param_split <- cSplit(param_clean, splitCols = c("population_country", 'populati
   filter(!is.na(region)) %>%
   select(-c(c, reg))
 
-write.csv(param_clean, 'parameter_clean.csv', row.names = FALSE)
+# write.csv(param_clean, 'parameter_clean.csv', row.names = FALSE)
 
 
 
