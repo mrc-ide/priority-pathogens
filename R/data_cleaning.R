@@ -3,6 +3,7 @@ library(dplyr)
 library(janitor)
 library(rio)
 library(tidyr)
+library(stringr)
 
 # import_df <- function(pathogen){
 #   import(paste0('data/', pathogen, "/", pathogen, "_article.xlsx"))
@@ -32,8 +33,8 @@ clean_dfs <- function(df, column_name){
                                          grepl('Mosquito', parameter_type) ~ "Mosquito",
                                          grepl('Relative', parameter_type) ~ 'Relative contribution',
                                          TRUE ~ 'Other'))%>%
-      mutate(population_country = str_replace(population_country, 'Congo, Rep.', 'Rep of Congo'),
-             population_country = str_replace(population_country, 'Congo, Dem. Rep.', 'DRC'))
+      mutate(population_country = str_replace(population_country, 'Congo, Rep.', 'Republic of the Congo'),
+             population_country = str_replace(population_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'))
   }
   
   return(df)
