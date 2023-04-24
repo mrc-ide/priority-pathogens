@@ -20,7 +20,7 @@ clean_dfs <- function(df, column_name){
   #' output: df 
   df <- df %>%
     janitor::clean_names() %>%
-    dplyr::filter(!is.na(.data[[column_name]]))
+    dplyr::filter(!is.na(all_of(column_name)))
 
   if('parameter_type' %in% colnames(df)){
     df <- df %>%
@@ -70,7 +70,7 @@ filter_extracted <- function(df, double = FALSE, matching = FALSE,
       dplyr::filter(double_extracted == 1) %>%
       dplyr::group_by(covidence_id) %>%
       # dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
-      dplyr::group_by(across(-c(.data[[id_name1]], .data[[id_name2]]))) %>%
+      dplyr::group_by(across(-c(all_of(id_name1), all_of(id_name2)))) %>%
       dplyr::mutate(num_rows = sum(n())) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0))
@@ -91,15 +91,14 @@ needs_fixing <- function(df_disconcordant, df_detail) {
   #' process: join the duplicated papers in details with df_dis and order to make the fixing process straightforward
   #' output: rds of the data that needs fixing ordered in a sensible way
   dis_detail <- df_detail %>%
-    dplyr::filter(double_extracted == FALSE) %>% 
+    dplyr::filter(double_extracted == 1) %>% 
     dplyr::filter(covidence_id %in% unique(df_disconcordant$covidence_id)) %>%
     dplyr::arrange(covidence_id)
   dis_detail$fixed = NA
   
   df <- dplyr::full_join(df_disconcordant, dis_detail) %>%
     dplyr::relocate(c(fixed, covidence_id, name_data_entry)) %>%
-    dplyr::arrange(covidence_id) %>%
-    dplyr::select(-names_combined)
+    dplyr::arrange(covidence_id) 
   return(df)
 }
 
