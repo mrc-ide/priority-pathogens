@@ -33,8 +33,8 @@ clean_dfs <- function(df, column_name){
                                          grepl('Mosquito', parameter_type) ~ "Mosquito",
                                          grepl('Relative', parameter_type) ~ 'Relative contribution',
                                          TRUE ~ 'Other'))%>%
-      mutate(population_country = stringr::str_replace(population_country, 'Congo, Rep.', 'Rep of Congo'),
-             population_country = stringr::str_replace(population_country, 'Congo, Dem. Rep.', 'DRC'))
+      mutate(population_country = stringr::str_replace(population_country, 'Congo, Rep.', 'Republic of the Congo'),
+             population_country = stringr::str_replace(population_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'))
   }
   
   return(df)
