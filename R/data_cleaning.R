@@ -3,6 +3,7 @@ library(dplyr)
 library(janitor)
 library(rio)
 library(tidyr)
+library(stringr)
 
 # import_df <- function(pathogen){
 #   import(paste0('data/', pathogen, "/", pathogen, "_article.xlsx"))
@@ -31,19 +32,21 @@ clean_dfs <- function(df, column_name){
                                          grepl('Severity', parameter_type) ~ 'Severity',
                                          grepl('Mosquito', parameter_type) ~ "Mosquito",
                                          grepl('Relative', parameter_type) ~ 'Relative contribution',
-                                         TRUE ~ 'Other'))
+                                         TRUE ~ 'Other'))%>%
+      mutate(population_country = str_replace(population_country, 'Congo, Rep.', 'Republic of the Congo'),
+             population_country = str_replace(population_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'))
   }
   
   return(df)
 }
 
-get_details <- function(article_df){
+get_details <- function(article_df, double_vec){
   #' input: article data frame
   #' process: pulls out the covidence ID, article ID, and name of extractor and if duplicated
   #' output: df with 4 columns
   df <- article_df %>%
     dplyr::select(c(article_id, covidence_id, name_data_entry)) %>%
-    dplyr::mutate(double_extracted = ifelse(duplicated(covidence_id) & !duplicated(article_id), 1, 0)) 
+    dplyr::mutate(double_extracted = ifelse(covidence_id %in% double_vec, 1, 0)) 
   
   return(df)
 }
@@ -66,8 +69,8 @@ filter_extracted <- function(df, double = FALSE, matching = FALSE,
     df <- df %>%
       dplyr::filter(double_extracted == 1) %>%
       dplyr::group_by(covidence_id) %>%
-      dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
-      dplyr::group_by(across(-c(names_combined, name_data_entry, .data[[id_name1]], .data[[id_name2]]))) %>%
+      # dplyr::mutate(names_combined = list(unique(name_data_entry))) %>%
+      dplyr::group_by(across(-c(.data[[id_name1]], .data[[id_name2]]))) %>%
       dplyr::mutate(num_rows = sum(n())) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(matching = ifelse(num_rows == 2, 1, 0))

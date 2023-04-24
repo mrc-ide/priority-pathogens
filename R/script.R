@@ -1,5 +1,22 @@
 source('R/data_cleaning.R')
 
+## automate so you can read from the assignment
+real_duplicate <- c(1483,
+                    1594,
+                    1595,
+                    1613,
+                    1615,
+                    1649,
+                    1692,
+                    1693,
+                    1871,
+                    1927,
+                    1930,
+                    1931,
+                    1983,
+                    2032,
+                    2042)
+
 article_raw <- import('data/marburg/raw/marburg_article.xlsx')
 model_raw <- import('data/marburg/raw/marburg_model.xlsx')
 outbreak_raw <- import('data/marburg/raw/marburg_outbreak.xlsx')
@@ -10,7 +27,7 @@ model_clean <- model_raw %>% clean_dfs(column_name = 'model_type')
 outbreak_clean <- outbreak_raw %>% clean_dfs(column_name = 'outbreak_country')
 parameter_clean <- parameter_raw %>% clean_dfs(column_name = 'parameter_type')
 
-details <- article_clean %>% get_details()
+details <- article_clean %>% get_details(double_vec = real_duplicate)
 
 article_clean <- article_clean %>% add_details(detail = details)
 model_clean <- model_clean %>% add_details(detail = details)
