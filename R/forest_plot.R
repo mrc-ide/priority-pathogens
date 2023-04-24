@@ -5,13 +5,14 @@
 
 source("R/script.R")
 library(ggplot2)
+df <- read.csv("data/marburg/final/parameter_final.csv")
+article_df <- read.csv("data/marburg/final/article_final.csv")
 
-#df <- parameter_single
 # merge with article ID to get the y-axis labels
-df <- merge(parameter_single,article_single %>% dplyr::select(article_id,first_author_first_name,year_publication),
+df <- merge(df,article_df %>% dplyr::select(article_id,first_author_first_name,year_publication),
             all.x=TRUE,by="article_id") %>%
-  mutate(article_label = factor(paste0(first_author_first_name," ",year_publication)),
-         article_label = reorder(article_label,-year_publication))
+  mutate(article_label = as.character(paste0(first_author_first_name," ",year_publication))) %>%
+  dplyr::arrange(article_label)
 
 # for testing purposes
 #parameter <- "Human delay"
@@ -112,20 +113,21 @@ forest_plot_fr <- function(df) {
   df_cfr$article_label <- factor(df_cfr$article_label)
     
   # estimate pooled CFR based on num and denom
-  df_cfr$pooled <- (sum(df_cfr$cfr_ifr_numerator)/sum(df_cfr$cfr_ifr_denominator))*100
+  df_cfr$pooled <- (sum(df_cfr$cfr_ifr_numerator, na.rm = TRUE)/sum(df_cfr$cfr_ifr_denominator, na.rm = TRUE))*100
   p <- df_cfr$pooled[1]/100
-  n <- sum(df_cfr$cfr_ifr_denominator)
+  n <- sum(df_cfr$cfr_ifr_denominator, na.rm = TRUE)
   df_cfr$pooled_low <- (p - 1.96*(sqrt((p * (1-p))/n)))*100
   df_cfr$pooled_upp <- (p + 1.96*(sqrt((p * (1-p))/n)))*100
   
   df_plot <- df_cfr %>% 
     dplyr::filter(is.na(parameter_value) == FALSE) %>%
     dplyr::select(c(article_id:distribution_par2_uncertainty, covidence_id:pooled_upp)) %>%
-    dplyr::arrange(article_label)
+    dplyr::arrange((article_label))
 
   plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label, group=parameter_data_id))+
     theme_minimal()+
-    geom_point()+
+    # facet_grid(cfr_ifr_method ~ .) + 
+    geom_point(aes())+
     geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
                       linetype="Parameter range"),
@@ -138,6 +140,7 @@ forest_plot_fr <- function(df) {
                   position=position_dodge(width=0.5),
                   width=0.25)+
     geom_vline(aes(xintercept=pooled,col="Pooled unadjusted CFR"),linetype="dashed") + 
+    geom_rect(aes(xmin = pooled_low,xmax = pooled_upp, ymin = -Inf, ymax = Inf),fill = "blue", alpha = 0.05) +
     labs(x="Parameter value",y="Study (First author surname and publication year)",linetype="",colour="")+
     scale_linetype_manual(values = c("dotted","solid","dashed"))+
     scale_colour_manual(values=c("blue"))+
@@ -154,30 +157,25 @@ forest_plot_fr <- function(df) {
 
 human_delay <- forest_plot(df,"Human delay")
 human_delay
-#### ggsave currently not working for me (turns plot black and blurry...)
-#ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png")
+ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white")
 
 mutations <- forest_plot(df,"Mutations")
 mutations
-#### ggsave currently not working for me (turns plot black and blurry...)
-#ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png")
+ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white")
 
 
 reproduction_number <- forest_plot(df,"Reproduction number")
 reproduction_number
-#### ggsave currently not working for me (turns plot black and blurry...)
-#ggsave(plot = reproduction_number,filename="data/marburg/output/FP_reproduction_number.png")
+ggsave(plot = reproduction_number,filename="data/marburg/output/FP_reproduction_number.png",bg = "white")
 
 
 severity <- forest_plot_fr(df)
 severity
-#### ggsave currently not working for me (turns plot black and blurry...)
-#ggsave(plot = severity,filename="data/marburg/output/FP_severity.png")
+ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white")
 
 seroprevalence <- forest_plot(df,"Seroprevalence")
 seroprevalence
-#### ggsave currently not working for me (turns plot black and blurry...)
-#ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png")
+ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png",bg = "white")
 
 
 
