@@ -107,7 +107,8 @@ forest_plot_fr <- function(df) {
   
   df_cfr <- df %>% filter(parameter_class == parameter) %>%
     mutate(parameter_value = as.numeric(parameter_value)) %>%
-    group_by(parameter_type)
+    group_by(parameter_type) %>%
+    dplyr::arrange(first_author_first_name)
   df_cfr$article_label <- factor(df_cfr$article_label)
     
   # estimate pooled CFR based on num and denom
@@ -119,24 +120,12 @@ forest_plot_fr <- function(df) {
   
   df_plot <- df_cfr %>% 
     dplyr::filter(is.na(parameter_value) == FALSE) %>%
-    dplyr::select(c(article_id:distribution_par2_uncertainty, covidence_id:pooled_upp))
-  
-  
-  ## need some logic for the different parameter classes
-  ## can't do for risk factors as not extracting values
-  ## don't think we can plot seroprevalence this way - needs to include time as well
-  ## how to distinguish between uncertainty reporting and range reporting
-  
-  ## need to see "Relative contribution" to be able to plot
-  ## 'Mosquito' won't be an issue for Marburg
-  ## decide what to do with "Other"
-    
-  # plot <- 
-  ggplot(df_plot, aes(x=parameter_value, y=article_label, group=parameter_data_id))+
+    dplyr::select(c(article_id:distribution_par2_uncertainty, covidence_id:pooled_upp)) %>%
+    dplyr::arrange(article_label)
+
+  plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label, group=parameter_data_id))+
     theme_minimal()+
     geom_point()+
-    # facet_wrap(~parameter_type,scales="free_x",
-    #            labeller = labeller(parameter_type = label_wrap_gen(width = 25)))+
     geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
                       linetype="Parameter range"),
