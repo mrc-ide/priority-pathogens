@@ -109,8 +109,9 @@ forest_plot_fr <- function(df) {
   df_cfr <- df %>% filter(parameter_class == parameter) %>%
     mutate(parameter_value = as.numeric(parameter_value)) %>%
     group_by(parameter_type) %>%
-    dplyr::arrange(first_author_first_name)
-  df_cfr$article_label <- factor(df_cfr$article_label)
+    dplyr::arrange(first_author_first_name) #%>%
+    # dplyr::filter(article_label != "Nyakarahuka 2016")
+  # df_cfr$article_label <- factor(df_cfr$article_label)
     
   # estimate pooled CFR based on num and denom
   df_cfr$pooled <- (sum(df_cfr$cfr_ifr_numerator, na.rm = TRUE)/sum(df_cfr$cfr_ifr_denominator, na.rm = TRUE))*100
@@ -126,7 +127,7 @@ forest_plot_fr <- function(df) {
 
   plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label, group=parameter_data_id))+
     theme_minimal()+
-    # facet_grid(cfr_ifr_method ~ .) + 
+    facet_grid(cfr_ifr_method ~ .) +
     geom_point(aes())+
     geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
@@ -152,9 +153,6 @@ forest_plot_fr <- function(df) {
   
 }
 
-
-
-
 human_delay <- forest_plot(df,"Human delay")
 human_delay
 ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white")
@@ -177,5 +175,6 @@ seroprevalence <- forest_plot(df,"Seroprevalence")
 seroprevalence
 ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png",bg = "white")
 
-
+cfr_table_df <- df %>%
+  dplyr::filter(parameter_class == "Severity")
 
