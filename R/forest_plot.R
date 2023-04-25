@@ -12,7 +12,7 @@ article_df <- read.csv("data/marburg/final/article_final.csv")
 df <- merge(df,article_df %>% dplyr::select(article_id,first_author_first_name,year_publication),
             all.x=TRUE,by="article_id") %>%
   mutate(article_label = as.character(paste0(first_author_first_name," ",year_publication))) %>%
-  dplyr::arrange(article_label)
+  dplyr::arrange(article_label, -year_publication)
 
 # for testing purposes
 #parameter <- "Human delay"
@@ -109,11 +109,8 @@ forest_plot_fr <- function(df) {
   df_cfr <- df %>% filter(parameter_class == parameter) %>%
     mutate(parameter_value = as.numeric(parameter_value)) %>%
     group_by(parameter_type) %>%
-    dplyr::arrange(first_author_first_name) #%>%
-    # dplyr::filter(article_label != "Nyakarahuka 2016")
-  # df_cfr$article_label <- factor(df_cfr$article_label)
-    
-  # estimate pooled CFR based on num and denom
+    dplyr::arrange(first_author_first_name)
+  
   df_cfr$pooled <- (sum(df_cfr$cfr_ifr_numerator, na.rm = TRUE)/sum(df_cfr$cfr_ifr_denominator, na.rm = TRUE))*100
   p <- df_cfr$pooled[1]/100
   n <- sum(df_cfr$cfr_ifr_denominator, na.rm = TRUE)
@@ -123,31 +120,37 @@ forest_plot_fr <- function(df) {
   df_plot <- df_cfr %>% 
     dplyr::filter(is.na(parameter_value) == FALSE) %>%
     dplyr::select(c(article_id:distribution_par2_uncertainty, covidence_id:pooled_upp)) %>%
-    dplyr::arrange((article_label))
+    dplyr::arrange((cfr_ifr_method))
+  
+  ## ensuring that each entry is on it's own line
+  df_plot$article_label_unique <- make.unique(df_plot$article_label)
 
-  plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label, group=parameter_data_id))+
-    theme_minimal()+
-    facet_grid(cfr_ifr_method ~ .) +
-    geom_point(aes())+
-    geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
+  plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
+                              col = cfr_ifr_method)) + 
+    theme_bw() + geom_point() +
+    scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
+    facet_grid(cfr_ifr_method ~ ., scales = "free", space = "free") +
+    geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
                       linetype="Parameter range"),
                   position=position_dodge(width=0.5),
-                  width=0.25)+
-    geom_errorbar(aes(y=article_label,
+                  width=0.25) +
+    geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
-                  width=0.25)+
-    geom_vline(aes(xintercept=pooled,col="Pooled unadjusted CFR"),linetype="dashed") + 
-    geom_rect(aes(xmin = pooled_low,xmax = pooled_upp, ymin = -Inf, ymax = Inf),fill = "blue", alpha = 0.05) +
-    labs(x="Parameter value",y="Study (First author surname and publication year)",linetype="",colour="")+
-    scale_linetype_manual(values = c("dotted","solid","dashed"))+
-    scale_colour_manual(values=c("blue"))+
+                  width=0.25) +
+    # geom_vline(aes(xintercept=pooled,col="Pooled unadjusted CFR"), col = "blue",
+    #            linetype="dashed") + 
+    # geom_rect(aes(xmin = pooled_low,xmax = pooled_upp, ymin = -Inf, ymax = Inf),
+    #           fill = "blue", alpha = 0.05) +
+    labs(x="Parameter value",y="Study (First author surname and publication year)",
+         linetype="",colour="") + 
+    scale_linetype_manual(values = c("dotted","solid"))+
     theme(legend.position="bottom",
           strip.text = element_text(size=12)) +
-    xlim(c(0, 100))
+    xlim(c(0, 100)) 
 
   return(plot)
   
@@ -169,12 +172,9 @@ ggsave(plot = reproduction_number,filename="data/marburg/output/FP_reproduction_
 
 severity <- forest_plot_fr(df)
 severity
-ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white")
+ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",
+       width = 25, height = 15, units = "cm")
 
 seroprevalence <- forest_plot(df,"Seroprevalence")
 seroprevalence
 ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png",bg = "white")
-
-cfr_table_df <- df %>%
-  dplyr::filter(parameter_class == "Severity")
-
