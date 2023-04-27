@@ -31,7 +31,9 @@ details <- article_clean %>% get_details(double_vec = real_duplicate)
 
 article_clean <- article_clean %>% add_details(detail = details)
 model_clean <- model_clean %>% add_details(detail = details)
-outbreak_clean <- outbreak_clean %>% add_details(detail = details)
+outbreak_clean <- outbreak_clean %>% add_details(detail = details) %>%
+  mutate(outbreak_country = str_replace(outbreak_country, 'Congo, Rep.', 'Republic of the Congo'),
+         outbreak_country = str_replace(outbreak_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'))
 parameter_clean <- parameter_clean %>% add_details(detail = details)
 
 article_single <- filter_extracted(df = article_clean, double = FALSE, matching = FALSE)
