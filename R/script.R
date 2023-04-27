@@ -68,5 +68,30 @@ write.csv(outbreak_fixing, "data/marburg/fixing/outbreak_fixing.csv", row.names 
 write.csv(parameter_fixing, "data/marburg/fixing/parameter_fixing.csv", row.names = FALSE)
 
 # ## when data is fixed
-# outbreak_fixed <- import('data/marburg/fixed/outbreak.csv')
-# parameter_fixed <- import('data/marburg/fixed/parameter.csv')
+outbreak_fixed <- readxl::read_excel('data/marburg/fixed/marburg_fixing.xlsx', sheet = "outbreaks")
+parameter_fixed <- readxl::read_excel('data/marburg/fixed/marburg_fixing.xlsx', sheet = "parameters")
+
+## create final datasets
+outbreak_fixed <- outbreak_fixed %>%
+  dplyr::filter(fixed == TRUE) %>%
+  dplyr::select(names(outbreak_single))
+
+parameter_fixed <- parameter_fixed %>%
+  dplyr::filter(fixed == TRUE) %>%
+  dplyr::select(names(parameter_single))
+
+# final data sets
+outbreak_final <- rbind(outbreak_single,
+                        outbreak_double_matching,
+                        outbreak_fixed)
+parameter_final <- rbind(parameter_single,
+                         parameter_double_matching,
+                         parameter_fixed)
+model_final <- rbind(model_single)
+article_final <- rbind(article_single,
+                       article_double) # think if this is correct
+
+write.csv(article_final, "data/marburg/final/article_final.csv")
+write.csv(model_final, "data/marburg/final/model_final.csv")
+write.csv(outbreak_final, "data/marburg/final/outbreak_final.csv")
+write.csv(parameter_final, "data/marburg/final/parameter_final.csv") # 24 apr missing Cyril and Gina's DE
