@@ -213,11 +213,11 @@ forest_plot_mutations <- function(df){
 }
 
 
-human_delay <- forest_plot_delay(df,"Human delay")
+human_delay <- forest_plot_delay(df)
 human_delay
 ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white")
 
-mutations <- forest_plot_mutations(df,"Mutations")
+mutations <- forest_plot_mutations(df)
 mutations
 ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white",
        width = 25, height = 15, units = "cm")
