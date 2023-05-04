@@ -208,17 +208,14 @@ forest_plot_mutations <- function(df){
     # facet_grid(gene ~ ., scales = "free_y", space = "free") +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     geom_errorbar(aes(y=article_label_unique,
-                      xmin=if_else(((parameter_value - parameter_uncertainty_single_value)* 1e04) < 0, 0,
-                              (parameter_value - parameter_uncertainty_single_value)* 1e04),
+                      xmin=if_else((parameter_value - parameter_uncertainty_single_value)* 1e04 < 0, 0,
+                                   (parameter_value - parameter_uncertainty_single_value)* 1e04),
                       xmax=(parameter_value + parameter_uncertainty_single_value)* 1e04,
                       group=parameter_data_id,
-                      linetype="Value \u00B1 standard error *"),
-                  width=0.8) +
+                      linetype="Value \u00B1 standard error *"), width=0.8) +
     geom_errorbar(aes(y=article_label_unique,
-                      xmin=if_else(parameter_uncertainty_lower_value < 1e-02, parameter_uncertainty_lower_value*1e-04,
-                                   parameter_uncertainty_lower_value),
-                      xmax=if_else(parameter_uncertainty_upper_value < 1e-02, parameter_uncertainty_upper_value*1e-04,
-                                   parameter_uncertainty_upper_value),
+                      xmin=parameter_uncertainty_lower_value* 1e04,
+                      xmax=parameter_uncertainty_upper_value* 1e04,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   width = 0.8) +
