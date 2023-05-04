@@ -83,6 +83,7 @@ sero_table <- function(){
   sero_tbl
   save_as_image(sero_tbl, path = "sero_tbl.png")
 }
+sero_table()
 
 # Human Delay table
 delay_table <- function(){
@@ -124,3 +125,4 @@ delay_table <- function(){
   
   save_as_image(delay_tbl, path = "delay_tbl.png")
 }
+delay_table()
