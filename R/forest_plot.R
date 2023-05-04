@@ -176,8 +176,7 @@ forest_plot_mutations <- function(df){
   df_mutations <- df %>% 
     dplyr::filter(parameter_class == parameter) %>%
     dplyr::mutate(parameter_value = as.numeric(parameter_value)) %>%
-    dplyr::group_by(parameter_type) %>%
-    dplyr::arrange(first_author_first_name)
+    dplyr::group_by(parameter_type) 
   
   df_plot <- df_mutations %>% 
     dplyr::filter(parameter_class == parameter) %>%
@@ -186,26 +185,36 @@ forest_plot_mutations <- function(df){
     # mutate(median = median(parameter_value,na.rm=TRUE))
   
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
+  df_plot <- df_plot %>%
+    dplyr::mutate(gene = ifelse(is.na(genome_site)==TRUE, "whole genome", genome_site))  %>%
+    dplyr::arrange(gene,first_author_first_name)
+  # df_plot <- df_plot %>%
+  #   dplyr::mutate(parameter_type = ifelse(article_label == "Suzuki 1997", "Mutations - substitution rate",
+  #                                         parameter_type))
   
-  plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
-                              col = parameter_type)) + 
-    theme_bw() + geom_point() +
+  plot <-
+    ggplot(df_plot, aes(x=parameter_value * 1e04, y=article_label_unique, 
+                               col = gene)) + 
+    theme_bw() + geom_point(size = 2) +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
-    facet_grid(parameter_type ~ ., scales = "free", space = "free") +
-    geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
-                      group=parameter_data_id,
-                      linetype="Parameter range"),
-                  # position=position_dodge(width=0.5),
-                  width=0.4) +
     geom_errorbar(aes(y=article_label_unique,
-                      xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
+                      xmin=(parameter_value - parameter_uncertainty_single_value)* 1e04,
+                      xmax=(parameter_value + parameter_uncertainty_single_value)* 1e04,
+                      group=parameter_data_id,
+                      linetype="Value \u00B1 standard error"),
+                  width=0.8) +
+    geom_errorbar(aes(y=article_label_unique,
+                      xmin=parameter_uncertainty_lower_value* 1e04,
+                      xmax=parameter_uncertainty_upper_value* 1e04,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
-                  # position=position_dodge(width=0.5),
-                  width = 0.4) +
-    labs(x="Parameter value",y="Study (First author surname and publication year)",
+                  width = 0.8) +
+    labs(x=expression(Molecular~evolutionary~rate~(substitution/site/year ~10^{-4})),
+         y="Study (First author surname and publication year)",
          linetype="",colour="") + 
-    scale_linetype_manual(values = c("dotted","solid"))
+    scale_linetype_manual(values = c("dashed","solid")) + #+ scale_x_log10()
+    geom_vline(xintercept = 0, linetype = "dotted") +
+    theme(legend.position = "bottom", legend.direction = "horizontal")
   
   
   return(plot)
@@ -220,7 +229,7 @@ ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg =
 mutations <- forest_plot_mutations(df)
 mutations
 ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white",
-       width = 25, height = 15, units = "cm")
+       width = 15, height = 8, units = "cm")
 
 
 reproduction_number <- forest_plot_R(df)
