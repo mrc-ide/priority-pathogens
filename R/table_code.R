@@ -81,7 +81,7 @@ sero_table <- function(){
     bold(i = 1, bold = TRUE, part = "header") %>%
     add_footer_lines("*HAI/HI: Hemagglutination Inhibition Assay; IFA: Indirect Fluorescent Antibody assay; IgG: Immunoglobulin G; IgM: Immunoglobulin M; Unspecified assay.")
   sero_tbl
-  save_as_image(sero_tbl, path = "sero_tbl.png")
+  save_as_image(sero_tbl, path = "sero_tbl.png", background = "white")
 }
 
 # Human Delay table
@@ -121,5 +121,5 @@ delay_table <- function(){
     add_footer_lines("")
   delay_tbl
   
-  save_as_image(delay_tbl, path = "delay_tbl.png")
+  save_as_image(delay_tbl, path = "delay_tbl.png", background = "white")
 }

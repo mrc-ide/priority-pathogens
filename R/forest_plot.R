@@ -91,7 +91,7 @@ forest_plot_R <- function(df){
   
   plot <-
     ggplot(df_plot, aes(x = parameter_value, y = article_label_unique, col = parameter_type))+
-    theme_minimal()+
+    theme_bw()+
     # scale_x_continuous(breaks = seq(0, 2, by = 0.2))+
     geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
@@ -106,7 +106,7 @@ forest_plot_R <- function(df){
                   width=0.25)+
     geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),position=position_dodge(width=0.5))+
     # geom_vline(aes(xintercept=median,col="Sample median"),linetype="dashed", colour = "grey") +
-    geom_vline(xintercept = 1, linetype = "dashed", colour = "black") +
+    geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey") +
     labs(x="Parameter value",y="Study (First author surname and publication year)",linetype="",colour="")+
     scale_linetype_manual(values = c("dotted","solid"))+
     scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
@@ -134,15 +134,18 @@ forest_plot_delay <- function(df){
     dplyr::filter(parameter_class == parameter) %>%
     dplyr::mutate(parameter_value = as.numeric(parameter_value)) %>%
     dplyr::group_by(parameter_type) %>% ### median function not behaving in ggplot so going with this even with grouping
-    mutate(median = median(parameter_value,na.rm=TRUE))
+    mutate(median = median(parameter_value,na.rm=TRUE)) %>%
+    dplyr::arrange(desc(parameter_type), desc(parameter_value), desc(article_label))
   
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
+  df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
   
-  plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
+  plot <-
+    ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
                               col = parameter_type)) + 
     theme_bw() + geom_point() +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
-    facet_grid(parameter_type ~ ., scales = "free", space = "free") +
+    # facet_wrap(parameter_type ~ ., scales = "free",  strip.position = "top", ncol = 1) +
     geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
                       linetype="Parameter range"),
@@ -154,13 +157,13 @@ forest_plot_delay <- function(df){
                       linetype="Uncertainty interval"),
                   # position=position_dodge(width=0.5),
                   width = 0.4) +
-    labs(x="Parameter value",y="Study (First author surname and publication year)",
+    labs(x="Delay (days)",y="Study (First author surname and publication year)",
          linetype="",colour="") + 
     scale_linetype_manual(values = c("dotted","solid")) +
     scale_colour_discrete(labels = c("Incubation period", 
                                      "Time in care",
                                      "Symptom to careseeking",
-                                     "Symptom to outcome"))
+                                     "Symptom to outcome")) 
 
   
   
@@ -187,21 +190,27 @@ forest_plot_mutations <- function(df){
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
   df_plot <- df_plot %>%
     dplyr::mutate(gene = ifelse(is.na(genome_site)==TRUE, "whole genome", genome_site))  %>%
-    dplyr::arrange(gene,first_author_first_name)
+    dplyr::arrange(gene, desc(parameter_value))
+  df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
+    
+
+  
   # df_plot <- df_plot %>%
   #   dplyr::mutate(parameter_type = ifelse(article_label == "Suzuki 1997", "Mutations - substitution rate",
   #                                         parameter_type))
   
-  plot <-
-    ggplot(df_plot, aes(x=parameter_value * 1e04, y=article_label_unique, 
+  # plot <-
+    ggplot(df_plot, aes(x=(parameter_value * 1e04), y=article_label_unique, 
                                col = gene)) + 
     theme_bw() + geom_point(size = 2) +
+    # facet_grid(gene ~ ., scales = "free_y", space = "free") +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     geom_errorbar(aes(y=article_label_unique,
-                      xmin=(parameter_value - parameter_uncertainty_single_value)* 1e04,
+                      xmin=if_else(((parameter_value - parameter_uncertainty_single_value)* 1e04) < 0, 0,
+                              (parameter_value - parameter_uncertainty_single_value)* 1e04),
                       xmax=(parameter_value + parameter_uncertainty_single_value)* 1e04,
                       group=parameter_data_id,
-                      linetype="Value \u00B1 standard error"),
+                      linetype="Value \u00B1 standard error *"),
                   width=0.8) +
     geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value* 1e04,
@@ -213,23 +222,23 @@ forest_plot_mutations <- function(df){
          y="Study (First author surname and publication year)",
          linetype="",colour="") + 
     scale_linetype_manual(values = c("dashed","solid")) + #+ scale_x_log10()
-    geom_vline(xintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
     theme(legend.position = "bottom", legend.direction = "horizontal")
   
   
-  return(plot)
   
 }
 
 
 human_delay <- forest_plot_delay(df)
 human_delay
-ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white")
+ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white",
+       width = 25, height = 15, units = "cm")
 
 mutations <- forest_plot_mutations(df)
 mutations
 ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white",
-       width = 15, height = 8, units = "cm")
+       width = 25, height = 15, units = "cm")
 
 
 reproduction_number <- forest_plot_R(df)
@@ -243,12 +252,12 @@ severity
 ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",
        width = 25, height = 15, units = "cm")
 
-## the only figure that doesn't yet have a custom figure -- I think this is 
-# better as a table regardless?
-seroprevalence <- forest_plot(df,"Seroprevalence")
-seroprevalence
-ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png",bg = "white")
-
+# ## the only figure that doesn't yet have a custom figure -- I think this is 
+# # better as a table regardless?
+# seroprevalence <- forest_plot(df,"Seroprevalence")
+# seroprevalence
+# ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png",bg = "white")
+# 
 
 # for testing purposes
 #parameter <- "Human delay"
@@ -279,7 +288,7 @@ ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png
 #   if(parameter %in% c("Human delay","Mutations","Reproduction number","Severity")){
 # 
 #     plot <- ggplot(df_plot)+
-#       theme_minimal()+
+#       theme_bw()+
 #       facet_wrap(~parameter_type,scales="free_x",
 #                  labeller = labeller(parameter_type = label_wrap_gen(width = 25)))+
 #       geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
@@ -307,7 +316,7 @@ ggsave(plot = seroprevalence,filename="data/marburg/output/FP_seroprevalence.png
 # 
 #     plot <- ggplot(df_plot,
 #            aes(x=population_study_end_year,y=parameter_value,group=factor(parameter_data_id)))+
-#       theme_minimal()+
+#       theme_bw()+
 #       facet_wrap(~parameter_type,scales="free_x",
 #                  labeller = labeller(parameter_type = label_wrap_gen(width = 25)))+
 #       geom_errorbar(position=position_dodge2(width=0.5),
