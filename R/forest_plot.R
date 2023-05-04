@@ -47,7 +47,7 @@ forest_plot_fr <- function(df) {
   
   plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
                               col = cfr_ifr_method)) + 
-    theme_bw() + geom_point() +
+    theme_bw() + geom_point(size = 2) +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     facet_grid(cfr_ifr_method ~ ., scales = "free", space = "free") +
     geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
@@ -61,7 +61,7 @@ forest_plot_fr <- function(df) {
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
                   width=0.25) +
-    labs(x="Parameter value",y="Study (First author surname and publication year)",
+    labs(x="Case fatality ratio",y="Study (First author surname and publication year)",
          linetype="",colour="") + 
     scale_linetype_manual(values = c("dotted","solid"))+
     theme(legend.position="bottom",
@@ -104,10 +104,10 @@ forest_plot_R <- function(df){
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
                   width=0.25)+
-    geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),position=position_dodge(width=0.5))+
+    geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),size = 2)+
     # geom_vline(aes(xintercept=median,col="Sample median"),linetype="dashed", colour = "grey") +
     geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey") +
-    labs(x="Parameter value",y="Study (First author surname and publication year)",linetype="",colour="")+
+    labs(x="Reproduction number",y="Study (First author surname and publication year)",linetype="",colour="")+
     scale_linetype_manual(values = c("dotted","solid"))+
     scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
     theme(legend.position="bottom",
@@ -143,7 +143,7 @@ forest_plot_delay <- function(df){
   plot <-
     ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
                               col = parameter_type)) + 
-    theme_bw() + geom_point() +
+    theme_bw() + geom_point(size = 2) +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     # facet_wrap(parameter_type ~ ., scales = "free",  strip.position = "top", ncol = 1) +
     geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
@@ -192,14 +192,16 @@ forest_plot_mutations <- function(df){
     dplyr::mutate(gene = ifelse(is.na(genome_site)==TRUE, "whole genome", genome_site))  %>%
     dplyr::arrange(gene, desc(parameter_value))
   df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
-    
+  df_plot <- df_plot %>%
+    dplyr::mutate(parameter_value = if_else(parameter_value > 1e-02, parameter_value * 1e-04, parameter_value),
+                  parameter_uncertainty_single_value = if_else(parameter_uncertainty_single_value > 1e-02, parameter_uncertainty_single_value * 1e-04, parameter_uncertainty_single_value))
 
   
   # df_plot <- df_plot %>%
   #   dplyr::mutate(parameter_type = ifelse(article_label == "Suzuki 1997", "Mutations - substitution rate",
   #                                         parameter_type))
   
-  # plot <-
+  plot <-
     ggplot(df_plot, aes(x=(parameter_value * 1e04), y=article_label_unique, 
                                col = gene)) + 
     theme_bw() + geom_point(size = 2) +
@@ -213,8 +215,10 @@ forest_plot_mutations <- function(df){
                       linetype="Value \u00B1 standard error *"),
                   width=0.8) +
     geom_errorbar(aes(y=article_label_unique,
-                      xmin=parameter_uncertainty_lower_value* 1e04,
-                      xmax=parameter_uncertainty_upper_value* 1e04,
+                      xmin=if_else(parameter_uncertainty_lower_value < 1e-02, parameter_uncertainty_lower_value*1e-04,
+                                   parameter_uncertainty_lower_value),
+                      xmax=if_else(parameter_uncertainty_upper_value < 1e-02, parameter_uncertainty_upper_value*1e-04,
+                                   parameter_uncertainty_upper_value),
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   width = 0.8) +
