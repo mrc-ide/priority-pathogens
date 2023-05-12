@@ -35,12 +35,15 @@ df <- merge(par_final, article_df %>% dplyr::select(article_id, first_author_fir
          # fixing mislabeling of range
          parameter_uncertainty_type = ifelse((article_id == 57 & parameter_data_id == 89) | 
                                                (article_id == 7 & parameter_data_id == 78), 'Range', parameter_uncertainty_type),
+         # fixing missing country 
+         population_country = ifelse(article_id == 58 | article_id == 57, 'Democratic Republic of the Congo', 
+                                     ifelse(article_id == 6, 'South Africa', population_country)),
          # combining range and uncertainty range
          parameter_uncertainty_type = ifelse(!is.na(parameter_upper_bound) & is.na(parameter_uncertainty_upper_value), 'Range', parameter_uncertainty_type),
          parameter_uncertainty_upper_value = ifelse(!is.na(parameter_upper_bound) & is.na(parameter_uncertainty_upper_value), parameter_upper_bound, parameter_uncertainty_upper_value),
          parameter_uncertainty_lower_value = ifelse(!is.na(parameter_lower_bound) & is.na(parameter_uncertainty_lower_value), parameter_lower_bound, parameter_uncertainty_lower_value),
          Uncertainty = ifelse(parameter_uncertainty_type == 'CI95%', paste0(parameter_uncertainty_lower_value, ", ", parameter_uncertainty_upper_value),
-                              ifelse(parameter_uncertainty_type %in% c('Range', 'Highest Posterior Density Interval 95%'), paste0(parameter_uncertainty_lower_value, '-', parameter_uncertainty_upper_value),
+                              ifelse(parameter_uncertainty_type %in% c('Range', 'Highest Posterior Density Interval 95%'), paste0(parameter_uncertainty_lower_value, ' - ', parameter_uncertainty_upper_value),
                                      NA))) 
 
 
@@ -48,6 +51,7 @@ df <- merge(par_final, article_df %>% dplyr::select(article_id, first_author_fir
 # Seroprevalence table
 sero_table <- function(){
   border_style = officer::fp_border(color="black", width=1)
+  set_flextable_defaults(background.color = "white")
   
   sero_tbl <- df %>%
     mutate(parameter_value = percent(round(parameter_value, 2), scale = 1),
@@ -65,9 +69,15 @@ sero_table <- function(){
              `Population Group` = population_group,
              parameter_class,
              `Timing of survey` = method_moment_value,
-             `Disaggregated data\navailable` = method_disaggregated_by)) %>%
-    arrange(`Parameter type*`) %>%
-    group_by(`Parameter type*`) %>%
+             `Disaggregated data\navailable` = method_disaggregated_by))
+  
+  multicountry <- sero_tbl[which(sero_tbl$Country == "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon"),]
+  
+  sero_tbl <- sero_tbl %>%
+    filter(!Country == "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon") %>%
+    arrange(Country, `Survey year`, `Parameter type*`) %>%
+    rbind(multicountry) %>%
+    group_by(Country) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
     flextable(col_keys = c("Article", "Country", "Parameter type*", "Survey year", "Seroprevalence (%)", 'Uncertainty', 'Uncertainty type',
@@ -81,13 +91,14 @@ sero_table <- function(){
     bold(i = 1, bold = TRUE, part = "header") %>%
     add_footer_lines("*HAI/HI: Hemagglutination Inhibition Assay; IFA: Indirect Fluorescent Antibody assay; IgG: Immunoglobulin G; IgM: Immunoglobulin M; Unspecified assay.")
   sero_tbl
-  save_as_image(sero_tbl, path = "sero_tbl.png", background = "white")
+  save_as_image(sero_tbl, path = "sero_tbl.png")
 }
 sero_table()
 
 # Human Delay table
 delay_table <- function(){
   border_style = officer::fp_border(color="black", width=1)
+  set_flextable_defaults(background.color = "white")
   
   delay_tbl <- df %>%
     filter(parameter_class == 'Human delay') %>%
@@ -106,9 +117,8 @@ delay_table <- function(){
              `Disaggregated data\navailable` = method_disaggregated_by,
              # `Risk factor outcome` = riskfactor_outcome
              )) %>%
-    arrange(`Parameter type`) %>%
-    group_by(`Parameter type`) %>%
-    
+    arrange(Country, `Survey year`, `Parameter type`) %>%
+    group_by(Country) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
     flextable(col_keys = c("Article", "Country", "Parameter type", "Survey year", "Delays (days)", 'Statistic',
@@ -123,6 +133,6 @@ delay_table <- function(){
     add_footer_lines("")
   delay_tbl
   
-  save_as_image(delay_tbl, path = "delay_tbl.png", background = "white")
+  save_as_image(delay_tbl, path = "delay_tbl.png")
 }
 delay_table()
