@@ -70,8 +70,8 @@ write.csv(outbreak_fixing, "data/marburg/fixing/outbreak_fixing.csv", row.names 
 write.csv(parameter_fixing, "data/marburg/fixing/parameter_fixing.csv", row.names = FALSE)
 
 # ## when data is fixed
-outbreak_fixed <- readxl::read_excel('data/marburg/fixed/marburg_fixing.xlsx', sheet = "outbreaks")
-parameter_fixed <- readxl::read_excel('data/marburg/fixed/marburg_fixing.xlsx', sheet = "parameters")
+outbreak_fixed <- rio::import('data/marburg/fixed/marburg_outbreak_fixed.csv')
+parameter_fixed <- rio::import('data/marburg/fixed/marburg_parameter_fixed.csv')
 
 ## create final datasets
 outbreak_fixed <- outbreak_fixed %>%
