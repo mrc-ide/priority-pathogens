@@ -91,7 +91,7 @@ sero_table <- function(){
     bold(i = 1, bold = TRUE, part = "header") %>%
     add_footer_lines("*HAI/HI: Hemagglutination Inhibition Assay; IFA: Indirect Fluorescent Antibody assay; IgG: Immunoglobulin G; IgM: Immunoglobulin M; Unspecified assay.")
   sero_tbl
-  save_as_image(sero_tbl, path = "sero_tbl.png")
+  save_as_image(sero_tbl, path = "data/marburg/output/sero_tbl.png")
 }
 sero_table()
 
@@ -128,11 +128,11 @@ delay_table <- function(){
     autofit() %>%
     theme_booktabs() %>%
     vline(j = c(4), border = border_style) %>%
-    hline(i = ~ index_of_change == 1) %>%
+    # hline(i = ~ index_of_change == 1) %>%
     bold(i = 1, bold = TRUE, part = "header") %>%
     add_footer_lines("")
   delay_tbl
   
-  save_as_image(delay_tbl, path = "delay_tbl.png")
+  save_as_image(delay_tbl, path = "data/marburg/output/delay_tbl.png")
 }
 delay_table()
