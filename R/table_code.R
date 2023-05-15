@@ -128,7 +128,7 @@ delay_table <- function(){
     autofit() %>%
     theme_booktabs() %>%
     vline(j = c(4), border = border_style) %>%
-    # hline(i = ~ index_of_change == 1) %>%
+    hline(i = ~ index_of_change == 1) %>%
     bold(i = 1, bold = TRUE, part = "header") %>%
     add_footer_lines("")
   delay_tbl
