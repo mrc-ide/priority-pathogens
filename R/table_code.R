@@ -117,7 +117,7 @@ delay_table <- function(){
              `Disaggregated data\navailable` = method_disaggregated_by,
              # `Risk factor outcome` = riskfactor_outcome
              )) %>%
-    arrange(Country, `Survey year`, `Parameter type`) %>%
+    arrange(`Parameter type`, Country, `Survey year`) %>%
     group_by(Country) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
