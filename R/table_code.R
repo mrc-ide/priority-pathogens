@@ -149,6 +149,32 @@ delay_table <- function(){
     add_footer_lines("")
   delay_tbl
   
+  delay_latex <- df %>%
+    filter(parameter_class == 'Human delay') %>%
+    mutate(parameter_type = str_to_title(str_replace(parameter_type, 'Human delay - ', ''))) %>%
+    select(c(Article = article_label, 
+             Country = population_country, 
+             `Survey year`, 
+             `Parameter type` = parameter_type, 
+             `Delays (days)` = parameter_value, 
+             Statistic = parameter_value_type,
+             Uncertainty,
+             `Uncertainty type` = parameter_uncertainty_type,
+             `Population Group` = population_group,
+             `Timing of survey` = method_moment_value,
+             Outcome = riskfactor_outcome,
+             `Disaggregated data\navailable` = method_disaggregated_by,
+             # `Risk factor outcome` = riskfactor_outcome
+    )) %>%
+    arrange(`Parameter type`, Country, `Survey year`) %>%
+    group_by(Country) %>%
+    mutate(index_of_change = row_number(),
+           index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
+    mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% dplyr::select(-c(index_of_change)) %>%
+    gt() %>% 
+    as_latex() %>% as.character()
+  
   save_as_image(delay_tbl, path = "data/marburg/output/delay_tbl.png")
+  writeLines(delay_latex, "data/marburg/output/delay_latex_tbl.txt")
 }
 delay_table()
