@@ -9,6 +9,7 @@ library(dplyr)
 library(flextable)
 library(scales)
 library(stringr)
+library(gt)
 
 par_final <- read.csv("data/marburg/final/parameter_final.csv")
 article_df <- read.csv("data/marburg/final/article_final.csv")
@@ -73,7 +74,7 @@ sero_table <- function(){
   
   multicountry <- sero_tbl[which(sero_tbl$Country == "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon"),]
   
-  sero_tbl <- sero_tbl %>%
+  sero_flextable_tbl <- sero_tbl %>%
     filter(!Country == "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon") %>%
     arrange(Country, `Survey year`, `Parameter type*`) %>%
     rbind(multicountry) %>%
@@ -90,8 +91,23 @@ sero_table <- function(){
     hline(i = ~ index_of_change == 1) %>%
     bold(i = 1, bold = TRUE, part = "header") %>%
     add_footer_lines("*HAI/HI: Hemagglutination Inhibition Assay; IFA: Indirect Fluorescent Antibody assay; IgG: Immunoglobulin G; IgM: Immunoglobulin M; Unspecified assay.")
-  sero_tbl
-  save_as_image(sero_tbl, path = "data/marburg/output/sero_tbl.png")
+  sero_flextable_tbl
+  save_as_image(sero_flextable_tbl, path = "data/marburg/output/sero_tbl.png")
+  
+  sero_latex <- sero_tbl %>%
+    filter(!Country == "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon") %>%
+    arrange(Country, `Survey year`, `Parameter type*`) %>%
+    rbind(multicountry) %>%
+    group_by(Country) %>%
+    mutate(index_of_change = row_number(),
+           index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>% 
+    mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% dplyr::select(-c(parameter_class,index_of_change)) %>%
+    gt() %>% 
+    tab_source_note(
+      source_note = "*HAI/HI: Hemagglutination Inhibition Assay; IFA: Indirect Fluorescent Antibody assay; IgG: Immunoglobulin G; IgM: Immunoglobulin M; Unspecified assay.") %>%
+    as_latex() %>% as.character()
+  
+  writeLines(sero_latex, "data/marburg/output/sero_latex_tbl.txt")
 }
 sero_table()
 
