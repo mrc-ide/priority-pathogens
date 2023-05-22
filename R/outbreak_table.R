@@ -1,6 +1,7 @@
 ## outbreak table
 library(tidyverse)
 library(flextable)
+library(gt)
 
 ## only rerun if we want to recreate the final datasets 
 REGENERATE_DATA <- FALSE
@@ -103,5 +104,39 @@ outbreak_table <- function(){
     hline(i = ~ index_of_change == 1) %>%
     bold(i = 1, bold = TRUE, part = "header") 
   save_as_image(outbreak_tbl, path = "data/marburg/output/outbreak_tbl.png")
+  
+  outbreak_latex_tbl <- df %>%
+    select(c(article_label, outbreak_start_day, outbreak_start_month, outbreak_start_year,
+             outbreak_end_day, outbreak_end_month, outbreak_date_year, 
+             outbreak_country, outbreak_location, 
+             cases_confirmed, cases_suspected, cases_asymptomatic, cases_mode_detection,
+             cases_severe_hospitalised, deaths)) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(outbreak_start = date_start(start_day = outbreak_start_day,
+                                              start_month = outbreak_start_month,
+                                              start_year = outbreak_start_year), 
+                  outbreak_end = date_end(end_day = outbreak_end_day,
+                                          end_month = outbreak_end_month,
+                                          end_year = outbreak_date_year))%>%
+    dplyr::arrange(outbreak_country, outbreak_start) %>%
+    dplyr::select(Country = outbreak_country,
+                  Location = outbreak_location,
+                  Article = article_label,
+                  Start = outbreak_start, 
+                  End = outbreak_end, 
+                  "Confirmed Cases" = cases_confirmed,
+                  "Confirmation Method" = cases_mode_detection, 
+                  "Suspected Cases" = cases_suspected,
+                  "Asymptomatic Cases" = cases_asymptomatic,
+                  "Severe/hospitalised Cases" = cases_severe_hospitalised,
+                  Deaths = deaths) %>%
+    group_by(Country) %>%
+    mutate(index_of_change = row_number(),
+           index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
+    mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% dplyr::select(-c(index_of_change)) %>%
+    gt() %>% 
+    as_latex() %>% as.character()
+  
+  writeLines(outbreak_latex_tbl, "data/marburg/output/outbreak_latex_tbl.txt")
 }
 outbreak_table()
