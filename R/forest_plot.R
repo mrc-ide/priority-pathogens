@@ -45,11 +45,15 @@ forest_plot_fr <- function(df) {
   ## ensuring that each entry is on it's own line
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
   
-  plot <- ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
+  ## sorry team this is also hacky but I'm gonna scream if these points don't go where we want them 
+  df_plot <- df_plot %>% mutate(order_num = seq(1,5,1))
+  
+  
+  plot <- ggplot(df_plot, aes(x=parameter_value, y=reorder(article_label_unique,-order_num), 
                               col = cfr_ifr_method)) + 
     theme_bw() + geom_point(size = 2) +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
-    facet_grid(cfr_ifr_method ~ ., scales = "free", space = "free") +
+    #facet_grid(cfr_ifr_method ~ ., scales = "free", space = "free") +
     geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
                       linetype="Parameter range"),
@@ -61,16 +65,30 @@ forest_plot_fr <- function(df) {
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
                   width=0.25) +
-    labs(x="Case fatality ratio",y="Study (First author surname and publication year)",
-         linetype="",colour="") + 
-    scale_linetype_manual(values = c("dotted","solid"))+
+    labs(x="Case fatality ratio (%)",y="Study",
+         linetype="",colour="",fill="") + 
     theme(legend.position="bottom",
           strip.text = element_text(size=12)) +
-    xlim(c(0, 100)) 
+    xlim(c(0, 100)) +
+    scale_colour_viridis_d(begin=0.1,end=0.9)+
+    guides(colour = guide_legend(order=1,nrow=3),
+           linetype = guide_legend(order=2,nrow=2))+
+    geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed")+
+    geom_rect(xmin=unique(df_cfr$pooled_low),xmax=unique(df_cfr$pooled_upp),
+              ymin=-Inf,ymax=Inf,alpha=0.1,col=NA,fill="grey"#,aes(fill="CFR - pooled 95% CI")
+              )+
+    scale_linetype_manual(values = c("dotted","solid"))+
+    scale_fill_manual(values="grey")
   
   return(plot)
   
 }
+
+
+severity <- forest_plot_fr(df)
+severity
+ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",
+       width = 15, height = 10, units = "cm")
 
 ## reproduction numbers
 forest_plot_R <- function(df){
@@ -107,12 +125,15 @@ forest_plot_R <- function(df){
     geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),size = 2)+
     # geom_vline(aes(xintercept=median,col="Sample median"),linetype="dashed", colour = "grey") +
     geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey") +
-    labs(x="Reproduction number",y="Study (First author surname and publication year)",linetype="",colour="")+
+    labs(x="Reproduction number",y="Study",linetype="",colour="")+
     scale_linetype_manual(values = c("dotted","solid"))+
-    scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
+    #scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
+    scale_colour_manual(values=c("#1e2761","#408ec6"))+
     theme(legend.position="bottom",
           legend.text = element_text(size=10),
-          strip.text = element_text(size=12)) + xlim(c(0,2)) 
+          strip.text = element_text(size=12)) + xlim(c(0,2)) +
+    guides(colour = guide_legend(order=1,nrow=2),
+           linetype = guide_legend(order=2,nrow=2))
   
   return(plot)
   
@@ -220,11 +241,14 @@ forest_plot_mutations <- function(df){
                       linetype="Uncertainty interval"),
                   width = 0.8) +
     labs(x=expression(Molecular~evolutionary~rate~(substitution/site/year ~10^{-4})),
-         y="Study (First author surname and publication year)",
+         y="Study",
          linetype="",colour="") + 
     scale_linetype_manual(values = c("dashed","solid")) + #+ scale_x_log10()
-    geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
-    theme(legend.position = "bottom", legend.direction = "horizontal")
+    #geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
+    theme(legend.position = "bottom", legend.direction = "horizontal")+
+    scale_colour_viridis_d(option="magma",end=0.8)+
+    guides(colour = guide_legend(order=1,nrow=2),
+           linetype = guide_legend(order=2,nrow=2))
   
   
   
@@ -239,19 +263,19 @@ ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg =
 mutations <- forest_plot_mutations(df)
 mutations
 ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white",
-       width = 25, height = 15, units = "cm")
+       width = 15, height = 10, units = "cm")
 
 
 reproduction_number <- forest_plot_R(df)
 reproduction_number
 ggsave(plot = reproduction_number,filename="data/marburg/output/FP_reproduction_number.png",bg = "white",
-       width = 25, height = 15, units = "cm")
+       width = 15, height = 10, units = "cm")
 
 
 severity <- forest_plot_fr(df)
 severity
 ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",
-       width = 25, height = 15, units = "cm")
+       width = 15, height = 10, units = "cm")
 
 # ## the only figure that doesn't yet have a custom figure -- I think this is 
 # # better as a table regardless?
