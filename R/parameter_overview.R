@@ -25,8 +25,8 @@ ggplot(parameter_df, aes(x = parameter_type, col = parameter_class, fill = param
   guides(fill = guide_legend(title="Parameter Classification"), 
          col = guide_legend(title="Parameter Classification")) + 
   scale_y_continuous(breaks = seq(0, 10, by = 2))+
-  scale_fill_viridis_d(option = "magma",end=0.95)+
-  scale_colour_viridis_d(option="magma",end=0.95)
+  scale_fill_viridis_d(option = "magma",begin=0.15,end=0.95)+
+  scale_colour_viridis_d(option="magma",begin=0.15,end=0.95)
 
 ggsave(filename="data/marburg/output/parameter_overview.png",bg = "white",
        width = 15, height = 10, units = "cm")
