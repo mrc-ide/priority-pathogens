@@ -9,6 +9,7 @@ if(REGENERATE_DATA) source("R/script.R")              #only rerun this if we wan
 
 library(ggplot2)
 library(tidyverse)
+library(patchwork)
 
 df <- read.csv("data/marburg/final/parameter_final.csv")
 article_df <- read.csv("data/marburg/final/article_final.csv")
@@ -51,24 +52,26 @@ forest_plot_fr <- function(df) {
   
   plot <- ggplot(df_plot, aes(x=parameter_value, y=reorder(article_label_unique,-order_num), 
                               col = cfr_ifr_method)) + 
-    theme_bw() + geom_point(size = 2) +
+    theme_bw() + geom_point(size = 3) +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     #facet_grid(cfr_ifr_method ~ ., scales = "free", space = "free") +
-    geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
-                      group=parameter_data_id,
-                      linetype="Parameter range"),
-                  position=position_dodge(width=0.5),
-                  width=0.25) +
+    # geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
+    #                   group=parameter_data_id,
+    #                   linetype="Parameter range"),
+    #               position=position_dodge(width=0.5),
+    #               width=0.25) +
     geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
-                  width=0.25) +
-    labs(x="Case fatality ratio (%)",y="Study",
+                  width=0.25,
+                  linewidth=1) +
+    labs(x="Case fatality ratio (%)",y="",#y="Study",
          linetype="",colour="",fill="") + 
     theme(legend.position="bottom",
-          strip.text = element_text(size=12)) +
+          legend.text = element_text(size=12),
+          strip.text = element_text(size=20)) +
     xlim(c(0, 100)) +
     scale_colour_viridis_d(begin=0.1,end=0.9)+
     guides(colour = guide_legend(order=1,nrow=3),
@@ -77,7 +80,7 @@ forest_plot_fr <- function(df) {
     geom_rect(xmin=unique(df_cfr$pooled_low),xmax=unique(df_cfr$pooled_upp),
               ymin=-Inf,ymax=Inf,alpha=0.1,col=NA,fill="grey"#,aes(fill="CFR - pooled 95% CI")
               )+
-    scale_linetype_manual(values = c("dotted","solid"))+
+    scale_linetype_manual(values = c("solid"))+
     scale_fill_manual(values="grey")
   
   return(plot)
@@ -87,8 +90,7 @@ forest_plot_fr <- function(df) {
 
 severity <- forest_plot_fr(df)
 severity
-ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",
-       width = 15, height = 10, units = "cm")
+#ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",width = 15, height = 10, units = "cm")
 
 ## reproduction numbers
 forest_plot_R <- function(df){
@@ -111,27 +113,29 @@ forest_plot_R <- function(df){
     ggplot(df_plot, aes(x = parameter_value, y = article_label_unique, col = parameter_type))+
     theme_bw()+
     # scale_x_continuous(breaks = seq(0, 2, by = 0.2))+
-    geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
-                      group=parameter_data_id,
-                      linetype="Parameter range"),
-                  position=position_dodge(width=0.5),
-                  width=0.25)+
+    # geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
+    #                   group=parameter_data_id,
+    #                   linetype="Parameter range"),
+    #               position=position_dodge(width=0.5),
+    #               width=0.25)+
     geom_errorbar(aes(y=article_label,
                       xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
-                  width=0.25)+
-    geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),size = 2)+
+                  width=0.25,
+                  linewidth=1)+
+    geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),size = 3)+
     # geom_vline(aes(xintercept=median,col="Sample median"),linetype="dashed", colour = "grey") +
     geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey") +
-    labs(x="Reproduction number",y="Study",linetype="",colour="")+
-    scale_linetype_manual(values = c("dotted","solid"))+
+    labs(x="Reproduction number",y="",#y="Study",
+         linetype="",colour="")+
+    scale_linetype_manual(values = c("solid"))+
     #scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
     scale_colour_manual(values=c("#1e2761","#408ec6"))+
     theme(legend.position="bottom",
-          legend.text = element_text(size=10),
-          strip.text = element_text(size=12)) + xlim(c(0,2)) +
+          legend.text = element_text(size=12),
+          strip.text = element_text(size=20)) + xlim(c(0,2)) +
     guides(colour = guide_legend(order=1,nrow=2),
            linetype = guide_legend(order=2,nrow=2))
   
@@ -164,27 +168,34 @@ forest_plot_delay <- function(df){
   plot <-
     ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
                               col = parameter_type)) + 
-    theme_bw() + geom_point(size = 2) +
+    theme_bw() + geom_point(size = 3) +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     # facet_wrap(parameter_type ~ ., scales = "free",  strip.position = "top", ncol = 1) +
     geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
                       group=parameter_data_id,
                       linetype="Parameter range"),
                   # position=position_dodge(width=0.5),
-                  width=0.4) +
+                  width=0.4,
+                  linewidth=1) +
     geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   # position=position_dodge(width=0.5),
-                  width = 0.4) +
-    labs(x="Delay (days)",y="Study (First author surname and publication year)",
+                  width = 0.4,
+                  linewidth=1) +
+    labs(x="Delay (days)", y="",#y="Study (First author surname and publication year)",
          linetype="",colour="") + 
     scale_linetype_manual(values = c("dotted","solid")) +
     scale_colour_discrete(labels = c("Incubation period", 
                                      "Time in care",
                                      "Symptom to careseeking",
-                                     "Symptom to outcome")) 
+                                     "Symptom to outcome")) +
+    theme(legend.position="bottom",
+          legend.text = element_text(size=12),
+          strip.text = element_text(size=20)) + xlim(c(0,56)) +
+    guides(colour = guide_legend(order=1,nrow=2),
+           linetype = guide_legend(order=2,nrow=2)) 
 
   
   
@@ -225,7 +236,7 @@ forest_plot_mutations <- function(df){
   plot <-
     ggplot(df_plot, aes(x=(parameter_value * 1e04), y=article_label_unique, 
                                col = gene)) + 
-    theme_bw() + geom_point(size = 2) +
+    theme_bw() + geom_point(size = 3) +
     # facet_grid(gene ~ ., scales = "free_y", space = "free") +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     geom_errorbar(aes(y=article_label_unique,
@@ -233,49 +244,53 @@ forest_plot_mutations <- function(df){
                                    (parameter_value - parameter_uncertainty_single_value)* 1e04),
                       xmax=(parameter_value + parameter_uncertainty_single_value)* 1e04,
                       group=parameter_data_id,
-                      linetype="Value \u00B1 standard error *"), width=0.8) +
+                      linetype="Value \u00B1 standard error *"), width=0.8,
+                  linewidth=1) +
     geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value* 1e04,
                       xmax=parameter_uncertainty_upper_value* 1e04,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
-                  width = 0.8) +
+                  width = 0.8,
+                  linewidth=1) +
     labs(x=expression(Molecular~evolutionary~rate~(substitution/site/year ~10^{-4})),
-         y="Study",
+         y="",#y="Study",
          linetype="",colour="") + 
     scale_linetype_manual(values = c("dashed","solid")) + #+ scale_x_log10()
     #geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
-    theme(legend.position = "bottom", legend.direction = "horizontal")+
+    theme(legend.position="bottom",
+          legend.text = element_text(size=12),
+          strip.text = element_text(size=20)) + xlim(c(0,9)) +
     scale_colour_viridis_d(option="magma",end=0.8)+
     guides(colour = guide_legend(order=1,nrow=2),
            linetype = guide_legend(order=2,nrow=2))
   
-  
-  
+  return(plot)
 }
 
 
 human_delay <- forest_plot_delay(df)
 human_delay
-ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white",
-       width = 25, height = 15, units = "cm")
+#ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white",width = 25, height = 15, units = "cm")
 
 mutations <- forest_plot_mutations(df)
 mutations
-ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white",
-       width = 15, height = 10, units = "cm")
+#ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white",width = 15, height = 10, units = "cm")
 
 
 reproduction_number <- forest_plot_R(df)
 reproduction_number
-ggsave(plot = reproduction_number,filename="data/marburg/output/FP_reproduction_number.png",bg = "white",
-       width = 15, height = 10, units = "cm")
+#ggsave(plot = reproduction_number,filename="data/marburg/output/FP_reproduction_number.png",bg = "white",width = 15, height = 10, units = "cm")
 
 
 severity <- forest_plot_fr(df)
 severity
-ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",
-       width = 15, height = 10, units = "cm")
+#ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",width = 15, height = 10, units = "cm")
+
+
+panel_plot <- (reproduction_number + ggtitle("A") + severity + ggtitle("B")) / (human_delay + ggtitle("C") + mutations + ggtitle("D"))
+ggsave(plot = panel_plot,filename="data/marburg/output/panel_plot.png",bg = "white",width = 15, height=10)
+
 
 # ## the only figure that doesn't yet have a custom figure -- I think this is 
 # # better as a table regardless?
