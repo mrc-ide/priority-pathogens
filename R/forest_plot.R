@@ -10,6 +10,7 @@ if(REGENERATE_DATA) source("R/script.R")              #only rerun this if we wan
 library(ggplot2)
 library(tidyverse)
 library(patchwork)
+library(cowplot)
 
 df <- read.csv("data/marburg/final/parameter_final.csv")
 article_df <- read.csv("data/marburg/final/article_final.csv")
@@ -66,31 +67,27 @@ forest_plot_fr <- function(df) {
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
                   width=0.25,
-                  linewidth=1) +
+                  lwd=1) +
     labs(x="Case fatality ratio (%)",y="",#y="Study",
          linetype="",colour="",fill="") + 
     theme(legend.position="bottom",
           legend.text = element_text(size=12),
           strip.text = element_text(size=20)) +
     xlim(c(0, 100)) +
-    scale_colour_viridis_d(begin=0.1,end=0.9)+
+    scale_colour_viridis_d(option="inferno",begin=0.2,end=0.8)+
     guides(colour = guide_legend(order=1,nrow=3),
            linetype = guide_legend(order=2,nrow=2))+
     geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed")+
     geom_rect(xmin=unique(df_cfr$pooled_low),xmax=unique(df_cfr$pooled_upp),
               ymin=-Inf,ymax=Inf,alpha=0.1,col=NA,fill="grey"#,aes(fill="CFR - pooled 95% CI")
               )+
-    scale_linetype_manual(values = c("solid"))+
+    scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
     scale_fill_manual(values="grey")
   
   return(plot)
   
 }
 
-
-severity <- forest_plot_fr(df)
-severity
-#ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",width = 15, height = 10, units = "cm")
 
 ## reproduction numbers
 forest_plot_R <- function(df){
@@ -109,8 +106,13 @@ forest_plot_R <- function(df){
   
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
   
+  df_plot <- df_plot %>% mutate(parameter_type_short = 
+                                  ifelse(parameter_type=="Reproduction number (Basic R0)",
+                                                             "Basic (R0)",
+                                                             ifelse(parameter_type=="Reproduction number (Effective, Re)","Effective (Re)",NA)))
+  
   plot <-
-    ggplot(df_plot, aes(x = parameter_value, y = article_label_unique, col = parameter_type))+
+    ggplot(df_plot, aes(x = parameter_value, y = article_label_unique, col = parameter_type_short))+
     theme_bw()+
     # scale_x_continuous(breaks = seq(0, 2, by = 0.2))+
     # geom_errorbar(aes(y=article_label,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
@@ -124,13 +126,13 @@ forest_plot_R <- function(df){
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
                   width=0.25,
-                  linewidth=1)+
+                  lwd=1)+
     geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),size = 3)+
     # geom_vline(aes(xintercept=median,col="Sample median"),linetype="dashed", colour = "grey") +
     geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey") +
     labs(x="Reproduction number",y="",#y="Study",
          linetype="",colour="")+
-    scale_linetype_manual(values = c("solid"))+
+    scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
     #scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
     scale_colour_manual(values=c("#1e2761","#408ec6"))+
     theme(legend.position="bottom",
@@ -152,8 +154,8 @@ forest_plot_delay <- function(df){
     dplyr::filter(parameter_class == parameter) %>%
     dplyr::mutate(parameter_value = as.numeric(parameter_value)) %>%
     dplyr::group_by(parameter_type) %>%
-    dplyr::arrange(first_author_first_name) %>%
-    dplyr::filter(parameter_type != "Human delay - generation time")
+    dplyr::arrange(first_author_first_name) #%>%
+    #dplyr::filter(parameter_type != "Human delay - generation time")
   
   df_plot <- df_delay %>% 
     dplyr::filter(parameter_class == parameter) %>%
@@ -165,9 +167,18 @@ forest_plot_delay <- function(df){
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
   df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
   
+  df_plot <- df_plot %>% 
+    mutate(parameter_type_short = ifelse(parameter_type=="Human delay - generation time","Generation time",
+                                         ifelse(parameter_type=="Human delay - incubation period",
+                                                "Incubation period",
+                                                ifelse(parameter_type=="Human delay - time in care","Time in care",
+                                                       ifelse(parameter_type=="Human delay - time symptom to careseeking","Time symptom to careseeking",
+                                                              ifelse(parameter_type=="Human delay - time symptom to outcome","Time symptom to outcome",NA)))))
+  )
+  
   plot <-
     ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
-                              col = parameter_type)) + 
+                              col = parameter_type_short)) + 
     theme_bw() + geom_point(size = 3) +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
     # facet_wrap(parameter_type ~ ., scales = "free",  strip.position = "top", ncol = 1) +
@@ -176,25 +187,26 @@ forest_plot_delay <- function(df){
                       linetype="Parameter range"),
                   # position=position_dodge(width=0.5),
                   width=0.4,
-                  linewidth=1) +
+                  lwd=1) +
     geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   # position=position_dodge(width=0.5),
                   width = 0.4,
-                  linewidth=1) +
+                  lwd=1) +
     labs(x="Delay (days)", y="",#y="Study (First author surname and publication year)",
          linetype="",colour="") + 
-    scale_linetype_manual(values = c("dotted","solid")) +
-    scale_colour_discrete(labels = c("Incubation period", 
-                                     "Time in care",
-                                     "Symptom to careseeking",
-                                     "Symptom to outcome")) +
+    scale_linetype_manual(values = c("dotted","solid"),labels = function(x) str_wrap(x, width = 5)) +
+    scale_colour_viridis_d(end=0.9,labels = function(x) str_wrap(x, width = 18))+
+    # scale_colour_discrete(labels = c("Incubation period",
+    #                                  "Time in care",
+    #                                  "Symptom to careseeking",
+    #                                  "Symptom to outcome")) +
     theme(legend.position="bottom",
           legend.text = element_text(size=12),
           strip.text = element_text(size=20)) + xlim(c(0,56)) +
-    guides(colour = guide_legend(order=1,nrow=2),
+    guides(colour = guide_legend(order=1,nrow=3),
            linetype = guide_legend(order=2,nrow=2)) 
 
   
@@ -245,23 +257,23 @@ forest_plot_mutations <- function(df){
                       xmax=(parameter_value + parameter_uncertainty_single_value)* 1e04,
                       group=parameter_data_id,
                       linetype="Value \u00B1 standard error *"), width=0.8,
-                  linewidth=1) +
+                  lwd=1) +
     geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value* 1e04,
                       xmax=parameter_uncertainty_upper_value* 1e04,
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   width = 0.8,
-                  linewidth=1) +
+                  lwd=1) +
     labs(x=expression(Molecular~evolutionary~rate~(substitution/site/year ~10^{-4})),
          y="",#y="Study",
          linetype="",colour="") + 
-    scale_linetype_manual(values = c("dashed","solid")) + #+ scale_x_log10()
+    scale_linetype_manual(values = c("dashed","solid"),labels = function(x) str_wrap(x, width = 18)) + #+ scale_x_log10()
     #geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
     theme(legend.position="bottom",
           legend.text = element_text(size=12),
           strip.text = element_text(size=20)) + xlim(c(0,9)) +
-    scale_colour_viridis_d(option="magma",end=0.8)+
+    scale_colour_viridis_d(option="magma",end=0.8,labels = function(x) str_wrap(x, width = 10))+
     guides(colour = guide_legend(order=1,nrow=2),
            linetype = guide_legend(order=2,nrow=2))
   
@@ -286,6 +298,14 @@ reproduction_number
 severity <- forest_plot_fr(df)
 severity
 #ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",width = 15, height = 10, units = "cm")
+
+
+plot_grid(reproduction_number+labs(tag="A"),
+          severity+labs(tag="B"),
+          human_delay+labs(tag="C"),
+          mutations+labs(tag="D"),
+          nrow=2,align="hv",rel_heights = c(0.7,1))
+ggsave(filename="data/marburg/output/panel_plot.png",bg = "white",width = 15, height=10)
 
 
 panel_plot <- (reproduction_number + ggtitle("A") + severity + ggtitle("B")) / (human_delay + ggtitle("C") + mutations + ggtitle("D"))
