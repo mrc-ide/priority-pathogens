@@ -3,30 +3,6 @@ library(tidyverse)
 library(flextable)
 library(gt)
 
-## only rerun if we want to recreate the final datasets 
-REGENERATE_DATA <- FALSE
-
-if(REGENERATE_DATA) source("R/script.R") 
-
-df <- read.csv("data/marburg/final/outbreak_final.csv")
-article_df <- read.csv("data/marburg/final/article_final.csv")
-
-# merge with article ID to get the y-axis labels
-df <- article_df %>% dplyr::select(article_id,first_author_first_name,year_publication) %>%
-  dplyr::right_join(df, by = "article_id") %>%
-  mutate(article_label = as.character(paste0(first_author_first_name," ",year_publication)),
-         outbreak_start_month = chartr(old = "-", new = " ", x = outbreak_start_month),
-         outbreak_end_month = chartr(old = "-", new = " ", x = outbreak_end_month),
-         cases_mode_detection = if_else(cases_mode_detection == "Molecular (PCR etc)", 
-                                        "Molecular", cases_mode_detection),
-         outbreak_country = dplyr::if_else(outbreak_country == "Congo, Dem. Rep.", 
-                                           "Democratic Republic of the Congo",
-                                           outbreak_country),
-         outbreak_location = dplyr::if_else(outbreak_location == "Marburg (23), Frankfurt am Main (6), Belgrade (2)",
-                                            "Marburg, Frankfurt am Main, Belgrade",
-                                            outbreak_location)) %>%
-  dplyr::arrange(outbreak_country, outbreak_start_year) 
-
 date_start <- function(start_day, start_month, start_year) {
   start_day <- as.character(start_day)
   start_year <- as.character(start_year)
@@ -58,7 +34,7 @@ date_end <- function(end_day, end_month, end_year) {
   end_date
 }
 
-outbreak_table <- function(){
+outbreak_table <- function(df,pathogen){
   border_style = officer::fp_border(color="black", width=1)
   set_flextable_defaults(background.color = "white")
   
@@ -103,7 +79,7 @@ outbreak_table <- function(){
     vline(j = c(3, 5, 7, 10), border = border_style) %>%
     hline(i = ~ index_of_change == 1) %>%
     bold(i = 1, bold = TRUE, part = "header") 
-  save_as_image(outbreak_tbl, path = "data/marburg/output/outbreak_tbl.png")
+  save_as_image(outbreak_tbl, path = paste0("data/", pathogen,"/output/outbreak_tbl.png"))
   
   outbreak_latex_tbl <- df %>%
     select(c(article_label, outbreak_start_day, outbreak_start_month, outbreak_start_year,
@@ -137,6 +113,6 @@ outbreak_table <- function(){
     gt() %>% 
     as_latex() %>% as.character()
   
-  writeLines(outbreak_latex_tbl, "data/marburg/output/outbreak_latex_tbl.txt")
+  writeLines(outbreak_latex_tbl, paste0("data/", pathogen,"/output/outbreak_latex_tbl.txt"))
 }
-outbreak_table()
+
