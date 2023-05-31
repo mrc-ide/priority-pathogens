@@ -83,7 +83,7 @@ ggplot(parameter_df, aes(x = parameter_type_short, col = parameter_class, fill =
   scale_fill_viridis_d(option = "magma",begin=0.15,end=0.95)+
   scale_colour_viridis_d(option="magma",begin=0.15,end=0.95)
 
-ggsave(filename="data/marburg/output/parameter_overview_shortnames.png",bg = "white",
+ggsave(filename="data/marburg/output/parameter_overview_shortnames.png", bg = "white",
        width = 15, height = 10, units = "cm")
 
 
