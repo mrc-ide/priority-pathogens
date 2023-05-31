@@ -18,23 +18,6 @@ parameter_df <- parameter_df %>% dplyr::filter(!is.na(parameter_type)) %>%
 parameter_df$parameter_class <- factor(parameter_df$parameter_class, levels = unique(parameter_df$parameter_class))
 parameter_df$parameter_type <- factor(parameter_df$parameter_type, levels = unique(parameter_df$parameter_type))
 
-ggplot(parameter_df, aes(x = parameter_type, col = parameter_class, fill = parameter_class)) + 
-  geom_bar() + theme_bw() +
-  theme(axis.text.x = element_text(angle = 315, vjust = 0, hjust=0)) +
-  labs(x = "Parameter", y = "Number extracted") + 
-  guides(fill = guide_legend(title="Parameter Classification"), 
-         col = guide_legend(title="Parameter Classification")) + 
-  scale_y_continuous(breaks = seq(0, 10, by = 2))+
-  scale_fill_viridis_d(option = "magma",begin=0.15,end=0.95)+
-  scale_colour_viridis_d(option="magma",begin=0.15,end=0.95)
-
-ggsave(filename="data/marburg/output/parameter_overview.png",bg = "white",
-       width = 15, height = 10, units = "cm")
-
-
-
-### wanted a version with shorter parameter types
-
 parameter_df <- parameter_df %>%
   mutate(parameter_type_short = ifelse(parameter_type=="Human delay - time symptom to careseeking",
                                        "Time symptom to careseeking",
@@ -73,15 +56,23 @@ parameter_df <- parameter_df %>%
                                                 "Case fatality ratio (CFR)")))
 
 
-ggplot(parameter_df, aes(x = parameter_type_short, col = parameter_class, fill = parameter_class)) + 
-  geom_bar() + theme_bw() +
-  theme(axis.text.x = element_text(angle = 315, vjust = 0, hjust=0)) +
-  labs(x = "Parameter", y = "Number extracted") + 
-  guides(fill = guide_legend(title="Parameter Classification"), 
-         col = guide_legend(title="Parameter Classification")) + 
+ggplot(parameter_df) + 
+  geom_bar(aes(x = parameter_type_short, fill = parameter_class), color = 'black', linewidth = 0.3) + 
+  labs(x = "Parameter", 
+       y = "Number extracted") + 
+  guides(fill = guide_legend(title="Parameter Classification")) + 
   scale_y_continuous(breaks = seq(0, 10, by = 2))+
-  scale_fill_viridis_d(option = "magma",begin=0.15,end=0.95)+
-  scale_colour_viridis_d(option="magma",begin=0.15,end=0.95)
+  scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95)+
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid.minor = element_line(linewidth = 0.2), 
+        panel.grid.major = element_line(linewidth = 0.2),
+        legend.position = c(0.75, 0.35),
+        legend.title = element_text(size = 8), 
+        legend.text  = element_text(size = 8),
+        legend.key.size = unit(0.65, "lines"),
+        legend.background = element_rect(fill = "transparent", colour = "transparent"))
+  
 
 ggsave(filename="data/marburg/output/parameter_overview_shortnames.png", bg = "white",
        width = 15, height = 10, units = "cm")
