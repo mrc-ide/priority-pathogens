@@ -3,7 +3,10 @@
 # shapes for different assays
 
 #' input: cleaned outbreaks dataset, cleaned parameter dataset, admin boundaries 
-source("R/script.R")
+REGENERATE_DATA <- FALSE
+
+if(REGENERATE_DATA) source("R/marburg/script_marburg.R")              #only rerun this if we want to re-generate the marburg files (rather than rewriting this every time) 
+
 library(sf)
 library(dplyr)
 library(tidyr)
