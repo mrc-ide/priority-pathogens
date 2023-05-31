@@ -11,3 +11,8 @@ create_data_subfolders <- function(pathogen)
   dir.create(paste0("data/", pathogen,"/raw/"), showWarnings = FALSE, recursive = TRUE)
 }
 
+create_R_subfolders <- function(pathogen)
+{
+  ## Ensure that output directories exist
+  dir.create(paste0("R/", pathogen), showWarnings = FALSE, recursive = TRUE)
+}
