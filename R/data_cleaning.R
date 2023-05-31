@@ -40,7 +40,7 @@ clean_dfs <- function(df, column_name){
   return(df)
 }
 
-get_details <- function(article_df, double_vec){
+get_details <- function(article_df, double_vec, article_id = "article_id"){
   #' input: article data frame
   #' process: pulls out the covidence ID, article ID, and name of extractor and if duplicated
   #' output: df with 4 columns
@@ -51,9 +51,9 @@ get_details <- function(article_df, double_vec){
   return(df)
 }
 
-add_details <- function(df, detail) {
+add_details <- function(df, details, article_id = "article_id") {
   df <- df %>%
-    left_join(details, by = 'article_id')
+    left_join(details, by = article_id)
   return(df)
 }
 
