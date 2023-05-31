@@ -1,8 +1,8 @@
-# FUnction to produce table
+# Function to produce table
 
 REGENERATE_DATA <- FALSE
 
-if(REGENERATE_DATA) source("R/script.R")
+if(REGENERATE_DATA) source("R/marburg/script_marburg.R")              #only rerun this if we want to re-generate the marburg files (rather than rewriting this every time) 
 
 library(ggplot2)
 library(dplyr)
