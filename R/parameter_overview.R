@@ -1,8 +1,10 @@
 ## script to compare an overview of the parameter values, types of each 
 # parameters and what we do and do not currently know
 
-plot_param_overview <- function(parameter_df){
+plot_param_overview <- function(parameter_df, pathogen){
   #' input: final parameter dataset; e.g. parameter_df <- read.csv("data/marburg/final/parameter_final.csv")
+  #'        pathogen name 
+  #' output: plot with pathogen class and number of papers      
   library(ggplot2)
   library(tidyverse)
   
@@ -56,7 +58,7 @@ plot_param_overview <- function(parameter_df){
           legend.background = element_rect(fill = "transparent", colour = "transparent"))
   
   
-  ggsave(filename="data/marburg/output/parameter_overview_shortnames.png", bg = "white",
+  ggsave(filename=paste0("data/", pathogen,"/output/parameter_overview_shortnames.png", bg = "white",
          width = 15, height = 10, units = "cm")
 }
 
