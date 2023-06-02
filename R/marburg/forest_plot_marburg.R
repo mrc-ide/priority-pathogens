@@ -7,10 +7,7 @@ REGENERATE_DATA <- FALSE
 
 if(REGENERATE_DATA) source("R/marburg/script_marburg.R")              #only rerun this if we want to re-generate the marburg files (rather than rewriting this every time) 
 
-library(ggplot2)
-library(tidyverse)
-library(patchwork)
-library(cowplot)
+source("R/forest_plot.R")
 
 df <- read.csv("data/marburg/final/parameter_final.csv")
 article_df <- read.csv("data/marburg/final/article_final.csv")

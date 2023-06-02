@@ -48,20 +48,20 @@ clean_dfs <- function(df, column_name){
   return(df)
 }
 
-get_details <- function(article_df, double_vec, article_id = "article_id"){
+get_details <- function(article_df, double_vec, article_id_opt = "article_id"){
   #' input: article data frame
   #' process: pulls out the covidence ID, article ID, and name of extractor and if duplicated
   #' output: df with 4 columns
   df <- article_df %>%
-    dplyr::select(c(article_id, covidence_id, name_data_entry)) %>%
+    dplyr::select(c(article_id_opt, covidence_id, name_data_entry)) %>%
     dplyr::mutate(double_extracted = ifelse(covidence_id %in% double_vec, 1, 0)) 
   
   return(df)
 }
 
-add_details <- function(df, details, article_id = "article_id") {
+add_details <- function(df, details, article_id_opt = "article_id") {
   df <- df %>%
-    left_join(details, by = article_id)
+    left_join(details, by = article_id_opt)
   return(df)
 }
 
