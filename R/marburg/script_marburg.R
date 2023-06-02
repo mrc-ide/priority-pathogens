@@ -1,9 +1,9 @@
 source('R/data_cleaning.R')
 
-article_raw <- import('data/marburg/raw/marburg_article_raw.xlsx')
-model_raw <- import('data/marburg/raw/marburg_model_raw.xlsx')
-outbreak_raw <- import('data/marburg/raw/marburg_outbreak_raw.xlsx')
-parameter_raw <- import('data/marburg/raw/marburg_parameter_raw.xlsx')
+article_raw <- import('data/marburg/raw/marburg_article_new.xlsx')
+model_raw <- import('data/marburg/raw/marburg_model_new.xlsx')
+outbreak_raw <- import('data/marburg/raw/marburg_outbreak_new.xlsx')
+parameter_raw <- import('data/marburg/raw/marburg_parameter_new.xlsx')
 
 real_duplicate <- article_raw %>% filter(duplicated(Covidence_ID)) %>% pull(var = Covidence_ID)
 
