@@ -1,43 +1,11 @@
 source('R/data_cleaning.R')
 
-article_raw <- import('data/marburg/raw/marburg_article.xlsx')
-model_raw <- import('data/marburg/raw/marburg_model.xlsx')
-outbreak_raw <- import('data/marburg/raw/marburg_outbreak.xlsx')
-parameter_raw <- readxl::read_xlsx('data/marburg/raw/marburg_parameter.xlsx')
+article_raw <- import('data/marburg/raw/marburg_article_raw.xlsx')
+model_raw <- import('data/marburg/raw/marburg_model_raw.xlsx')
+outbreak_raw <- import('data/marburg/raw/marburg_outbreak_raw.xlsx')
+parameter_raw <- import('data/marburg/raw/marburg_parameter_raw.xlsx')
 
-# Editing specific entries
-parameter_raw <- parameter_raw %>%
-  janitor::clean_names() %>%
-  mutate(parameter_type = ifelse(parameter_data_id == 54, 'Risk factor', parameter_type),
-         # Format the start/stop months
-         population_study_start_month = substring(population_study_start_month, 1, 3),
-         population_study_end_month = substring(population_study_end_month, 1, 3),
-         # fixing missing month/year 
-         population_study_start_month = ifelse((article_id == 57), 'Oct', population_study_start_month),
-         population_study_end_month = ifelse((article_id == 57), 'Sep', population_study_end_month),
-         population_study_start_year = ifelse((article_id == 57), '1998', population_study_start_year),
-         population_study_end_year = ifelse((article_id == 57), '2000', population_study_end_year),
-         # Format survey year
-         `Survey year` = ifelse(population_study_start_year == population_study_end_year & !is.na(population_study_start_month) & !is.na(population_study_end_month),
-                                paste0(population_study_start_month, "-", population_study_end_month, " ", population_study_start_year),
-                                ifelse(population_study_start_year != population_study_end_year, 
-                                       paste0(population_study_start_year,"-", population_study_end_year), population_study_start_year)),
-         # fixing mislabeling of range
-         parameter_uncertainty_type = ifelse((article_id == 57 & parameter_data_id == 89) | 
-                                               (article_id == 7 & parameter_data_id == 78), 'Range', parameter_uncertainty_type),
-         # fixing missing country 
-         population_country = ifelse(article_id == 58 | article_id == 57, 'Democratic Republic of the Congo', 
-                                     ifelse(article_id == 6, 'South Africa', population_country)),
-         # combining range and uncertainty range
-         parameter_uncertainty_type = ifelse(!is.na(parameter_upper_bound) & is.na(parameter_uncertainty_upper_value), 'Range', parameter_uncertainty_type),
-         parameter_uncertainty_upper_value = ifelse(!is.na(parameter_upper_bound) & is.na(parameter_uncertainty_upper_value), parameter_upper_bound, parameter_uncertainty_upper_value),
-         parameter_uncertainty_lower_value = ifelse(!is.na(parameter_lower_bound) & is.na(parameter_uncertainty_lower_value), parameter_lower_bound, parameter_uncertainty_lower_value),
-         Uncertainty = ifelse(parameter_uncertainty_type == 'CI95%', paste0(parameter_uncertainty_lower_value, ", ", parameter_uncertainty_upper_value),
-                              ifelse(parameter_uncertainty_type %in% c('Range', 'Highest Posterior Density Interval 95%'), paste0(parameter_uncertainty_lower_value, ' - ', parameter_uncertainty_upper_value),
-                                     NA))) 
-
-
-real_duplicate <- c(unique(article_raw$Covidence_ID))
+real_duplicate <- article_raw %>% filter(duplicated(Covidence_ID)) %>% pull(var = Covidence_ID)
 
 article_clean <- article_raw %>% clean_dfs(column_name = 'article_title') 
 model_clean <- model_raw %>% clean_dfs(column_name = 'model_type')
@@ -105,7 +73,17 @@ outbreak_final <- rbind(outbreak_single,
                         outbreak_fixed)
 parameter_final <- rbind(parameter_single,
                          parameter_double_matching,
-                         parameter_fixed)
+                         parameter_fixed) %>%
+  mutate(Uncertainty = ifelse(parameter_uncertainty_type == 'CI95%', paste0(parameter_uncertainty_lower_value, ", ", parameter_uncertainty_upper_value),
+                              ifelse(parameter_uncertainty_type %in% c('Range', 'Highest Posterior Density Interval 95%'), paste0(parameter_uncertainty_lower_value, ' - ', parameter_uncertainty_upper_value),
+                                     NA)),
+         # Format survey year
+         `Survey year` = ifelse(population_study_start_year == population_study_end_year & !is.na(population_study_start_month) & !is.na(population_study_end_month),
+                                paste0(population_study_start_month, "-", population_study_end_month, " ", population_study_start_year),
+                                ifelse(population_study_start_year != population_study_end_year, 
+                                       paste0(population_study_start_year,"-", population_study_end_year), population_study_start_year)))
+
+  
 model_final <- rbind(model_single)
 article_final <- rbind(article_single,
                        article_double) # think if this is correct
