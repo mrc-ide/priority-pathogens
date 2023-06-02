@@ -34,7 +34,15 @@ clean_dfs <- function(df, column_name){
                                          grepl('Relative', parameter_type) ~ 'Relative contribution',
                                          TRUE ~ 'Other transmission parameters'))%>%
       mutate(population_country = stringr::str_replace(population_country, 'Congo, Rep.', 'Republic of the Congo'),
-             population_country = stringr::str_replace(population_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'))
+             population_country = stringr::str_replace(population_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'))  %>%
+      janitor::clean_names() %>%
+      mutate(# Format the start/stop months
+        population_study_start_month = substring(population_study_start_month, 1, 3),
+        population_study_end_month = substring(population_study_end_month, 1, 3),
+        # combining range and uncertainty range
+        parameter_uncertainty_type = ifelse(!is.na(parameter_upper_bound) & is.na(parameter_uncertainty_upper_value), 'Range', parameter_uncertainty_type),
+        parameter_uncertainty_upper_value = ifelse(!is.na(parameter_upper_bound) & is.na(parameter_uncertainty_upper_value), parameter_upper_bound, parameter_uncertainty_upper_value),
+        parameter_uncertainty_lower_value = ifelse(!is.na(parameter_lower_bound) & is.na(parameter_uncertainty_lower_value), parameter_lower_bound, parameter_uncertainty_lower_value)) 
   }
   
   return(df)
