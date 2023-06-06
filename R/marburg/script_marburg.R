@@ -22,7 +22,9 @@ outbreak_clean <- outbreak_clean %>% add_details(detail = details) %>%
 parameter_clean <- parameter_clean %>% add_details(detail = details)
 
 article_single <- filter_extracted(df = article_clean, double = FALSE, matching = FALSE)
-article_double <- article_clean %>% dplyr::filter(double_extracted == 1) # filter_extracted doesn't work here -- need specific quality assessment
+article_double <- article_clean %>% dplyr::filter(double_extracted == 1) %>%
+  filter(article_id!=34) %>%
+  distinct(covidence_id, .keep_all = TRUE)
 
 ## I know there isn't a double for models
 model_single <- filter_extracted(df = model_clean, double = FALSE, matching = FALSE)
@@ -51,8 +53,8 @@ parameter_double_discordant <- filter_extracted(df = parameter_clean,
 outbreak_fixing <- needs_fixing(outbreak_double_discordant, details)
 parameter_fixing <- needs_fixing(parameter_double_discordant, details)
 
-write.csv(outbreak_fixing, "data/marburg/fixing/outbreak_fixing.csv", row.names = FALSE)
-write.csv(parameter_fixing, "data/marburg/fixing/parameter_fixing.csv", row.names = FALSE)
+# write.csv(outbreak_fixing, "data/marburg/fixing/outbreak_fixing.csv", row.names = FALSE)
+# write.csv(parameter_fixing, "data/marburg/fixing/parameter_fixing.csv", row.names = FALSE)
 
 # ## when data is fixed
 outbreak_fixed <- rio::import('data/marburg/fixed/marburg_outbreak_fixed.csv')
@@ -86,9 +88,10 @@ parameter_final <- rbind(parameter_single,
   
 model_final <- rbind(model_single)
 article_final <- rbind(article_single,
-                       article_double) # think if this is correct
+                       article_double) %>%
+  filter(!is.na(covidence_id))
 
-write.csv(article_final, "data/marburg/final/article_final.csv")
-write.csv(model_final, "data/marburg/final/model_final.csv")
-write.csv(outbreak_final, "data/marburg/final/outbreak_final.csv")
-write.csv(parameter_final, "data/marburg/final/parameter_final.csv") # 24 apr missing Cyril and Gina's DE
+write.csv(article_final, "data/marburg/final/article_final.csv", row.names = FALSE)
+write.csv(model_final, "data/marburg/final/model_final.csv", row.names = FALSE)
+write.csv(outbreak_final, "data/marburg/final/outbreak_final.csv", row.names = FALSE)
+write.csv(parameter_final, "data/marburg/final/parameter_final.csv", row.names = FALSE) # 24 apr missing Cyril and Gina's DE
