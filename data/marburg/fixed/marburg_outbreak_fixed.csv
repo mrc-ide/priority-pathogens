@@ -1,6 +1,14 @@
 fixed,name_data_entry,covidence_id,outbreak_id,article_id,outbreak_start_day,outbreak_start_month,outbreak_start_year,outbreak_end_day,outbreak_end_month,outbreak_date_year,outbreak_duration_months,outbreak_size,outbreak_country,outbreak_location,cases_confirmed,cases_mode_detection,cases_suspected,cases_asymptomatic,asymptomatic_transmission,cases_severe_hospitalised,deaths,double_extracted
-TRUE,Joseph,1930,1,14,17,Sep-09,2014,28,Sep-09,2014,NA,NA,Uganda,Kampala,1,Molecular (PCR etc),NA,NA,FALSE,1,1,1
-NA,Gina,2032,15,50,NA,Sep-09,2012,13,Nov-11,2012,NA,NA,Uganda,Ibanda and Kabale,9,Molecular (PCR etc),5,NA,FALSE,NA,7,1
-NA,Dariya Nikitin,1613,16,54,NA,Oct-10,2004,NA,Jul-07,2005,NA,NA,Angola,Uige Province,252,NA,NA,NA,FALSE,0,227,1
-TRUE,Sabine,1871,26,31,,,2004,,,2005,,,Angola,,252,,,,FALSE,,227,1
-TRUE,Cyril,1871,8,31,,,1998,,,2000,,,"Congo, Dem. Rep.",,154,,,,FALSE,,128,1
+TRUE,Joseph,1930,1,14,17,9-Sep,2014,28,9-Sep,2014,NA,NA,Uganda,Kampala,1,Molecular (PCR etc),NA,NA,FALSE,1,1,1
+TRUE,Gina,2032,15,50,NA,9-Sep,2012,13,11-Nov,2012,NA,NA,Uganda,Ibanda and Kabale,9,Molecular (PCR etc),5,NA,FALSE,NA,7,1
+TRUE,Dariya Nikitin,1613,16,54,NA,10-Oct,2004,NA,7-Jul,2005,NA,NA,Angola,Uige Province,252,NA,NA,NA,FALSE,0,227,1
+TRUE,Sabine,1871,26,31,NA,NA,2004,NA,NA,2005,NA,NA,Angola,NA,252,NA,NA,NA,FALSE,NA,227,1
+TRUE,Cyril,1871,8,31,NA,NA,1998,NA,NA,2000,NA,NA,"Congo, Dem. Rep.",,154,NA,NA,NA,FALSE,NA,128,1
+TRUE,Sabine,1871,20,62,NA,NA,1967,NA,NA,NA,NA,NA,Germany;Yuogslavia,NA,31,NA,NA,NA,FALSE,NA,7,1
+TRUE,Sabine,1871,21,62,NA,NA,1980,NA,NA,NA,NA,NA,Kenya,NA,2,NA,NA,NA,FALSE,NA,1,1
+TRUE,Sabine,1871,22,62,NA,NA,1987,NA,NA,NA,NA,NA,Kenya,NA,1,NA,NA,NA,FALSE,NA,1,1
+TRUE,Sabine,1871,23,62,NA,NA,1988,NA,NA,NA,NA,NA,Russian Federation,NA,1,NA,NA,NA,FALSE,NA,1,1
+TRUE,Sabine,1871,24,62,NA,NA,1990,NA,NA,NA,NA,NA,Russian Federation,NA,1,NA,NA,NA,FALSE,NA,0,1
+TRUE,Sabine,1871,27,62,NA,NA,2007,NA,NA,NA,NA,NA,Uganda,NA,4,NA,NA,NA,FALSE,NA,2,1
+TRUE,Sabine,1871,28,62,NA,NA,2008,NA,NA,NA,NA,NA,United States,Colorado,1,NA,NA,NA,FALSE,NA,0,1
+TRUE,Sabine,1871,29,62,NA,NA,2008,NA,NA,NA,NA,NA,Netherlands,NA,1,NA,NA,NA,FALSE,NA,1,1
