@@ -15,22 +15,24 @@ plot_param_overview <- function(parameter_df, pathogen){
     mutate(parameter_class = factor(parameter_class, levels = unique(parameter_class)),
            parameter_type = factor(parameter_type, levels = unique(parameter_type))) %>%
     # change label of parameter type 
-    mutate(parameter_type_short = ifelse(parameter_type=="Human delay - time symptom to careseeking",
-                                         "Time symptom to careseeking",
-                                         ifelse(parameter_type=="Human delay - generation time",
-                                                "Generation time",
-                                                ifelse(parameter_type=="Human delay - time symptom to outcome",
-                                                       "Time symptom to outcome",
-                                                       ifelse(parameter_type=="Human delay - time in care",
-                                                              "Time in care",
-                                                              ifelse(parameter_type=="Human delay - incubation period",
-                                                                     "Incubation period",
-                                                                     ifelse(parameter_type=="Mutations - mutation rate",
-                                                                            "Mutation rate",
-                                                                            ifelse(parameter_type=="Mutations - substitution rate","Substitution rate",
-                                                                                   ifelse(parameter_type=="Mutations - evolutionary rate","Evolutionary rate",      
-                                                                                          ifelse(parameter_type=="Seroprevalence - IFA","IFA", NA)))))))))))))))))))),
-
+    mutate(parameter_type_short = case_when(parameter_type=="Human delay - time symptom to careseeking"~"Time symptom to careseeking",
+                                            parameter_type=="Human delay - generation time"~"Generation time",
+                                            parameter_type=="Human delay - time symptom to outcome"~"Time symptom to outcome",
+                                            parameter_type=="Human delay - time in care"~"Time in care",
+                                            parameter_type=="Human delay - incubation period"~"Incubation period",
+                                            parameter_type=="Mutations - mutation rate"~"Mutation rate",
+                                            parameter_type=="Mutations - substitution rate"~"Substitution rate",
+                                            parameter_type=="Mutations – substitution rate"~"Substitution rate",
+                                            parameter_type=="Mutations - evolutionary rate"~"Evolutionary rate",
+                                            parameter_type=="Seroprevalence - IFA"~"IFA",
+                                            parameter_type=="Seroprevalence - Unspecified"~"Unspecified",
+                                            parameter_type=="Seroprevalence - IgG"~"IgG",
+                                            parameter_type=="Seroprevalence - IgM"~"IgM",
+                                            parameter_type=="Seroprevalence - HAI/HI"~"HAI/HI",
+                                            parameter_type=="Severity - case fatality rate (CFR)"~"Case fatality ratio (CFR)",
+                                            parameter_type=="Reproduction number (Basic R0)"~"Basic (R0)",
+                                            parameter_type=="Reproduction number (Effective, Re)"~"Effective (Re)",
+                                            .default = parameter_type),
            parameter_type_short = factor(parameter_type_short,
                                          levels=c("Time symptom to careseeking","Generation time",
                                                   "Time symptom to outcome","Time in care","Incubation period",
@@ -54,11 +56,11 @@ plot_param_overview <- function(parameter_df, pathogen){
           legend.position = c(0.75, 0.35),
           legend.title = element_text(size = 8), 
           legend.text  = element_text(size = 8),
-          legend.key.size = unit(0.65, "lines"),
+          legend.key.size = unit(0.7, "lines"),
           legend.background = element_rect(fill = "transparent", colour = "transparent"))
   
   
-  ggsave(filename=paste0("data/", pathogen,"/output/parameter_overview_shortnames.png", bg = "white",
+  ggsave(filename=paste0("data/", pathogen,"/output/parameter_overview_shortnames.png"), bg = "white",
          width = 15, height = 10, units = "cm")
 }
 
