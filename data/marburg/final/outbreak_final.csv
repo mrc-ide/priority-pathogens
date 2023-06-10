@@ -1,24 +1,24 @@
-"","outbreak_id","article_id","outbreak_start_day","outbreak_start_month","outbreak_start_year","outbreak_end_day","outbreak_end_month","outbreak_date_year","outbreak_duration_months","outbreak_size","asymptomatic_transmission","outbreak_country","outbreak_location","cases_confirmed","cases_mode_detection","cases_suspected","cases_asymptomatic","deaths","cases_severe_hospitalised","covidence_id","name_data_entry","double_extracted"
-"1",4,20,NA,"Aug 08","1968",NA,"Nov 11","1968",3,NA,TRUE,"Germany;Yuogslavia","Marburg (23), Frankfurt am Main (6), Belgrade (2)",31,"Symptoms",NA,"1",7,NA,2060,"Christian Morgenstern",0
-"2",5,23,"18","Aug 08","1968","13","Nov 11","1968",3,NA,TRUE,"Germany","Marburg, Frankfurt am Main",23,"Symptoms",NA,"1",5,NA,2883,"Joseph",0
-"3",6,23,"18","Oct 10","2012","7","Nov 11","2012",NA,NA,FALSE,"Uganda","Kabale; Ibanda; Mbarara; Kampala",15,"Molecular (PCR etc)",NA,NA,4,NA,2883,"Joseph",0
-"4",7,21,NA,"Oct 10","1998",NA,"Aug 08","2000",NA,NA,TRUE,"Democratic Republic of the Congo","Durba and Watsa villages",76,"Molecular (PCR etc)",33,"0",NA,NA,2762,"Kelly McCain",0
-"5",10,33,NA,NA,"2005",NA,NA,"2005",NA,NA,FALSE,"Angola",NA,252,"Not specified",NA,NA,227,0,2696,"Ruth McCabe",0
-"6",12,42,NA,"Jul 07","2012","10","Nov 11","2012",NA,NA,FALSE,"Uganda","Ibanda, Kabale and Kamwenge Districts",15,"Molecular (PCR etc)",11,NA,15,NA,2241,"Ettie Unwin",0
-"7",13,45,NA,"Oct 10","1998",NA,"May 05","1999",NA,NA,FALSE,"Democratic Republic of the Congo","Durba and Watsa",73,"Symptoms",NA,NA,61,0,2759,"Jack Wardle",0
-"8",14,49,"10","Jun 06","2007","14","Sep 09","2007",NA,NA,FALSE,"Uganda","Kamwenge and Ibanda",4,"Molecular (PCR etc)",NA,NA,1,0,4693,"Jack Wardle",0
-"9",17,57,NA,"Oct 10","1998",NA,"Sep 09","2000",NA,NA,FALSE,"Democratic Republic of the Congo","Durba and Watsa",48,"Molecular (PCR etc)",106,NA,125,0,2819,"Cyril",0
-"10",19,60,"12","Feb 02","1975",NA,NA,NA,NA,NA,FALSE,"South Africa;Zimbabwe","Johannesburg",3,"Molecular (PCR etc)",NA,NA,1,1,2573,"Patrick Doohan",0
-"11",1,14,"17","9-Sep","2014","28","9-Sep","2014",NA,NA,FALSE,"Uganda","Kampala",1,"Molecular (PCR etc)",NA,NA,1,1,1930,"Joseph",1
-"12",15,50,NA,"9-Sep","2012","13","11-Nov","2012",NA,NA,FALSE,"Uganda","Ibanda and Kabale",9,"Molecular (PCR etc)",5,NA,7,NA,2032,"Gina",1
-"13",16,54,NA,"10-Oct","2004",NA,"7-Jul","2005",NA,NA,FALSE,"Angola","Uige Province",252,NA,NA,NA,227,0,1613,"Dariya Nikitin",1
-"14",26,31,NA,NA,"2004",NA,NA,"2005",NA,NA,FALSE,"Angola",NA,252,NA,NA,NA,227,NA,1871,"Sabine",1
-"15",8,31,NA,NA,"1998",NA,NA,"2000",NA,NA,FALSE,"Congo, Dem. Rep.","",154,NA,NA,NA,128,NA,1871,"Cyril",1
-"16",20,62,NA,NA,"1967",NA,NA,NA,NA,NA,FALSE,"Germany;Yuogslavia",NA,31,NA,NA,NA,7,NA,1871,"Sabine",1
-"17",21,62,NA,NA,"1980",NA,NA,NA,NA,NA,FALSE,"Kenya",NA,2,NA,NA,NA,1,NA,1871,"Sabine",1
-"18",22,62,NA,NA,"1987",NA,NA,NA,NA,NA,FALSE,"Kenya",NA,1,NA,NA,NA,1,NA,1871,"Sabine",1
-"19",23,62,NA,NA,"1988",NA,NA,NA,NA,NA,FALSE,"Russian Federation",NA,1,NA,NA,NA,1,NA,1871,"Sabine",1
-"20",24,62,NA,NA,"1990",NA,NA,NA,NA,NA,FALSE,"Russian Federation",NA,1,NA,NA,NA,0,NA,1871,"Sabine",1
-"21",27,62,NA,NA,"2007",NA,NA,NA,NA,NA,FALSE,"Uganda",NA,4,NA,NA,NA,2,NA,1871,"Sabine",1
-"22",28,62,NA,NA,"2008",NA,NA,NA,NA,NA,FALSE,"United States","Colorado",1,NA,NA,NA,0,NA,1871,"Sabine",1
-"23",29,62,NA,NA,"2008",NA,NA,NA,NA,NA,FALSE,"Netherlands",NA,1,NA,NA,NA,1,NA,1871,"Sabine",1
+"outbreak_id","article_id","outbreak_start_day","outbreak_start_month","outbreak_start_year","outbreak_end_day","outbreak_end_month","outbreak_date_year","outbreak_duration_months","outbreak_size","asymptomatic_transmission","outbreak_country","outbreak_location","cases_confirmed","cases_mode_detection","cases_suspected","cases_asymptomatic","deaths","cases_severe_hospitalised","covidence_id","name_data_entry","double_extracted"
+4,20,NA,"Aug 08","1968",NA,"Nov 11","1968",3,NA,TRUE,"Germany;Yuogslavia","Marburg (23), Frankfurt am Main (6), Belgrade (2)",31,"Symptoms",NA,"1",7,NA,2060,"Christian Morgenstern",0
+5,23,"18","Aug 08","1968","13","Nov 11","1968",3,NA,TRUE,"Germany","Marburg, Frankfurt am Main",23,"Symptoms",NA,"1",5,NA,2883,"Joseph",0
+6,23,"18","Oct 10","2012","7","Nov 11","2012",NA,NA,FALSE,"Uganda","Kabale; Ibanda; Mbarara; Kampala",15,"Molecular (PCR etc)",NA,NA,4,NA,2883,"Joseph",0
+7,21,NA,"Oct 10","1998",NA,"Aug 08","2000",NA,NA,TRUE,"Democratic Republic of the Congo","Durba and Watsa villages",76,"Molecular (PCR etc)",33,"0",NA,NA,2762,"Kelly McCain",0
+10,33,NA,NA,"2005",NA,NA,"2005",NA,NA,FALSE,"Angola",NA,252,"Not specified",NA,NA,227,0,2696,"Ruth McCabe",0
+12,42,NA,"Jul 07","2012","10","Nov 11","2012",NA,NA,FALSE,"Uganda","Ibanda, Kabale and Kamwenge Districts",15,"Molecular (PCR etc)",11,NA,15,NA,2241,"Ettie Unwin",0
+13,45,NA,"Oct 10","1998",NA,"May 05","1999",NA,NA,FALSE,"Democratic Republic of the Congo","Durba and Watsa",73,"Symptoms",NA,NA,61,0,2759,"Jack Wardle",0
+14,49,"10","Jun 06","2007","14","Sep 09","2007",NA,NA,FALSE,"Uganda","Kamwenge and Ibanda",4,"Molecular (PCR etc)",NA,NA,1,0,4693,"Jack Wardle",0
+17,57,NA,"Oct 10","1998",NA,"Sep 09","2000",NA,NA,FALSE,"Democratic Republic of the Congo","Durba and Watsa",48,"Molecular (PCR etc)",106,NA,125,0,2819,"Cyril",0
+19,60,"12","Feb 02","1975",NA,NA,NA,NA,NA,FALSE,"South Africa;Zimbabwe","Johannesburg",3,"Molecular (PCR etc)",NA,NA,1,1,2573,"Patrick Doohan",0
+1,14,"17","09-Sep","2014","28","09-Sep","2014",NA,NA,FALSE,"Uganda","Kampala",1,"Molecular (PCR etc)",NA,NA,1,1,1930,"Joseph",1
+15,50,NA,"09-Sep","2012","13","11-Nov","2012",NA,NA,FALSE,"Uganda","Ibanda and Kabale",9,"Molecular (PCR etc)",5,NA,7,NA,2032,"Gina",1
+16,54,NA,"10-Oct","2004",NA,"07-Jul","2005",NA,NA,FALSE,"Angola","Uige Province",252,NA,NA,NA,227,0,1613,"Dariya Nikitin",1
+26,31,NA,NA,"2004",NA,NA,"2005",NA,NA,FALSE,"Angola",NA,252,NA,NA,NA,227,NA,1871,"Sabine",1
+8,31,NA,NA,"1998",NA,NA,"2000",NA,NA,FALSE,"Congo, Dem. Rep.","",154,NA,NA,NA,128,NA,1871,"Cyril",1
+20,31,NA,NA,"1967",NA,NA,NA,NA,NA,FALSE,"Germany;Yuogslavia",NA,31,NA,NA,NA,7,NA,1871,"Sabine",1
+21,31,NA,NA,"1980",NA,NA,NA,NA,NA,FALSE,"Kenya",NA,2,NA,NA,NA,1,NA,1871,"Sabine",1
+22,31,NA,NA,"1987",NA,NA,NA,NA,NA,FALSE,"Kenya",NA,1,NA,NA,NA,1,NA,1871,"Sabine",1
+23,31,NA,NA,"1988",NA,NA,NA,NA,NA,FALSE,"Russian Federation",NA,1,NA,NA,NA,1,NA,1871,"Sabine",1
+24,31,NA,NA,"1990",NA,NA,NA,NA,NA,FALSE,"Russian Federation",NA,1,NA,NA,NA,0,NA,1871,"Sabine",1
+27,31,NA,NA,"2007",NA,NA,NA,NA,NA,FALSE,"Uganda",NA,4,NA,NA,NA,2,NA,1871,"Sabine",1
+28,31,NA,NA,"2008",NA,NA,NA,NA,NA,FALSE,"United States","Colorado",1,NA,NA,NA,0,NA,1871,"Sabine",1
+29,31,NA,NA,"2008",NA,NA,NA,NA,NA,FALSE,"Netherlands",NA,1,NA,NA,NA,1,NA,1871,"Sabine",1
