@@ -8,11 +8,11 @@ if(REGENERATE_DATA) source("R/marburg/script_marburg.R")
 source("R/outbreak_table.R")
 
 df <- read.csv("data/marburg/final/outbreak_final.csv")
-article_df <- read.csv("data/marburg/final/article_final.csv")
+article_df <- read.csv("data/marburg/final/article_clean.csv")
 
 # merge with article ID to get the y-axis labels
 df <- article_df %>% dplyr::select(article_id,first_author_first_name,year_publication) %>%
-  dplyr::right_join(df, by = "article_id") %>%
+  dplyr::right_join(df, by = c('article_id'), multiple = "all") %>%
   mutate(article_label = as.character(paste0(first_author_first_name," ",year_publication)),
          outbreak_start_month = chartr(old = "-", new = " ", x = outbreak_start_month),
          outbreak_end_month = chartr(old = "-", new = " ", x = outbreak_end_month),
