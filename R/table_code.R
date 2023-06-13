@@ -137,3 +137,52 @@ delay_table <- function(df, pathogen){
   writeLines(delay_latex, paste0("data/", pathogen,"/output/delay_latex_tbl.txt"))
 }
 
+# risk factor table
+risk_table <- function(df,pathogen){
+  border_style = officer::fp_border(color="black", width=1)
+  set_flextable_defaults(background.color = "white")
+  
+  risk_tbl <- df %>%
+    filter(parameter_class == 'Risk factors') %>%
+    select(c(Article = article_label, 
+             Country = population_country, 
+             `Survey year`, 
+             'Outcome' = riskfactor_outcome,
+             'Risk factor' = riskfactor_name,
+             'Occupation' = riskfactor_occupation,
+             'Significant' = riskfactor_significant,
+             'Adjusted' = riskfactor_adjusted,
+             `Sample size` = population_sample_size, 
+             'Population sample type' = population_sample_type,
+             `Population group` = population_group,
+             `Timing of survey` = method_moment_value)) %>%
+    dplyr::arrange(Outcome)
+  
+  risk_flextable_tbl <- risk_tbl %>%
+    arrange(Outcome, Country, `Survey year`) %>%
+    group_by(Country) %>%
+    mutate(index_of_change = row_number(),
+           index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
+    flextable(col_keys = c("Article", "Country", "Survey year", "Outcome", 'Risk factor', 'Occupation',
+                           'Significant', 'Adjusted', 'Sample size', 'Population sample type',
+                           'Population group', 'Timing of survey')) %>%
+    fontsize(i = 1, size = 12, part = "header") %>%  # adjust font size of header
+    border_remove() %>%
+    autofit() %>%
+    theme_booktabs() %>%
+    vline(j = c(4), border = border_style) %>%
+    hline(i = ~ index_of_change == 1) %>%
+    bold(i = 1, bold = TRUE, part = "header")
+  save_as_image(risk_flextable_tbl, path = paste0("data/", pathogen,"/output/risk_tbl.png"))
+  
+ risk_latex <- risk_tbl %>%
+   arrange(Outcome, Country, `Survey year`) %>%
+   group_by(Country) %>%
+   mutate(index_of_change = row_number(),
+          index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>% 
+    mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% dplyr::select(-c(index_of_change)) %>%
+    gt() %>% 
+    as_latex() %>% as.character()
+  
+  writeLines(risk_latex, paste0("data/", pathogen,"/output/risk_latex_tbl.txt"))
+}
