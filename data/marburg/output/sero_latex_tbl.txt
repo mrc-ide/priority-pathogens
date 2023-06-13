@@ -12,7 +12,7 @@ Johnson 1993 &  & IFA & 3.20\% & 1 - 7.4 & Range & 137 & 4295 & General populati
 \midrule
 \multicolumn{11}{l}{Congo, Rep.} \\ 
 \midrule
-Moyen 2015 & 03-Mar-07-Jul 2011 & IgG & 0.50\% &  &  &  &  &  & Pre outbreak &  \\ 
+NA NA & 03-Mar-07-Jul 2011 & IgG & 0.50\% &  &  &  &  &  & Pre outbreak &  \\ 
 \midrule
 \multicolumn{11}{l}{Democratic Republic of the Congo} \\ 
 \midrule
@@ -24,8 +24,8 @@ Borchert 2006 &  & IgG & 1.65\% & 0.2, 5.8 & CI95\% &  &  & Household contacts o
 \multicolumn{11}{l}{Gabon} \\ 
 \midrule
 Ivanoff 1982 & Feb-Mar 1980 & IFA & 0.00\% &  &  & 0 & 197 &  &  &  \\ 
-Ivanoff 1982 & Feb-Mar 1980 & IFA & 0.00\% &  &  & 0 & 28 & Pregnant women &  &  \\ 
 Ivanoff 1982 & Feb-Mar 1980 & IFA & 0.00\% &  &  & 0 & 28 & Other &  &  \\ 
+Ivanoff 1982 & Feb-Mar 1980 & IFA & 0.00\% &  &  & 0 & 28 & Pregnant women &  &  \\ 
 \midrule
 \multicolumn{11}{l}{Germany} \\ 
 \midrule
@@ -40,20 +40,20 @@ O'Hearn 2016 & 2007-2014 & IgG & 10.70\% &  &  & 71 & 663 & Other &  &  \\
 Johnson 1983 &  & IFA &  &  &  & 8 & 1899 &  &  & Region \\ 
 Johnson 1983 &  & IFA & 0.00\% &  &  & 0 & 741 & General population & Post outbreak &  \\ 
 Martini 1973 &  & Unspecified &  &  &  & 0 & 79 & Other & Post outbreak &  \\ 
+Smith 1982 &  & Unspecified &  &  &  & 0 & 224 & General population & Post outbreak &  \\ 
 Smith 1982 &  & Unspecified &  &  &  & 2 & 186 & Persons under investigation & Post outbreak &  \\ 
 Smith 1982 &  & Unspecified &  &  &  & 3 & 100 & Healthcare workers & Post outbreak &  \\ 
-Smith 1982 &  & Unspecified &  &  &  & 0 & 224 & General population & Post outbreak &  \\ 
 Smith 1982 &  & Unspecified &  &  &  & 0 & 63 & Other & Post outbreak &  \\ 
 Smith 1982 &  & Unspecified &  &  &  & 0 & 79 & Other & Post outbreak &  \\ 
 Smith 1982 &  & Unspecified &  &  &  & 0 & 44 & Outdoor workers & Post outbreak &  \\ 
 \midrule
 \multicolumn{11}{l}{Liberia} \\ 
 \midrule
-Van der Waals 1986 & 1981-1982 & IFA & 1.30\% &  &  & 3 & 225 & Other & Other & Other, Region \\ 
+NA NA & 1981-1982 & IFA & 1.30\% &  &  & 3 & 225 & Other & Other & Other, Region \\ 
 \midrule
 \multicolumn{11}{l}{Madagascar} \\ 
 \midrule
-Mathiot 1989 &  & Unspecified & 0.00\% &  &  & 0 & 381 &  & Other & Region \\ 
+NA NA &  & Unspecified & 0.00\% &  &  & 0 & 381 &  & Other & Region \\ 
 \midrule
 \multicolumn{11}{l}{Nigeria} \\ 
 \midrule

@@ -21,3 +21,4 @@ df <- merge(par_final, article_df %>% dplyr::select(article_id, first_author_fir
 
 sero_table(df,pathogen="marburg")
 delay_table(df,pathogen="marburg")
+risk_table(df,pathogen="marburg")
