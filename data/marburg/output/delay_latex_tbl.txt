@@ -5,9 +5,9 @@ available \\
 \midrule
 \multicolumn{11}{l}{Angola} \\ 
 \midrule
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Generation Time & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 7 & Median & 5 - 9 & Range & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak &  &  \\ 
 \midrule
