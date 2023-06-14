@@ -93,7 +93,7 @@ delay_table <- function(df, pathogen){
              # `Risk factor outcome` = riskfactor_outcome
              )) %>%
     arrange(`Parameter type`, Country, `Survey year`) %>%
-    group_by(Country) %>%
+    group_by(`Parameter type`) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
     flextable(col_keys = c("Article", "Country", "Parameter type", "Survey year", "Delays (days)", 'Statistic',
@@ -126,7 +126,7 @@ delay_table <- function(df, pathogen){
              # `Risk factor outcome` = riskfactor_outcome
     )) %>%
     arrange(`Parameter type`, Country, `Survey year`) %>%
-    group_by(Country) %>%
+    group_by(`Parameter type`) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
     mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% dplyr::select(-c(index_of_change)) %>%
