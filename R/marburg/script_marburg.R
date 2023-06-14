@@ -18,7 +18,8 @@ article_clean$double_extracted <- details$double_extracted #%>% add_details(deta
 model_clean <- model_clean %>% add_details(detail = details)
 outbreak_clean <- outbreak_clean %>% add_details(detail = details) %>%
   mutate(outbreak_country = str_replace(outbreak_country, 'Congo, Rep.', 'Republic of the Congo'),
-         outbreak_country = str_replace(outbreak_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'))
+         outbreak_country = str_replace(outbreak_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'),
+         outbreak_country = str_replace(outbreak_country, 'Yuogslavia', 'Yugoslavia'))
 parameter_clean <- parameter_clean %>% add_details(detail = details)
 
 article_single <- filter_extracted(df = article_clean, double = FALSE, matching = FALSE)
@@ -79,11 +80,23 @@ parameter_final <- rbind(parameter_single,
   mutate(Uncertainty = ifelse(parameter_uncertainty_type == 'CI95%', paste0(parameter_uncertainty_lower_value, ", ", parameter_uncertainty_upper_value),
                               ifelse(parameter_uncertainty_type %in% c('Range', 'Highest Posterior Density Interval 95%'), paste0(parameter_uncertainty_lower_value, ' - ', parameter_uncertainty_upper_value),
                                      NA)),
+         population_study_start_month = case_when(covidence_id == '3795' ~ 'Feb',
+                                                  covidence_id == '2600' ~ 'March',
+                                                  TRUE ~ population_study_start_month),
+         population_study_start_year = case_when(covidence_id == '3795' ~ '1975', 
+                                                 covidence_id == '2600' ~ '1980',
+                                                 TRUE ~ population_study_start_year),
+         population_study_end_month = case_when(covidence_id == '2600' ~ 'Dec',
+                                                TRUE ~ population_study_end_month),
+         population_study_end_year = case_when(covidence_id == '2600' ~ '1981',
+                                               TRUE ~ population_study_end_year),
          # Format survey year
          `Survey year` = ifelse(population_study_start_year == population_study_end_year & !is.na(population_study_start_month) & !is.na(population_study_end_month),
                                 paste0(population_study_start_month, "-", population_study_end_month, " ", population_study_start_year),
                                 ifelse(population_study_start_year != population_study_end_year, 
-                                       paste0(population_study_start_year,"-", population_study_end_year), population_study_start_year)))
+                                       paste0(population_study_start_year,"-", population_study_end_year), population_study_start_year)) ,
+         riskfactor_outcome = ifelse(parameter_data_id == '42' | parameter_data_id == '45', 'Death', 
+                                     ifelse(parameter_data_id == '16', 'Other', riskfactor_outcome)))
 
   
 model_final <- rbind(model_single)
