@@ -5,11 +5,20 @@ available \\
 \midrule
 \multicolumn{11}{l}{Angola} \\ 
 \midrule
+Ajelli 2012 & Mar-Nov 2005 & Generation Time & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Generation Time & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 7 & Median & 5 - 9 & Range & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 7 & Median & 5 - 9 & Range & General population & Mid outbreak & Death &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 7 & Median & 5 - 9 & Range & General population & Mid outbreak & Death &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak & Death &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak & Death &  \\ 
+\midrule
+\multicolumn{11}{l}{Germany, Yugoslavia} \\ 
+\midrule
+Martini 1973 & Aug-Nov 1968 & Incubation Period &  &  & 4 - 7 & Range &  &  &  &  \\ 
 \midrule
 \multicolumn{11}{l}{Germany, Yuogslavia} \\ 
 \midrule
@@ -18,17 +27,26 @@ Martini 1973 & Aug-Nov 1968 & Incubation Period &  &  & 4 - 7 & Range &  &  &  &
 \multicolumn{11}{l}{South Africa} \\ 
 \midrule
 Gear 1975 &  & Incubation Period &  &  & 7 - 8 & Range & Healthcare workers & Mid outbreak &  &  \\ 
+Gear 1975 &  & Incubation Period &  &  & 7 - 8 & Range & Healthcare workers & Mid outbreak &  &  \\ 
 Gear 1975 &  & Time Symptom To Careseeking & 4 & Other &  &  & Other & Start outbreak &  &  \\ 
-Gear 1975 &  & Time Symptom To Outcome & 9 &  &  &  & Other & Start outbreak &  &  \\ 
+Gear 1975 &  & Time Symptom To Careseeking & 4 & Other &  &  & Other & Start outbreak &  &  \\ 
+Gear 1975 &  & Time Symptom To Outcome & 9 &  &  &  & Other & Start outbreak & Other &  \\ 
+Gear 1975 &  & Time Symptom To Outcome & 9 &  &  &  & Other & Start outbreak & Other &  \\ 
 \midrule
 \multicolumn{11}{l}{Uganda} \\ 
 \midrule
 Knust 2015 & 2012 & Time In Care & 14.3 & Mean & 4 - 22 & Range & General population & Post outbreak & Other &  \\ 
+Knust 2015 & 2012 & Time In Care & 14.3 & Mean & 4 - 22 & Range & General population & Post outbreak & Other &  \\ 
 Knust 2015 & 2012 & Time Symptom To Careseeking & 4 & Mean &  &  & General population &  &  &  \\ 
-Knust 2015 & 2012 & Time Symptom To Outcome & 9 & Mean & 6.5 - 9 & Range & General population & Post outbreak & Death & Other \\ 
+Knust 2015 & 2012 & Time Symptom To Careseeking & 4 & Mean &  &  & General population &  &  &  \\ 
 Knust 2015 & 2012 & Time Symptom To Outcome & 22 & Mean & 16 - 30 & Range & General population &  & Other &  \\ 
+Knust 2015 & 2012 & Time Symptom To Outcome & 22 & Mean & 16 - 30 & Range & General population &  & Other &  \\ 
+Knust 2015 & 2012 & Time Symptom To Outcome & 9 & Mean & 6.5 - 9 & Range & General population & Post outbreak & Death & Other \\ 
+Knust 2015 & 2012 & Time Symptom To Outcome & 9 & Mean & 6.5 - 9 & Range & General population & Post outbreak & Death & Other \\ 
 \midrule
 \multicolumn{11}{l}{Democratic Republic of the Congo} \\ 
+\midrule
+Bausch 2006 & 1999-2000 & Time Symptom To Careseeking & 4.5 & Median & 0 - 24 & Range & Other & Mid outbreak &  &  \\ 
 Bausch 2006 & 1999-2000 & Time Symptom To Careseeking & 4.5 & Median & 0 - 24 & Range & Other & Mid outbreak &  &  \\ 
 \bottomrule
 \end{longtable}
