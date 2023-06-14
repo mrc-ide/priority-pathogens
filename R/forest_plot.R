@@ -5,7 +5,7 @@ library(patchwork)
 library(cowplot)
 
 # fatality rates 
-forest_plot_fr <- function(df) {
+forest_plot_fr <- function(df,outbreak_naive=FALSE) {
   
   parameter <- "Severity"
   
@@ -22,51 +22,72 @@ forest_plot_fr <- function(df) {
   
   df_plot <- df_cfr %>% 
     dplyr::filter(is.na(parameter_value) == FALSE) %>%
-    dplyr::select(c(article_id:distribution_par2_uncertainty, covidence_id:pooled_upp)) %>%
+    #dplyr::select(c(article_id:distribution_par2_uncertainty, covidence_id:pooled_upp)) %>%
     dplyr::arrange((cfr_ifr_method))
   
   ## ensuring that each entry is on it's own line
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
   
   ## sorry team this is also hacky but I'm gonna scream if these points don't go where we want them 
-  df_plot <- df_plot %>% mutate(order_num = seq(1,5,1))
+  df_plot <- df_plot %>% mutate(order_num = seq(1,dim(df_plot)[1],1))
   
-  
-  plot <- ggplot(df_plot, aes(x=parameter_value, y=reorder(article_label_unique,-order_num), 
-                              col = cfr_ifr_method)) + 
-    theme_bw() + geom_point(size = 3) +
-    scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
-    #facet_grid(cfr_ifr_method ~ ., scales = "free", space = "free") +
-    # geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
-    #                   group=parameter_data_id,
-    #                   linetype="Parameter range"),
-    #               position=position_dodge(width=0.5),
-    #               width=0.25) +
-    geom_errorbar(aes(y=article_label_unique,
-                      xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
-                      group=parameter_data_id,
-                      linetype="Uncertainty interval"),
-                  position=position_dodge(width=0.5),
-                  width=0.25,
-                  lwd=1) +
-    labs(x="Case fatality ratio (%)",y="",#y="Study",
-         linetype="",colour="",fill="") + 
-    theme(legend.position="bottom",
-          legend.text = element_text(size=12),
-          strip.text = element_text(size=20)) +
-    xlim(c(0, 100)) +
-    scale_colour_viridis_d(option="inferno",begin=0.2,end=0.8)+
-    guides(colour = guide_legend(order=1,nrow=3),
-           linetype = guide_legend(order=2,nrow=2))+
-    geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed")+
-    geom_rect(xmin=unique(df_cfr$pooled_low),xmax=unique(df_cfr$pooled_upp),
-              ymin=-Inf,ymax=Inf,alpha=0.1,col=NA,fill="grey"#,aes(fill="CFR - pooled 95% CI")
-              )+
-    scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
-    scale_fill_manual(values="grey")
+  if(outbreak_naive)
+  {
+    plot <- ggplot(df_plot, aes(x=parameter_value, y=reorder(article_label_unique,-order_num), 
+                                col = outbreak_year_cnt)) + 
+      theme_bw() + geom_point(size = 3) +
+      scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
+      labs(x="Case fatality ratio (%)",y="",#y="Study",
+           linetype="",colour="",fill="") + 
+      theme(legend.position="right",
+            legend.text = element_text(size=12),
+            strip.text = element_text(size=20)) +
+      xlim(c(0, 100)) +
+      scale_colour_viridis_d(option="inferno",begin=0.2,end=0.8)+
+      guides(colour = guide_legend(order=1,ncol=1),
+             linetype = guide_legend(order=2,ncol=1))+
+      geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed")+
+      geom_rect(xmin=unique(df_cfr$pooled_low),xmax=unique(df_cfr$pooled_upp),
+                ymin=-Inf,ymax=Inf,alpha=0.1,col=NA,fill="grey"#,aes(fill="CFR - pooled 95% CI")
+      )+
+      scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
+      scale_fill_manual(values="grey")
+  } else {
+    plot <- ggplot(df_plot, aes(x=parameter_value, y=reorder(article_label_unique,-order_num), 
+                                col = cfr_ifr_method)) + 
+      theme_bw() + geom_point(size = 3) +
+      scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
+      #facet_grid(cfr_ifr_method ~ ., scales = "free", space = "free") +
+      # geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
+      #                   group=parameter_data_id,
+      #                   linetype="Parameter range"),
+      #               position=position_dodge(width=0.5),
+      #               width=0.25) +
+      geom_errorbar(aes(y=article_label_unique,
+                        xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
+                        group=parameter_data_id,
+                        linetype="Uncertainty interval"),
+                    position=position_dodge(width=0.5),
+                    width=0.25,
+                    lwd=1) +
+      labs(x="Case fatality ratio (%)",y="",#y="Study",
+           linetype="",colour="",fill="") + 
+      theme(#legend.position="right",
+            legend.text = element_text(size=12),
+            strip.text = element_text(size=20)) +
+      xlim(c(0, 100)) +
+      scale_colour_viridis_d(option="inferno",begin=0.2,end=0.8)+
+      guides(colour = guide_legend(order=1,ncol=1),
+             linetype = guide_legend(order=2,ncol=1))+
+      geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed")+
+      geom_rect(xmin=unique(df_cfr$pooled_low),xmax=unique(df_cfr$pooled_upp),
+                ymin=-Inf,ymax=Inf,alpha=0.1,col=NA,fill="grey"#,aes(fill="CFR - pooled 95% CI")
+      )+
+      scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
+      scale_fill_manual(values="grey")
+  }
   
   return(plot)
-  
 }
 
 ## reproduction numbers
@@ -115,11 +136,11 @@ forest_plot_R <- function(df){
     scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
     #scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
     scale_colour_manual(values=c("#1e2761","#408ec6"))+
-    theme(legend.position="bottom",
+    theme(#legend.position="bottom",
           legend.text = element_text(size=12),
           strip.text = element_text(size=20)) + xlim(c(0,2)) +
-    guides(colour = guide_legend(order=1,nrow=2),
-           linetype = guide_legend(order=2,nrow=2))
+    guides(colour = guide_legend(order=1,ncol=1),
+           linetype = guide_legend(order=2,ncol=1))
   
   return(plot)
   
@@ -153,7 +174,8 @@ forest_plot_delay <- function(df){
                                                 "Incubation period",
                                                 ifelse(parameter_type=="Human delay - time in care","Time in care",
                                                        ifelse(parameter_type=="Human delay - time symptom to careseeking","Time symptom to careseeking",
-                                                              ifelse(parameter_type=="Human delay - time symptom to outcome","Time symptom to outcome",NA)))))
+                                                              ifelse(parameter_type=="Human delay - time symptom to outcome" & riskfactor_outcome=="Death","Time symptom to outcome (Death)",
+                                                                     ifelse(parameter_type=="Human delay - time symptom to outcome" & riskfactor_outcome=="Other","Time symptom to outcome (Other)",NA))))))
   )
   
   plot <-
@@ -183,11 +205,11 @@ forest_plot_delay <- function(df){
     #                                  "Time in care",
     #                                  "Symptom to careseeking",
     #                                  "Symptom to outcome")) +
-    theme(legend.position="bottom",
+    theme(#legend.position="bottom",
           legend.text = element_text(size=12),
           strip.text = element_text(size=20)) + xlim(c(0,56)) +
-    guides(colour = guide_legend(order=1,nrow=3),
-           linetype = guide_legend(order=2,nrow=2)) 
+    guides(colour = guide_legend(order=1,ncol =1),
+           linetype = guide_legend(order=2,ncol=1)) 
 
   
   
@@ -213,7 +235,7 @@ forest_plot_mutations <- function(df){
   
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
   df_plot <- df_plot %>%
-    dplyr::mutate(gene = ifelse(is.na(genome_site)==TRUE, "whole genome", genome_site))  %>%
+    dplyr::mutate(gene = ifelse(is.na(genome_site)==TRUE, "Whole genome", genome_site))  %>%
     dplyr::arrange(gene, desc(parameter_value))
   df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
   df_plot <- df_plot %>%
@@ -248,14 +270,14 @@ forest_plot_mutations <- function(df){
     labs(x=expression(Molecular~evolutionary~rate~(substitution/site/year ~10^{-4})),
          y="",#y="Study",
          linetype="",colour="") + 
-    scale_linetype_manual(values = c("dashed","solid"),labels = function(x) str_wrap(x, width = 18)) + #+ scale_x_log10()
+    scale_linetype_manual(values = c("dotted","solid"),labels = function(x) str_wrap(x, width = 18)) + #+ scale_x_log10()
     #geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
-    theme(legend.position="bottom",
+    theme(#legend.position="bottom",
           legend.text = element_text(size=12),
-          strip.text = element_text(size=20)) + xlim(c(0,9)) +
+          strip.text = element_text(size=20)) + xlim(c(0,10)) +
     scale_colour_viridis_d(option="magma",end=0.8,labels = function(x) str_wrap(x, width = 10))+
-    guides(colour = guide_legend(order=1,nrow=2),
-           linetype = guide_legend(order=2,nrow=2))
+    guides(colour = guide_legend(order=1,ncol=1),
+           linetype = guide_legend(order=2,ncol=1))
   
   return(plot)
 }

@@ -5,11 +5,11 @@ available \\
 \midrule
 \multicolumn{11}{l}{Angola} \\ 
 \midrule
+Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Generation Time & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 7 & Median & 5 - 9 & Range & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak &  &  \\ 
 \midrule
 \multicolumn{11}{l}{Germany, Yuogslavia} \\ 
 \midrule
@@ -29,7 +29,7 @@ Knust 2015 & 2012 & Time Symptom To Outcome & 9 & Mean & 6.5 - 9 & Range & Gener
 Knust 2015 & 2012 & Time Symptom To Outcome & 22 & Mean & 16 - 30 & Range & General population &  & Other &  \\ 
 \midrule
 \multicolumn{11}{l}{Democratic Republic of the Congo} \\ 
-Bausch 2006 & 1998-2000 & Time Symptom To Careseeking & 4.5 & Median & 0 - 24 & Range &  &  &  &  \\ 
+Bausch 2006 & 1999-2000 & Time Symptom To Careseeking & 4.5 & Median & 0 - 24 & Range & Other & Mid outbreak &  &  \\ 
 \bottomrule
 \end{longtable}
 
