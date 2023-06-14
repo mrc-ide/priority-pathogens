@@ -1,82 +1,76 @@
-\begin{longtable}{llllrlrrrr}
+\begin{longtable}{llllrrrrrl}
 \toprule
-Location & Article & Start & End & Confirmed Cases & Confirmation Method & Suspected Cases & Asymptomatic Cases & Severe/hospitalised Cases & Deaths \\ 
+Location & Article & Start & End & Deaths & Confirmed & Suspected & Asymptomatic & Severe/hospitalised & Confirmation Method \\ 
 \midrule
-\multicolumn{10}{l}{} \\ 
+\multicolumn{10}{l}{Angola - 2005} \\ 
 \midrule
- & NA NA &  NA &  NA &  &  &  &  &  &  \\ 
- & NA NA &  NA &  NA &  &  &  &  &  &  \\ 
- & NA NA &  NA &  NA &  &  &  &  &  &  \\ 
- & NA NA &  NA &  NA &  &  &  &  &  &  \\ 
- & NA NA &  NA &  NA &  &  &  &  &  &  \\ 
- & NA NA &  NA &  NA &  &  &  &  &  &  \\ 
+ & Carroll 2013 & 2005 & 2005 & 227 & 252 &  &  & 0 & Not specified \\ 
 \midrule
-\multicolumn{10}{l}{Angola} \\ 
+\multicolumn{10}{l}{Angola - 2004} \\ 
 \midrule
-Uige Province & Towner 2006 & 10-Oct 2004 & 07-Jul 2005 & 252 &  &  &  & 0 & 227 \\ 
-Uige Province & Towner 2006 & 10-Oct 2004 & 7-Jul 2005 & 252 &  &  &  & 0 & 227 \\ 
- & Palvin 2014 & 2004 & 2005 & 252 &  &  &  &  & 227 \\ 
- & Palvin 2014 & 2004 & 2005 & 252 &  &  &  &  & 227 \\ 
- & Carroll 2013 & 2005 & 2005 & 252 & Not specified &  &  & 0 & 227 \\ 
+ & Palvin 2014 & 2004 & 2005 & 227 & 252 &  &  &  &  \\ 
+Uige Province & Towner 2006 & Oct 2004 & Jul 2005 & 227 & 252 &  &  & 0 &  \\ 
 \midrule
-\multicolumn{10}{l}{Democratic Republic of the Congo} \\ 
+\multicolumn{10}{l}{Democratic Republic of the Congo - 1998} \\ 
 \midrule
- & Palvin 2014 & 1998 & 2000 & 154 &  &  &  &  & 128 \\ 
- & Palvin 2014 & 1998 & 2000 & 154 &  &  &  &  & 128 \\ 
-Durba and Watsa & Bausch 2006 & Oct 1998 & Sep 2000 & 48 & Molecular (PCR etc) & 106 &  & 0 & 125 \\ 
-Durba and Watsa & Borchert 2002 & Oct 1998 & May 1999 & 73 & Symptoms &  &  & 0 & 61 \\ 
-Durba and Watsa villages & Borchert 2006 & Oct 1998 & Aug 2000 & 76 & Molecular (PCR etc) & 33 & 0 &  &  \\ 
+Durba and Watsa & Borchert 2002 & Oct 1998 & May 1999 & 61 & 73 &  &  & 0 & Symptoms \\ 
+Durba and Watsa & Bausch 2006 & Oct 1998 & Sep 2000 & 125 & 48 & 106 &  & 0 & Molecular (PCR etc) \\ 
+Durba and Watsa villages & Borchert 2006 & Oct 1998 & Aug 2000 &  & 76 & 33 & 0 &  & Molecular (PCR etc) \\ 
+ & Palvin 2014 & 1998 & 2000 & 128 & 154 &  &  &  &  \\ 
 \midrule
-\multicolumn{10}{l}{Germany} \\ 
+\multicolumn{10}{l}{Germany - 1968} \\ 
 \midrule
-Marburg, Frankfurt am Main & Albarino 2013 & 18 Aug 1968 & 13 Nov 1968 & 23 & Symptoms &  & 1 &  & 5 \\ 
+Marburg, Frankfurt am Main & Albarino 2013 & 18 Aug 1968 & 13 Nov 1968 & 5 & 23 &  & 1 &  & Symptoms \\ 
 \midrule
-\multicolumn{10}{l}{Germany, Yugoslavia} \\ 
+\multicolumn{10}{l}{Germany, Yugoslavia - 1968} \\ 
 \midrule
- & Palvin 2014 & 1967 &  & 31 &  &  &  &  & 7 \\ 
- & Palvin 2014 & 1967 &  & 31 &  &  &  &  & 7 \\ 
-Marburg (23), Frankfurt am Main (6), Belgrade (2) & Martini 1973 & Aug 1968 & Nov 1968 & 31 & Symptoms &  & 1 &  & 7 \\ 
-Marburg (23), Frankfurt am Main (6), Belgrade (2) & Martini 1973 & Aug 1968 & Nov 1968 & 31 & Symptoms &  & 1 &  & 7 \\ 
+Marburg (23), Frankfurt am Main (6), Belgrade (2) & Martini 1973 & Aug 1968 & Nov 1968 & 7 & 31 &  & 1 &  & Symptoms \\ 
 \midrule
-\multicolumn{10}{l}{Kenya} \\ 
+\multicolumn{10}{l}{Germany, Yugoslavia - 1967} \\ 
 \midrule
- & Palvin 2014 & 1980 &  & 2 &  &  &  &  & 1 \\ 
- & Palvin 2014 & 1980 &  & 2 &  &  &  &  & 1 \\ 
- & Palvin 2014 & 1987 &  & 1 &  &  &  &  & 1 \\ 
- & Palvin 2014 & 1987 &  & 1 &  &  &  &  & 1 \\ 
+ & Palvin 2014 & 1967 &  & 7 & 31 &  &  &  &  \\ 
 \midrule
-\multicolumn{10}{l}{Netherlands} \\ 
+\multicolumn{10}{l}{Kenya - 1980} \\ 
 \midrule
- & Palvin 2014 & 2008 &  & 1 &  &  &  &  & 1 \\ 
- & Palvin 2014 & 2008 &  & 1 &  &  &  &  & 1 \\ 
+ & Palvin 2014 & 1980 &  & 1 & 2 &  &  &  &  \\ 
 \midrule
-\multicolumn{10}{l}{Russian Federation} \\ 
+\multicolumn{10}{l}{Kenya - 1987} \\ 
 \midrule
- & Palvin 2014 & 1988 &  & 1 &  &  &  &  & 1 \\ 
- & Palvin 2014 & 1988 &  & 1 &  &  &  &  & 1 \\ 
- & Palvin 2014 & 1990 &  & 1 &  &  &  &  & 0 \\ 
- & Palvin 2014 & 1990 &  & 1 &  &  &  &  & 0 \\ 
+ & Palvin 2014 & 1987 &  & 1 & 1 &  &  &  &  \\ 
 \midrule
-\multicolumn{10}{l}{South Africa, Zimbabwe} \\ 
+\multicolumn{10}{l}{Netherlands - 2008} \\ 
 \midrule
-Johannesburg & Conrad 1978 & 12 Feb 1975 &  & 3 & Molecular (PCR etc) &  &  & 1 & 1 \\ 
+ & Palvin 2014 & 2008 &  & 1 & 1 &  &  &  &  \\ 
 \midrule
-\multicolumn{10}{l}{Uganda} \\ 
+\multicolumn{10}{l}{Russian Federation - 1988} \\ 
 \midrule
-Ibanda and Kabale & Mbonye 2012 & 09-Sep 2012 & 13 11-Nov 2012 & 9 & Molecular (PCR etc) & 5 &  &  & 7 \\ 
-Kamwenge and Ibanda & Adjemian 2011 & 10 Jun 2007 & 14 Sep 2007 & 4 & Molecular (PCR etc) &  &  & 0 & 1 \\ 
-Kampala & Nyakarahuka 2017 & 17 09-Sep 2014 & 28 09-Sep 2014 & 1 & Molecular (PCR etc) &  &  & 1 & 1 \\ 
-Kampala & Nyakarahuka 2017 & 17 9-Sep 2014 & 28 9-Sep 2014 & 1 & Molecular (PCR etc) &  &  & 1 & 1 \\ 
-Kabale; Ibanda; Mbarara; Kampala & Albarino 2013 & 18 Oct 2012 & 7 Nov 2012 & 15 & Molecular (PCR etc) &  &  &  & 4 \\ 
- & Palvin 2014 & 2007 &  & 4 &  &  &  &  & 2 \\ 
- & Palvin 2014 & 2007 &  & 4 &  &  &  &  & 2 \\ 
-Ibanda and Kabale & Mbonye 2012 & 9-Sep 2012 & 13 11-Nov 2012 & 9 & Molecular (PCR etc) & 5 &  &  & 7 \\ 
-Ibanda, Kabale and Kamwenge Districts & Knust 2015 & Jul 2012 & 10 Nov 2012 & 15 & Molecular (PCR etc) & 11 &  &  & 15 \\ 
+ & Palvin 2014 & 1988 &  & 1 & 1 &  &  &  &  \\ 
 \midrule
-\multicolumn{10}{l}{United States} \\ 
+\multicolumn{10}{l}{Russian Federation - 1990} \\ 
 \midrule
-Colorado & Palvin 2014 & 2008 &  & 1 &  &  &  &  & 0 \\ 
-Colorado & Palvin 2014 & 2008 &  & 1 &  &  &  &  & 0 \\ 
+ & Palvin 2014 & 1990 &  & 0 & 1 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{South Africa, Zimbabwe - 1975} \\ 
+\midrule
+Johannesburg & Conrad 1978 & 12 Feb 1975 &  & 1 & 3 &  &  & 1 & Molecular (PCR etc) \\ 
+\midrule
+\multicolumn{10}{l}{Uganda - 2007} \\ 
+\midrule
+Kamwenge and Ibanda & Adjemian 2011 & 10 Jun 2007 & 14 Sep 2007 & 1 & 4 &  &  & 0 & Molecular (PCR etc) \\ 
+ & Palvin 2014 & 2007 &  & 2 & 4 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Uganda - 2012} \\ 
+\midrule
+Kabale; Ibanda; Mbarara; Kampala & Albarino 2013 & 18 Oct 2012 & 7 Nov 2012 & 4 & 15 &  &  &  & Molecular (PCR etc) \\ 
+Ibanda, Kabale and Kamwenge Districts & Knust 2015 & Jul 2012 & 10 Nov 2012 & 15 & 15 & 11 &  &  & Molecular (PCR etc) \\ 
+Ibanda and Kabale & Mbonye 2012 & Sep 2012 & 13 Nov 2012 & 7 & 9 & 5 &  &  & Molecular (PCR etc) \\ 
+\midrule
+\multicolumn{10}{l}{Uganda - 2014} \\ 
+\midrule
+Kampala & Nyakarahuka 2017 & 17 Sep 2014 & 28 Sep 2014 & 1 & 1 &  &  & 1 & Molecular (PCR etc) \\ 
+\midrule
+\multicolumn{10}{l}{United States - 2008} \\ 
+Colorado & Palvin 2014 & 2008 &  & 0 & 1 &  &  &  &  \\ 
 \bottomrule
 \end{longtable}
 

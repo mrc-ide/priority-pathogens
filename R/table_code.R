@@ -230,33 +230,37 @@ outbreak_table <- function(df,pathogen){
              cases_confirmed, cases_suspected, cases_asymptomatic, cases_mode_detection,
              cases_severe_hospitalised, deaths)) %>%
     dplyr::rowwise() %>% 
+    dplyr::mutate(outbreak_start_month = str_replace_all(tm::removeNumbers(outbreak_start_month), "-",""),
+                  outbreak_end_month = str_replace_all(tm::removeNumbers(outbreak_end_month), "-","")) %>%
     dplyr::mutate(outbreak_start = date_start(start_day = outbreak_start_day,
                                               start_month = outbreak_start_month,
                                               start_year = outbreak_start_year), 
                   outbreak_end = date_end(end_day = outbreak_end_day,
                                           end_month = outbreak_end_month,
-                                          end_year = outbreak_date_year))%>%
-    dplyr::arrange(outbreak_country, outbreak_start) %>%
+                                          end_year = outbreak_date_year),
+                  cases_mode_detection = str_replace_all(cases_mode_detection, "Molecular (PCR etc)", "Molecular")) %>%
+    dplyr::distinct() %>%
+    dplyr::arrange(outbreak_country, outbreak_date_year) %>%
+    group_by(outbreak_country, outbreak_start_year) %>%    
     dplyr::select(Country = outbreak_country,
                   Location = outbreak_location,
                   Article = article_label,
                   Start = outbreak_start, 
                   End = outbreak_end, 
-                  "Confirmed Cases" = cases_confirmed,
-                  "Confirmation Method" = cases_mode_detection, 
-                  "Suspected Cases" = cases_suspected,
-                  "Asymptomatic Cases" = cases_asymptomatic,
-                  "Severe/hospitalised Cases" = cases_severe_hospitalised,
-                  Deaths = deaths) %>%
-    group_by(Country) %>%
+                  Deaths = deaths,
+                  "Confirmed" = cases_confirmed,
+                  "Suspected" = cases_suspected,
+                  "Asymptomatic" = cases_asymptomatic,
+                  "Severe/hospitalised" = cases_severe_hospitalised,
+                  "Confirmation Method" = cases_mode_detection) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
     flextable(col_keys = c("Country",
                            "Location", "Article", 
                            "Start", "End", 
-                           "Confirmed Cases", "Confirmation Method",
-                           "Suspected Cases", "Asymptomatic Cases", 
-                           "Severe/hospitalised Cases", "Deaths")) %>%
+                           "Deaths", "Confirmed",
+                           "Suspected", "Asymptomatic", 
+                           "Severe/hospitalised", "Confirmation Method")) %>%
     fontsize(i = 1, size = 12, part = "header") %>%  # adjust font size of header
     border_remove() %>%
     autofit() %>%
@@ -267,31 +271,35 @@ outbreak_table <- function(df,pathogen){
   save_as_image(outbreak_tbl, path = paste0("data/", pathogen,"/output/outbreak_tbl.png"))
   
   outbreak_latex_tbl <- df %>%
+    dplyr::filter(is.na(outbreak_start_year) == FALSE) %>%
     select(c(article_label, outbreak_start_day, outbreak_start_month, outbreak_start_year,
              outbreak_end_day, outbreak_end_month, outbreak_date_year, 
              outbreak_country, outbreak_location, 
              cases_confirmed, cases_suspected, cases_asymptomatic, cases_mode_detection,
              cases_severe_hospitalised, deaths)) %>%
-    dplyr::rowwise() %>%
+    dplyr::rowwise() %>% 
+    dplyr::mutate(outbreak_start_month = str_replace_all(tm::removeNumbers(outbreak_start_month), "-",""),
+                  outbreak_end_month = str_replace_all(tm::removeNumbers(outbreak_end_month), "-","")) %>%
     dplyr::mutate(outbreak_start = date_start(start_day = outbreak_start_day,
                                               start_month = outbreak_start_month,
                                               start_year = outbreak_start_year), 
                   outbreak_end = date_end(end_day = outbreak_end_day,
                                           end_month = outbreak_end_month,
-                                          end_year = outbreak_date_year))%>%
-    dplyr::arrange(outbreak_country, outbreak_start) %>%
+                                          end_year = outbreak_date_year)) %>%
+    dplyr::distinct() %>%
+    dplyr::arrange(outbreak_country, outbreak_date_year) %>%
+    group_by(outbreak_country, outbreak_start_year) %>%    
     dplyr::select(Country = outbreak_country,
                   Location = outbreak_location,
                   Article = article_label,
                   Start = outbreak_start, 
                   End = outbreak_end, 
-                  "Confirmed Cases" = cases_confirmed,
-                  "Confirmation Method" = cases_mode_detection, 
-                  "Suspected Cases" = cases_suspected,
-                  "Asymptomatic Cases" = cases_asymptomatic,
-                  "Severe/hospitalised Cases" = cases_severe_hospitalised,
-                  Deaths = deaths) %>%
-    group_by(Country) %>%
+                  Deaths = deaths,
+                  "Confirmed" = cases_confirmed,
+                  "Suspected" = cases_suspected,
+                  "Asymptomatic" = cases_asymptomatic,
+                  "Severe/hospitalised" = cases_severe_hospitalised,
+                  "Confirmation Method" = cases_mode_detection) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
     mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% dplyr::select(-c(index_of_change)) %>%
