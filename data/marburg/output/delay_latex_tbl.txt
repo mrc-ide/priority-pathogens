@@ -1,53 +1,36 @@
 \begin{longtable}{lllrlrlllll}
 \toprule
-Article & Survey year & Parameter type & Delays (days) & Statistic & Uncertainty & Uncertainty type & Population Group & Timing of survey & Outcome & Disaggregated data
+Article & Country & Survey year & Delays (days) & Statistic & Uncertainty & Uncertainty type & Population Group & Timing of survey & Outcome & Disaggregated data
 available \\ 
 \midrule
-\multicolumn{11}{l}{Angola} \\ 
+\multicolumn{11}{l}{Generation Time} \\ 
 \midrule
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Generation Time & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 7 & Median & 5 - 9 & Range & General population & Mid outbreak & Death &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 7 & Median & 5 - 9 & Range & General population & Mid outbreak & Death &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak & Death &  \\ 
-Ajelli 2012 & Mar-Nov 2005 & Time Symptom To Outcome & 9 & Median & 0 - 56 & Range & General population & Mid outbreak & Death &  \\ 
+Ajelli 2012 & Angola & Mar-Nov 2005 & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Angola & Mar-Nov 2005 & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Angola & Mar-Nov 2005 & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 \midrule
-\multicolumn{11}{l}{Germany, Yugoslavia} \\ 
+\multicolumn{11}{l}{Incubation Period} \\ 
 \midrule
-Martini 1973 & Aug-Nov 1968 & Incubation Period &  &  & 4 - 7 & Range &  &  &  &  \\ 
+Martini 1973 & Germany, Yugoslavia & Aug-Nov 1968 &  &  & 4 - 7 & Range &  &  &  &  \\ 
+Gear 1975 & South Africa & Feb 1975 &  &  & 7 - 8 & Range & Healthcare workers & Mid outbreak &  &  \\ 
 \midrule
-\multicolumn{11}{l}{Germany, Yuogslavia} \\ 
+\multicolumn{11}{l}{Time In Care} \\ 
 \midrule
-Martini 1973 & Aug-Nov 1968 & Incubation Period &  &  & 4 - 7 & Range &  &  &  &  \\ 
+Knust 2015 & Uganda & 2012 & 14.3 & Mean & 4 - 22 & Range & General population & Post outbreak & Other &  \\ 
 \midrule
-\multicolumn{11}{l}{South Africa} \\ 
+\multicolumn{11}{l}{Time Symptom To Careseeking} \\ 
 \midrule
-Gear 1975 &  & Incubation Period &  &  & 7 - 8 & Range & Healthcare workers & Mid outbreak &  &  \\ 
-Gear 1975 &  & Incubation Period &  &  & 7 - 8 & Range & Healthcare workers & Mid outbreak &  &  \\ 
-Gear 1975 &  & Time Symptom To Careseeking & 4 & Other &  &  & Other & Start outbreak &  &  \\ 
-Gear 1975 &  & Time Symptom To Careseeking & 4 & Other &  &  & Other & Start outbreak &  &  \\ 
-Gear 1975 &  & Time Symptom To Outcome & 9 &  &  &  & Other & Start outbreak & Other &  \\ 
-Gear 1975 &  & Time Symptom To Outcome & 9 &  &  &  & Other & Start outbreak & Other &  \\ 
+Bausch 2006 & Democratic Republic of the Congo & 1999-2000 & 4.5 & Median & 0 - 24 & Range & Other & Mid outbreak &  &  \\ 
+Gear 1975 & South Africa & Feb 1975 & 4 & Other &  &  & Other & Start outbreak &  &  \\ 
+Knust 2015 & Uganda & 2012 & 4 & Mean &  &  & General population &  &  &  \\ 
 \midrule
-\multicolumn{11}{l}{Uganda} \\ 
+\multicolumn{11}{l}{Time Symptom To Outcome} \\ 
 \midrule
-Knust 2015 & 2012 & Time In Care & 14.3 & Mean & 4 - 22 & Range & General population & Post outbreak & Other &  \\ 
-Knust 2015 & 2012 & Time In Care & 14.3 & Mean & 4 - 22 & Range & General population & Post outbreak & Other &  \\ 
-Knust 2015 & 2012 & Time Symptom To Careseeking & 4 & Mean &  &  & General population &  &  &  \\ 
-Knust 2015 & 2012 & Time Symptom To Careseeking & 4 & Mean &  &  & General population &  &  &  \\ 
-Knust 2015 & 2012 & Time Symptom To Outcome & 22 & Mean & 16 - 30 & Range & General population &  & Other &  \\ 
-Knust 2015 & 2012 & Time Symptom To Outcome & 22 & Mean & 16 - 30 & Range & General population &  & Other &  \\ 
-Knust 2015 & 2012 & Time Symptom To Outcome & 9 & Mean & 6.5 - 9 & Range & General population & Post outbreak & Death & Other \\ 
-Knust 2015 & 2012 & Time Symptom To Outcome & 9 & Mean & 6.5 - 9 & Range & General population & Post outbreak & Death & Other \\ 
-\midrule
-\multicolumn{11}{l}{Democratic Republic of the Congo} \\ 
-\midrule
-Bausch 2006 & 1999-2000 & Time Symptom To Careseeking & 4.5 & Median & 0 - 24 & Range & Other & Mid outbreak &  &  \\ 
-Bausch 2006 & 1999-2000 & Time Symptom To Careseeking & 4.5 & Median & 0 - 24 & Range & Other & Mid outbreak &  &  \\ 
+Ajelli 2012 & Angola & Mar-Nov 2005 & 7 & Median & 5 - 9 & Range & General population & Mid outbreak & Death &  \\ 
+Ajelli 2012 & Angola & Mar-Nov 2005 & 9 & Median & 0 - 56 & Range & General population & Mid outbreak & Death &  \\ 
+Gear 1975 & South Africa & Feb 1975 & 9 &  &  &  & Other & Start outbreak & Other &  \\ 
+Knust 2015 & Uganda & 2012 & 9 & Mean & 6.5 - 9 & Range & General population & Post outbreak & Death & Other \\ 
+Knust 2015 & Uganda & 2012 & 22 & Mean & 16 - 30 & Range & General population &  & Other &  \\ 
 \bottomrule
 \end{longtable}
 
