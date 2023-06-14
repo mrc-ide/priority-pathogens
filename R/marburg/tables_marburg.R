@@ -21,13 +21,14 @@ df <- merge(par_final, article_df %>% dplyr::select(article_id, first_author_fir
 
 outbreak <- merge(outbreak_final, article_df %>% dplyr::select(covidence_id, first_author_first_name,year_publication),
                   all.x=TRUE, by="covidence_id") %>%
-  dplyr::filter(is.na(outbreak_country) == FALSE) %>%
+  dplyr::filter(is.na(double_extracted) == FALSE) %>%
   mutate(article_label = as.character(paste0(first_author_first_name," ",year_publication)),
          outbreak_country = str_replace_all(outbreak_country,";",", "),
          outbreak_country = str_replace_all(outbreak_country, "Yuogslavia", "Yugoslavia"),
          outbreak_country = str_replace_all(outbreak_country, "Congo, Dem. Rep.", "Democratic Republic of the Congo"),
          outbreak_location = str_replace_all(outbreak_location, "Marburg (23), Frankfurt am Main (6), Belgrade (2)",
-                                             "Marburg, Frankfurt am Main, Belgrade")) %>%
+                                             "Marburg, Frankfurt am Main, Belgrade"),
+         cases_mode_detection = gsub("[()]", "", str_replace_all(cases_mode_detection, "(PCR etc)", " "))) %>%
   dplyr::arrange(article_label, -year_publication)
 
 
