@@ -4,17 +4,27 @@ Article & Survey year & Outcome & Risk factor & Occupation & Significant & Adjus
 \midrule
 \multicolumn{11}{l}{Angola} \\ 
 \midrule
+Borchert 2005 & Mar-Jul 2005 & Infection & Household contact;Other &  & Significant & Unknown & 102 & Hospital based & Persons under investigation & Mid outbreak \\ 
 Borchert 2005 & Mar-Jul 2005 & Infection & Gathering;Occupation & Funeral and burrial services & Significant & Unknown & 102 & Hospital based & Persons under investigation & Mid outbreak \\ 
 Borchert 2005 & Mar-Jul 2005 & Infection & Household contact;Other &  & Significant & Unknown & 102 & Hospital based & Persons under investigation & Mid outbreak \\ 
+Borchert 2005 & Mar-Jul 2005 & Infection & Gathering;Occupation & Funeral and burrial services & Significant & Unknown & 102 & Hospital based & Persons under investigation & Mid outbreak \\ 
 \midrule
 \multicolumn{11}{l}{Uganda} \\ 
 \midrule
 Knust 2015 & 2012 & Infection & Gathering &  & Significant & Unknown & 26 & Community based & General population & Post outbreak \\ 
+Knust 2015 & 2012 & Infection & Gathering &  & Significant & Unknown & 26 & Community based & General population & Post outbreak \\ 
 Knust 2015 & 2012 & Infection & Other;Sex &  & Not significant & Unknown & 26 & Community based & General population & Post outbreak \\ 
+Knust 2015 & 2012 & Infection & Other;Sex &  & Not significant & Unknown & 26 & Community based & General population & Post outbreak \\ 
+Amman 2012 &  & Infection & Contact with animal;Other &  & Significant & Unknown &  &  &  &  \\ 
+\midrule
+\multicolumn{11}{l}{NA} \\ 
+\midrule
 Amman 2012 &  & Infection & Contact with animal;Other &  & Significant & Unknown &  &  &  &  \\ 
 \midrule
 \multicolumn{11}{l}{Democratic Republic of the Congo} \\ 
 \midrule
+Bausch 2003 & May-May 1999 & Serology & Contact with animal;Household contact;Occupation & Funeral and burrial services & Not significant & Adjusted & 912 & Population based &  &  \\ 
+Bausch 2003 & May-May 1999 & Serology & Hospitalisation &  & Significant & Adjusted & 915 & Population based &  &  \\ 
 Bausch 2003 & May-May 1999 & Serology & Hospitalisation &  & Significant & Adjusted & 915 & Population based &  &  \\ 
 Bausch 2003 & May-May 1999 & Serology & Contact with animal;Household contact;Occupation & Funeral and burrial services & Not significant & Adjusted & 912 & Population based &  &  \\ 
 \bottomrule
