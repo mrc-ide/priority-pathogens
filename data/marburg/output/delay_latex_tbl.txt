@@ -5,9 +5,9 @@ available \\
 \midrule
 \multicolumn{11}{l}{Generation Time} \\ 
 \midrule
-Ajelli 2012 & Angola & Mar-Nov 2005 & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Angola & Mar-Nov 2005 & 9.3 & Mean & 3.7, 14.6 & CI95\% & General population & Mid outbreak &  &  \\ 
 Ajelli 2012 & Angola & Mar-Nov 2005 & 5.4 & Standard Deviation & 3.9, 8.6 & CI95\% & General population & Mid outbreak &  &  \\ 
+Ajelli 2012 & Angola & Mar-Nov 2005 & 9 & Mean & 8.2, 10 & CI95\% & General population & Mid outbreak &  &  \\ 
 \midrule
 \multicolumn{11}{l}{Incubation Period} \\ 
 \midrule
