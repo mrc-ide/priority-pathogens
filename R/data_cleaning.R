@@ -21,6 +21,16 @@ clean_dfs <- function(df, column_name){
   df <- df %>%
     janitor::clean_names() %>%
     dplyr::filter(!is.na(all_of(column_name)))
+  
+  if('outbreak_id' %in% colnames(df)){
+    df <- df %>%
+      mutate(# Format start/stop months for outbreaks
+        outbreak_start_month = substring(outbreak_start_month, 1, 3),
+        outbreak_end_month = substring(outbreak_end_month, 1, 3)) %>%
+      mutate(outbreak_country = stringr::str_replace(outbreak_country, 'Congo, Rep.', 'Republic of the Congo'),
+             outbreak_country = stringr::str_replace(outbreak_country, 'Congo, Dem. Rep.', 'Democratic Republic of the Congo'),
+             outbreak_country = str_replace(outbreak_country, 'Yuogslavia', 'Yugoslavia'))
+  }
 
   if('parameter_type' %in% colnames(df)){
     df <- df %>%
