@@ -6,6 +6,7 @@ library(flextable)
 library(scales)
 library(stringr)
 library(gt)
+library(tm)
 
 
 # Seroprevalence table
