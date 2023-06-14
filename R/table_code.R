@@ -143,8 +143,10 @@ risk_table <- function(df,pathogen){
   set_flextable_defaults(background.color = "white")
   
   risk_tbl <- df %>%
-    filter(parameter_class == 'Risk factors') %>%
-    select(c(Article = article_label, 
+    dplyr::filter(parameter_class == 'Risk factors') %>%
+    dplyr::mutate(riskfactor_occupation = str_replace_all(riskfactor_occupation, "burrial", "burial"),
+                  riskfactor_name = str_replace_all(riskfactor_name, ";", ", ")) %>%
+    dplyr::select(c(Article = article_label, 
              Country = population_country, 
              `Survey year`, 
              'Outcome' = riskfactor_outcome,
