@@ -4,12 +4,13 @@ Location & Article & Start & End & Confirmed Cases & Confirmation Method & Suspe
 \midrule
 \multicolumn{10}{l}{Angola} \\ 
 \midrule
- & Palvin 2014 &  2004 &  2005 & 252 &  &  &  &  & 227 \\ 
+Uige Province & Towner 2006 & 10 2004 & 07 2005 & 252 &  &  &  & 0 & 227 \\ 
+ & Palvin 2014 & 2004 & 2005 & 252 &  &  &  &  & 227 \\ 
  & Carroll 2013 & 2005 & 2005 & 252 & Not specified &  &  & 0 & 227 \\ 
 \midrule
 \multicolumn{10}{l}{Democratic Republic of the Congo} \\ 
 \midrule
- & Palvin 2014 &  1998 &  2000 & 154 &  &  &  &  & 128 \\ 
+ & Palvin 2014 & 1998 & 2000 & 154 &  &  &  &  & 128 \\ 
 Durba and Watsa villages & Borchert 2006 & Oct 1998 & Aug 2000 & 76 & Molecular & 33 & 0 &  &  \\ 
 Durba and Watsa & Borchert 2002 & Oct 1998 & May 1999 & 73 & Symptoms &  &  & 0 & 61 \\ 
 Durba and Watsa & Bausch 2006 & Oct 1998 & Sep 2000 & 48 & Molecular & 106 &  & 0 & 125 \\ 
@@ -18,20 +19,40 @@ Durba and Watsa & Bausch 2006 & Oct 1998 & Sep 2000 & 48 & Molecular & 106 &  & 
 \midrule
 Marburg, Frankfurt am Main & Albarino 2013 & 18 Aug 1968 & 13 Nov 1968 & 23 & Symptoms &  & 1 &  & 5 \\ 
 \midrule
-\multicolumn{10}{l}{Germany, Yuogslavia} \\ 
+\multicolumn{10}{l}{Germany;Yuogslavia} \\ 
 \midrule
+ & Palvin 2014 & 1967 &  & 31 &  &  &  &  & 7 \\ 
 Marburg, Frankfurt am Main, Belgrade & Martini 1973 & Aug 1968 & Nov 1968 & 31 & Symptoms &  & 1 &  & 7 \\ 
 \midrule
-\multicolumn{10}{l}{South Africa} \\ 
+\multicolumn{10}{l}{Kenya} \\ 
 \midrule
-Johannesburg & Gear 1975 & 11 Feb 1975 & Mar 1975 & 3 & Molecular &  &  & 3 & 1 \\ 
+ & Palvin 2014 & 1980 &  & 2 &  &  &  &  & 1 \\ 
+ & Palvin 2014 & 1987 &  & 1 &  &  &  &  & 1 \\ 
+\midrule
+\multicolumn{10}{l}{Netherlands} \\ 
+\midrule
+ & Palvin 2014 & 2008 &  & 1 &  &  &  &  & 1 \\ 
+\midrule
+\multicolumn{10}{l}{Russian Federation} \\ 
+\midrule
+ & Palvin 2014 & 1988 &  & 1 &  &  &  &  & 1 \\ 
+ & Palvin 2014 & 1990 &  & 1 &  &  &  &  & 0 \\ 
+\midrule
+\multicolumn{10}{l}{South Africa;Zimbabwe} \\ 
+\midrule
+Johannesburg & Conrad 1978 & 12 Feb 1975 &  & 3 & Molecular &  &  & 1 & 1 \\ 
 \midrule
 \multicolumn{10}{l}{Uganda} \\ 
 \midrule
+Ibanda and Kabale & Mbonye 2012 & 09 2012 & 13 11 2012 & 9 & Molecular & 5 &  &  & 7 \\ 
 Kamwenge and Ibanda & Adjemian 2011 & 10 Jun 2007 & 14 Sep 2007 & 4 & Molecular &  &  & 0 & 1 \\ 
-Kampala & Nyakarahuka 2017 & 17 Sep 2014 & 28 Sep 2014 & 1 & Molecular &  &  & 1 & 1 \\ 
+Kampala & Nyakarahuka 2017 & 17 09 2014 & 28 09 2014 & 1 & Molecular &  &  & 1 & 1 \\ 
 Kabale; Ibanda; Mbarara; Kampala & Albarino 2013 & 18 Oct 2012 & 7 Nov 2012 & 15 & Molecular &  &  &  & 4 \\ 
+ & Palvin 2014 & 2007 &  & 4 &  &  &  &  & 2 \\ 
 Ibanda, Kabale and Kamwenge Districts & Knust 2015 & Jul 2012 & 10 Nov 2012 & 15 & Molecular & 11 &  &  & 15 \\ 
+\midrule
+\multicolumn{10}{l}{United States} \\ 
+Colorado & Palvin 2014 & 2008 &  & 1 &  &  &  &  & 0 \\ 
 \bottomrule
 \end{longtable}
 

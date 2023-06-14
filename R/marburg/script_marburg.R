@@ -108,3 +108,4 @@ write.csv(article_final, "data/marburg/final/article_final.csv", row.names = FAL
 write.csv(model_final, "data/marburg/final/model_final.csv", row.names = FALSE)
 write.csv(outbreak_final, "data/marburg/final/outbreak_final.csv", row.names = FALSE)
 write.csv(parameter_final, "data/marburg/final/parameter_final.csv", row.names = FALSE) # 24 apr missing Cyril and Gina's DE
+
