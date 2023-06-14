@@ -9,10 +9,14 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
   
   parameter <- "Severity"
   
+  if(outbreak_naive) {
+    df <- df %>% dplyr::filter(keep_record == 1)
+  }
+  
   df_cfr <- df %>% filter(parameter_class == parameter) %>%
     mutate(parameter_value = as.numeric(parameter_value)) %>%
     group_by(parameter_type) %>%
-    dplyr::arrange(first_author_first_name)
+    dplyr::arrange(article_label)
   
   df_cfr$pooled <- (sum(df_cfr$cfr_ifr_numerator, na.rm = TRUE)/sum(df_cfr$cfr_ifr_denominator, na.rm = TRUE))*100
   p <- df_cfr$pooled[1]/100
@@ -31,12 +35,15 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
   ## sorry team this is also hacky but I'm gonna scream if these points don't go where we want them 
   df_plot <- df_plot %>% mutate(order_num = seq(1,dim(df_plot)[1],1))
   
-  if(outbreak_naive)
-  {
+  if(outbreak_naive) {
+    df_plot <- df_plot %>% 
+      dplyr::arrange(outbreak_year_cnt) %>%
+      dplyr::mutate(order_num = row_number())
+    
     plot <- ggplot(df_plot, aes(x=parameter_value, y=reorder(article_label_unique,-order_num), 
-                                col = outbreak_year_cnt)) + 
+                                col = article_label)) + 
       theme_bw() + geom_point(size = 3) +
-      scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
+      scale_y_discrete(labels=setNames(df_plot$outbreak_year_cnt, df_plot$article_label_unique)) +
       labs(x="Case fatality ratio (%)",y="",#y="Study",
            linetype="",colour="",fill="") + 
       theme(legend.position="right",
@@ -53,6 +60,10 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
       scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
       scale_fill_manual(values="grey")
   } else {
+    df_plot <- df_plot %>% 
+      dplyr::arrange(article_label_unique) %>%
+      dplyr::mutate(order_num = row_number())
+    
     plot <- ggplot(df_plot, aes(x=parameter_value, y=reorder(article_label_unique,-order_num), 
                                 col = cfr_ifr_method)) + 
       theme_bw() + geom_point(size = 3) +
@@ -64,7 +75,8 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
       #               position=position_dodge(width=0.5),
       #               width=0.25) +
       geom_errorbar(aes(y=article_label_unique,
-                        xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
+                        xmin=parameter_uncertainty_lower_value,
+                        xmax=parameter_uncertainty_upper_value,
                         group=parameter_data_id,
                         linetype="Uncertainty interval"),
                     position=position_dodge(width=0.5),
