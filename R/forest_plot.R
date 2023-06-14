@@ -174,7 +174,8 @@ forest_plot_delay <- function(df){
                                                 "Incubation period",
                                                 ifelse(parameter_type=="Human delay - time in care","Time in care",
                                                        ifelse(parameter_type=="Human delay - time symptom to careseeking","Time symptom to careseeking",
-                                                              ifelse(parameter_type=="Human delay - time symptom to outcome","Time symptom to outcome",NA)))))
+                                                              ifelse(parameter_type=="Human delay - time symptom to outcome" & riskfactor_outcome=="Death","Time symptom to outcome (Death)",
+                                                                     ifelse(parameter_type=="Human delay - time symptom to outcome" & riskfactor_outcome=="Other","Time symptom to outcome (Other)",NA))))))
   )
   
   plot <-
@@ -234,7 +235,7 @@ forest_plot_mutations <- function(df){
   
   df_plot$article_label_unique <- make.unique(df_plot$article_label)
   df_plot <- df_plot %>%
-    dplyr::mutate(gene = ifelse(is.na(genome_site)==TRUE, "whole genome", genome_site))  %>%
+    dplyr::mutate(gene = ifelse(is.na(genome_site)==TRUE, "Whole genome", genome_site))  %>%
     dplyr::arrange(gene, desc(parameter_value))
   df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
   df_plot <- df_plot %>%
