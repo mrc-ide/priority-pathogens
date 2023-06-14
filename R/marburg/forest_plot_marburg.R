@@ -44,7 +44,7 @@ df_out <- merge(outbreak_df, article_df %>% dplyr::select(article_id, first_auth
          parameter_type="Severity - case fatality rate (CFR)",
          parameter_uncertainty_lower_value = NA,
          parameter_uncertainty_upper_value = NA,
-         outbreak_year_cnt = paste(outbreak_country,outbreak_date_year))
+         outbreak_year_cnt = str_replace(paste0(outbreak_country, " (",outbreak_date_year,")"),"NA","unknown") )
 df_out$parameter_data_id <- seq(1,dim(df_out)[1],1)
 
 
@@ -60,7 +60,7 @@ reproduction_number <- forest_plot_R(df)
 
 severity_params <- forest_plot_fr(df) 
 #ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",width = 15, height = 10, units = "cm")
-severity_outbreaks <- forest_plot_fr(df_out)
+severity_outbreaks <- forest_plot_fr(df_out,outbreak_naive = TRUE)
 
 plot_grid(reproduction_number+labs(tag="A"),
           #severity+labs(tag="B"),
@@ -69,6 +69,10 @@ plot_grid(reproduction_number+labs(tag="A"),
           nrow=3,align="hv",rel_heights = c(0.7,1))
 ggsave(filename="data/marburg/output/panel_plot.png",bg = "white",width = 12.5, height=15)
 
+plot_grid(severity_params+labs(tag="A"),
+          severity_outbreaks+labs(tag="B"),
+          nrow=2,align="hv",rel_heights = c(0.7,1))
+ggsave(filename="data/marburg/output/cfr_plot.png",bg = "white",width = 12.5, height=7.5)
 
 #panel_plot <- (reproduction_number + ggtitle("A") + severity + ggtitle("B")) / (human_delay + ggtitle("C") + mutations + ggtitle("D"))
 #ggsave(plot = panel_plot,filename="data/marburg/output/panel_plot.png",bg = "white",width = 15, height=10)
