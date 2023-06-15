@@ -35,15 +35,20 @@ answers$Question <- factor(answers$Question, levels=rev(c("Q1 Method: \nClear & 
                                                        "Q6 Data: \nIssues acknowledged",
                                                        "Q7 Data: \nIssues accounted for")))
 
+answers$Assessment[is.na(answers$Assessment)] <- "NA"
+answers$Assessment <- factor(answers$Assessment,levels=c("NA","No","Yes"))
+
 QA_answers <- answers %>%
   group_by(Question,Assessment) %>% summarize(count=n()) %>% ungroup() %>%
   ggplot(aes(fill=Assessment, y=count, x=Question)) + 
   geom_bar(position="stack", stat="identity") + theme_bw() +
-  scale_fill_manual(values = c("coral1","darkolivegreen2"),aesthetics = "fill",na.value = "grey70") +
-  xlab("") + ylab("Count") + 
+  scale_fill_manual(values = c("darkolivegreen2","coral1","grey70"),aesthetics = "fill",name="",breaks=c('Yes', 'No','NA')) +
+  xlab("") + ylab("Count of papers") + 
   coord_flip() + theme(legend.position = 'bottom')
   
-QA_answers + QA_time_series # 900x450
+QA_answers + labs(tag="A") + QA_time_series +labs(tag="B") # 900x450
   
+ggsave(filename="data/marburg/output/quality_assessment_si_plot.png",bg = "white",width = 12.5, height=5)
+
 # Axis title
 
