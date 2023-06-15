@@ -45,7 +45,7 @@ plot_param_overview <- function(parameter_df, pathogen){
   ggplot(parameter_df) + 
     geom_bar(aes(x = parameter_type_short, fill = parameter_class), color = 'black', linewidth = 0.3) + 
     labs(x = "Parameter", 
-         y = "Number extracted") + 
+         y = "Number of parameters extracted") + 
     guides(fill = guide_legend(title="Parameter Classification")) + 
     scale_y_continuous(breaks = seq(0, 10, by = 2))+
     scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95)+
