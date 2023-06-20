@@ -140,7 +140,7 @@ forest_plot_R <- function(df){
                       group=parameter_data_id,
                       linetype="Uncertainty interval"),
                   position=position_dodge(width=0.5),
-                  width=0.25,
+                  width = 0.2,
                   lwd=1)+
     geom_point(aes(x=parameter_value,y=article_label,group=parameter_data_id),size = 3)+
     # geom_vline(aes(xintercept=median,col="Sample median"),linetype="dashed", colour = "grey") +
@@ -168,30 +168,28 @@ forest_plot_delay <- function(df){
   df_delay <- df %>% 
     dplyr::filter(parameter_class == parameter) %>%
     dplyr::mutate(parameter_value = as.numeric(parameter_value)) %>%
-    dplyr::group_by(parameter_type) %>%
-    dplyr::arrange(first_author_first_name) #%>%
-    #dplyr::filter(parameter_type != "Human delay - generation time")
-  
-  df_plot <- df_delay %>% 
-    dplyr::filter(parameter_class == parameter) %>%
-    dplyr::mutate(parameter_value = as.numeric(parameter_value)) %>%
-    dplyr::group_by(parameter_type) %>% ### median function not behaving in ggplot so going with this even with grouping
-    mutate(median = median(parameter_value,na.rm=TRUE)) %>%
-    dplyr::arrange(desc(parameter_type), desc(parameter_value), desc(article_label))
-  
-  df_plot$article_label_unique <- make.unique(df_plot$article_label)
-  df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
-  
-  df_plot <- df_plot %>% 
     mutate(parameter_type_short = ifelse(parameter_type=="Human delay - generation time","Generation time",
                                          ifelse(parameter_type=="Human delay - incubation period",
                                                 "Incubation period",
                                                 ifelse(parameter_type=="Human delay - time in care","Time in care",
                                                        ifelse(parameter_type=="Human delay - time symptom to careseeking","Time symptom to careseeking",
                                                               ifelse(parameter_type=="Human delay - time symptom to outcome" & riskfactor_outcome=="Death","Time symptom to outcome (Death)",
-                                                                     ifelse(parameter_type=="Human delay - time symptom to outcome" & riskfactor_outcome=="Other","Time symptom to outcome (Other)",NA))))))
-  )
+                                                                     ifelse(parameter_type=="Human delay - time symptom to outcome" & riskfactor_outcome=="Other","Time symptom to outcome (Other)",NA))))))) %>%
+    dplyr::group_by(parameter_type_short) %>%
+    dplyr::arrange(first_author_first_name) 
+     
+    #dplyr::filter(parameter_type != "Human delay - generation time")
   
+  df_plot <- df_delay %>% 
+    dplyr::filter(parameter_class == parameter) %>%
+    dplyr::mutate(parameter_value = as.numeric(parameter_value)) %>%
+    dplyr::group_by(parameter_type_short) %>% ### median function not behaving in ggplot so going with this even with grouping
+    mutate(median = median(parameter_value,na.rm=TRUE)) %>%
+    dplyr::arrange(desc(parameter_type_short), desc(parameter_value), desc(article_label))
+  
+  df_plot$article_label_unique <- make.unique(df_plot$article_label)
+  df_plot$article_label_unique <- factor(df_plot$article_label_unique, levels = df_plot$article_label_unique)
+    
   plot <-
     ggplot(df_plot, aes(col = parameter_type_short)) + 
     theme_bw() + 
@@ -222,7 +220,8 @@ forest_plot_delay <- function(df){
          y="",#y="Study (First author surname and publication year)",
          linetype="", 
          colour="",
-         shape = '') + 
+         shape = '',
+         caption = '*Solid transparent rectangles refer to parameter ranges while the error bars are uncertainty intervals.') + 
     # scale_linetype_manual(values = c("blank",'solid'),
     #                       labels = function(x) str_wrap(x, width = 5)) +
     scale_color_brewer(palette = 'Dark2',#end=0.9,
@@ -240,8 +239,7 @@ forest_plot_delay <- function(df){
     guides(colour = guide_legend(order=1,ncol =1),
            linetype = guide_legend(order=2,ncol=1)) 
 
-  plot
-  
+
   return(plot)
   
 }
@@ -296,11 +294,12 @@ forest_plot_mutations <- function(df){
                       xmax=parameter_uncertainty_upper_value* 1e04,
                       group=parameter_data_id),
                       # linetype="Uncertainty interval"),
-                  width = 0.8,
+                  width = 0.3,
                   lwd=1) +
     labs(x=expression(Molecular~evolutionary~rate~(substitution/site/year ~10^{-4})),
          y="",#y="Study",
-         linetype="",colour="") + 
+         linetype="",colour="",
+         caption = '*Solid transparent lines are calculated as the parameter value \u00B1 standard error. Error bars refer to uncertainty intervals.') + 
     # scale_linetype_manual(values = c("dotted","solid"),labels = function(x) str_wrap(x, width = 18)) + #+ scale_x_log10()
     #geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
     theme(legend.text = element_text(size=12),
