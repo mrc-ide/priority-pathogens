@@ -90,7 +90,7 @@ delay_table <- function(df, pathogen){
              `Population Group` = population_group,
              `Timing of survey` = method_moment_value,
              Outcome = riskfactor_outcome,
-             `Disaggregated data\navailable` = method_disaggregated_by,
+             # `Disaggregated data\navailable` = method_disaggregated_by,
              # `Risk factor outcome` = riskfactor_outcome
              )) %>%
     arrange(`Parameter type`, Country, `Survey year`) %>%
@@ -98,7 +98,7 @@ delay_table <- function(df, pathogen){
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
     flextable(col_keys = c("Article", "Country", "Parameter type", "Survey year", "Delays (days)", 'Statistic',
-                           'Uncertainty', 'Uncertainty type', 'Population Group', 'Timing of survey', 'Outcome','Disaggregated data\navailable')) %>%
+                           'Uncertainty', 'Uncertainty type', 'Population Group', 'Timing of survey', 'Outcome')) %>%#,'Disaggregated data\navailable'
     fontsize(i = 1, size = 12, part = "header") %>%  # adjust font size of header
     border_remove() %>%
     autofit() %>%
