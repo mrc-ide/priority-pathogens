@@ -28,7 +28,8 @@ df <- merge(param_df, article_df %>% dplyr::select(article_id, first_author_firs
   mutate(parameter_uncertainty_lower_value = replace(parameter_uncertainty_lower_value, parameter_data_id == 43, parameter_uncertainty_lower_value * 1e-4),   # need to adjust for scaling
          parameter_uncertainty_upper_value = replace(parameter_uncertainty_upper_value, parameter_data_id == 43, parameter_uncertainty_upper_value * 1e-4)) %>%             # need to adjust for scaling
   mutate(parameter_value = replace(parameter_value, parameter_data_id == 34, 0.93),
-         cfr_ifr_method = replace(cfr_ifr_method, str_starts(parameter_type,"Severity") & is.na(cfr_ifr_method), "Unknown"))
+         cfr_ifr_method = replace(cfr_ifr_method, str_starts(parameter_type,"Severity") & is.na(cfr_ifr_method), "Unknown")) %>%
+  mutate(parameter_value_type = ifelse(parameter_data_id == 16, 'Other', parameter_value_type)) 
 
 df_out <- merge(outbreak_df, article %>% dplyr::select(covidence_id, first_author_first_name, year_publication),
                 all.x = TRUE, by = "covidence_id") %>%
@@ -53,17 +54,13 @@ df_out$keep_record <- c(1,0,0,0,0,1,0,0,1,1,1,1,1,1,1,0,1,0,1,0,1,1)
 
 
 human_delay <- forest_plot_delay(df)
-#ggsave(plot = human_delay,filename="data/marburg/output/FP_human_delay.png",bg = "white",width = 25, height = 15, units = "cm")
 
 mutations <- forest_plot_mutations(df)
-#ggsave(plot = mutations,filename="data/marburg/output/FP_mutations.png",bg = "white",width = 15, height = 10, units = "cm")
-
 
 reproduction_number <- forest_plot_R(df)
-#ggsave(plot = reproduction_number,filename="data/marburg/output/FP_reproduction_number.png",bg = "white",width = 15, height = 10, units = "cm")
 
 severity_params <- forest_plot_fr(df) 
-#ggsave(plot = severity,filename="data/marburg/output/FP_severity.png",bg = "white",width = 15, height = 10, units = "cm")
+
 severity_outbreaks <- forest_plot_fr(df_out,outbreak_naive = TRUE)
 
 plot_grid(reproduction_number+labs(tag="A"),
