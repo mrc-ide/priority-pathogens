@@ -7,7 +7,7 @@ if(REGENERATE_DATA) source("R/marburg/script_marburg.R")              #only reru
 source("R/table_code.R")
 
 par_final      <- read.csv("data/marburg/final/parameter_final.csv")
-article_final  <- read.csv("data/marburg/final/article_final.csv")
+article_final  <- read.csv("data/marburg/final/article_clean.csv")
 outbreak_final <- read.csv("data/marburg/final/outbreak_final.csv")
 
 # merge with article ID article labels

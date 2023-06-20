@@ -15,7 +15,7 @@ sero_table <- function(df,pathogen){
   set_flextable_defaults(background.color = "white")
   
   sero_tbl <- df %>%
-    mutate(parameter_value = percent(round(parameter_value, 2), scale = 1),
+    mutate(parameter_value = round(parameter_value, 2),
            parameter_type = str_replace(parameter_type, 'Seroprevalence - ', '')) %>%
     filter(parameter_class == 'Seroprevalence') %>%
     select(c(Article = article_label, 
@@ -23,7 +23,7 @@ sero_table <- function(df,pathogen){
              `Survey year`, 
              `Parameter type*` = parameter_type, 
              `Seroprevalence (%)` = parameter_value, 
-             Uncertainty,
+             `Uncertainty (%)` = Uncertainty,
              `Uncertainty type` = parameter_uncertainty_type,
              `Number Seropositive` = cfr_ifr_numerator, 
              `Sample size` = cfr_ifr_denominator, 
@@ -41,7 +41,7 @@ sero_table <- function(df,pathogen){
     group_by(Country) %>%
     mutate(index_of_change = row_number(),
            index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>%
-    flextable(col_keys = c("Article", "Country", "Parameter type*", "Survey year", "Seroprevalence (%)", 'Uncertainty', 'Uncertainty type',
+    flextable(col_keys = c("Article", "Country", "Parameter type*", "Survey year", "Seroprevalence (%)", 'Uncertainty (%)', 'Uncertainty type',
                            'Number Seropositive', 'Sample size', 'Population Group', 'Timing of survey', 'Disaggregated data\navailable')) %>%
     fontsize(i = 1, size = 12, part = "header") %>%  # adjust font size of header
     border_remove() %>%

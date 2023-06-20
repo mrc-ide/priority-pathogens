@@ -50,7 +50,7 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
             legend.text = element_text(size=12),
             strip.text = element_text(size=20)) +
       xlim(c(0, 100)) +
-      scale_colour_viridis_d(option="inferno",begin=0.2,end=0.8)+
+      scale_color_brewer(palette = 'Dark2')+
       guides(colour = guide_legend(order=1,ncol=1),
              linetype = guide_legend(order=2,ncol=1))+
       geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed")+
@@ -88,7 +88,9 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
             legend.text = element_text(size=12),
             strip.text = element_text(size=20)) +
       xlim(c(0, 100)) +
-      scale_colour_viridis_d(option="inferno",begin=0.2,end=0.8)+
+      scale_colour_manual(values=c("#D95F02","#7570B3"))+
+      # scale_color_brewer(palette = 'Dark2') +
+      # scale_colour_viridis_d(option="viridis",begin=0.2,end=0.8)+
       guides(colour = guide_legend(order=1,ncol=1),
              linetype = guide_legend(order=2,ncol=1))+
       geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed")+
@@ -147,7 +149,7 @@ forest_plot_R <- function(df){
          linetype="",colour="")+
     scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
     #scale_colour_discrete(labels = c("Basic R0", "Effective Re")) +
-    scale_colour_manual(values=c("#1e2761","#408ec6"))+
+    scale_colour_manual(values=c("#D95F02","#7570B3"))+
     theme(#legend.position="bottom",
           legend.text = element_text(size=12),
           strip.text = element_text(size=20)) + xlim(c(0,2)) +
@@ -191,39 +193,54 @@ forest_plot_delay <- function(df){
   )
   
   plot <-
-    ggplot(df_plot, aes(x=parameter_value, y=article_label_unique, 
-                              col = parameter_type_short)) + 
-    theme_bw() + geom_point(size = 3) +
-    scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
+    ggplot(df_plot, aes(col = parameter_type_short)) + 
+    theme_bw() + 
+    geom_point(aes(x=parameter_value, y=article_label_unique, shape = parameter_value_type,
+                   ),
+               size = 3.5) +
+    scale_y_discrete(labels = setNames(df_plot$article_label, df_plot$article_label_unique)) +
+    scale_x_continuous(breaks = c(seq(0, 60, by = 10))) +
     # facet_wrap(parameter_type ~ ., scales = "free",  strip.position = "top", ncol = 1) +
-    geom_errorbar(aes(y=article_label_unique,xmin=parameter_lower_bound,xmax=parameter_upper_bound,
-                      group=parameter_data_id,
-                      linetype="Parameter range"),
+    geom_segment(aes( y=article_label_unique, yend = article_label_unique,
+                      x=parameter_lower_bound, xend=parameter_upper_bound,
+                      group=parameter_data_id, 
+                      # linetype="Parameter range"
+                      ),
                   # position=position_dodge(width=0.5),
-                  width=0.4,
-                  lwd=1) +
+                  # width=0.4,
+                  lwd=5,
+                  alpha = 0.4) +
     geom_errorbar(aes(y=article_label_unique,
-                      xmin=parameter_uncertainty_lower_value,xmax=parameter_uncertainty_upper_value,
+                      xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       group=parameter_data_id,
-                      linetype="Uncertainty interval"),
+                      # linetype="Uncertainty interval"
+                      ),
                   # position=position_dodge(width=0.5),
                   width = 0.4,
                   lwd=1) +
-    labs(x="Delay (days)", y="",#y="Study (First author surname and publication year)",
-         linetype="",colour="") + 
-    scale_linetype_manual(values = c("dotted","solid"),labels = function(x) str_wrap(x, width = 5)) +
-    scale_colour_viridis_d(end=0.9,labels = function(x) str_wrap(x, width = 18))+
+    labs(x="Delay (days)", 
+         y="",#y="Study (First author surname and publication year)",
+         linetype="", 
+         colour="",
+         shape = '') + 
+    # scale_linetype_manual(values = c("blank",'solid'),
+    #                       labels = function(x) str_wrap(x, width = 5)) +
+    scale_color_brewer(palette = 'Dark2',#end=0.9,
+                           labels = function(x) str_wrap(x, width = 18))+
+    scale_shape_manual(values = c(16,15,17,18), 
+                       labels = c('Mean','Median','Std Dev', 'Other'),
+                       na.translate = F) +
     # scale_colour_discrete(labels = c("Incubation period",
     #                                  "Time in care",
     #                                  "Symptom to careseeking",
     #                                  "Symptom to outcome")) +
     theme(#legend.position="bottom",
           legend.text = element_text(size=12),
-          strip.text = element_text(size=20)) + xlim(c(0,56)) +
+          strip.text = element_text(size=20)) + #xlim(c(0,56)) +
     guides(colour = guide_legend(order=1,ncol =1),
            linetype = guide_legend(order=2,ncol=1)) 
 
-  
+  plot
   
   return(plot)
   
@@ -263,34 +280,34 @@ forest_plot_mutations <- function(df){
     ggplot(df_plot, aes(x=(parameter_value * 1e04), y=article_label_unique, 
                                col = gene)) + 
     theme_bw() + geom_point(size = 3) +
+    geom_vline(xintercept = 0, color = 'black', linetype = 'dashed') +
     # facet_grid(gene ~ ., scales = "free_y", space = "free") +
     scale_y_discrete(labels=setNames(df_plot$article_label, df_plot$article_label_unique)) +
-    geom_errorbar(aes(y=article_label_unique,
-                      xmin=if_else((parameter_value - parameter_uncertainty_single_value)* 1e04 < 0, 0,
+    geom_segment(aes(y=article_label_unique, yend = article_label_unique,
+                      x=if_else((parameter_value - parameter_uncertainty_single_value)* 1e04 < 0, 0,
                                    (parameter_value - parameter_uncertainty_single_value)* 1e04),
-                      xmax=(parameter_value + parameter_uncertainty_single_value)* 1e04,
-                      group=parameter_data_id,
-                      linetype="Value \u00B1 standard error *"), width=0.8,
-                  lwd=1) +
+                      xend=(parameter_value + parameter_uncertainty_single_value)* 1e04,
+                      group=parameter_data_id),
+                      # linetype="Value \u00B1 standard error *"), 
+                 lwd=5,
+                 alpha = 0.4) +
     geom_errorbar(aes(y=article_label_unique,
                       xmin=parameter_uncertainty_lower_value* 1e04,
                       xmax=parameter_uncertainty_upper_value* 1e04,
-                      group=parameter_data_id,
-                      linetype="Uncertainty interval"),
+                      group=parameter_data_id),
+                      # linetype="Uncertainty interval"),
                   width = 0.8,
                   lwd=1) +
     labs(x=expression(Molecular~evolutionary~rate~(substitution/site/year ~10^{-4})),
          y="",#y="Study",
          linetype="",colour="") + 
-    scale_linetype_manual(values = c("dotted","solid"),labels = function(x) str_wrap(x, width = 18)) + #+ scale_x_log10()
+    # scale_linetype_manual(values = c("dotted","solid"),labels = function(x) str_wrap(x, width = 18)) + #+ scale_x_log10()
     #geom_vline(xintercept = 0, linetype = "dotted", colour = "dark grey") +
-    theme(#legend.position="bottom",
-          legend.text = element_text(size=12),
+    theme(legend.text = element_text(size=12),
           strip.text = element_text(size=20)) + xlim(c(0,10)) +
-    scale_colour_viridis_d(option="magma",end=0.8,labels = function(x) str_wrap(x, width = 10))+
-    guides(colour = guide_legend(order=1,ncol=1),
-           linetype = guide_legend(order=2,ncol=1))
+    scale_color_brewer(palette = 'Dark2',labels = function(x) str_wrap(x, width = 10)) +
+    guides(colour = guide_legend(order=1,ncol=1)   )
   
   return(plot)
-}
 
+}
