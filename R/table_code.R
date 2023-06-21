@@ -143,25 +143,30 @@ risk_table <- function(df,pathogen){
   border_style = officer::fp_border(color="black", width=1)
   set_flextable_defaults(background.color = "white")
   
-  risk_tbl <- df %>%
-    dplyr::filter(parameter_class == 'Risk factors') %>%
-    dplyr::mutate(riskfactor_occupation = str_replace_all(riskfactor_occupation, "burrial", "burial"),
-                  riskfactor_name = str_replace_all(riskfactor_name, ";", ", ")) %>%
+  risk_tbl_supp <- df %>%
+    dplyr::mutate(riskfactor_occupation = str_replace_all(riskfactor_occupation, "burrial", "burial")) %>% 
+    rowwise() %>%
+    dplyr::mutate(riskfactor_1 = str_split(riskfactor_name, ";")[[1]][1],
+                  riskfactor_2 = str_split(riskfactor_name, ";")[[1]][2],
+                  riskfactor_3 = str_split(riskfactor_name, ";")[[1]][3]) %>% 
+    tidyr::pivot_longer(riskfactor_1:riskfactor_3, names_to = "riskfactor_num", values_to = "riskfactor_names") %>%
+    dplyr::mutate(riskfactor_name = if_else(riskfactor_names == "Occupation",
+                                            "Occupation - Funeral and burial services",
+                                            riskfactor_names)) %>%
+    dplyr::filter(is.na(riskfactor_name) == FALSE) %>%
     dplyr::select(c(Article = article_label, 
              Country = population_country, 
              `Survey year`, 
              'Outcome' = riskfactor_outcome,
              'Risk factor' = riskfactor_name,
-             'Occupation' = riskfactor_occupation,
              'Significant' = riskfactor_significant,
              'Adjusted' = riskfactor_adjusted,
              `Sample size` = population_sample_size, 
              'Population sample type' = population_sample_type,
              `Population group` = population_group,
-             `Timing of survey` = method_moment_value)) %>%
-    dplyr::arrange(Outcome)
+             `Timing of survey` = method_moment_value))
   
-  risk_flextable_tbl <- risk_tbl %>%
+  risk_flextable_tbl <- risk_tbl_supp %>%
     arrange(Outcome, Country, `Survey year`) %>%
     group_by(Country) %>%
     mutate(index_of_change = row_number(),
@@ -176,14 +181,39 @@ risk_table <- function(df,pathogen){
     vline(j = c(4), border = border_style) %>%
     hline(i = ~ index_of_change == 1) %>%
     bold(i = 1, bold = TRUE, part = "header")
-  save_as_image(risk_flextable_tbl, path = paste0("data/", pathogen,"/output/risk_tbl.png"))
+  save_as_image(risk_flextable_tbl, path = paste0("data/", pathogen,"/output/risk_tbl_supp.png"))
   
- risk_latex <- risk_tbl %>%
-   arrange(Outcome, Country, `Survey year`) %>%
-   group_by(Country) %>%
-   mutate(index_of_change = row_number(),
-          index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>% 
-    mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% dplyr::select(-c(index_of_change)) %>%
+  risk_tbl <- df %>%
+    dplyr::mutate(riskfactor_occupation = str_replace_all(riskfactor_occupation, "burrial", "burial")) %>% 
+    rowwise() %>%
+    dplyr::mutate(riskfactor_1 = str_split(riskfactor_name, ";")[[1]][1],
+                  riskfactor_2 = str_split(riskfactor_name, ";")[[1]][2],
+                  riskfactor_3 = str_split(riskfactor_name, ";")[[1]][3]) %>% 
+    tidyr::pivot_longer(riskfactor_1:riskfactor_3, names_to = "riskfactor_num", values_to = "riskfactor_names") %>%
+    dplyr::mutate(riskfactor_name = if_else(riskfactor_names == "Occupation",
+                                            "Occupation - Funeral and burial services",
+                                            riskfactor_names)) %>%
+    dplyr::filter(is.na(riskfactor_name) == FALSE) %>%
+    dplyr::group_by(riskfactor_outcome, riskfactor_name, riskfactor_adjusted, 
+                    riskfactor_significant) %>%
+    dplyr::summarise(sample_size = sum(population_sample_size, na.rm = TRUE)) %>%
+    tidyr::pivot_wider(names_from = riskfactor_significant,
+                       values_from = sample_size) %>%
+    dplyr::mutate(riskfactor_outcome = if_else(riskfactor_outcome == "Serology",
+                                               "Seropositivity", 
+                                               riskfactor_outcome)) %>%
+    dplyr::select('Outcome' = riskfactor_outcome,
+                  'Risk factor' = riskfactor_name,
+                  'Adjusted' = riskfactor_adjusted,
+                  Significant, 'Not significant')
+  
+  risk_latex <- risk_tbl %>%
+    dplyr::arrange(Outcome, `Risk factor`, Adjusted) %>%
+    dplyr::group_by(Outcome) %>%
+    dplyr::mutate(index_of_change = row_number(),
+           index_of_change = ifelse(index_of_change == max(index_of_change),1,0)) %>% 
+    dplyr::mutate(across(everything(), ~ replace(.x, is.na(.x), ""))) %>% 
+    dplyr::select(-c(index_of_change)) %>%
     gt() %>% 
     as_latex() %>% as.character()
   
