@@ -60,16 +60,16 @@ mutations <- forest_plot_mutations(df)
 
 reproduction_number <- forest_plot_R(df)
 
-severity_params <- forest_plot_fr(df) 
-
-severity_outbreaks <- forest_plot_fr(df_out,outbreak_naive = TRUE)
-
 plot_grid(reproduction_number+labs(tag="A"),
           #severity+labs(tag="B"),
           human_delay+labs(tag="B"),
           mutations+labs(tag="C"),
           nrow=3,align="hv",rel_heights = c(0.7,1))
 ggsave(filename="data/marburg/output/panel_plot.png",bg = "white",width = 12.5, height=15)
+
+severity_params <- forest_plot_fr(df) 
+
+severity_outbreaks <- forest_plot_fr(df_out,outbreak_naive = TRUE)
 
 plot_grid(severity_params+labs(tag="A"),
           severity_outbreaks+labs(tag="B"),
