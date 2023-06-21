@@ -29,7 +29,8 @@ df <- merge(param_df, article_df %>% dplyr::select(article_id, first_author_firs
          parameter_uncertainty_upper_value = replace(parameter_uncertainty_upper_value, parameter_data_id == 43, parameter_uncertainty_upper_value * 1e-4)) %>%             # need to adjust for scaling
   mutate(parameter_value = replace(parameter_value, parameter_data_id == 34, 0.93),
          cfr_ifr_method = replace(cfr_ifr_method, str_starts(parameter_type,"Severity") & is.na(cfr_ifr_method), "Unknown")) %>%
-  mutate(parameter_value_type = ifelse(parameter_data_id == 16, 'Other', parameter_value_type)) 
+  mutate(parameter_value_type = ifelse(parameter_data_id == 16, 'Other', parameter_value_type),
+         parameter_value_type = ordered(parameter_value_type, levels = c('Mean','Median','Standard Deviation','Other','Unspecified') )) 
 
 df_out <- merge(outbreak_df, article %>% dplyr::select(covidence_id, first_author_first_name, year_publication),
                 all.x = TRUE, by = "covidence_id") %>%
