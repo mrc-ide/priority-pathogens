@@ -69,7 +69,7 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
       geom_vline(xintercept = unique(df_cfr$pooled),linetype="dashed") +
       scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
       scale_fill_manual(values="grey") + 
-      geom_vline(xintercept = c(0, 100), linetype = "dashed") +
+      geom_vline(xintercept = c(0, 100), linetype = "dotted") +
       scale_x_continuous(breaks = seq(-20, 120, by = 20))
   } else {
     df_plot <- df_plot %>% 
@@ -112,7 +112,7 @@ forest_plot_fr <- function(df,outbreak_naive=FALSE) {
       )+
       scale_linetype_manual(values = c("solid"),labels = function(x) str_wrap(x, width = 5))+
       scale_fill_manual(values="grey") + 
-      geom_vline(xintercept = c(0, 100), linetype = "dashed") + 
+      geom_vline(xintercept = c(0, 100), linetype = "dotted") + 
       scale_x_continuous(breaks = seq(-20, 120, by = 20)) + 
       xlim(c(-20, 120))
   }
