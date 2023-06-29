@@ -1,0 +1,17 @@
+\begin{longtable}{llll}
+\toprule
+Data field & Expected data type & Variable name & Notes \\ 
+\midrule
+Model data ID & integer & model\_data\_id & ID assigned by database \\ 
+Article ID & integer & article\_id & ID to connect to article form \\ 
+Model type & character & model\_type & General type of model - from dropdown list \\ 
+Compartmental type & character & compartmental\_type & Specific type of compartmental model - from dropdown list \\ 
+Stochastic or deterministic & character & stoch\_deter & Stochastic or deterministic model as reported \\ 
+Theoretical model & logical & theoretical\_model & Tick box whether the model was fitted to data (NA) or just theoretical (TRUE) \\ 
+Intervention type & character & interventions\_type & Type of intervention(s) modelled - from dropdown list \\ 
+Code available & logical & code\_available & Tick box whether code for model was publicly available and reported in the paper \\ 
+Transmission route & character & transmission\_route & Transmission route(s) modelled - from dropdown list \\ 
+Assumptions & character & assumptions & General assumptions for the model - from dropdown list \\ 
+\bottomrule
+\end{longtable}
+
