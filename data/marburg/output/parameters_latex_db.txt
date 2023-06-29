@@ -53,6 +53,8 @@ End year of study & integer & population\_study\_end\_year & Study end year - se
 Genome site & character & genome\_site & Site of genome or gene studied \\ 
 Genomic sequence available? & logical & genomic\_sequence\_available & Tick box whether genomic sequence data are available (TRUE) or not (FALSE) \\ 
 Parameter class & character & parameter\_class & General parameter class (delays, seroprevalence, reproduction numbers, mutations, severity, risk factors, relative contribution) \\ 
+Uncertainty & character & Uncertainty & Formatted uncertainty range from `parameter\_uncertainty\_lower\_value` and `parameter\_uncertainty\_lower\_value` in format x - x for ranges and x, x for confidence or credible intervals \\ 
+Survey year & character & Survey year & Dates of survey in format YYYY, YYYY-YYYY, MMM YYYY, or MMM-MMM YYYY from survey start and end variables \\ 
 \bottomrule
 \end{longtable}
 

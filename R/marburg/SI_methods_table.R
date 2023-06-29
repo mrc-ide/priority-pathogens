@@ -14,7 +14,7 @@ m <- read.csv('data/marburg/access_db_dropdown_models.csv')
 o <- read.csv('data/marburg/access_db_dropdown_outbreaks.csv') 
 
 parameters <- import('data/marburg/final/parameter_final.csv') %>% 
-  select(-name_data_entry, -double_extracted, -covidence_id, -Uncertainty, -c(`Survey year`))
+  select(-name_data_entry, -double_extracted, -covidence_id)
 outbreaks <- import('data/marburg/final/outbreak_final.csv')%>%
   select(-outbreak_size, -cases_severe_hospitalised, -name_data_entry, -double_extracted, -covidence_id)
 models <- import('data/marburg/final/model_final.csv') %>%
@@ -146,7 +146,9 @@ p_latex <- tibble(`Data field` = c('Parameter data ID',
                                    'End year of study',
                                    'Genome site',
                                    'Genomic sequence available?',
-                                   'Parameter class'),
+                                   'Parameter class',
+                                   'Uncertainty',
+                                   'Survey year'),
                   `Expected data type` = sapply(parameters, class),
                   `Variable name` = names(parameters),
                   `Notes` = c('ID assigned by database',
@@ -199,7 +201,9 @@ p_latex <- tibble(`Data field` = c('Parameter data ID',
                               'Study end year - see dropdown list',
                               'Site of genome or gene studied',
                               'Tick box whether genomic sequence data are available (TRUE) or not (FALSE)',
-                              'General parameter class (delays, seroprevalence, reproduction numbers, mutations, severity, risk factors, relative contribution)')) %>%
+                              'General parameter class (delays, seroprevalence, reproduction numbers, mutations, severity, risk factors, relative contribution)',
+                              'Formatted uncertainty range from `parameter_uncertainty_lower_value` and `parameter_uncertainty_lower_value` in format x - x for ranges and x, x for confidence or credible intervals',
+                              'Dates of survey in format YYYY, YYYY-YYYY, MMM YYYY, or MMM-MMM YYYY from survey start and end variables')) %>%
   gt() %>% 
   as_latex() %>% as.character()
 
