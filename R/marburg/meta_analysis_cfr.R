@@ -1,13 +1,5 @@
-## function to produce forest plot
-## to go into data_analysis.R when up and running
-
-# doing on 'parameter_single' until get finalised data
-
-REGENERATE_DATA <- FALSE
-
-if(REGENERATE_DATA) source("R/marburg/script_marburg.R")              #only rerun this if we want to re-generate the marburg files (rather than rewriting this every time) 
-
-source("R/forest_plot.R")
+library(meta)
+library(metafor)
 
 param_df    <- read.csv("data/marburg/final/parameter_final.csv")
 outbreak_df <- read.csv("data/marburg/final/outbreak_final.csv")
@@ -53,32 +45,19 @@ df_out <- merge(outbreak_df, article %>% dplyr::select(covidence_id, first_autho
 df_out$parameter_data_id <- seq(1, dim(df_out)[1], 1)
 df_out$keep_record <- c(1,0,0,0,0,1,0,0,1,1,1,1,1,1,1,0,1,0,1,0,1,1)
 
+cfr <- df %>% filter(cfr_ifr_denominator>0 & parameter_class=="Severity")
 
-human_delay <- forest_plot_delay(df)
+meta_cfr <- metaprop(cfr_ifr_numerator, cfr_ifr_denominator, studlab=article_label, sm="PLOGIT", data=cfr, method="GLMM", method.tau="ML")
+summary(meta_cfr)
 
-mutations <- forest_plot_mutations(df)
+forest.meta(meta_cfr, layout="RevMan5", xlab="Proportion", comb.r=T, comb.f=F, xlim = c(0,1), fontsize=10, digits=3)
 
-reproduction_number <- forest_plot_R(df)
+cfr_outbreak <- df_out %>% filter(keep_record==1)
 
-plot_grid(reproduction_number+labs(tag="A"),
-          #severity+labs(tag="B"),
-          human_delay+labs(tag="B"),
-          mutations+labs(tag="C"),
-          nrow=3,align="hv",rel_heights = c(0.7,1))
-ggsave(filename="data/marburg/output/panel_plot.png",bg = "white",width = 12.5, height=15)
+meta_cfr_outbreak <- metaprop(cfr_ifr_numerator, cfr_ifr_denominator, studlab=article_label, sm="PLOGIT", data=cfr_outbreak, method="GLMM", method.tau="ML")
+summary(meta_cfr_outbreak)
 
-severity_params <- forest_plot_fr(df) 
+forest.meta(meta_cfr_outbreak, layout="RevMan5", xlab="Proportion", comb.r=T, comb.f=F, xlim = c(0,1), fontsize=10, digits=3)
 
-severity_outbreaks <- forest_plot_fr(df_out,outbreak_naive = TRUE)
-
-plot_grid(severity_params+labs(tag="A"),
-          severity_outbreaks+labs(tag="B"),
-          nrow=2,align="hv",rel_heights = c(0.7,1))
-ggsave(filename="data/marburg/output/cfr_plot.png",bg = "white",width = 12.5, height=7.5)
-
-#panel_plot <- (reproduction_number + ggtitle("A") + severity + ggtitle("B")) / (human_delay + ggtitle("C") + mutations + ggtitle("D"))
-#ggsave(plot = panel_plot,filename="data/marburg/output/panel_plot.png",bg = "white",width = 15, height=10)
-
-
-
-
+# Assessment for small study effects
+funnel.meta(meta_cfr)
