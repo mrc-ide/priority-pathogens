@@ -7,5 +7,76 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+library(snakecase)
+
 ```
 
+```{r read-data-marburg, include=FALSE}
+
+marburg_article <- readxl::read_xlsx("~/code/priority-pathogens/src/data_cleaning/data/marburg/marburg_article.xlsx")
+marburg_model <- readxl::read_xlsx("~/code/priority-pathogens/src/data_cleaning/data/marburg/marburg_model.xlsx")
+marburg_outbreak <- readxl::read_xlsx("~/code/priority-pathogens/src/data_cleaning/data/marburg/marburg_outbreak.xlsx")
+marburg_parameter <- readxl::read_xlsx("~/code/priority-pathogens/src/data_cleaning/data/marburg/marburg_parameter.xlsx")
+
+names(marburg_article) <- to_snake_case(names(marburg_article))
+names(marburg_model) <- to_snake_case(names(marburg_model))
+names(marburg_outbreak) <- to_snake_case(names(marburg_outbreak))
+names(marburg_parameter) <- to_snake_case(names(marburg_parameter))
+
+```
+
+```{r author-extractor-id, include=FALSE}
+## create a data frame including all the details of what we will want to add to each data sheet
+marburg_details <- marburg_article[,c("article_id", "covidence_id", "name_data_entry")]
+
+length(unique(marburg_details$covidence_id))
+length(unique(marburg_details$article_id))
+
+## add covidence ID and name of data entry to every data sheet
+marburg_parameter <- right_join(marburg_details, marburg_parameter, by = "article_id") %>% 
+  dplyr::filter(is.na(parameter_type) == FALSE)
+marburg_outbreak <- right_join(marburg_details, marburg_outbreak, by = "article_id")
+marburg_model <- right_join(marburg_details, marburg_model, by = "article_id")
+
+```
+
+## Examine double extraction
+We need to begin by assessing the concordance in the papers where we performed double extraction of the data. Come back to this and first try and have a quick look at the data itself
+
+```{r marburg-double-extraction}
+marburg_compare <- marburg_details$covidence_id[duplicated(marburg_details$covidence_id) & !duplicated(marburg_details$article_id)]
+marburg_double_parameter <- marburg_parameter %>%
+  dplyr::filter(covidence_id %in% marburg_compare) %>%
+  dplyr::arrange(desc(parameter_type))
+marburg_double_outbreak <- marburg_outbreak %>%
+  dplyr::filter(covidence_id %in% marburg_compare)
+
+
+
+```
+
+## Parameter types
+```{r marburg-parameter-types}
+# marburg_single_parameter <- marburg_parameter %>% 
+#   dplyr::filter(!(Parameter_data_ID %in% marburg_double_parameter$Parameter_data_ID))
+
+marburg_parameter_type <- marburg_parameter %>%
+  dplyr::group_by(parameter_type) %>%
+  dplyr::summarise(count = n())
+
+ggplot(marburg_parameter, aes(x = parameter_type)) + geom_bar() + theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## fix the NAs here
+mapping <- read.csv("data_dictionary.csv")
+marburg_parameter <- right_join(mapping, marburg_parameter, by = "parameter_type")
+
+marburg_parameter$parameter_type[is.na(marburg_parameter$classification)]
+
+ggplot(marburg_parameter, aes(x = classification)) + geom_bar() + theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
