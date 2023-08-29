@@ -1,3 +1,15 @@
+orderly2::orderly_strict_mode()
+
+orderly2::orderly_artefact(
+  "Merged data as csv",
+  c("ebola_article.csv", "ebola_model.csv", "ebola_parameters.csv"))
+
+library(dplyr)
+library(here)
+library(Hmisc)
+library(purrr)
+library(readr)
+
 ## Plan
 ## Extract one access DB at a time
 ## Modify primary key.
