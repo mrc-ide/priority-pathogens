@@ -1,0 +1,21 @@
+script: automation.R
+
+packages:
+- dplyr
+- here
+- Hmisc
+- purrr
+- readr 
+
+resources:
+- DIDE Priority Pathogens EBOLA - SABINE.accdb
+- DIDE Priority Pathogens EBOLA - SANGEETA.accdb
+
+artefacts:
+- data:
+    description: Merged data as csv
+    filenames:
+      - ebola_article.csv
+      - ebola_model.csv
+      - ebola_parameters.csv
+   
