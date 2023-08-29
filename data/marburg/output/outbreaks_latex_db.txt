@@ -1,0 +1,24 @@
+\begin{longtable}{llll}
+\toprule
+Data field & Expected data type & Variable name & Notes \\ 
+\midrule
+Outbreak ID & integer & outbreak\_id & ID assigned by database \\ 
+Article ID & integer & article\_id & ID to connect to article form \\ 
+Outbreak start day & integer & outbreak\_start\_day & Day of outbreak start if reported \\ 
+Outbreak start month & character & outbreak\_start\_month & Month of outbreak start if reported \\ 
+Outbreak start year & integer & outbreak\_start\_year & Year of outbreak start if reported \\ 
+Outbreak end day & integer & outbreak\_end\_day & Day of outbreak end if reported \\ 
+Outbreak end month & character & outbreak\_end\_month & Month of outbreak end if reported \\ 
+Outbreak end year & integer & outbreak\_date\_year & Year of outbreak end if reported \\ 
+Duration (months) & integer & outbreak\_duration\_months & Duration of outbreak in months, if reported. No calculation of duration is done. \\ 
+Asymptomatic transmission described & logical & asymptomatic\_transmission & Tick box whether asymptomatic transmission is described in the paper or not. \\ 
+Outbreak country & character & outbreak\_country & Country or countries where the outbreak took place - from dropdown list \\ 
+Outbreak location & character & outbreak\_location & Region/district/province/city where the outbreak took place \\ 
+Cases confirmed & integer & cases\_confirmed & Number of confirmed cases as reported \\ 
+Mode of detection of cases & character & cases\_mode\_detection & Method for case detection - from dropdown list \\ 
+Cases suspected & integer & cases\_suspected & Number of suspected cases as reported \\ 
+Asymptomatic cases & integer & cases\_asymptomatic & Number of asymptomatic cases as reported \\ 
+Deaths & integer & deaths & Number of deaths as reported \\ 
+\bottomrule
+\end{longtable}
+

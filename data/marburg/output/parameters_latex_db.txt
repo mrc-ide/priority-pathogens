@@ -1,0 +1,60 @@
+\begin{longtable}{llll}
+\toprule
+Data field & Expected data type & Variable name & Notes \\ 
+\midrule
+Parameter data ID & integer & parameter\_data\_id & ID assigned by database \\ 
+Article ID & integer & article\_id & ID to connect to article form \\ 
+Parameter type & character & parameter\_type & Category of parameter - see dropdown list \\ 
+Parameter value & numeric & parameter\_value & Central parameter value \\ 
+Parameter unit & character & parameter\_unit & Units for parameter value, applies to central estimate and ranges/uncertainty intervals - see dropdown list \\ 
+Parameter lower bound & numeric & parameter\_lower\_bound & Lower bound of the parameter range if a range was reported or if data are disaggregated \\ 
+Parameter upper bound & numeric & parameter\_upper\_bound & Upper bound of the parameter range if a range was reported or if data are disaggregated \\ 
+Parameter value type & character & parameter\_value\_type & Type of central parameter value - see dropdown list \\ 
+Parameter uncertainty - single value & numeric & parameter\_uncertainty\_single\_value & Value for uncertainty for central parameter value if a single value was reported (e.g. value of std. dev.) \\ 
+Parameter uncertainty - single type & character & parameter\_uncertainty\_singe\_type & Type of uncertainty fpr central parameter value if single value was reported - see dropdown list \\ 
+Parameter uncertainty - lower value & numeric & parameter\_uncertainty\_lower\_value & Lower bound for uncertainty for central parameter value if paired values were reported \\ 
+Parameter uncertainty - upper value & numeric & parameter\_uncertainty\_upper\_value & Upper bound for uncertainty for central parameter value if paired values were reported \\ 
+Parameter uncertainty paired type & character & parameter\_uncertainty\_type & Type of uncertainty for central parameter value if paired values were reported - see dropdown list \\ 
+Numerator & integer & cfr\_ifr\_numerator & Numerator of either CFR/IFR (deaths) or seroprevalence (number seropositive) estimates \\ 
+Denominator & integer & cfr\_ifr\_denominator & Denominator of either CFR/IFR (cases) or seroprevalence (number tested) estimates \\ 
+Distribution type & logical & distribution\_type & Type of distribution for estimated parameter - see dropdown list \\ 
+First distribution parameter value & logical & distribution\_par1\_value & Value for first distribution parameter (e.g. shape or scale parameter for a gamma distribution) \\ 
+First distribution parameter type & logical & distribution\_par1\_type & Type of value for first distribution parameter - see dropdown list \\ 
+First distribution parameter uncertainty & logical & distribution\_par1\_uncertainty & Tick box for whether uncertainty is estimated for the first distribution parameter (TRUE) or not (FALSE) \\ 
+Second distribution parameter value & logical & distribution\_par2\_value & Value for second distribution parameter (e.g. shape or scale parameter for a gamma distribution) \\ 
+Second distribution parameter type & logical & distribution\_par2\_type & Type of value for second distribution parameter - see dropdown list \\ 
+Second distribution parameter uncertainty & logical & distribution\_par2\_uncertainty & Tick box for whether uncertainty is estimated for the second distribution parameter (TRUE) or not (FALSE) \\ 
+Is parameter from supplement? & logical & method\_from\_supplement & Tick box for whether parameter was extracted from supplement (TRUE) or not (FALSE) \\ 
+Survey timing related to outbreak & character & method\_moment\_value & Timing of the survey in relation to the outbreak, if specified in paper - see dropdown list \\ 
+Is the CFR/IFR estimate adjusted? & character & cfr\_ifr\_method & Is the CFR/IFR estimate adjusted, unadjusted, or unspecified - see dropdown list \\ 
+Method to estimate R & character & method\_r & Method used for estimation of the reproduction number - see dropdown list \\ 
+Parameter estimates disaggregated by & character & method\_disaggregated\_by & Categories for disaggregation of parameter estimates \\ 
+Disaggregated data available & logical & method\_disaggregated & Tick box if disaggregated estimates are available (TRUE) or not (FALSE) \\ 
+Only disaggregated data available & logical & method\_disaggregated\_only & Tick box if ONLY disaggregated estimates are available (TRUE) or if a central estimate is also available (FALSE) \\ 
+Outcome for risk factor(s) & character & riskfactor\_outcome & Outcome for risk factor(s) - see dropdown list \\ 
+Risk factor name & character & riskfactor\_name & Risk factor name - see dropdown list \\ 
+Risk factor occupation & character & riskfactor\_occupation & If risk factor is an occupation, then specified occupation as risk factor - see dropdown list \\ 
+Risk factor significant & character & riskfactor\_significant & Statistical significance of risk factor(s) - see dropdown list \\ 
+Risk factor adjusted & character & riskfactor\_adjusted & Adjustment status of risk factor(s)- see dropdown list \\ 
+Sex of study population & character & population\_sex & Sex of survey population - see dropdown list \\ 
+Population sample setting & character & population\_sample\_type & General setting of the survey - see dropdown list \\ 
+Population group & character & population\_group & Specific group of the survey population - see dropdown list \\ 
+Study population minimum age (years) & numeric & population\_age\_min & Minimum age of the survey population in years \\ 
+Study population maximum age (years) & numeric & population\_age\_max & Maximum age of the survey population in years \\ 
+Study population sample size & integer & population\_sample\_size & Sample size of the population used for parameter estimation \\ 
+Study population country & character & population\_country & Country of the survey population - see dropdown list \\ 
+Study population location & character & population\_location & Region/district/province/city of the survey population - see dropdown list \\ 
+Start day of study & integer & population\_study\_start\_day & Study start day \\ 
+Start month of study & character & population\_study\_start\_month & Study start month - see dropdown list \\ 
+Start year of study & integer & population\_study\_start\_year & Study start year - see dropdown list \\ 
+End day of study & integer & population\_study\_end\_day & Study end day \\ 
+End month of study & character & population\_study\_end\_month & Study end month - see dropdown list \\ 
+End year of study & integer & population\_study\_end\_year & Study end year - see dropdown list \\ 
+Genome site & character & genome\_site & Site of genome or gene studied \\ 
+Genomic sequence available? & logical & genomic\_sequence\_available & Tick box whether genomic sequence data are available (TRUE) or not (FALSE) \\ 
+Parameter class & character & parameter\_class & General parameter class (delays, seroprevalence, reproduction numbers, mutations, severity, risk factors, relative contribution) \\ 
+Uncertainty & character & Uncertainty & Formatted uncertainty range from `parameter\_uncertainty\_lower\_value` and `parameter\_uncertainty\_lower\_value` in format x - x for ranges and x, x for confidence or credible intervals \\ 
+Survey year & character & Survey year & Dates of survey in format YYYY, YYYY-YYYY, MMM YYYY, or MMM-MMM YYYY from survey start and end variables \\ 
+\bottomrule
+\end{longtable}
+

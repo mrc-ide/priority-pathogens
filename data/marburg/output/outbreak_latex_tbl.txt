@@ -1,0 +1,76 @@
+\begin{longtable}{llllrrrrrl}
+\toprule
+Location & Article & Start & End & Deaths & Confirmed & Suspected & Asymptomatic & Severe/hospitalised & Confirmation Method \\ 
+\midrule
+\multicolumn{10}{l}{Angola - 2005} \\ 
+\midrule
+ & Carroll 2013 & 2005 & 2005 & 227 & 252 &  &  & 0 & Not specified \\ 
+\midrule
+\multicolumn{10}{l}{Angola - 2004} \\ 
+\midrule
+ & Palvin 2014 & 2004 & 2005 & 227 & 252 &  &  &  &  \\ 
+Uige Province & Towner 2006 & Oct 2004 & Jul 2005 & 227 & 252 &  &  & 0 &  \\ 
+\midrule
+\multicolumn{10}{l}{Democratic Republic of the Congo - 1998} \\ 
+\midrule
+Durba and Watsa & Borchert 2002 & Oct 1998 & May 1999 & 61 & 73 &  &  & 0 & Symptoms \\ 
+Durba and Watsa & Bausch 2006 & Oct 1998 & Sep 2000 & 125 & 48 & 106 &  & 0 & Molecular   \\ 
+Durba and Watsa villages & Borchert 2006 & Oct 1998 & Aug 2000 &  & 76 & 33 & 0 &  & Molecular   \\ 
+ & Palvin 2014 & 1998 & 2000 & 128 & 154 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Germany - 1968} \\ 
+\midrule
+Marburg, Frankfurt am Main & Albarino 2013 & 18 Aug 1968 & 13 Nov 1968 & 5 & 23 &  & 1 &  & Symptoms \\ 
+\midrule
+\multicolumn{10}{l}{Germany, Yugoslavia - 1968} \\ 
+\midrule
+Marburg (23), Frankfurt am Main (6), Belgrade (2) & Martini 1973 & Aug 1968 & Nov 1968 & 7 & 31 &  & 1 &  & Symptoms \\ 
+\midrule
+\multicolumn{10}{l}{Germany, Yugoslavia - 1967} \\ 
+\midrule
+ & Palvin 2014 & 1967 &  & 7 & 31 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Kenya - 1980} \\ 
+\midrule
+ & Palvin 2014 & 1980 &  & 1 & 2 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Kenya - 1987} \\ 
+\midrule
+ & Palvin 2014 & 1987 &  & 1 & 1 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Netherlands - 2008} \\ 
+\midrule
+ & Palvin 2014 & 2008 &  & 1 & 1 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Russian Federation - 1988} \\ 
+\midrule
+ & Palvin 2014 & 1988 &  & 1 & 1 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Russian Federation - 1990} \\ 
+\midrule
+ & Palvin 2014 & 1990 &  & 0 & 1 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{South Africa, Zimbabwe - 1975} \\ 
+\midrule
+Johannesburg & Conrad 1978 & 12 Feb 1975 &  & 1 & 3 &  &  & 1 & Molecular   \\ 
+\midrule
+\multicolumn{10}{l}{Uganda - 2007} \\ 
+\midrule
+Kamwenge and Ibanda & Adjemian 2011 & 10 Jun 2007 & 14 Sep 2007 & 1 & 4 &  &  & 0 & Molecular   \\ 
+ & Palvin 2014 & 2007 &  & 2 & 4 &  &  &  &  \\ 
+\midrule
+\multicolumn{10}{l}{Uganda - 2012} \\ 
+\midrule
+Kabale; Ibanda; Mbarara; Kampala & Albarino 2013 & 18 Oct 2012 & 7 Nov 2012 & 4 & 15 &  &  &  & Molecular   \\ 
+Ibanda, Kabale and Kamwenge Districts & Knust 2015 & Jul 2012 & 10 Nov 2012 & 15 & 15 & 11 &  &  & Molecular   \\ 
+Ibanda and Kabale & Mbonye 2012 & Sep 2012 & 13 Nov 2012 & 7 & 9 & 5 &  &  & Molecular   \\ 
+\midrule
+\multicolumn{10}{l}{Uganda - 2014} \\ 
+\midrule
+Kampala & Nyakarahuka 2017 & 17 Sep 2014 & 28 Sep 2014 & 1 & 1 &  &  & 1 & Molecular   \\ 
+\midrule
+\multicolumn{10}{l}{United States - 2008} \\ 
+Colorado & Palvin 2014 & 2008 &  & 0 & 1 &  &  &  &  \\ 
+\bottomrule
+\end{longtable}
+

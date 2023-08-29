@@ -1,0 +1,22 @@
+parameter_type,classification
+Attack rate,other
+Doubling time,other
+Growth rate (r),other
+Human delay - generation time,human delay
+Human delay - incubation period,human delay
+Human delay - time in care,human delay
+Human delay - time symptom to careseeking,human delay
+Human delay - time symptom to outcome,human delay
+Mutations - evolutionary rate,mutations
+Mutations – mutation rate,mutations
+Mutations – substitution rate,mutations
+Mutations - substitution rate,mutations
+Reproduction number (Basic R0),reproduction number
+"Reproduction number (Effective, Re)",reproduction number
+Risk factors,risk factors
+Seroprevalence - HAI/HI,seroprevalence
+Seroprevalence - IFA,seroprevalence
+Seroprevalence - IgG,seroprevalence
+Seroprevalence - IgM,seroprevalence
+Seroprevalence - Unspecified,seroprevalence
+Severity - case fatality rate (CFR),severity
