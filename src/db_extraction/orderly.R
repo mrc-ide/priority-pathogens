@@ -9,7 +9,7 @@ orderly_artefact(
     ## pathogens
     "outbreaks.csv"))
 
-orderly_resource(
+infiles <- orderly_resource(
   c("DIDE Priority Pathogens EBOLA - SABINE.accdb",
     "DIDE Priority Pathogens EBOLA - SANGEETA.accdb"
     )
@@ -37,7 +37,7 @@ library(readr)
 indir <- "."
 outdir <- "renamed"
 if (! dir.exists(outdir)) dir.create(outdir)
-infiles <- list.files(path = indir, pattern = "*.accdb")
+##infiles <- list.files(path = indir, pattern = "*.accdb")
 
 ## make a copy so that the task can be run again if needed
 file.copy(
