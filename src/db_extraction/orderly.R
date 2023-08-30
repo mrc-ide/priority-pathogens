@@ -3,29 +3,42 @@ orderly_strict_mode()
 
 orderly_artefact(
   "Merged data as csv",
-  c("ebola_article.csv", "ebola_model.csv", "ebola_parameters.csv"))
+  c("articles.csv", "models.csv",
+    "parameters.csv",
+    ## Empty for ebola but creating for other
+    ## pathogens
+    "outbreaks.csv"))
 
-orderly_resource(
+infiles <- orderly_resource(
   c("DIDE Priority Pathogens EBOLA - SABINE.accdb",
     "DIDE Priority Pathogens EBOLA - SANGEETA.accdb"
     )
 )
+## pathogen should be set to one of our priority-pathogens
+## use capital case; see code below where this pathogen
+## is used in the file name
+## Downstream tasks can query on this parameter to
+## pull in the correct files as dependancies.
+## Extraction can be single or double.
+## This is so that downsteam tasks can pull in the right
+## outputs and put them together.
+orderly_parameters(pathogen = NULL, extraction = "single")
 
 library(dplyr)
 library(here)
 library(Hmisc)
+library(ids)
 library(purrr)
 library(readr)
 
-## Plan
 ## Extract one access DB at a time
 ## Modify primary key.
-## Write to csv
 ## Do this for all DBs, create a master CSV
 indir <- "."
 outdir <- "renamed"
 if (! dir.exists(outdir)) dir.create(outdir)
-infiles <- list.files(path = indir, pattern = "*.accdb")
+##infiles <- list.files(path = indir, pattern = "*.accdb")
+
 ## make a copy so that the task can be run again if needed
 file.copy(
   from = infiles, to = outdir, overwrite = TRUE
@@ -37,7 +50,7 @@ file.copy(
 outfiles <- sapply(
   infiles, function(infile) {
     gsub(
-      pattern = "DIDE Priority Pathogens EBOLA - ",
+      pattern = paste0("DIDE Priority Pathogens ", pathogen, " - "),
       replacement = "",
       x = infile
     )
@@ -49,16 +62,20 @@ file.rename(
   to = paste0(outdir, "/", outfiles)
 )
 
-
 infiles <- list.files(path = outdir, pattern = "*.accdb", full.names = TRUE)
 names(infiles) <- infiles
 
+## model, parameter and outbreak
+## are all tied together using
+## Article_ID
 primary_key_col <- "Article_ID"
-extractor_col <- "Name_data_entry"
 outfiles <- list(
-  "Article data - Table" = "ebola_article.csv",
-  "Model data - Table" = "ebola_model.csv",
-  "Parameter data - Table" = "ebola_parameters.csv"
+  "Article data - Table" = "articles.csv",
+  "Model data - Table" = "models.csv",
+  "Parameter data - Table" = "parameters.csv"
+  ## TODO add the name of outbreaks table
+  ## and add a file name here,
+  ## xxx = "outbreaks.csv"
 )
 
 from <- map(
@@ -68,10 +85,10 @@ from <- map(
   }
 )
 
-
 ## Remove databases with empty tables
 from <- keep(from, function(y) nrow(y[[1]]) > 0)
 
+## Update the ID of each table.
 ## First modify the article column, adding an
 ## extra column. Then get this new column tacked
 ## on to the other tables as well.
@@ -79,15 +96,12 @@ from <- keep(from, function(y) nrow(y[[1]]) > 0)
 from <- imap(
   from, function(x, y) {
     message("Now reading ", y)
-    names <- x[["Article data - Table"]][[extractor_col]]
-    ## TODO Check that a blank field does show up as 0 length
-    ## string
-    blank <- which(lapply(names, length) == 0)
-    names[blank] <- "Blank"
     ## Append a new column
-    x[["Article data - Table"]]$ID <- paste0(
-      x[["Article data - Table"]][[primary_key_col]],
-      "_", names
+    narticles <- nrow(x[["Article data - Table"]])
+
+
+    x[["Article data - Table"]]$ID <- random_id(
+      n = narticles, use_openssl = FALSE
     )
     ## Join with other tables so that they get this
     ## new column.
@@ -101,6 +115,12 @@ from <- imap(
       x[["Model data - Table"]],
       by = primary_key_col
     )
+    ## update model_id column as it has no use now
+    ## better than having multiple ID columns hanging around
+    nmodels <- nrow(x[["Model data - Table"]])
+    x[["Model data - Table"]][["Model_data_ID"]] <- random_id(
+      n = nmodels, use_openssl = FALSE
+    )
     ## Same for the third table
     x[["Parameter data - Table"]][[primary_key_col]] <- as.integer(
       x[["Parameter data - Table"]][[primary_key_col]]
@@ -110,6 +130,12 @@ from <- imap(
       x[["Parameter data - Table"]],
       by = primary_key_col
     )
+    nparams <- nrow(x[["Parameter data - Table"]])
+    x[["Parameter data - Table"]][["Parameter_data_ID"]] <-  random_id(
+      n = nparams, use_openssl = FALSE
+    )
+    ## TODO
+    ## Do the same for outbreaks table
     x
   }
 )
@@ -129,5 +155,8 @@ walk(
     )
   }
 )
+## Empty outbreaks.csv for Ebola
+## Amend this for other pathogens
+file.create("outbreaks.csv")
 ## Clean-up
 unlink(outdir, recursive = TRUE)
