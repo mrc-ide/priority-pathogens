@@ -1,8 +1,15 @@
-orderly2::orderly_strict_mode()
+library(orderly2)
+orderly_strict_mode()
 
-orderly2::orderly_artefact(
+orderly_artefact(
   "Merged data as csv",
   c("ebola_article.csv", "ebola_model.csv", "ebola_parameters.csv"))
+
+orderly_resource(
+  c("DIDE Priority Pathogens EBOLA - SABINE.accdb",
+    "DIDE Priority Pathogens EBOLA - SANGEETA.accdb"
+    )
+)
 
 library(dplyr)
 library(here)
