@@ -3,3 +3,11 @@
 .RData
 .Ruserdata
 priority-pathogens.Rproj
+
+# ---VVV--- added by orderly ---VVV----------------
+# Don't manually edit content between these markers
+.outpack
+orderly_envir.yml
+draft
+archive
+# ---^^^--- added by orderly ---^^^----------------

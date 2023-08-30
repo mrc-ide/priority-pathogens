@@ -1,3 +1,22 @@
+library(orderly2)
+orderly_strict_mode()
+
+orderly_artefact(
+  "Merged data as csv",
+  c("ebola_article.csv", "ebola_model.csv", "ebola_parameters.csv"))
+
+orderly_resource(
+  c("DIDE Priority Pathogens EBOLA - SABINE.accdb",
+    "DIDE Priority Pathogens EBOLA - SANGEETA.accdb"
+    )
+)
+
+library(dplyr)
+library(here)
+library(Hmisc)
+library(purrr)
+library(readr)
+
 ## Plan
 ## Extract one access DB at a time
 ## Modify primary key.
