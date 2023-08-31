@@ -3,8 +3,10 @@ orderly_strict_mode()
 
 orderly_artefact(
   "Merged data as csv",
-  c("articles.csv", "models.csv",
-    "parameters.csv",
+  c("single_extraction_articles.csv", "single_extraction_models.csv",
+    "single_extraction_params.csv",
+    "double_extraction_articles.csv", "double_extraction_models.csv",
+    "double_extraction_params.csv",
     ## Empty for ebola but creating for other
     ## pathogens
     "outbreaks.csv"))
@@ -18,24 +20,36 @@ infiles <- orderly_resource(
     "DIDE Priority Pathogens EBOLA - GINA.accdb",
     "DIDE Priority Pathogens EBOLA - JACK.accdb",
     "DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
-    "DIDE Priority Pathogens EBOLA - KELLY.accdb",
+    "DIDE Priority Pathogens EBOLA - KELLY---.accdb",
     "DIDE Priority Pathogens EBOLA - PATRICK.accdb",
     "DIDE Priority Pathogens EBOLA - REBECCA.accdb",
     "DIDE Priority Pathogens EBOLA - RUTH.accdb",
     "DIDE Priority Pathogens EBOLA - SABINE.accdb",
     "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
-    "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb"
+    "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
+    "double/DIDE Priority Pathogens EBOLA - ANNA_MARIA.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - ANNE.accdb", "double/DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - CYRIL.accdb", "double/DIDE Priority Pathogens EBOLA - DARIYA.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - ETTIE.accdb", "double/DIDE Priority Pathogens EBOLA - GINA.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - JACK.accdb", "double/DIDE Priority Pathogens EBOLA - JOSEPH.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - KEITH.accdb", "double/DIDE Priority Pathogens EBOLA - KELLY.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - PABLO.accdb", "double/DIDE Priority Pathogens EBOLA - PATRICK.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - PAULA.accdb", "double/DIDE Priority Pathogens EBOLA - REBECCA.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - RICHARD.accdb", "double/DIDE Priority Pathogens EBOLA - RUTH.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - SABINE.accdb", "double/DIDE Priority Pathogens EBOLA - SANGEETA.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - SEQUOIA.accdb", "double/DIDE Priority Pathogens EBOLA - TRISTAN.accdb",
+    "double-round2/DIDE Priority Pathogens ETTIE.accdb", "double-round2/DIDE Priority Pathogens REBECCA.accdb", 
+    "double-round2/DIDE Priority Pathogens RICHARD.accdb", "double-round2/DIDE Priority Pathogens SANGEETA.accdb", 
+    "double-round2/DIDE Priority Pathogens TRISTAN.accdb"
   )
 )
 ## pathogen should be set to one of our priority-pathogens
 ## use capital case; see code below where this pathogen
-## is used in the file name
+## is used 
 ## Downstream tasks can query on this parameter to
 ## pull in the correct files as dependancies.
-## Extraction can be single or double.
-## This is so that downstream tasks can pull in the right
-## outputs and put them together.
-orderly_parameters(pathogen = NULL, extraction = "single")
+
+orderly_parameters(pathogen = NULL)
 
 library(dplyr)
 library(ids)
@@ -43,6 +57,14 @@ library(odbc)
 library(purrr)
 library(readr)
 
+# check that none of the fields contain a comma
+# Implement other checks here.
+validate <- function(df) {
+  out <- apply(df, 2, function(x) {
+    gsub(pattern = ",", replacement = ";", x = x)
+  })
+  as.data.frame(out)
+}
 
 ## Extract one access DB at a time
 ## Modify primary key.
@@ -109,34 +131,54 @@ from <- map(
     params$Parameter_data_ID <- random_id(
       n = nparams, use_openssl = FALSE
     )
-    
+    articles <- validate(articles)
+    models <- validate(models)
+    params <- validate(models)
     # TODO Extract outbreaks table where relevant
     list(
       articles = articles, models = models, params = params
     )
   }
 )
+# Filter out empty databases
+from <- keep(from, function(x) !is.null(x))
+# Merge databases and then split again
+articles <- map_dfr(from, function(x) x[["articles"]])
+models <- map_dfr(from, function(x) x[["models"]])
+params <- map_dfr(from, function(x) x[["params"]])
+
+
 
 ## Write each DB to the same file now.
-walk(
-  from, function(x) {
-    iwalk(x, function(df, dfname) {
-      ## TODO
-      ## have to do something about this if we
-      ## decide to commit these files to git
-      file <- outfiles[[dfname]] 
-      append <- FALSE
-      if (file.exists(file)) append <- TRUE
-      message("Writing to ", file)
-      write_csv(df, file, append = append)
-    }
-    )
-      }
-    )
-  
+double_articles <- count(articles, Covidence_ID) %>% filter(n >= 2)
+double_a <- articles[articles$Covidence_ID %in% double_articles$Covidence_ID, ]
+double_m <- models[models$Covidence_ID %in% double_articles$Covidence_ID, ]
+double_p <- params[params$Covidence_ID %in% double_articles$Covidence_ID, ]
 
+single_a <- articles[!articles$Covidence_ID %in% double_articles$Covidence_ID, ]
+single_m <- models[!models$Covidence_ID %in% double_articles$Covidence_ID, ]
+single_p <- params[!params$Covidence_ID %in% double_articles$Covidence_ID, ]
+
+write_csv(
+  double_a, "double_extraction_articles.csv"
+)
+write_csv(
+  double_m, "double_extraction_models.csv"
+)
+write_csv(
+  double_p, "double_extraction_params.csv"
+)
+
+write_csv(
+  single_a, "single_extraction_articles.csv"
+)
+write_csv(
+  single_m, "single_extraction_models.csv"
+)
+write_csv(
+  single_p, "single_extraction_params.csv"
+)
 ## Empty outbreaks.csv for Ebola
 ## Amend this for other pathogens
 file.create("outbreaks.csv")
-## Clean-up
-unlink(outdir, recursive = TRUE)
+
