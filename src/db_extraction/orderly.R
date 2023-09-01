@@ -32,9 +32,8 @@ infiles <- orderly_resource(
     "double/DIDE Priority Pathogens EBOLA - ETTIE.accdb", "double/DIDE Priority Pathogens EBOLA - GINA.accdb", 
     "double/DIDE Priority Pathogens EBOLA - JACK.accdb", "double/DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
     "double/DIDE Priority Pathogens EBOLA - KELLY.accdb", "double/DIDE Priority Pathogens EBOLA - PATRICK.accdb",
-    "double/DIDE Priority Pathogens EBOLA - REBECCA.accdb", "double/DIDE Priority Pathogens EBOLA - RICHARD.accdb", 
-    "double/DIDE Priority Pathogens EBOLA - RUTH.accdb", "double/DIDE Priority Pathogens EBOLA - SABINE.accdb",
-    "double/DIDE Priority Pathogens EBOLA - SANGEETA.accdb", "double/DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
+    "double/DIDE Priority Pathogens EBOLA - REBECCA.accdb", "double/DIDE Priority Pathogens EBOLA - RUTH.accdb",
+    "double/DIDE Priority Pathogens EBOLA - SABINE.accdb", "double/DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
     "double-round2/DIDE Priority Pathogens ETTIE.accdb", "double-round2/DIDE Priority Pathogens REBECCA.accdb", 
     "double-round2/DIDE Priority Pathogens RICHARD.accdb", "double-round2/DIDE Priority Pathogens SANGEETA.accdb", 
     "double-round2/DIDE Priority Pathogens TRISTAN.accdb"
