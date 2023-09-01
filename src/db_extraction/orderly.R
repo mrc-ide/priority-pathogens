@@ -10,8 +10,11 @@ orderly_artefact(
     "outbreaks.csv"))
 
 infiles <- orderly_resource(
-  c("DIDE Priority Pathogens EBOLA - SABINE.accdb",
-    "DIDE Priority Pathogens EBOLA - SANGEETA.accdb"
+  c("DIDE Priority Pathogens EBOLA - ETTIE.accdb",
+    "DIDE Priority Pathogens EBOLA - REBECCA.accdb",
+    "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
+    "DIDE Priority Pathogens EBOLA - RICHARD.accdb",
+    "DIDE Priority Pathogens EBOLA - TRISTAN.accdb"
     )
 )
 ## pathogen should be set to one of our priority-pathogens
@@ -22,7 +25,7 @@ infiles <- orderly_resource(
 ## Extraction can be single or double.
 ## This is so that downsteam tasks can pull in the right
 ## outputs and put them together.
-orderly_parameters(pathogen = NULL, extraction = "single")
+orderly_parameters(pathogen = "EBOLA", extraction = "double")
 
 library(dplyr)
 library(here)
