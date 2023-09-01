@@ -26,15 +26,16 @@ orderly2::orderly_run("db_extraction",
 ```
 
 This orderly task will have combined all the individual extraction databases into 
-article, model and parameter .csv files, and will have created new ID variables. 
-It will automatically detect which papers have been double extracted and create 
-separate article, model and parameter files for single and double extracted papers.
+article, model, parameter and outbreak .csv files, and will have created new ID 
+variables. It will automatically detect which papers have been double extracted 
+and create separate article, model, parameter and outbreak files for single and
+double extracted papers.
 
 Combined data for single extracted papers will be in:
-articles_single.csv, parameters_single.csv, models_single.csv
+articles_single.csv, parameters_single.csv, models_single.csv, outbreaks_single.csv
 
 Combined data for double extracted papers will be in:
-articles_double.csv, parameters_double.csv, models_double.csv
+articles_double.csv, parameters_double.csv, models_double.csv, outbreaks_double.csv
 
 These files can be found within the “archive” folder in the priority-pathogens
 directory.
@@ -45,11 +46,12 @@ This task takes the article, parameter and model csv files for the double
 extracted papers and identifies the entries that match and those that need to
 be given back to the extractors to be fixed.
 
-* Copy across the "articles_double.csv", "parameters_double.csv", "models_double.csv",
-"outbreaks_double.csv" files from the "archive/db_extraction" folder to the
+* Copy across the "articles_double.csv", "parameters_double.csv", "models_double.csv"
+and "outbreaks_double.csv" files from the "archive/db_extraction" folder to the
 "src/db_double" folder (Note: update this to use orderly_dependency() when running properly)
 * Ensure that the "orderly.R" script lists "articles_double.csv",
-"parameters_double.csv", "models_double.csv" in the orderly_resource() function
+"parameters_double.csv", "models_double.csv" and "outbreaks_double.csv" in the
+orderly_resource() function
 * Then run the following:
 
 ```
