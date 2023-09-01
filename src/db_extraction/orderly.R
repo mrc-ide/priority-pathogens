@@ -129,7 +129,7 @@ from <- map(
     )
     articles <- validate(articles)
     models <- validate(models)
-    params <- validate(models)
+    params <- validate(params)
     # TODO Extract outbreaks table where relevant
     list(
       articles = articles, models = models, params = params
