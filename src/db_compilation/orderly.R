@@ -10,9 +10,9 @@ orderly_artefact(
 
 # # Once working as an orderly task, we can get inputs from previous tasks
 # orderly_dependency("db_extraction", "TASKID",
-#   c("articles_single.csv" = "articles_single.csv",
-#     "parameters_single.csv" = "parameters_single.csv",
-#     "models_single.csv" = "models_single.csv")
+#   c("single_extraction_articles.csv" = "single_extraction_articles.csv",
+#     "single_extraction_parameters.csv" = "single_extraction_parameters.csv",
+#     "single_extraction_models.csv" = "single_extraction_models.csv")
 # )
 # 
 # orderly_dependency("db_double", "TASKID",
@@ -21,9 +21,9 @@ orderly_artefact(
 
 ## Inputs (when set up properly, this will just list the manually fixed files)
 orderly_resource(
-  c("articles_single.csv",
-    "parameters_single.csv",
-    "models_single.csv",
+  c("single_extraction_articles.csv",
+    "single_extraction_parameters.csv",
+    "single_extraction_models.csv",
     "qa_fixing.csv",
     "parameter_fixing.csv",
     "model_fixing.csv",
