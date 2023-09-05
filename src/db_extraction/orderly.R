@@ -144,6 +144,35 @@ models <- map_dfr(from, function(x) x[["models"]])
 params <- map_dfr(from, function(x) x[["params"]])
 
 
+# 1) Check for duplicate article entries by the same extractor
+articles[(duplicated(articles[c("Covidence_ID","Name_data_entry")]) |
+             duplicated(articles[c("Covidence_ID","Name_data_entry")],
+                        fromLast = TRUE)), ]
+# 2) Check for empty model entries
+check_empty_models <- colnames(models)[c(7:9, 11, 13:ncol(models))]
+check_models <- models %>%
+  filter_at(vars(all_of(check_empty_models)), any_vars(is.na(.)))
+# 3) Check for entries where parameter type has not been entered (check if empty
+# and should be removed or if this was accidentally missed by the extractor)
+check_params <- params %>% filter(is.na(params$Parameter_type))
+
+# Ebola-specific cleaning
+if(pathogen = "EBOLA") {
+  # articles
+  articles <- articles %>%
+    filter(Article_ID!=14 | Name_data_entry!="Christian")
+  # models
+  check_empty_models <- colnames(models)[c(7:9, 11, 13:ncol(models))]
+  models <- models %>%
+    filter_at(vars(all_of(check_empty_models)), any_vars(!is.na(.)))
+  # parameters
+  params$Parameter_type[
+    params$Covidence_ID == "16757" &
+      params$Name_data_entry == "Ruth"] <- "Seroprevalence - IgG"
+  check_empty_params <- colnames(params)[7:ncol(params)]
+  params <- params %>%
+    filter_at(vars(all_of(check_empty_params)), any_vars(!is.na(.)))
+}
 
 ## Write each DB to the same file now.
 double_articles <- count(articles, Covidence_ID) %>% filter(n >= 2)
