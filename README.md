@@ -15,14 +15,15 @@ Once extractions are complete and you want to compile the databases together:
 * Clone the latest priority-pathogens repo
 * Open the priority-pathogens R project on your machine
 * Copy all extraction databases (single and double extraction databases) into 
-the "src/db_extraction" folder
+the "src/db_extraction" folder (Note: this may change and be set up to get the
+databases directly from the shared drive)
 * Ensure that in the "orderly.R" script the orderly_resource() function has been
 updated with all of the database file names you have added to the folder
 * Then run the following (specifying the pathogen):
 
 ```
 orderly2::orderly_run("db_extraction",
-                        parameters = list(pathogen = "EBOLA")
+                        parameters = list(pathogen = "EBOLA"))
 ```
 
 This orderly task will have combined all the individual extraction databases into 
