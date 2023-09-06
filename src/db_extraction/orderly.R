@@ -2,15 +2,17 @@ library(orderly2)
 orderly_strict_mode()
 
 orderly_artefact(
-  "Merged data as csv",
+  "Merged data as csv and errors as RDS",
   c("single_extraction_articles.csv", "single_extraction_models.csv",
     "single_extraction_params.csv",
     "double_extraction_articles.csv", "double_extraction_models.csv",
     "double_extraction_params.csv",
     ## Empty for ebola but creating for other
     ## pathogens
-    "outbreaks.csv"))
+    "outbreaks.csv",
+    "errors.rds"))
 
+orderly_resource("validation.R")
 infiles <- orderly_resource(
   c("DIDE Priority Pathogens EBOLA - ANNE.accdb",
     "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
@@ -27,21 +29,21 @@ infiles <- orderly_resource(
     "DIDE Priority Pathogens EBOLA - SABINE.accdb",
     "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
     "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
-    "double/DIDE Priority Pathogens EBOLA - ANNE.accdb", "double/DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb", 
-    "double/DIDE Priority Pathogens EBOLA - CYRIL.accdb", "double/DIDE Priority Pathogens EBOLA - DARIYA.accdb", 
-    "double/DIDE Priority Pathogens EBOLA - ETTIE.accdb", "double/DIDE Priority Pathogens EBOLA - GINA.accdb", 
+    "double/DIDE Priority Pathogens EBOLA - ANNE.accdb", "double/DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
+    "double/DIDE Priority Pathogens EBOLA - CYRIL.accdb", "double/DIDE Priority Pathogens EBOLA - DARIYA.accdb",
+    "double/DIDE Priority Pathogens EBOLA - ETTIE.accdb", "double/DIDE Priority Pathogens EBOLA - GINA.accdb",
     "double/DIDE Priority Pathogens EBOLA - JACK.accdb", "double/DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
     "double/DIDE Priority Pathogens EBOLA - KELLY.accdb", "double/DIDE Priority Pathogens EBOLA - PATRICK.accdb",
     "double/DIDE Priority Pathogens EBOLA - REBECCA.accdb", "double/DIDE Priority Pathogens EBOLA - RUTH.accdb",
     "double/DIDE Priority Pathogens EBOLA - SABINE.accdb", "double/DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
-    "double-round2/DIDE Priority Pathogens ETTIE.accdb", "double-round2/DIDE Priority Pathogens REBECCA.accdb", 
-    "double-round2/DIDE Priority Pathogens RICHARD.accdb", "double-round2/DIDE Priority Pathogens SANGEETA.accdb", 
+    "double-round2/DIDE Priority Pathogens ETTIE.accdb", "double-round2/DIDE Priority Pathogens REBECCA.accdb",
+    "double-round2/DIDE Priority Pathogens RICHARD.accdb", "double-round2/DIDE Priority Pathogens SANGEETA.accdb",
     "double-round2/DIDE Priority Pathogens TRISTAN.accdb"
   )
 )
 ## pathogen should be set to one of our priority-pathogens
 ## use capital case; see code below where this pathogen
-## is used 
+## is used
 ## Downstream tasks can query on this parameter to
 ## pull in the correct files as dependancies.
 
@@ -53,14 +55,7 @@ library(odbc)
 library(purrr)
 library(readr)
 
-# check that none of the fields contain a comma
-# Implement other checks here.
-validate <- function(df) {
-  out <- apply(df, 2, function(x) {
-    gsub(pattern = ",", replacement = ";", x = x)
-  })
-  as.data.frame(out)
-}
+source("validation.R")
 
 ## Extract one access DB at a time
 ## Modify primary key.
@@ -82,27 +77,30 @@ from <- map(
   infiles, function(infile) {
     message("Reading ", infile)
     con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[./", infile, "];"))
-    
+
     if (is.null(con)){
       message("Error in reading ", infile)
       return()
     }
-    
+
     res <- dbSendQuery(con, "SELECT * FROM [Article data - Table]")
     articles <- dbFetch(res)
     narticles <- nrow(articles)
-    
+
     if (narticles == 0) return()
-    
+    ## Convert Covidence_ID to numeric.
+    ## Covidence_ID is entered as a text, so
+    ## also save the original i.e., as entered in the DB
+    ## to allow errors induced by conversion to be fixed.
+    articles$Covidence_ID_text <- articles$Covidence_ID
+    articles$Covidence_ID <- as.integer(articles$Covidence_ID)
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
     )
-    
-    
+
     res <- dbSendQuery(con, "SELECT * FROM [Model data - Table]")
     models <- dbFetch(res)
-   
-    
+
     models <- left_join(
       articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       models,
@@ -112,12 +110,12 @@ from <- map(
     models$Model_data_ID <- random_id(
       n = nmodels, use_openssl = FALSE
     )
-    
-    
+
+
     res <- dbSendQuery(con, "SELECT * FROM [Parameter data - Table]")
     params <- dbFetch(res)
-    
-    
+
+
     params <- left_join(
       articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       params,
@@ -144,65 +142,6 @@ articles <- map_dfr(from, function(x) x[["articles"]])
 models <- map_dfr(from, function(x) x[["models"]])
 params <- map_dfr(from, function(x) x[["params"]])
 
-# Check for generic article errors
-validate_articles <- function(article_df) {
-  # 1) Check for duplicate article entries by the same extractor
-  article_dupes <- article_df[
-    (duplicated(article_df[c("Covidence_ID","Name_data_entry")]) |
-       duplicated(article_df[c("Covidence_ID","Name_data_entry")],
-                  fromLast = TRUE)), ]
-  if(nrow(article_dupes) > 0) {
-    print(article_dupes)
-    stop("There are duplicate article entries by the same extractor")
-  }
-  # 2) Check for missing covidence IDs
-  if(any(is.na(articles$Covidence_ID))) {
-    missing_ids <- articles[is.na(articles$Covidence_ID),]
-    print(missing_ids)
-    stop("The above article entry or entries are missing Covidence IDs")
-  }
-}
-
-# Check for generic model errors
-validate_models <- function(model_df) {
-  # Check for empty model entries
-  check_model_cols <- colnames(model_df)[c(7:9, 11, 13:ncol(model_df))]
-  check_empty_models <- model_df %>%
-    filter_at(vars(all_of(check_model_cols)), all_vars(is.na(.)))
-  if(nrow(check_empty_models) > 0) {
-    print(check_empty_models)
-    stop("The above model entries are empty")
-  }
-}
-
-# Check for generic parameter errors
-validate_params <- function(param_df) {
-  # Check for empty parameter entries
-  check_param_cols <- colnames(param_df)[7:ncol(param_df)]
-  check_param_cols <- check_param_cols[! check_param_cols %in%
-                                         c('Exponent',
-                                           'Distribution_par1_uncertainity',
-                                           'Distribution_par2_uncertainty',
-                                           'Method_from_supplement',
-                                           'Method_disaggregated',
-                                           'Method_disaggregated_only',
-                                           'Genomic_sequence_available',
-                                           'Inverse_param',
-                                           'Parameter_FromFigure')]
-  check_empty_params <- param_df %>%
-    filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
-  if(nrow(check_empty_params) > 0) {
-    print(check_empty_params)
-    stop("The above parameter entries are empty")
-  }
-  # Check for entries where parameter type has not been entered (check if empty
-  # and should be removed or if this was accidentally missed by the extractor)
-  check_param_type <- param_df %>% filter(is.na(param_df$Parameter_type))
-  if(nrow(check_param_type) > 0) {
-  print(check_param_type)
-  stop("The 'Parameter_type' variable is empty in the above parameter entries")
-  }
-}
 
 # Ebola-specific cleaning
 if(pathogen == "EBOLA") {
@@ -242,9 +181,15 @@ if(pathogen == "EBOLA") {
 }
 
 ## Check data after pathogen-specific cleaning
-validate_articles(articles)
-validate_models(models)
-validate_params(params)
+a_err <- validate_articles(articles)
+m_err <- validate_models(models)
+p_err <- validate_params(params)
+saveRDS(
+  list(articles_errors = a_err,
+       models_errors = m_err,
+       params_errors = p_err),
+  "errors.rds"
+)
 
 ## Write each DB to the same file now.
 double_articles <- count(articles, Covidence_ID) %>% filter(n >= 2)
