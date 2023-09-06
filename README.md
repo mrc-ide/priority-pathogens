@@ -11,6 +11,13 @@ it tells you to.
 
 ### Task 1: db_extraction
 
+*IMPORTANT* This task can only run on a Windows machine becuase as far
+as we know, Microsoft does not provide a (free) Mac driver for their
+Access DB. Mac users can use their Windows VM to run this task by
+connecting the priority-pathogens repo to Rstudio on their VM. If you
+are unsure about the steps, please feel free to message Rebecca or
+Sangeeta.
+
 Once extractions are complete and you want to compile the databases together:
 * Clone the latest priority-pathogens repo
 * Open the priority-pathogens R project on your machine
@@ -25,6 +32,7 @@ updated with all of the database file names you have added to the folder
 orderly2::orderly_run("db_extraction",
                         parameters = list(pathogen = "EBOLA"))
 ```
+Replace EBOLA with the pathogen of interest.
 
 This orderly task will have combined all the individual extraction databases into 
 article, model, parameter and outbreak .csv files, and will have created new ID 
