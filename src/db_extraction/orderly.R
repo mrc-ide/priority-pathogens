@@ -140,39 +140,111 @@ from <- map(
 from <- keep(from, function(x) !is.null(x))
 # Merge databases and then split again
 articles <- map_dfr(from, function(x) x[["articles"]])
+# SANGEETA TO DO: Make Covidence_ID numeric
 models <- map_dfr(from, function(x) x[["models"]])
 params <- map_dfr(from, function(x) x[["params"]])
 
+# Check for generic article errors
+validate_articles <- function(article_df) {
+  # 1) Check for duplicate article entries by the same extractor
+  article_dupes <- article_df[
+    (duplicated(article_df[c("Covidence_ID","Name_data_entry")]) |
+       duplicated(article_df[c("Covidence_ID","Name_data_entry")],
+                  fromLast = TRUE)), ]
+  if(nrow(article_dupes) > 0) {
+    print(article_dupes)
+    stop("There are duplicate article entries by the same extractor")
+  }
+  # 2) Check for missing covidence IDs
+  if(any(is.na(articles$Covidence_ID))) {
+    missing_ids <- articles[is.na(articles$Covidence_ID),]
+    print(missing_ids)
+    stop("The above article entry or entries are missing Covidence IDs")
+  }
+}
 
-# 1) Check for duplicate article entries by the same extractor
-articles[(duplicated(articles[c("Covidence_ID","Name_data_entry")]) |
-             duplicated(articles[c("Covidence_ID","Name_data_entry")],
-                        fromLast = TRUE)), ]
-# 2) Check for empty model entries
-check_empty_models <- colnames(models)[c(7:9, 11, 13:ncol(models))]
-check_models <- models %>%
-  filter_at(vars(all_of(check_empty_models)), any_vars(is.na(.)))
-# 3) Check for entries where parameter type has not been entered (check if empty
-# and should be removed or if this was accidentally missed by the extractor)
-check_params <- params %>% filter(is.na(params$Parameter_type))
+# Check for generic model errors
+validate_models <- function(model_df) {
+  # Check for empty model entries
+  check_model_cols <- colnames(model_df)[c(7:9, 11, 13:ncol(model_df))]
+  check_empty_models <- model_df %>%
+    filter_at(vars(all_of(check_model_cols)), all_vars(is.na(.)))
+  if(nrow(check_empty_models) > 0) {
+    print(check_empty_models)
+    stop("The above model entries are empty")
+  }
+}
+
+# Check for generic parameter errors
+validate_params <- function(param_df) {
+  # Check for empty parameter entries
+  check_param_cols <- colnames(param_df)[7:ncol(param_df)]
+  check_param_cols <- check_param_cols[! check_param_cols %in%
+                                         c('Exponent',
+                                           'Distribution_par1_uncertainity',
+                                           'Distribution_par2_uncertainty',
+                                           'Method_from_supplement',
+                                           'Method_disaggregated',
+                                           'Method_disaggregated_only',
+                                           'Genomic_sequence_available',
+                                           'Inverse_param',
+                                           'Parameter_FromFigure')]
+  check_empty_params <- param_df %>%
+    filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
+  if(nrow(check_empty_params) > 0) {
+    print(check_empty_params)
+    stop("The above parameter entries are empty")
+  }
+  # Check for entries where parameter type has not been entered (check if empty
+  # and should be removed or if this was accidentally missed by the extractor)
+  check_param_type <- param_df %>% filter(is.na(param_df$Parameter_type))
+  if(nrow(check_param_type) > 0) {
+  print(check_param_type)
+  stop("The 'Parameter_type' variable is empty in the above parameter entries")
+  }
+}
 
 # Ebola-specific cleaning
-if(pathogen = "EBOLA") {
+if(pathogen == "EBOLA") {
   # articles
+  articles$Covidence_ID <- as.numeric(articles$Covidence_ID)
+  articles$Covidence_ID[articles$Article_ID == 54 &
+                          articles$Name_data_entry == "Christian"] <- 19880
+  articles$FirstAauthor_Surname[
+    articles$Article_ID == 54 &
+      articles$Name_data_entry == "Christian"] <- "Atangana"
+  articles$FirstAauthor_FirstName[
+    articles$Article_ID == 54 &
+      articles$Name_data_entry == "Christian"] <- "Abdon"
   articles <- articles %>%
     filter(Article_ID!=14 | Name_data_entry!="Christian")
   # models
-  check_empty_models <- colnames(models)[c(7:9, 11, 13:ncol(models))]
+  check_model_cols <- colnames(models)[c(7:9, 11, 13:ncol(models))]
   models <- models %>%
-    filter_at(vars(all_of(check_empty_models)), any_vars(!is.na(.)))
+    filter_at(vars(all_of(check_model_cols)), all_vars(!is.na(.)))
   # parameters
   params$Parameter_type[
     params$Covidence_ID == "16757" &
       params$Name_data_entry == "Ruth"] <- "Seroprevalence - IgG"
-  check_empty_params <- colnames(params)[7:ncol(params)]
+  check_param_cols <- colnames(params)[7:ncol(params)]
+  check_param_cols <- check_param_cols[! check_param_cols %in%
+                                         c('Exponent',
+                                           'Distribution_par1_uncertainity',
+                                           'Distribution_par2_uncertainty',
+                                           'Method_from_supplement',
+                                           'Method_disaggregated',
+                                           'Method_disaggregated_only',
+                                           'Genomic_sequence_available',
+                                           'Inverse_param',
+                                           'Parameter_FromFigure')]
   params <- params %>%
-    filter_at(vars(all_of(check_empty_params)), any_vars(!is.na(.)))
+    filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
 }
+
+## Check data after pathogen-specific cleaning
+validate_articles(articles)
+validate_models(models)
+validate_params(params)
 
 ## Write each DB to the same file now.
 double_articles <- count(articles, Covidence_ID) %>% filter(n >= 2)
