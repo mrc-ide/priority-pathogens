@@ -53,7 +53,7 @@ validate_params <- function(param_df) {
                                    c("Article_ID", "ID", "Pathogen",
                                      "Covidence_ID", "Name_data_entry",
                                      "Parameter_data_ID", "Exponent",
-                                     "Distribution_par1_uncertainity",
+                                     "Distribution_par1_uncertainty",
                                      "Distribution_par2_uncertainty",
                                      "Method_from_supplement",
                                      "Method_disaggregated",
@@ -61,7 +61,7 @@ validate_params <- function(param_df) {
                                      "Genomic_sequence_available",
                                      "Inverse_param", "Parameter_FromFigure")]
   check_empty_params <- param_df %>%
-    filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
+    filter_at(vars(all_of(check_param_cols)), all_vars(is.na(.)))
   if(nrow(check_empty_params) > 0) {
     warning("There are empty parameter entries")
   }
@@ -69,7 +69,7 @@ validate_params <- function(param_df) {
   # and should be removed or if this was accidentally missed by the extractor)
   check_param_type <- param_df %>% filter(is.na(param_df$Parameter_type))
   if(nrow(check_param_type) > 0) {
-    stop("The 'Parameter_type' variable is empty in some parameter entries")
+    warning("The 'Parameter_type' variable is empty in some parameter entries")
   }
   list(
     empty_params = check_empty_params,
