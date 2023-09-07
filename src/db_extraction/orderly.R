@@ -158,24 +158,27 @@ if(pathogen == "EBOLA") {
   articles <- articles %>%
     filter(Article_ID!=14 | Name_data_entry!="Christian")
   # models
-  check_model_cols <- colnames(models)[c(7:9, 11, 13:ncol(models))]
+  check_model_cols <- c("Model_type", "Compartmental_type", "Stoch_Deter",
+                        "Interventions_type", "Transmission_route",
+                        "Assumptions", "Ebola variant")
   models <- models %>%
     filter_at(vars(all_of(check_model_cols)), all_vars(!is.na(.)))
   # parameters
   params$Parameter_type[
     params$Covidence_ID == "16757" &
       params$Name_data_entry == "Ruth"] <- "Seroprevalence - IgG"
-  check_param_cols <- colnames(params)[7:ncol(params)]
-  check_param_cols <- check_param_cols[! check_param_cols %in%
-                                         c('Exponent',
-                                           'Distribution_par1_uncertainity',
-                                           'Distribution_par2_uncertainty',
-                                           'Method_from_supplement',
-                                           'Method_disaggregated',
-                                           'Method_disaggregated_only',
-                                           'Genomic_sequence_available',
-                                           'Inverse_param',
-                                           'Parameter_FromFigure')]
+  param_cols <- colnames(params)
+  check_param_cols <- param_cols[! param_cols %in%
+                                   c("Article_ID", "ID", "Pathogen",
+                                     "Covidence_ID", "Name_data_entry",
+                                     "Parameter_data_ID", "Exponent",
+                                     "Distribution_par1_uncertainity",
+                                     "Distribution_par2_uncertainty",
+                                     "Method_from_supplement",
+                                     "Method_disaggregated",
+                                     "Method_disaggregated_only",
+                                     "Genomic_sequence_available",
+                                     "Inverse_param", "Parameter_FromFigure")]
   params <- params %>%
     filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
 }
