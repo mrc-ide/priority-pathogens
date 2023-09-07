@@ -50,21 +50,16 @@ validate_params <- function(param_df) {
   ## Check for empty parameter entries
   param_cols <- colnames(param_df)
   check_param_cols <- param_cols[! param_cols %in%
-                                   c('Article_ID',
-                                     'ID',
-                                     'Pathogen',
-                                     'Covidence_ID',
-                                     'Name_data_entry',
-                                     'Parameter_data_ID',
-                                     'Exponent',
-                                     'Distribution_par1_uncertainity',
-                                     'Distribution_par2_uncertainty',
-                                     'Method_from_supplement',
-                                     'Method_disaggregated',
-                                     'Method_disaggregated_only',
-                                     'Genomic_sequence_available',
-                                     'Inverse_param',
-                                     'Parameter_FromFigure')]
+                                   c("Article_ID", "ID", "Pathogen",
+                                     "Covidence_ID", "Name_data_entry",
+                                     "Parameter_data_ID", "Exponent",
+                                     "Distribution_par1_uncertainity",
+                                     "Distribution_par2_uncertainty",
+                                     "Method_from_supplement",
+                                     "Method_disaggregated",
+                                     "Method_disaggregated_only",
+                                     "Genomic_sequence_available",
+                                     "Inverse_param", "Parameter_FromFigure")]
   check_empty_params <- param_df %>%
     filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
   if(nrow(check_empty_params) > 0) {
