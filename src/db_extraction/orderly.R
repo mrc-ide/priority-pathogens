@@ -110,7 +110,7 @@ from <- map(
     models$Model_data_ID <- random_id(
       n = nmodels, use_openssl = FALSE
     )
-
+    
 
     res <- dbSendQuery(con, "SELECT * FROM [Parameter data - Table]")
     params <- dbFetch(res)
@@ -158,21 +158,36 @@ if(pathogen == "EBOLA") {
   articles <- articles %>%
     filter(Article_ID!=14 | Name_data_entry!="Christian")
   # models
-  check_model_cols <- c("Model_type", "Compartmental_type", "Stoch_Deter",
-                        "Interventions_type", "Transmission_route",
-                        "Assumptions", "Ebola variant")
+  models$Covidence_ID <- as.numeric(models$Covidence_ID)
+  models <- models %>% mutate_if(is.character, list(~na_if(.,""))) 
+  model_cols <- colnames(models)
+  check_model_cols <- model_cols[! model_cols %in%
+                                   c("Article_ID", "ID", "Pathogen",
+                                     "Covidence_ID", "Name_data_entry",
+                                     "Model_data_ID", "Theoretical_model",
+                                     "Code_available")]
   models <- models %>%
-    filter_at(vars(all_of(check_model_cols)), all_vars(!is.na(.)))
+    filter_at(vars(all_of(check_model_cols)), any_vars(!is.na(.)))
   # parameters
+  params$Covidence_ID <- as.numeric(params$Covidence_ID)
+  params <- params %>% mutate_if(is.character, list(~na_if(.,"")))
+    # Add parameter type for accidental extractor errors
   params$Parameter_type[
     params$Covidence_ID == "16757" &
       params$Name_data_entry == "Ruth"] <- "Seroprevalence - IgG"
+  params$Parameter_type[
+    params$Covidence_ID == "4764" &
+      params$Name_data_entry == "Kelly M"] <- "Risk factors"
+    # Remove remaining blank parameter type entries
+  params <- params %>%
+    filter_at(vars(Parameter_type), any_vars(!is.na(.)))
+    # Remove entries where all variables that aren't prepopulated are empty
   param_cols <- colnames(params)
   check_param_cols <- param_cols[! param_cols %in%
                                    c("Article_ID", "ID", "Pathogen",
                                      "Covidence_ID", "Name_data_entry",
                                      "Parameter_data_ID", "Exponent",
-                                     "Distribution_par1_uncertainity",
+                                     "Distribution_par1_uncertainty",
                                      "Distribution_par2_uncertainty",
                                      "Method_from_supplement",
                                      "Method_disaggregated",
@@ -180,7 +195,7 @@ if(pathogen == "EBOLA") {
                                      "Genomic_sequence_available",
                                      "Inverse_param", "Parameter_FromFigure")]
   params <- params %>%
-    filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
+    filter_at(vars(all_of(check_param_cols)), any_vars(!is.na(.)))
 }
 
 ## Check data after pathogen-specific cleaning
