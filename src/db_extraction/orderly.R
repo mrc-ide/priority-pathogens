@@ -23,12 +23,16 @@ infiles <- orderly_resource(
     "DIDE Priority Pathogens EBOLA - JACK.accdb",
     "DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
     "DIDE Priority Pathogens EBOLA - KELLY---.accdb",
+    "DIDE Priority Pathogens EBOLA - PABLO.accdb",
     "DIDE Priority Pathogens EBOLA - PATRICK.accdb",
     "DIDE Priority Pathogens EBOLA - REBECCA.accdb",
+    "DIDE Priority Pathogens EBOLA - RICHARD.accdb",
     "DIDE Priority Pathogens EBOLA - RUTH.accdb",
     "DIDE Priority Pathogens EBOLA - SABINE.accdb",
     "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
     "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
+    "DIDE Priority Pathogens EBOLA - THOM.accdb",
+    "DIDE Priority Pathogens EBOLA - TRISTAN.accdb",
     "double/DIDE Priority Pathogens EBOLA - ANNE.accdb", "double/DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
     "double/DIDE Priority Pathogens EBOLA - CYRIL.accdb", "double/DIDE Priority Pathogens EBOLA - DARIYA.accdb",
     "double/DIDE Priority Pathogens EBOLA - ETTIE.accdb", "double/DIDE Priority Pathogens EBOLA - GINA.accdb",
@@ -107,6 +111,7 @@ from <- map(
       by = "Article_ID"
     )
     nmodels <- nrow(models)
+    models <- models %>% mutate(access_model_id = Model_data_ID)
     models$Model_data_ID <- random_id(
       n = nmodels, use_openssl = FALSE
     )
@@ -122,6 +127,7 @@ from <- map(
       by = "Article_ID"
     )
     nparams <- nrow(params)
+    params <- params %>% mutate(access_param_id = Parameter_data_ID)
     params$Parameter_data_ID <- random_id(
       n = nparams, use_openssl = FALSE
     )
