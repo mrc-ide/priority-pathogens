@@ -118,7 +118,7 @@ with orderly2.
 2. Map the shared drive on your machine.
 3. For instance, Rebecca has run the tasks db_compilation on a shared
    drive. I have mapped the drive on my Mac. Now, we add the orderly
-   folder on the shared drive as an orderly ``location'' as follows:
+   folder on the shared drive as an orderly "location" as follows:
    ``` 
    orderly2::orderly_location_add(name = "pp-network-drive", args
    = list(path =
@@ -141,7 +141,7 @@ locations.
 ```
 orderly2::orderly_location_pull_packet(<ids>)
 ```
-where ``ids'' is the set of ids that you want to pull to your local
+where "ids" is the set of ids that you want to pull to your local
    machine. You can get this value by looking into the archive
    directory of the orderly project mounted on network drive.
    
