@@ -16,7 +16,10 @@ as we know, Microsoft does not provide a (free) Mac driver for their
 Access DB. Mac users can use their Windows VM to run this task by
 connecting the priority-pathogens repo to Rstudio on their VM. If you
 are unsure about the steps, please feel free to message Rebecca or
-Sangeeta.
+Sangeeta. 
+
+*IMPORTANT* If you do not want to run any of the tasks yourself, but
+still want to use the outputs, please see instructions below. 
 
 Once extractions are complete and you want to compile the databases together:
 * Clone the latest priority-pathogens repo
@@ -102,3 +105,45 @@ orderly2::orderly_run("db_compilation")
 
 The outputs will be in the "db_compilation" folder, within the "archive" folder
 of the priority-pathogens main directory.
+
+### FAQ
+
+#### I don't want to or can't run one of the orderly tasks. Can I still somehow get the outputs?
+Yes, you can. Say you are a Mac user and don't want to run the
+db_compilation task. Or say if you have run it on your Windows VM and
+want to copy the outputs over to your local machine. This is very easy
+with orderly2.
+1. First, run or have someone run for you the desired orderly task on
+   a shared drive. This is so that the outputs are visible to you. 
+2. Map the shared drive on your machine.
+3. For instance, Rebecca has run the tasks db_compilation on a shared
+   drive. I have mapped the drive on my Mac. Now, we add the orderly
+   folder on the shared drive as an orderly ``location'' as follows:
+   ``` 
+   orderly2::orderly_location_add(name = "pp-network-drive", args
+   = list(path =
+   "/Volumes/outbreak_analysis/sbhatia/priority-pathogens/"), type =
+   "path")
+   ```
+Here, ``name'' can be anything, and ``args'' should be the fully
+   qualified name of the path where orderly project is available.
+4. Then do
+```
+orderly2::orderly_location_pull_metadata()
+```
+
+This allows orderly2 to retrieve the necessary metadata from all
+locations.
+
+5. Finally, you can pull the outputs (``packets'' in orderly2 terminology):
+   
+```
+orderly2::orderly_location_pull_packet(<ids>)
+```
+where ``ids'' is the set of ids that you want to pull to your local
+   machine. You can get this value by looking into the archive
+   directory of the orderly project mounted on network drive.
+   
+   
+   
+   
