@@ -23,12 +23,16 @@ infiles <- orderly_resource(
     "DIDE Priority Pathogens EBOLA - JACK.accdb",
     "DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
     "DIDE Priority Pathogens EBOLA - KELLY---.accdb",
+    "DIDE Priority Pathogens EBOLA - PABLO.accdb",
     "DIDE Priority Pathogens EBOLA - PATRICK.accdb",
     "DIDE Priority Pathogens EBOLA - REBECCA.accdb",
+    "DIDE Priority Pathogens EBOLA - RICHARD.accdb",
     "DIDE Priority Pathogens EBOLA - RUTH.accdb",
     "DIDE Priority Pathogens EBOLA - SABINE.accdb",
     "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
     "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
+    "DIDE Priority Pathogens EBOLA - THOM.accdb",
+    "DIDE Priority Pathogens EBOLA - TRISTAN.accdb",
     "double/DIDE Priority Pathogens EBOLA - ANNE.accdb", "double/DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
     "double/DIDE Priority Pathogens EBOLA - CYRIL.accdb", "double/DIDE Priority Pathogens EBOLA - DARIYA.accdb",
     "double/DIDE Priority Pathogens EBOLA - ETTIE.accdb", "double/DIDE Priority Pathogens EBOLA - GINA.accdb",
@@ -107,10 +111,11 @@ from <- map(
       by = "Article_ID"
     )
     nmodels <- nrow(models)
+    models <- models %>% mutate(access_model_id = Model_data_ID)
     models$Model_data_ID <- random_id(
       n = nmodels, use_openssl = FALSE
     )
-
+    
 
     res <- dbSendQuery(con, "SELECT * FROM [Parameter data - Table]")
     params <- dbFetch(res)
@@ -122,6 +127,7 @@ from <- map(
       by = "Article_ID"
     )
     nparams <- nrow(params)
+    params <- params %>% mutate(access_param_id = Parameter_data_ID)
     params$Parameter_data_ID <- random_id(
       n = nparams, use_openssl = FALSE
     )
@@ -158,26 +164,44 @@ if(pathogen == "EBOLA") {
   articles <- articles %>%
     filter(Article_ID!=14 | Name_data_entry!="Christian")
   # models
-  check_model_cols <- colnames(models)[c(7:9, 11, 13:ncol(models))]
+  models$Covidence_ID <- as.numeric(models$Covidence_ID)
+  models <- models %>% mutate_if(is.character, list(~na_if(.,""))) 
+  model_cols <- colnames(models)
+  check_model_cols <- model_cols[! model_cols %in%
+                                   c("Article_ID", "ID", "Pathogen",
+                                     "Covidence_ID", "Name_data_entry",
+                                     "Model_data_ID", "Theoretical_model",
+                                     "Code_available")]
   models <- models %>%
-    filter_at(vars(all_of(check_model_cols)), all_vars(!is.na(.)))
+    filter_at(vars(all_of(check_model_cols)), any_vars(!is.na(.)))
   # parameters
+  params$Covidence_ID <- as.numeric(params$Covidence_ID)
+  params <- params %>% mutate_if(is.character, list(~na_if(.,"")))
+    # Add parameter type for accidental extractor errors
   params$Parameter_type[
     params$Covidence_ID == "16757" &
       params$Name_data_entry == "Ruth"] <- "Seroprevalence - IgG"
-  check_param_cols <- colnames(params)[7:ncol(params)]
-  check_param_cols <- check_param_cols[! check_param_cols %in%
-                                         c('Exponent',
-                                           'Distribution_par1_uncertainity',
-                                           'Distribution_par2_uncertainty',
-                                           'Method_from_supplement',
-                                           'Method_disaggregated',
-                                           'Method_disaggregated_only',
-                                           'Genomic_sequence_available',
-                                           'Inverse_param',
-                                           'Parameter_FromFigure')]
+  params$Parameter_type[
+    params$Covidence_ID == "4764" &
+      params$Name_data_entry == "Kelly M"] <- "Risk factors"
+    # Remove remaining blank parameter type entries
   params <- params %>%
-    filter_at(vars(all_of(check_param_cols)), all_vars(!is.na(.)))
+    filter_at(vars(Parameter_type), any_vars(!is.na(.)))
+    # Remove entries where all variables that aren't prepopulated are empty
+  param_cols <- colnames(params)
+  check_param_cols <- param_cols[! param_cols %in%
+                                   c("Article_ID", "ID", "Pathogen",
+                                     "Covidence_ID", "Name_data_entry",
+                                     "Parameter_data_ID", "Exponent",
+                                     "Distribution_par1_uncertainty",
+                                     "Distribution_par2_uncertainty",
+                                     "Method_from_supplement",
+                                     "Method_disaggregated",
+                                     "Method_disaggregated_only",
+                                     "Genomic_sequence_available",
+                                     "Inverse_param", "Parameter_FromFigure")]
+  params <- params %>%
+    filter_at(vars(all_of(check_param_cols)), any_vars(!is.na(.)))
 }
 
 ## Check data after pathogen-specific cleaning

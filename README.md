@@ -55,12 +55,13 @@ This task takes the article, parameter and model csv files for the double
 extracted papers and identifies the entries that match and those that need to
 be given back to the extractors to be fixed.
 
-* Copy across the "articles_double.csv", "parameters_double.csv", "models_double.csv"
-and "outbreaks_double.csv" files from the "archive/db_extraction" folder to the
+* Copy across the "double_extraction_articles.csv",
+"double_extraction_params.csv", "double_extraction_models.csv" and 
+"double_extraction_outbreaks.csv" files from the "archive/db_extraction" folder to the
 "src/db_double" folder (Note: update this to use orderly_dependency() when running properly)
-* Ensure that the "orderly.R" script lists "articles_double.csv",
-"parameters_double.csv", "models_double.csv" and "outbreaks_double.csv" in the
-orderly_resource() function
+* Ensure that the "orderly.R" script lists "double_extraction_articles.csv",
+"double_extraction_params.csv", "double_extraction_models.csv" and 
+"double_extraction_outbreaks.csv" in the orderly_resource() function
 * Then run the following:
 
 ```
