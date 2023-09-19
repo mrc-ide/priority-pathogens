@@ -125,8 +125,9 @@ with orderly2.
    "/Volumes/outbreak_analysis/sbhatia/priority-pathogens/"), type =
    "path")
    ```
-Here, ``name'' can be anything, and ``args'' should be the fully
+Here, "name" can be anything, and "args" should be the fully
    qualified name of the path where orderly project is available.
+   
 4. Then do
 ```
 orderly2::orderly_location_pull_metadata()
@@ -135,7 +136,7 @@ orderly2::orderly_location_pull_metadata()
 This allows orderly2 to retrieve the necessary metadata from all
 locations.
 
-5. Finally, you can pull the outputs (``packets'' in orderly2 terminology):
+5. Finally, you can pull the outputs ("packets" in orderly2 terminology):
    
 ```
 orderly2::orderly_location_pull_packet(<ids>)
