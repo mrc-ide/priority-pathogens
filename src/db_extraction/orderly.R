@@ -90,14 +90,26 @@ from <- map(
     res <- dbSendQuery(con, "SELECT * FROM [Article data - Table]")
     articles <- dbFetch(res)
     narticles <- nrow(articles)
-
+    
     if (narticles == 0) return()
+    
+    ## pathogen-specific Covidence ID fixing before joining
+    if (pathogen == "EBOLA") {
+      articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
+                              articles$Name_data_entry == "Christian"] <- 19880
+      articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
+                              articles$Name_data_entry == "Thom"] <- 11565
+      articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
+                              articles$Name_data_entry == "Ettie"] <- 5197
+    }
+    
     ## Convert Covidence_ID to numeric.
     ## Covidence_ID is entered as a text, so
     ## also save the original i.e., as entered in the DB
     ## to allow errors induced by conversion to be fixed.
     articles$Covidence_ID_text <- articles$Covidence_ID
     articles$Covidence_ID <- as.integer(articles$Covidence_ID)
+    
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
     )
@@ -153,8 +165,6 @@ params <- map_dfr(from, function(x) x[["params"]])
 if(pathogen == "EBOLA") {
   # articles
   articles$Covidence_ID <- as.numeric(articles$Covidence_ID)
-  articles$Covidence_ID[articles$Article_ID == 54 &
-                          articles$Name_data_entry == "Christian"] <- 19880
   articles$FirstAauthor_Surname[
     articles$Article_ID == 54 &
       articles$Name_data_entry == "Christian"] <- "Atangana"
@@ -162,7 +172,9 @@ if(pathogen == "EBOLA") {
     articles$Article_ID == 54 &
       articles$Name_data_entry == "Christian"] <- "Abdon"
   articles <- articles %>%
-    filter(Article_ID!=14 | Name_data_entry!="Christian")
+    filter(Article_ID!=14 | Name_data_entry!="Christian") %>%
+    mutate_at(vars(QA_M1, QA_M2, QA_A3, QA_A4, QA_D5, QA_D6, QA_D7),
+    ~ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .))
   # models
   models$Covidence_ID <- as.numeric(models$Covidence_ID)
   models <- models %>% mutate_if(is.character, list(~na_if(.,""))) 
