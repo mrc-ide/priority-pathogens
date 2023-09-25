@@ -20,7 +20,7 @@ validate_articles <- function(article_df) {
   # 2) Check for missing covidence IDs
   if(any(is.na(articles$Covidence_ID))) {
     missing_ids <- articles[is.na(articles$Covidence_ID),]
-    warning("The above article entry or entries are missing Covidence IDs")
+    warning("There are article entries missing Covidence IDs")
   } else {
     missing_ids <- NA
   }
