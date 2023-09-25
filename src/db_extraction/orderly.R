@@ -98,7 +98,7 @@ from <- map(
       articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
                               articles$Name_data_entry == "Christian"] <- 19880
       articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
-                              articles$Name_data_entry == "Thom"] <- 11565
+                              articles$Name_data_entry == "Thomas Rawson"] <- 11565
       articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
                               articles$Name_data_entry == "Ettie"] <- 5197
     }
@@ -183,7 +183,7 @@ if(pathogen == "EBOLA") {
                                    c("Article_ID", "ID", "Pathogen",
                                      "Covidence_ID", "Name_data_entry",
                                      "Model_data_ID", "Theoretical_model",
-                                     "Code_available")]
+                                     "Code_available", "access_model_id")]
   models <- models %>%
     filter_at(vars(all_of(check_model_cols)), any_vars(!is.na(.)))
   # parameters
