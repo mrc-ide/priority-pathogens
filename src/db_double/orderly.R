@@ -10,17 +10,19 @@ orderly_artefact(
     "outbreaks_fixing.csv", "qa_matching.csv", "models_matching.csv",
     "params_matching.csv", "outbreaks_matching.csv"))
 
+# Update this to take the results from db_extraction taskid
 orderly_resource(c("double_extraction_articles.csv",
                    "double_extraction_params.csv",
                    "double_extraction_models.csv",
                    "sorting.R"))
 
+
+library(dplyr)
+library(readr)
 articles <- read_csv("double_extraction_articles.csv")
 parameters <- read_csv("double_extraction_params.csv")
 models <- read_csv("double_extraction_models.csv")
 outbreaks <- NULL
-
-library(dplyr)
 
 source("sorting.R")
 
