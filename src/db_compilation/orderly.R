@@ -11,7 +11,7 @@ orderly_artefact(
   c("articles.csv", "models.csv", "parameters.csv"))
 
 # Get results from db_extraction
-orderly_dependency("db_extraction", "20230926-163258-23fff0bc",
+orderly_dependency("db_extraction", "20230926-174305-b4c7951e",
   c("single_extraction_articles.csv" = "single_extraction_articles.csv",
     "single_extraction_params.csv" = "single_extraction_params.csv",
     "single_extraction_models.csv" = "single_extraction_models.csv",
@@ -21,7 +21,7 @@ orderly_dependency("db_extraction", "20230926-163258-23fff0bc",
 # Get results from db_double
 # db_double also produces the fixing files that need to be manually changed and
 # supplied as resources below
-orderly_dependency("db_double", "20230926-164459-297dbe77",
+orderly_dependency("db_double", "20230926-175626-bc9cd6d0",
                    c("qa_matching.csv" = "qa_matching.csv")
 )
 
@@ -116,7 +116,6 @@ model_all <- rbind(model_single,
 parameter_all <- clean_dfs(parameter_all, "parameter_type")
 model_all <- clean_dfs(model_all, "model_type")
 
-if (! dir.exists(outdir)) dir.create(outdir)
-write_csv(parameter_all, "outdir/parameters.csv")
-write_csv(model_all, "outdir/models.csv")
-write_csv(article_all, "outdir/articles.csv")
+write_csv(parameter_all, "parameters.csv")
+write_csv(model_all, "models.csv")
+write_csv(article_all, "articles.csv")
