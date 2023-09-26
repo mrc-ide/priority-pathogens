@@ -180,12 +180,17 @@ if(pathogen == "EBOLA") {
     filter(Article_ID!=14 | Name_data_entry!="Christian") %>%
     filter(!(Covidence_ID %in% c(5349, 1850, 1860, 1863, 2205, 2202, 483))) %>%
     mutate_at(vars(QA_M1, QA_M2, QA_A3, QA_A4, QA_D5, QA_D6, QA_D7),
-    ~ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .))
+    ~ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .)) %>%
+    mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
+                             ifelse(Pathogen == "Unwin", "Ebola virus",
+                                    Pathogen)))
   # models
   models$Covidence_ID <- as.numeric(models$Covidence_ID)
   models <- models %>% 
     mutate_if(is.character, list(~na_if(.,""))) %>%
-    mutate(pathogen = ifelse(pathogen == "Sheppard", "Ebola virus", pathogen)) 
+    mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
+                             ifelse(Pathogen == "Unwin", "Ebola virus",
+                                    Pathogen))) 
   model_cols <- colnames(models)
   check_model_cols <- model_cols[! model_cols %in%
                                    c("Article_ID", "ID", "Pathogen",
@@ -196,7 +201,10 @@ if(pathogen == "EBOLA") {
     filter_at(vars(all_of(check_model_cols)), any_vars(!is.na(.)))
   # parameters
   params$Covidence_ID <- as.numeric(params$Covidence_ID)
-  params <- params %>% mutate_if(is.character, list(~na_if(.,"")))
+  params <- params %>% mutate_if(is.character, list(~na_if(.,""))) %>%
+    mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
+                             ifelse(Pathogen == "Unwin", "Ebola virus",
+                                    Pathogen)))
     # Add parameter type for accidental extractor errors
   params$Parameter_type[
     params$Covidence_ID == "16757" &
