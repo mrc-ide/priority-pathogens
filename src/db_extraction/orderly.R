@@ -1,5 +1,5 @@
 library(orderly2)
-orderly_strict_mode()
+library(orderly.sharedfile)
 
 orderly_artefact(
   "Merged data as csv and errors as RDS",
@@ -13,7 +13,7 @@ orderly_artefact(
     "errors.rds"))
 
 orderly_resource("validation.R")
-infiles <- orderly_resource(
+infiles <- sharedfile_path(
   c("DIDE Priority Pathogens EBOLA - ANNE.accdb",
     "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
     "DIDE Priority Pathogens EBOLA - CYRIL.accdb",
@@ -32,19 +32,24 @@ infiles <- orderly_resource(
     "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
     "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
     "DIDE Priority Pathogens EBOLA - THOM.accdb",
-    "DIDE Priority Pathogens EBOLA - TRISTAN.accdb",
-    "double/DIDE Priority Pathogens EBOLA - ANNE.accdb", "double/DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
-    "double/DIDE Priority Pathogens EBOLA - CYRIL.accdb", "double/DIDE Priority Pathogens EBOLA - DARIYA.accdb",
-    "double/DIDE Priority Pathogens EBOLA - ETTIE.accdb", "double/DIDE Priority Pathogens EBOLA - GINA.accdb",
-    "double/DIDE Priority Pathogens EBOLA - JACK.accdb", "double/DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
-    "double/DIDE Priority Pathogens EBOLA - KELLY.accdb", "double/DIDE Priority Pathogens EBOLA - PATRICK.accdb",
-    "double/DIDE Priority Pathogens EBOLA - REBECCA.accdb", "double/DIDE Priority Pathogens EBOLA - RUTH.accdb",
-    "double/DIDE Priority Pathogens EBOLA - SABINE.accdb", "double/DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
-    "double-round2/DIDE Priority Pathogens ETTIE.accdb", "double-round2/DIDE Priority Pathogens REBECCA.accdb",
-    "double-round2/DIDE Priority Pathogens RICHARD.accdb", "double-round2/DIDE Priority Pathogens SANGEETA.accdb",
-    "double-round2/DIDE Priority Pathogens TRISTAN.accdb"
-  )
+    "DIDE Priority Pathogens EBOLA - TRISTAN.accdb"), from = "singledb")
+infiles2 <- sharedfile_path(
+    c("DIDE Priority Pathogens EBOLA - ANNE.accdb", "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
+    "DIDE Priority Pathogens EBOLA - CYRIL.accdb", "DIDE Priority Pathogens EBOLA - DARIYA.accdb",
+    "DIDE Priority Pathogens EBOLA - ETTIE.accdb", "DIDE Priority Pathogens EBOLA - GINA.accdb",
+    "DIDE Priority Pathogens EBOLA - JACK.accdb", "DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
+    "DIDE Priority Pathogens EBOLA - KELLY.accdb", "DIDE Priority Pathogens EBOLA - PATRICK.accdb",
+    "DIDE Priority Pathogens EBOLA - REBECCA.accdb", "DIDE Priority Pathogens EBOLA - RUTH.accdb",
+    "DIDE Priority Pathogens EBOLA - SABINE.accdb", "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb"),
+    from = "doubledb"
+    )
+infiles3 <- sharedfile_path(
+  c("DIDE Priority Pathogens ETTIE.accdb", "DIDE Priority Pathogens REBECCA.accdb",
+    "DIDE Priority Pathogens RICHARD.accdb", "DIDE Priority Pathogens SANGEETA.accdb",
+    "DIDE Priority Pathogens TRISTAN.accdb"
+  ), from = "doubledb2"
 )
+infiles <- c(infiles, infiles2, infiles3)
 ## pathogen should be set to one of our priority-pathogens
 ## use capital case; see code below where this pathogen
 ## is used
@@ -80,7 +85,7 @@ outfiles <- list(
 from <- map(
   infiles, function(infile) {
     message("Reading ", infile)
-    con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[./", infile, "];"))
+    con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
 
     if (is.null(con)){
       message("Error in reading ", infile)
