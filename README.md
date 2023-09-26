@@ -5,7 +5,10 @@ This repository has been set up as an orderly project. Please follow the
 installation instructions for orderly2 available here: 
 https://github.com/mrc-ide/orderly2.
 
-Note: When you run orderly for the first time you may get an error saying that
+Also install orderly.sharedfile plugin.
+``` remotes::install_github("mrc-ide/orderly.sharedfile@prototype") ```
+
+Note: When you run any of the orderly tasks for the first time, you may get an error saying that
 you need to run orderly2::orderly_init("pathway"), please run the line of code 
 it tells you to.
 
