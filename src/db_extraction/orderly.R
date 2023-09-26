@@ -183,7 +183,9 @@ if(pathogen == "EBOLA") {
     ~ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .))
   # models
   models$Covidence_ID <- as.numeric(models$Covidence_ID)
-  models <- models %>% mutate_if(is.character, list(~na_if(.,""))) 
+  models <- models %>% 
+    mutate_if(is.character, list(~na_if(.,""))) %>%
+    mutate(pathogen = ifelse(pathogen == "Sheppard", "Ebola virus", pathogen)) 
   model_cols <- colnames(models)
   check_model_cols <- model_cols[! model_cols %in%
                                    c("Article_ID", "ID", "Pathogen",
