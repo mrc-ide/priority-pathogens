@@ -6,7 +6,7 @@ installation instructions for orderly2 available here:
 https://github.com/mrc-ide/orderly2.
 
 Also install orderly.sharedfile plugin.
-``` remotes::install_github("mrc-ide/orderly.sharedfile@prototype") ```
+``` remotes::install_github("mrc-ide/orderly.sharedfile") ```
 
 Note: When you run any of the orderly tasks for the first time, you may get an error saying that
 you need to run orderly2::orderly_init("pathway"), please run the line of code 
