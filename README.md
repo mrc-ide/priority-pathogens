@@ -5,7 +5,10 @@ This repository has been set up as an orderly project. Please follow the
 installation instructions for orderly2 available here: 
 https://github.com/mrc-ide/orderly2.
 
-Note: When you run orderly for the first time you may get an error saying that
+Also install orderly.sharedfile plugin.
+``` remotes::install_github("mrc-ide/orderly.sharedfile") ```
+
+Note: When you run any of the orderly tasks for the first time, you may get an error saying that
 you need to run orderly2::orderly_init("pathway"), please run the line of code 
 it tells you to.
 
@@ -24,10 +27,8 @@ still want to use the outputs, please see instructions below.
 Once extractions are complete and you want to compile the databases together:
 * Clone the latest priority-pathogens repo
 * Open the priority-pathogens R project on your machine
-* Copy all extraction databases (single and double extraction databases) into 
-the "src/db_extraction" folder (Note: this may change and be set up to get the
-databases directly from the shared drive)
-* Ensure that in the "orderly.R" script the orderly_resource() function has been
+* Edit orderly_config.yml file to replace the "singledb", "doublesb", and "doubledb2" fields to appropriate values. These fields should contain the fully qualified name of the folder where the database files are located, *as seen from your machine*. For instance, I have mapped the PriorityPathogens shared drive to Y: locally. Hence for me, the entries are "Y:/Ebola/databases/Single extraction databases" etc.
+* Ensure that in the "orderly.R" script has been
 updated with all of the database file names you have added to the folder
 * Then run the following (specifying the pathogen):
 
