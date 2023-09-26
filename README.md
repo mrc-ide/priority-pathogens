@@ -24,10 +24,8 @@ still want to use the outputs, please see instructions below.
 Once extractions are complete and you want to compile the databases together:
 * Clone the latest priority-pathogens repo
 * Open the priority-pathogens R project on your machine
-* Copy all extraction databases (single and double extraction databases) into 
-the "src/db_extraction" folder (Note: this may change and be set up to get the
-databases directly from the shared drive)
-* Ensure that in the "orderly.R" script the orderly_resource() function has been
+* Edit orderly_config.yml file to replace the "singledb", "doublesb", and "doubledb2" fields to appropriate values. These fields should contain the fully qualified name of the folder where the database files are located, *as seen from your machine*. For instance, I have mapped the PriorityPathogens shared drive to Y: locally. Hence for me, the entries are "Y:/Ebola/databases/Single extraction databases" etc.
+* Ensure that in the "orderly.R" script has been
 updated with all of the database file names you have added to the folder
 * Then run the following (specifying the pathogen):
 
