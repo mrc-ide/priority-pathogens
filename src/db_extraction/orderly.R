@@ -173,6 +173,7 @@ if(pathogen == "EBOLA") {
       articles$Name_data_entry == "Christian"] <- "Abdon"
   articles <- articles %>%
     filter(Article_ID!=14 | Name_data_entry!="Christian") %>%
+    filter(!(Covidence_ID %in% c(5349, 1850, 1860, 1863, 2205, 2202, 483))) %>%
     mutate_at(vars(QA_M1, QA_M2, QA_A3, QA_A4, QA_D5, QA_D6, QA_D7),
     ~ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .))
   # models
