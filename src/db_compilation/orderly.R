@@ -10,27 +10,25 @@ orderly_artefact(
   "Merged single and double extracted data as csv",
   c("articles.csv", "models.csv", "parameters.csv"))
 
-# # Once working as an orderly task, we can get inputs from previous tasks
-# orderly_dependency("db_extraction", "20230914-083210-af90dec1",
-#   c("single_extraction_articles.csv" = "single_extraction_articles.csv",
-#     "single_extraction_params.csv" = "single_extraction_params.csv",
-#     "single_extraction_models.csv" = "single_extraction_models.csv",
-#     "double_extraction_articles.csv" = "double_extraction_articles.csv")
-# )
-# 
-# The below task also produces the fixing files that need to be manually changed
-# orderly_dependency("db_double", "20230914-085025-6f8c5333",
-#                    c("qa_matching.csv" = "qa_matching.csv")
-# )
+# Get results from db_extraction
+orderly_dependency("db_extraction", "20230926-163258-23fff0bc",
+  c("single_extraction_articles.csv" = "single_extraction_articles.csv",
+    "single_extraction_params.csv" = "single_extraction_params.csv",
+    "single_extraction_models.csv" = "single_extraction_models.csv",
+    "double_extraction_articles.csv" = "double_extraction_articles.csv")
+)
 
-## Inputs (when set up properly, this will just list the manually fixed files)
+# Get results from db_double
+# db_double also produces the fixing files that need to be manually changed and
+# supplied as resources below
+orderly_dependency("db_double", "20230926-164459-297dbe77",
+                   c("qa_matching.csv" = "qa_matching.csv")
+)
+
+# Manually fixed files and "cleaning" script - these need to be in the
+# src/db_compilation folder
 orderly_resource(
-  c("single_extraction_articles.csv",
-    "single_extraction_params.csv",
-    "single_extraction_models.csv",
-    "double_extraction_articles.csv",
-    "qa_matching.csv",
-    "qa_fixing.csv",
+  c("qa_fixing.csv",
     "params_fixing.csv",
     "models_fixing.csv",
     "cleaning.R"

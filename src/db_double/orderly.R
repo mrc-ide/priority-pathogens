@@ -10,12 +10,15 @@ orderly_artefact(
     "outbreaks_fixing.csv", "qa_matching.csv", "models_matching.csv",
     "params_matching.csv", "outbreaks_matching.csv"))
 
-# Update this to take the results from db_extraction taskid
-orderly_resource(c("double_extraction_articles.csv",
-                   "double_extraction_params.csv",
-                   "double_extraction_models.csv",
-                   "sorting.R"))
+orderly_resource("sorting.R")
 
+# Take the results from db_extraction
+orderly_dependency(
+  "db_extraction", "20230926-163258-23fff0bc",
+  c("double_extraction_articles.csv" = "double_extraction_articles.csv",
+    "double_extraction_params.csv" = "double_extraction_params.csv",
+    "double_extraction_models.csv" = "double_extraction_models.csv")
+)
 
 library(dplyr)
 library(readr)
