@@ -5,21 +5,28 @@ library(rio)
 library(tidyr)
 library(stringr)
 
-# copied across from data_cleaning.R script:
-#' input: data frame to clean, representative column that indicates no data
-#' in quotations
-#' article: column_name = article_title
-#' parameter: column_name = parameter_type
-#' model: column_name = model_type
-#' outbreak: column_name = outbreak_country
-#' process: clean names, drop rows with NAs, adds a grouping variable for
-#' classification of the parameter type
+# copied across some of this from data_cleaning.R script:
+#' input: data frame to clean
+#' process: clean names, removes old ids and extractor names, adds a grouping 
+#' variable for classification of the parameter type
 #' output: df 
-clean_dfs <- function(df, column_name){
-
-  df <- df %>%
-    clean_names() %>%
-    filter(!is.na(all_of(column_name)))
+clean_dfs <- function(df){
+  
+  if('article_title' %in% colnames(df)){
+    df <- df %>%
+      select(-c("article_id", "covidence_id_text", "name_data_entry")) %>%
+      rename(first_author_surname = first_aauthor_surname) %>%
+      relocate(c(id, covidence_id, pathogen,
+                 first_author_first_name, first_author_surname)) %>%
+      arrange(covidence_id)
+  }
+  
+    if('model_type' %in% colnames(df)){
+      df <- df %>%
+        select(-c("article_id", "access_model_id", "name_data_entry")) %>%
+        relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
+        arrange(covidence_id)
+    } 
   
   if('outbreak_id' %in% colnames(df)){
     df <- df %>%
@@ -63,8 +70,8 @@ if('parameter_type' %in% colnames(df)) {
       population_country = str_replace(population_country, 'Yuogslavia',
                                        'Yugoslavia'),
       # Format the start/stop months
-      population_study_start_month = substring(population_study_start_month, 1, 3),
-      population_study_end_month = substring(population_study_end_month, 1, 3),
+      # population_study_start_month = substring(population_study_start_month, 1, 3),
+      # population_study_end_month = substring(population_study_end_month, 1, 3),
       # combining range and uncertainty range
       parameter_uncertainty_type =
         ifelse(!is.na(parameter_upper_bound) &
@@ -83,7 +90,10 @@ if('parameter_type' %in% colnames(df)) {
         ifelse(parameter_type == "Growth rate ®", "Growth rate (r)",
                ifelse(parameter_type == "Reproduction number (Effective; Re)",
                       "Reproduction number (Effective, Re)", parameter_type))
-      )
+      ) %>%
+    select(-c("article_id", "access_param_id", "name_data_entry")) %>%
+    relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
+    arrange(covidence_id)
   }
   df
 }
