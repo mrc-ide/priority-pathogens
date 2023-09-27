@@ -99,7 +99,9 @@ if('parameter_type' %in% colnames(df)) {
       parameter_type =
         ifelse(parameter_type == "Growth rate ®", "Growth rate (r)",
                ifelse(parameter_type == "Reproduction number (Effective; Re)",
-                      "Reproduction number (Effective, Re)", parameter_type))
+                      "Reproduction number (Effective, Re)",
+                      ifelse(parameter_type == "Mutations ‚Äì substitution rate",
+                             "Mutations – substitution rate", parameter_type)))
       ) %>%
     select(-c("article_id", "access_param_id", "name_data_entry")) %>%
     relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
