@@ -10,7 +10,7 @@ library(stringr)
 #' process: clean names, removes old ids and extractor names, adds a grouping 
 #' variable for classification of the parameter type
 #' output: df 
-clean_dfs <- function(df){
+clean_dfs <- function(df, pathogen){
   
   if('article_title' %in% colnames(df)){
     df <- df %>%
@@ -69,9 +69,6 @@ if('parameter_type' %in% colnames(df)) {
                                        'Democratic Republic of the Congo'),
       population_country = str_replace(population_country, 'Yuogslavia',
                                        'Yugoslavia'),
-      # Format the start/stop months
-      # population_study_start_month = substring(population_study_start_month, 1, 3),
-      # population_study_end_month = substring(population_study_end_month, 1, 3),
       # combining range and uncertainty range
       parameter_uncertainty_type =
         ifelse(!is.na(parameter_upper_bound) &
@@ -94,6 +91,47 @@ if('parameter_type' %in% colnames(df)) {
     select(-c("article_id", "access_param_id", "name_data_entry")) %>%
     relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
+  
+  # Pathogen-specific parameter data cleaning
+  if (pathogen == "EBOLA") {
+    
+    # merge ebola_variant and ebola_variant_p
+    df <- df %>%
+      mutate(
+        ebola_variant_p = case_when(
+          ebola_variant_p == "Bundibugyo virus (BDBV)¬†" ~ ebola_variant,
+          TRUE ~ ebola_variant_p)) %>%
+      mutate(
+        ebola_variant_fix = case_when(
+          covidence_id %in% c(163, 662, 847, 6346) ~ "Zaire Ebola virus (EBOV)",
+          covidence_id %in% c(2548, 904, 17835) ~ 
+            "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
+          TRUE ~ ebola_variant_p)) %>%
+      select(-c(ebola_variant_p, ebola_variant)) %>%
+      rename(ebola_variant = ebola_variant_fix)
+    
+    # fix the population start and population end month
+    df <- df %>%
+      mutate(
+        population_study_end_month = 
+          case_when(population_study_end_month == "3" ~ "Mar",
+                    TRUE ~ population_study_end_month)) %>%
+      mutate(
+        population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
+        population_study_end_month = substr(population_study_end_month, 1, 3)) %>%
+      mutate(
+        population_study_start_month = gsub("[^a-zA-Z]", "", population_study_start_month),
+        population_study_start_month = substr(population_study_start_month, 1, 3))
+    
+  }
+  
+  if (pathogen == "MARBURG") {
+    df <- df %>%
+      mutate(
+        population_study_start_month = substring(population_study_start_month, 1, 3),
+        population_study_end_month = substring(population_study_end_month, 1, 3))
+    }
+  
   }
   df
 }
