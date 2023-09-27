@@ -14,7 +14,7 @@ orderly_resource("sorting.R")
 
 # Take the results from db_extraction
 orderly_dependency(
-  "db_extraction", "20230926-174305-b4c7951e",
+  "db_extraction", "20230927-125954-a4e3f52f",
   c("double_extraction_articles.csv" = "double_extraction_articles.csv",
     "double_extraction_params.csv" = "double_extraction_params.csv",
     "double_extraction_models.csv" = "double_extraction_models.csv")
