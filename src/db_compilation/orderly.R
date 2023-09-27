@@ -5,13 +5,17 @@ library(dplyr)
 library(janitor)
 orderly_strict_mode()
 
+## pathogen should be set to one of our priority-pathogens
+## use capital case
+orderly_parameters(pathogen = NULL)
+
 ## Outputs
 orderly_artefact(
   "Merged single and double extracted data as csv",
   c("articles.csv", "models.csv", "parameters.csv"))
 
 # Get results from db_extraction
-orderly_dependency("db_extraction", "20230926-174305-b4c7951e",
+orderly_dependency("db_extraction", "20230927-125954-a4e3f52f",
   c("single_extraction_articles.csv" = "single_extraction_articles.csv",
     "single_extraction_params.csv" = "single_extraction_params.csv",
     "single_extraction_models.csv" = "single_extraction_models.csv",
@@ -21,7 +25,7 @@ orderly_dependency("db_extraction", "20230926-174305-b4c7951e",
 # Get results from db_double
 # db_double also produces the fixing files that need to be manually changed and
 # supplied as resources below
-orderly_dependency("db_double", "20230926-175626-bc9cd6d0",
+orderly_dependency("db_double", "20230927-131039-aeb1e2f9",
                    c("qa_matching.csv" = "qa_matching.csv")
 )
 
@@ -113,8 +117,15 @@ model_all <- rbind(model_single,
                    model_fixed)
 
 # Cleaning
-parameter_all <- clean_dfs(parameter_all, "parameter_type")
-model_all <- clean_dfs(model_all, "model_type")
+article_all <- clean_dfs(article_all)
+parameter_all <- clean_dfs(parameter_all)
+model_all <- clean_dfs(model_all)
+
+# TO DO: work out difference between ebola_variant and ebola_variant_p
+if (pathogen == "EBOLA") {
+  test <- parameter_all %>%
+    mutate(ebola_variant_fix = coalesce(ebola_variant, ebola_variant_p))
+}
 
 write_csv(parameter_all, "parameters.csv")
 write_csv(model_all, "models.csv")
