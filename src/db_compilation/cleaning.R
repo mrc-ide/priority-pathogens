@@ -26,6 +26,19 @@ clean_dfs <- function(df, pathogen){
         select(-c("article_id", "access_model_id", "name_data_entry")) %>%
         relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
         arrange(covidence_id)
+      
+      # Pathogen-specific model data cleaning
+      if (pathogen == "EBOLA") {
+        
+        # edit ebola_variant names
+        df <- df %>%
+          mutate(
+            ebola_variant = case_when(
+              covidence_id == 15947 ~ "Bundibugyo virus (BDBV)",
+              covidence_id == 5675 ~ 
+                "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
+              TRUE ~ ebola_variant))
+      }
     } 
   
   if('outbreak_id' %in% colnames(df)){
