@@ -117,15 +117,9 @@ model_all <- rbind(model_single,
                    model_fixed)
 
 # Cleaning
-article_all <- clean_dfs(article_all)
-parameter_all <- clean_dfs(parameter_all)
-model_all <- clean_dfs(model_all)
-
-# TO DO: work out difference between ebola_variant and ebola_variant_p
-if (pathogen == "EBOLA") {
-  test <- parameter_all %>%
-    mutate(ebola_variant_fix = coalesce(ebola_variant, ebola_variant_p))
-}
+article_all <- clean_dfs(article_all, pathogen)
+parameter_all <- clean_dfs(parameter_all, pathogen)
+model_all <- clean_dfs(model_all, pathogen)
 
 write_csv(parameter_all, "parameters.csv")
 write_csv(model_all, "models.csv")
