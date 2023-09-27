@@ -173,7 +173,7 @@ if(pathogen == "EBOLA") {
   articles$FirstAauthor_Surname[
     articles$Article_ID == 54 &
       articles$Name_data_entry == "Christian"] <- "Atangana"
-  articles$FirstAauthor_FirstName[
+  articles$FirstAuthor_FirstName[
     articles$Article_ID == 54 &
       articles$Name_data_entry == "Christian"] <- "Abdon"
   articles <- articles %>%
