@@ -1,0 +1,33 @@
+﻿fixed,covidence_id,name_data_entry,shared_article_id,qa_m1,qa_m2,qa_a3,qa_a4,qa_d5,qa_d6,qa_d7,double_extracted,num_rows,matching
+1,41,Rebecca Nash,7_Rebecca Nash,Yes,Yes,Yes,NA,No,No,No,1,1,0
+1,45,Anne,25_Anne,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,1,0
+1,57,Dariya Nikitin,1_Dariya Nikitin,Yes,Yes,Yes,Yes,Yes,Yes,NA,1,1,0
+1,104,Christian,4_Christian,Yes,No,Yes,Yes,Yes,Yes,No,1,1,0
+1,163,Anne,30_Anne,Yes,Yes,Yes,Yes,Yes,Yes,No,1,1,0
+1,199,Ettie Unwin,16_Ettie Unwin,Yes,Yes,Yes,Yes,Yes,No,No,1,1,0
+1,206,Dariya Nikitin,5_Dariya Nikitin,Yes,No,Yes,No,Yes,Yes,No,1,1,0
+1,241,Anne,35_Anne,Yes,No,NA,NA,Yes,Yes,Yes,1,1,0
+1,291,Ettie Unwin,35_Ettie Unwin,Yes,Yes,Yes,Yes,Yes,Yes,No,1,1,0
+1,315,Ettie Unwin,36_Ettie Unwin,Yes,Yes,Yes,No,No,No,No,1,1,0
+1,411,Ettie Unwin,38_Ettie Unwin,Yes,Yes,Yes,Yes,No,Yes,NA,1,1,0
+1,442,Gina,2_Gina,Yes,No,Yes,Yes,No,Yes,No,1,1,0
+1,448,Rebecca Nash,39_Rebecca Nash,Yes,Yes,Yes,Yes,Yes,No,No,1,1,0
+1,454,Jack,2_Jack,No,Yes,No,No,Yes,Yes,No,1,1,0
+1,505,Sabine,4_Sabine,Yes,No,No,No,Yes,Yes,No,1,1,0
+1,506,Kelly McCain,5_Kelly McCain,No,No,NA,NA,Yes,Yes,No,1,1,0
+1,509,Rebecca Nash,10_Rebecca Nash,Yes,Yes,NA,NA,Yes,Yes,No,1,1,0
+1,525,Christian,5_Christian,No,No,Yes,No,Yes,No,No,1,1,0
+1,547,Ettie Unwin,39_Ettie Unwin,Yes,Yes,Yes,Yes,Yes,NA,NA,1,1,0
+1,562,Rebecca Nash,32_Rebecca Nash,Yes,No,NA,NA,Yes,Yes,No,1,1,0
+1,590,Jack,1_Jack,Yes,Yes,Yes,Yes,No,Yes,No,1,1,0
+1,654,Kelly McCain,6_Kelly McCain,Yes,No,No,No,Yes,Yes,No,1,1,0
+1,676,Kelly McCain,37_Kelly McCain,No,Yes,Yes,Yes,Yes,No,No,1,1,0
+1,700,Rebecca Nash,40_Rebecca Nash,Yes,Yes,Yes,Yes,No,No,No,1,1,0
+1,701,Sabine,5_Sabine,Yes,Yes,Yes,Yes,Yes,No,No,1,1,0
+1,754,Christian,7_Christian,Yes,No,Yes,Yes,No,No,No,1,1,0
+1,757,Cyril,4_Cyril,Yes,Yes,Yes,Yes,No,No,No,1,1,0
+1,847,Sequoia,37_Sequoia,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,1,0
+1,1030,Ettie Unwin,40_Ettie Unwin,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,1,0
+1,1044,Joseph,1_Joseph,Yes,Yes,Yes,Yes,NA,NA,NA,1,1,0
+1,2548,Joseph,2_Joseph,Yes,Yes,Yes,Yes,Yes,No,Yes,1,1,0
+1,3096,Jack,3_Jack,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,1,0
