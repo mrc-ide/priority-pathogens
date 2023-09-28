@@ -1,4 +1,4 @@
-# Task to identify entries of double extracted data that match or do not match 
+# Task to identify entries of double extracted data that match or do not match
 # between extractors
 
 library(orderly2)
@@ -14,7 +14,7 @@ orderly_resource("sorting.R")
 
 # Take the results from db_extraction
 orderly_dependency(
-  "db_extraction", "20230927-125954-a4e3f52f",
+  "db_extraction", "latest",
   c("double_extraction_articles.csv" = "double_extraction_articles.csv",
     "double_extraction_params.csv" = "double_extraction_params.csv",
     "double_extraction_models.csv" = "double_extraction_models.csv")
