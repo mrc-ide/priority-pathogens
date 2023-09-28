@@ -4,6 +4,7 @@ library(janitor)
 library(rio)
 library(tidyr)
 library(stringr)
+library(ids)
 
 # copied across some of this from data_cleaning.R script:
 #' input: data frame to clean
@@ -138,6 +139,17 @@ if('parameter_type' %in% colnames(df)) {
         population_study_start_month = gsub("[^a-zA-Z]", "", population_study_start_month),
         population_study_start_month = substr(population_study_start_month, 1, 3))
     
+    # Add ids for new parameters - hacky and needs to be fixed so that each new 
+    # parameter has a unique parameter_data_id
+    df <- df %>%
+      mutate(id = case_when(
+        covidence_id == 104 & is.na(id) ~ 
+          unique(id[covidence_id == 104 & parameter_type == "Risk factors"]),
+        TRUE ~ id)) %>%
+      mutate(parameter_data_id = case_when(
+        covidence_id == 104 & is.na(parameter_data_id) ~ 
+          random_id(n = 1, use_openssl = FALSE),
+        TRUE ~ parameter_data_id))
   }
   
   if (pathogen == "MARBURG") {
