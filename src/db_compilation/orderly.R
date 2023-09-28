@@ -15,18 +15,19 @@ orderly_artefact(
   c("articles.csv", "models.csv", "parameters.csv"))
 
 # Get results from db_extraction
-orderly_dependency("db_extraction", "20230927-125954-a4e3f52f",
-  c("single_extraction_articles.csv" = "single_extraction_articles.csv",
-    "single_extraction_params.csv" = "single_extraction_params.csv",
-    "single_extraction_models.csv" = "single_extraction_models.csv",
-    "double_extraction_articles.csv" = "double_extraction_articles.csv")
+orderly_dependency(
+    "db_extraction", "latest",
+  c("single_extraction_articles.csv",
+    "single_extraction_params.csv",
+    "single_extraction_models.csv",
+    "double_extraction_articles.csv")
 )
 
 # Get results from db_double
 # db_double also produces the fixing files that need to be manually changed and
 # supplied as resources below
-orderly_dependency("db_double", "20230927-131039-aeb1e2f9",
-                   c("qa_matching.csv" = "qa_matching.csv")
+orderly_dependency("db_double", "latest",
+                   c("qa_matching.csv")
 )
 
 # Manually fixed files and "cleaning" script - these need to be in the
@@ -73,15 +74,15 @@ outbreak_fixed <- NULL
 ## create final datasets
 # TO DO: Add outbreak_fixed for next pathogen
 qa_fixed <- qa_fixed %>%
-  filter(fixed == TRUE) %>%
+  filter(fixed == 1) %>%
   select(names(qa_matching))
 
 parameter_fixed <- parameter_fixed %>%
-  filter(fixed == TRUE) %>%
+  filter(fixed == 1) %>%
   select(names(parameter_single))
 
 model_fixed <- model_fixed %>%
-  filter(fixed == TRUE) %>%
+  filter(fixed == 1) %>%
   select(names(model_single))
 
 # join article data to qa files
