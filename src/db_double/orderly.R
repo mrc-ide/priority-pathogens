@@ -1,4 +1,4 @@
-# Task to identify entries of double extracted data that match or do not match 
+# Task to identify entries of double extracted data that match or do not match
 # between extractors
 
 library(orderly2)
@@ -14,7 +14,7 @@ orderly_resource("sorting.R")
 
 # Take the results from db_extraction
 orderly_dependency(
-  "db_extraction", "20230927-125954-a4e3f52f",
+  "db_extraction", "latest",
   c("double_extraction_articles.csv" = "double_extraction_articles.csv",
     "double_extraction_params.csv" = "double_extraction_params.csv",
     "double_extraction_models.csv" = "double_extraction_models.csv")
@@ -64,6 +64,12 @@ model_discordant <- filter_extracted(models, matching = FALSE,
                                      id_name2 = "ID",
                                      id_name3 = "Model_data_ID",
                                      id_name4 = "Article_ID")
+
+# The fixing files don't need the new IDs for now as they change each time 
+# db_extraction is run and they complicate merging the fixing files
+qa_discordant <- qa_discordant %>% select(-ID)
+param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
+model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
 
 # Create files
 write_csv(qa_match, "qa_matching.csv")

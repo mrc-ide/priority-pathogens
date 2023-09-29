@@ -15,18 +15,21 @@ orderly_artefact(
   c("articles.csv", "models.csv", "parameters.csv"))
 
 # Get results from db_extraction
-orderly_dependency("db_extraction", "20230927-125954-a4e3f52f",
-  c("single_extraction_articles.csv" = "single_extraction_articles.csv",
-    "single_extraction_params.csv" = "single_extraction_params.csv",
-    "single_extraction_models.csv" = "single_extraction_models.csv",
-    "double_extraction_articles.csv" = "double_extraction_articles.csv")
+orderly_dependency(
+    "db_extraction", "latest",
+  c("single_extraction_articles.csv",
+    "single_extraction_params.csv",
+    "single_extraction_models.csv",
+    "double_extraction_articles.csv",
+    "double_extraction_params.csv",
+    "double_extraction_models.csv")
 )
 
 # Get results from db_double
 # db_double also produces the fixing files that need to be manually changed and
 # supplied as resources below
-orderly_dependency("db_double", "20230927-131039-aeb1e2f9",
-                   c("qa_matching.csv" = "qa_matching.csv")
+orderly_dependency("db_double", "latest",
+                   c("qa_matching.csv")
 )
 
 # Manually fixed files and "cleaning" script - these need to be in the
@@ -55,12 +58,16 @@ parameter_single <- parameter_single %>% clean_names()
 
 # Double extractions - matched between extractors
 article_double <- read_csv("double_extraction_articles.csv")
+model_double <- read_csv("double_extraction_models.csv")
+param_double <- read_csv("double_extraction_params.csv")
 qa_matching <- read_csv("qa_matching.csv")
 model_matching <- NULL
 parameter_matching <- NULL
 outbreak_matching <- NULL
 
 article_double <- article_double %>% clean_names() %>% arrange(covidence_id)
+model_double <- model_double %>% clean_names() %>% arrange(covidence_id)
+param_double <- param_double %>% clean_names() %>% arrange(covidence_id)
 
 qa_matching <- qa_matching %>% clean_names()
 
@@ -71,18 +78,18 @@ parameter_fixed <- read_csv("params_fixing.csv")
 outbreak_fixed <- NULL
 
 ## create final datasets
-# TO DO: Add outbreak_fixed for next pathogen
+# Add outbreak_fixed for next pathogen
 qa_fixed <- qa_fixed %>%
-  filter(fixed == TRUE) %>%
-  select(names(qa_matching))
+  filter(fixed == 1) %>%
+  select(-c("fixed", "num_rows", "matching"))
 
 parameter_fixed <- parameter_fixed %>%
-  filter(fixed == TRUE) %>%
-  select(names(parameter_single))
+  filter(fixed == 1) %>%
+  select(-c("fixed", "num_rows", "matching"))
 
 model_fixed <- model_fixed %>%
-  filter(fixed == TRUE) %>%
-  select(names(model_single))
+  filter(fixed == 1) %>%
+  select(-c("fixed", "num_rows", "matching"))
 
 # join article data to qa files
 article_double_details <- article_double %>% select(-c(starts_with("qa")))
@@ -95,13 +102,32 @@ article_matching <- qa_matching %>%
   mutate(double_extracted = 1)
 
 article_fixed <- qa_fixed %>%
-  select(-c("num_rows", "matching")) %>%
   left_join(article_double_details,
-            by = c("id", "covidence_id", "name_data_entry")) %>%
+            by = c("covidence_id", "name_data_entry")) %>%
   mutate(double_extracted = 1)
 
 article_single <- article_single %>%
   mutate(double_extracted = 0)
+
+# join ids
+param_double_ids <- param_double %>% 
+  select(c("article_id", "name_data_entry", "access_param_id", "covidence_id",
+           "id", "parameter_data_id"))
+
+parameter_fixed <- parameter_fixed %>%
+  left_join(param_double_ids,
+            by = c("article_id", "name_data_entry",
+                   "access_param_id", "covidence_id"))
+
+
+model_double_ids <- model_double %>% 
+  select(c("article_id", "name_data_entry", "access_model_id", "covidence_id",
+           "id", "model_data_id"))
+
+model_fixed <- model_fixed %>%
+  left_join(model_double_ids,
+            by = c("article_id", "name_data_entry",
+                   "access_model_id", "covidence_id"))
 
 # bind single and double together
 article_all <- rbind(article_single,
@@ -120,6 +146,14 @@ model_all <- rbind(model_single,
 article_all <- clean_dfs(article_all, pathogen)
 parameter_all <- clean_dfs(parameter_all, pathogen)
 model_all <- clean_dfs(model_all, pathogen)
+
+# Add article QA scores to article data
+article_all <- add_qa_scores(article_all, parameter_all)
+
+# Add article QA scores as a parameter variable
+parameter_all <- parameter_all %>%
+  left_join(
+    select(article_all, covidence_id, article_qa_score), by = "covidence_id")
 
 write_csv(parameter_all, "parameters.csv")
 write_csv(model_all, "models.csv")
