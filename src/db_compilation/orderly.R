@@ -147,6 +147,14 @@ article_all <- clean_dfs(article_all, pathogen)
 parameter_all <- clean_dfs(parameter_all, pathogen)
 model_all <- clean_dfs(model_all, pathogen)
 
+# Add article QA scores to article data
+article_all <- add_qa_scores(article_all, parameter_all)
+
+# Add article QA scores as a parameter variable
+parameter_all <- parameter_all %>%
+  left_join(
+    select(article_all, covidence_id, article_qa_score), by = "covidence_id")
+
 write_csv(parameter_all, "parameters.csv")
 write_csv(model_all, "models.csv")
 write_csv(article_all, "articles.csv")
