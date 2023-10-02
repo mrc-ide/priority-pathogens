@@ -3,7 +3,7 @@
 
 library(orderly2)
 orderly_strict_mode()
-
+orderly_parameters(pathogen = NULL)
 orderly_artefact(
   "Double extraction matches and mismatches as csv files",
   c("qa_fixing.csv", "models_fixing.csv", "params_fixing.csv",
@@ -14,7 +14,7 @@ orderly_resource("sorting.R")
 
 # Take the results from db_extraction
 orderly_dependency(
-  "db_extraction", "latest",
+  "db_extraction", "latest(parameter:pathogen == this:pathogen)",
   c("double_extraction_articles.csv",
     "double_extraction_params.csv",
     "double_extraction_models.csv"
@@ -24,7 +24,7 @@ orderly_dependency(
 ## Downstream tasks can query on this parameter to
 ## pull in the correct files as dependancies.
 
-orderly_parameters(pathogen = NULL)
+
 
 library(dplyr)
 library(readr)
@@ -71,7 +71,7 @@ model_discordant <- filter_extracted(models, matching = FALSE,
                                      id_name3 = "Model_data_ID",
                                      id_name4 = "Article_ID")
 
-# The fixing files don't need the new IDs for now as they change each time 
+# The fixing files don't need the new IDs for now as they change each time
 # db_extraction is run and they complicate merging the fixing files
 qa_discordant <- qa_discordant %>% select(-ID)
 param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
