@@ -8,11 +8,11 @@ library(ids)
 
 # copied across some of this from data_cleaning.R script:
 #' input: data frame to clean
-#' process: clean names, removes old ids and extractor names, adds a grouping 
+#' process: clean names, removes old ids and extractor names, adds a grouping
 #' variable for classification of the parameter type
-#' output: df 
+#' output: df
 clean_dfs <- function(df, pathogen){
-  
+
   if('article_title' %in% colnames(df)){
     df <- df %>%
       select(-c("article_id", "covidence_id_text", "name_data_entry")) %>%
@@ -21,27 +21,27 @@ clean_dfs <- function(df, pathogen){
                  first_author_first_name, first_author_surname)) %>%
       arrange(covidence_id)
   }
-  
+
     if('model_type' %in% colnames(df)){
       df <- df %>%
         select(-c("article_id", "access_model_id", "name_data_entry")) %>%
         relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
         arrange(covidence_id)
-      
+
       # Pathogen-specific model data cleaning
       if (pathogen == "EBOLA") {
-        
+
         # edit ebola_variant names
         df <- df %>%
           mutate(
             ebola_variant = case_when(
               covidence_id == 15947 ~ "Bundibugyo virus (BDBV)",
-              covidence_id == 5675 ~ 
+              covidence_id == 5675 ~
                 "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
               TRUE ~ ebola_variant))
       }
-    } 
-  
+    }
+
   if('outbreak_id' %in% colnames(df)){
     df <- df %>%
       mutate(
@@ -56,7 +56,7 @@ clean_dfs <- function(df, pathogen){
         outbreak_country = str_replace(outbreak_country, 'Yuogslavia',
                                        'Yugoslavia'))
   }
-  
+
 if('parameter_type' %in% colnames(df)) {
   df <- df %>%
     mutate(
@@ -107,10 +107,10 @@ if('parameter_type' %in% colnames(df)) {
     select(-c("article_id", "access_param_id", "name_data_entry")) %>%
     relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
-  
+
   ## Pathogen-specific parameter data cleaning
   if (pathogen == "EBOLA") {
-    
+
     # merge ebola_variant and ebola_variant_p
     df <- df %>%
       mutate(
@@ -120,16 +120,16 @@ if('parameter_type' %in% colnames(df)) {
       mutate(
         ebola_variant_fix = case_when(
           covidence_id %in% c(163, 662, 847, 6346) ~ "Zaire Ebola virus (EBOV)",
-          covidence_id %in% c(2548, 904, 17835) ~ 
+          covidence_id %in% c(2548, 904, 17835) ~
             "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
           TRUE ~ ebola_variant_p)) %>%
       select(-c(ebola_variant_p, ebola_variant)) %>%
       rename(ebola_variant = ebola_variant_fix)
-    
+
     # fix the population start and population end month
     df <- df %>%
       mutate(
-        population_study_end_month = 
+        population_study_end_month =
           case_when(population_study_end_month == "3" ~ "Mar",
                     TRUE ~ population_study_end_month)) %>%
       mutate(
@@ -138,7 +138,7 @@ if('parameter_type' %in% colnames(df)) {
       mutate(
         population_study_start_month = gsub("[^a-zA-Z]", "", population_study_start_month),
         population_study_start_month = substr(population_study_start_month, 1, 3))
-    
+
     # clean the other human delays and merge the common ones into parameter_type
     df <- df %>%
       mutate(other_delay_start = case_when(
@@ -174,9 +174,9 @@ if('parameter_type' %in% colnames(df)) {
         other_delay_end %in% c("Test result", "Result", "Test Results") ~ "Test result",
         TRUE ~ other_delay_end
       )) %>%
-      mutate(other_delay = 
+      mutate(other_delay =
                paste(other_delay_start, "to", other_delay_end, sep = " ")) %>%
-      mutate(parameter_type = 
+      mutate(parameter_type =
                case_when(
                  other_delay %in% c(
                    "Symptom Onset/Fever to Admission to Care/Hospitalisation",
@@ -195,26 +195,27 @@ if('parameter_type' %in% colnames(df)) {
                  TRUE ~ parameter_type)
                  )
 
-    # Add ids for new parameters - hacky and needs to be fixed so that each new 
+    # Add ids for new parameters - hacky and needs to be fixed so that each new
     # parameter has a unique parameter_data_id
     df <- df %>%
       mutate(id = case_when(
-        covidence_id == 104 & is.na(id) ~ 
+        covidence_id == 104 & is.na(id) ~
           unique(id[covidence_id == 104 & parameter_type == "Risk factors"]),
-        TRUE ~ id)) %>%
-      mutate(parameter_data_id = case_when(
-        covidence_id == 104 & is.na(parameter_data_id) ~ 
-          random_id(n = 1, use_openssl = FALSE),
-        TRUE ~ parameter_data_id))
+        TRUE ~ id))
+
+      idx <- which(df$covidence_id == 104 & is.na(df$parameter_data_id))
+      df$parameter_data_id[idx] <-
+          random_id(n = length(idx), use_openssl = FALSE)
+
   }
-  
+
   if (pathogen == "MARBURG") {
     df <- df %>%
       mutate(
         population_study_start_month = substring(population_study_start_month, 1, 3),
         population_study_end_month = substring(population_study_end_month, 1, 3))
     }
-  
+
   }
   df
 }
@@ -223,17 +224,17 @@ if('parameter_type' %in% colnames(df)) {
 # input: articles data and parameter data
 # output: articles data with two new variables: model_only and article_qa_score
 add_qa_scores <- function(articles_df, params_df){
-  
+
   # add a model_only variable to article data (as denominator for qa will be different)
   articles_df <- articles_df %>%
-    mutate(model_only = 
+    mutate(model_only =
              as.numeric(!id %in% params_df$id)) %>%
     # if an article is model_only, make 5-7 NA for consistency between scores
     mutate(qa_d5 = ifelse(model_only == 1, NA, qa_d5),
            qa_d6 = ifelse(model_only == 1, NA, qa_d6),
            qa_d7 = ifelse(model_only == 1, NA, qa_d7)) %>%
     # add qa score to article data
-    mutate(total_qa = 
+    mutate(total_qa =
              rowSums(!is.na(
                select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7))),
            yes_score = rowSums(
@@ -241,8 +242,8 @@ add_qa_scores <- function(articles_df, params_df){
              na.rm = TRUE),
            article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)) %>%
     select(-c(total_qa, yes_score))
-  
+
   articles_df
-  
+
 }
-  
+
