@@ -1,35 +1,48 @@
 # priority-pathogens
 Welcome to the GitHub repository for the priority pathogen project.
 
+## Set-up
+
 This repository has been set up as an orderly project. Please follow the 
 installation instructions for orderly2 available here: 
-https://github.com/mrc-ide/orderly2.
+https://github.com/mrc-ide/orderly2
+
 
 Also install orderly.sharedfile plugin.
 ``` remotes::install_github("mrc-ide/orderly.sharedfile") ```
 
-Note: When you run any of the orderly tasks for the first time, you may get an error saying that
-you need to run orderly2::orderly_init("pathway"), please run the line of code 
-it tells you to.
+This plug-in allows orderly to read files that outside the orderly
+project. In our project, we read the Access DB files that are in the
+shared drive, without copying them across to the project.
+
+Note: When you run any of the orderly tasks for the first time, you may get an
+error saying that you need to run orderly2::orderly_init("pathway"), please run
+the line of code it tells you to.
+
+*IMPORTANT* If you do not want to run any of the tasks yourself, but
+still want to use the outputs, please see the instructions on sharing
+outputs in the FAQ below. 
 
 ### Task 1: db_extraction
 
-*IMPORTANT* This task can only run on a Windows machine becuase as far
-as we know, Microsoft does not provide a (free) Mac driver for their
+*IMPORTANT* This task can only run on a Windows machine because as far
+as we know, Microsoft does not provide a (free) Mac driver for 
 Access DB. Mac users can use their Windows VM to run this task by
 connecting the priority-pathogens repo to Rstudio on their VM. If you
 are unsure about the steps, please feel free to message Rebecca or
 Sangeeta. 
 
-*IMPORTANT* If you do not want to run any of the tasks yourself, but
-still want to use the outputs, please see instructions below. 
-
-Once extractions are complete and you want to compile the databases together:
-* Clone the latest priority-pathogens repo
-* Open the priority-pathogens R project on your machine
-* Edit orderly_config.yml file to replace the "singledb", "doublesb", and "doubledb2" fields to appropriate values. These fields should contain the fully qualified name of the folder where the database files are located, *as seen from your machine*. For instance, I have mapped the PriorityPathogens shared drive to Y: locally. Hence for me, the entries are "Y:/Ebola/databases/Single extraction databases" etc.
-* Ensure that in the "orderly.R" script has been
-updated with all of the database file names you have added to the folder
+Once data extractions are complete and you want to compile the databases together:
+* Clone the latest priority-pathogens repo;
+* Open the priority-pathogens R project on your (windows) machine;
+* Edit orderly_config.yml file to replace the "singledb", "doubledb", and 
+"doubledb2" fields to the appropriate folder pathways. These fields should 
+contain the fully qualified name of the folder where the database files are 
+located, *as seen from your machine*. For instance, I have mapped the 
+PriorityPathogens shared drive to Y: locally. Hence for me, the entries are 
+"Y:/Ebola/databases/Single extraction databases" etc.
+* Ensure that the "orderly.R" script in the db_extraction task has been
+updated with all the database file names you want to include.
 * Then run the following (specifying the pathogen):
 
 ```
@@ -38,10 +51,13 @@ orderly2::orderly_run("db_extraction",
 ```
 Replace EBOLA with the pathogen of interest.
 
-This orderly task will have combined all the individual extraction databases into 
-article, model, parameter and outbreak .csv files, and will have created new ID 
-variables. It will automatically detect which papers have been double extracted 
-and create separate article, model, parameter and outbreak files for single and
+This orderly task will :
+(a) create a new ID for rows of each individual database (so that they
+can be put together with unique ids);
+(b) combine all the individual extraction databases into article,
+model, parameter and outbreak .csv files;
+(c) identify which papers have been double extracted (using duplicated
+covidence ids) and create separate article, model, parameter and outbreak files for single and
 double extracted papers.
 
 Combined data for single extracted papers will be in:
@@ -50,37 +66,25 @@ articles_single.csv, parameters_single.csv, models_single.csv, outbreaks_single.
 Combined data for double extracted papers will be in:
 articles_double.csv, parameters_double.csv, models_double.csv, outbreaks_double.csv
 
-These files can be found within the “archive” folder in the priority-pathogens
-directory.
+These files can be found within the “archive/db_extraction” folder in the 
+priority-pathogens directory.
 
 ### Task 2: db_double
 
-This task takes the article, parameter and model csv files for the double
-extracted papers and identifies the entries that match and those that need to
-be given back to the extractors to be fixed.
-
-* Copy across the "double_extraction_articles.csv",
-"double_extraction_params.csv", "double_extraction_models.csv" and 
-"double_extraction_outbreaks.csv" files from the "archive/db_extraction" folder to the
-"src/db_double" folder (Note: update this to use orderly_dependency() when running properly)
-* Ensure that the "orderly.R" script lists "double_extraction_articles.csv",
-"double_extraction_params.csv", "double_extraction_models.csv" and 
-"double_extraction_outbreaks.csv" in the orderly_resource() function
-* Then run the following:
+This task takes the article, parameter, model and outbreak csv files for the 
+double extracted papers and identifies the entries that match and those that 
+need to be given back to the extractors to be fixed. To run the task, 
 
 ```
-orderly2::orderly_run("db_double")
+orderly2::orderly_run("db_double", parameters = list(pathogen = "EBOLA"))
 ```
-
-Once this has run, the outputs will be in the "db_double" folder, within the
-"archive" folder of the priority-pathogens main directory. Data that matches
-between extractors will be in:
+Data that matches between extractors will be in:
 
 qa_matching.csv, model_matching.csv, parameter_matching.csv, outbreak_matching.csv
 
-Whereas, data that does not match between extractors will be in:
+Data that does not match between extractors will be in:
 
-qa_fixing.csv, model_fixing.csv, parameter_fixing.csv, outbreak_fixing.csv
+"qa_fixing.csv", "model_fixing.csv", "parameter_fixing.csv", "outbreak_fixing.csv"
 
 These fixing files will need to go back to the extractors to be resolved.
 
@@ -88,64 +92,92 @@ These fixing files will need to go back to the extractors to be resolved.
 
 Once the double extraction fixes are complete, all of the single extracted data
 and double extracted data can then be compiled together. This task produces
-separate article, parameter and model csv files that will be used for the analysis.
+separate article, parameter and model csv files that will be used for the 
+analysis. This step will remove the old IDs generated by the access databases 
+(as these were replaced with new IDs in db_extraction) and will also remove the 
+names of extractors.
 
-* Copy across the "articles_single.csv", "parameters_single.csv", "models_single.csv",
-"outbreak_single.csv" files from the "archive/db_extraction" folder to the
-"src/db_compilation" folder (Note: update this to use orderly_dependency() when running properly)
-* Copy across the "qa_matching.csv", "model_matching.csv", "parameter_matching.csv",
-"outbreak_matching.csv" files from the "archive/db_double" folder to the
-"src/db_compilation" folder (Note: update this to use orderly_dependency() when running properly)
-* Add the corrected "qa_fixing.csv", "model_fixing.csv", "parameter_fixing.csv",
-"outbreak_fixing.csv" files to the "archive/db_double" folder
-* Then run the following:
+For this task there are two orderly_dependency() functions to update:
+* In the orderly_dependency() function for "db_extraction", ensure
+that the files relevant for your pathogen are listed.
+* In the orderly_dependency() function for "db_double", ensure that 
+the files relevant  for your pathogen are listed in this function.
+* You will need to manually add the corrected "qa_fixing.csv", "model_fixing.csv",
+"parameter_fixing.csv", and "outbreak_fixing.csv" files to the "src/db_compilation"
+folder.
+* Then run the following, specifying the pathogen e.g.:
 
 ```
-orderly2::orderly_run("db_compilation")
+orderly2::orderly_run("db_compilation", parameters = list(pathogen = "EBOLA"))
 ```
 
-The outputs will be in the "db_compilation" folder, within the "archive" folder
-of the priority-pathogens main directory.
+The db_compilation task will remove the IDs generated by the access databases,
+remove the names of extractors, reorder the columns, and clean the data. If
+you need to perform any pathogen-specific cleaning, add this to the cleaning.R
+script in the src/db_compilation folder. The results will be in the 
+"archive/db_compilation" folder.
 
 ### FAQ
 
-#### I don't want to or can't run one of the orderly tasks. Can I still somehow get the outputs?
+#### Sharing outputs across users
+
+Can I still get the outputs of an orderly task that I did not run myself?
 Yes, you can. Say you are a Mac user and don't want to run the
 db_compilation task. Or say if you have run it on your Windows VM and
 want to copy the outputs over to your local machine. This is very easy
-with orderly2.
-1. First, run or have someone run for you the desired orderly task on
-   a shared drive. This is so that the outputs are visible to you. 
-2. Map the shared drive on your machine.
-3. For instance, Rebecca has run the tasks db_compilation on a shared
-   drive. I have mapped the drive on my Mac. Now, we add the orderly
+with orderly2. 
+
+We will place all outputs that need to be shared across users on the
+"orderly-outputs" folder on the shared drive under
+"PriorityPathogens".
+
+1. Say Alice runs task 'db_extraction' on her machine and wants to
+   share the outputs with Bob. She will first map the shared drive on her machine.
+2. Then Alice adds the orderly
    folder on the shared drive as an orderly "location" as follows:
    ``` 
    orderly2::orderly_location_add(name = "pp-network-drive", args
-   = list(path =
-   "/Volumes/outbreak_analysis/sbhatia/priority-pathogens/"), type =
+   = list(path = "/Volumes/PriorityPathogens/orderly-outputs/"), type =
    "path")
    ```
 Here, "name" can be anything, and "args" should be the fully
-   qualified name of the path where orderly project is available.
+   qualified name of the "orderly-outputs" folder as seen from Alice's machine.
    
-4. Then do
+3. Then Alice "pushes" the output of the "db_extraction" task to this
+location as follows
 ```
-orderly2::orderly_location_pull_metadata()
+orderly_location_push(packet_id, "pp-network-drive")
+```
+where 'packet_id' is replaced by the id of the orderly run that Alice
+wants to push. Alice can find this id by looking at the
+archive/db_extraction folder.
+
+4. To get this packet, Bob also adds the orderly-outputs folder as an
+orderly location to his orderly project following the instructions
+above. Then, Bob runs
+
+```
+orderly_location_pull_metadata(location = NULL, root = NULL, locate = TRUE)
 ```
 
 This allows orderly2 to retrieve the necessary metadata from all
 locations.
 
-5. Finally, you can pull the outputs ("packets" in orderly2 terminology):
+5. Finally, Bob can pull the outputs from the shared drive
    
 ```
 orderly2::orderly_location_pull_packet(<ids>)
 ```
-where "ids" is the set of ids that you want to pull to your local
-   machine. You can get this value by looking into the archive
-   directory of the orderly project mounted on network drive.
+where "ids" is the set of ids that Bob wants to pull to your local
+machine. Bob can look into the orderly-outputs folder to get the id,
+   or ask Alice for it. Alternatively, he can simply run 
+
    
-   
-   
-   
+```
+orderly2::orderly_location_pull_packet()
+```
+
+which will pull all the outputs to his local machine.
+
+If you encounter any issues with the above steps please reach out to Sangeeta
+or Rebecca for help.
