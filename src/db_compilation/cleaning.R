@@ -1,4 +1,4 @@
-# Functions for cleaning data 
+# Functions for cleaning data and adding qa scores
 library(dplyr)
 library(janitor)
 library(rio)
@@ -162,3 +162,31 @@ if('parameter_type' %in% colnames(df)) {
   }
   df
 }
+
+# Add qa scores to article data
+# input: articles data and parameter data
+# output: articles data with two new variables: model_only and article_qa_score
+add_qa_scores <- function(articles_df, params_df){
+  
+  # add a model_only variable to article data (as denominator for qa will be different)
+  articles_df <- articles_df %>%
+    mutate(model_only = 
+             as.numeric(!id %in% params_df$id)) %>%
+    # if an article is model_only, make 5-7 NA for consistency between scores
+    mutate(qa_d5 = ifelse(model_only == 1, NA, qa_d5),
+           qa_d6 = ifelse(model_only == 1, NA, qa_d6),
+           qa_d7 = ifelse(model_only == 1, NA, qa_d7)) %>%
+    # add qa score to article data
+    mutate(total_qa = 
+             rowSums(!is.na(
+               select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7))),
+           yes_score = rowSums(
+             select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
+             na.rm = TRUE),
+           article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)) %>%
+    select(-c(total_qa, yes_score))
+  
+  articles_df
+  
+}
+  
