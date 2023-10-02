@@ -15,10 +15,16 @@ orderly_resource("sorting.R")
 # Take the results from db_extraction
 orderly_dependency(
   "db_extraction", "latest",
-  c("double_extraction_articles.csv" = "double_extraction_articles.csv",
-    "double_extraction_params.csv" = "double_extraction_params.csv",
-    "double_extraction_models.csv" = "double_extraction_models.csv")
+  c("double_extraction_articles.csv",
+    "double_extraction_params.csv",
+    "double_extraction_models.csv"
+    )
 )
+## pathogen should be set to one of our priority-pathogens
+## Downstream tasks can query on this parameter to
+## pull in the correct files as dependancies.
+
+orderly_parameters(pathogen = NULL)
 
 library(dplyr)
 library(readr)
