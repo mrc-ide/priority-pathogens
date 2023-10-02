@@ -1,6 +1,13 @@
 library(orderly2)
 library(orderly.sharedfile)
 
+## pathogen should be set to one of our priority-pathogens
+## use capital case; see code below where this pathogen
+## is used
+## Downstream tasks can query on this parameter to
+## pull in the correct files as dependancies.
+orderly_parameters(pathogen = NULL)
+
 orderly_artefact(
   "Merged data as csv and errors as RDS",
   c("single_extraction_articles.csv", "single_extraction_models.csv",
@@ -50,13 +57,6 @@ infiles3 <- sharedfile_path(
   ), from = "doubledb2"
 )
 infiles <- c(infiles, infiles2, infiles3)
-## pathogen should be set to one of our priority-pathogens
-## use capital case; see code below where this pathogen
-## is used
-## Downstream tasks can query on this parameter to
-## pull in the correct files as dependancies.
-
-orderly_parameters(pathogen = NULL)
 
 library(dplyr)
 library(ids)
@@ -170,14 +170,12 @@ params <- map_dfr(from, function(x) x[["params"]])
 if(pathogen == "EBOLA") {
   # articles
   articles$Covidence_ID <- as.numeric(articles$Covidence_ID)
-  articles$FirstAauthor_Surname[
-    articles$Article_ID == 54 &
-      articles$Name_data_entry == "Christian"] <- "Atangana"
-  articles$FirstAauthor_FirstName[
-    articles$Article_ID == 54 &
-      articles$Name_data_entry == "Christian"] <- "Abdon"
   articles <- articles %>%
     filter(Article_ID!=14 | Name_data_entry!="Christian") %>%
+    # For some reason surname and first name are the wrong way around
+    rename(temp_col = FirstAuthor_FirstName,
+           FirstAuthor_FirstName = FirstAauthor_Surname) %>%
+    rename(FirstAauthor_Surname = temp_col) %>%
     filter(!(Covidence_ID %in% c(5349, 1850, 1860, 1863, 2205, 2202, 483))) %>%
     mutate_at(vars(QA_M1, QA_M2, QA_A3, QA_A4, QA_D5, QA_D6, QA_D7),
     ~ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .)) %>%
@@ -190,7 +188,7 @@ if(pathogen == "EBOLA") {
     mutate_if(is.character, list(~na_if(.,""))) %>%
     mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
                              ifelse(Pathogen == "Unwin", "Ebola virus",
-                                    Pathogen))) 
+                                    Pathogen)))
   model_cols <- colnames(models)
   check_model_cols <- model_cols[! model_cols %in%
                                    c("Article_ID", "ID", "Pathogen",
