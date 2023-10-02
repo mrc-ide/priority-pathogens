@@ -71,6 +71,12 @@ model_discordant <- filter_extracted(models, matching = FALSE,
                                      id_name3 = "Model_data_ID",
                                      id_name4 = "Article_ID")
 
+# The fixing files don't need the new IDs for now as they change each time 
+# db_extraction is run and they complicate merging the fixing files
+qa_discordant <- qa_discordant %>% select(-ID)
+param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
+model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
+
 # Create files
 write_csv(qa_match, "qa_matching.csv")
 write_csv(qa_discordant, "qa_fixing.csv")
