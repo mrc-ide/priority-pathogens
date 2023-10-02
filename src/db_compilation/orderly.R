@@ -1,8 +1,11 @@
 # Task to compile single and double extraction databases together
-library(readr)
-library(orderly2)
 library(dplyr)
 library(janitor)
+library(orderly2)
+library(readr)
+
+
+
 orderly_strict_mode()
 
 ## pathogen should be set to one of our priority-pathogens
@@ -16,7 +19,8 @@ orderly_artefact(
 
 # Get results from db_extraction
 orderly_dependency(
-    "db_extraction", "latest",
+    "db_extraction",
+    "latest(parameter:pathogen == this:pathogen)",
   c("single_extraction_articles.csv",
     "single_extraction_params.csv",
     "single_extraction_models.csv",
@@ -110,7 +114,7 @@ article_single <- article_single %>%
   mutate(double_extracted = 0)
 
 # join ids
-param_double_ids <- param_double %>% 
+param_double_ids <- param_double %>%
   select(c("article_id", "name_data_entry", "access_param_id", "covidence_id",
            "id", "parameter_data_id"))
 
@@ -120,7 +124,7 @@ parameter_fixed <- parameter_fixed %>%
                    "access_param_id", "covidence_id"))
 
 
-model_double_ids <- model_double %>% 
+model_double_ids <- model_double %>%
   select(c("article_id", "name_data_entry", "access_model_id", "covidence_id",
            "id", "model_data_id"))
 
