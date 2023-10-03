@@ -1,11 +1,17 @@
+library(dplyr)
+library(ids)
+library(odbc)
 library(orderly2)
 library(orderly.sharedfile)
+library(purrr)
+library(readr)
 
 ## pathogen should be set to one of our priority-pathogens
 ## use capital case; see code below where this pathogen
 ## is used
 ## Downstream tasks can query on this parameter to
 ## pull in the correct files as dependancies.
+## orderly_parameters(pathogen = 'EBOLA')
 orderly_parameters(pathogen = NULL)
 
 orderly_artefact(
@@ -20,51 +26,20 @@ orderly_artefact(
     "errors.rds"))
 
 orderly_resource("validation.R")
-infiles <- sharedfile_path(
-  c("DIDE Priority Pathogens EBOLA - ANNE.accdb",
-    "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
-    "DIDE Priority Pathogens EBOLA - CYRIL.accdb",
-    "DIDE Priority Pathogens EBOLA - DARIYA.accdb",
-    "DIDE Priority Pathogens EBOLA - ETTIE.accdb",
-    "DIDE Priority Pathogens EBOLA - GINA.accdb",
-    "DIDE Priority Pathogens EBOLA - JACK.accdb",
-    "DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
-    "DIDE Priority Pathogens EBOLA - KELLY---.accdb",
-    "DIDE Priority Pathogens EBOLA - PABLO.accdb",
-    "DIDE Priority Pathogens EBOLA - PATRICK.accdb",
-    "DIDE Priority Pathogens EBOLA - REBECCA.accdb",
-    "DIDE Priority Pathogens EBOLA - RICHARD.accdb",
-    "DIDE Priority Pathogens EBOLA - RUTH.accdb",
-    "DIDE Priority Pathogens EBOLA - SABINE.accdb",
-    "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
-    "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
-    "DIDE Priority Pathogens EBOLA - THOM.accdb",
-    "DIDE Priority Pathogens EBOLA - TRISTAN.accdb"), from = "singledb")
-infiles2 <- sharedfile_path(
-    c("DIDE Priority Pathogens EBOLA - ANNE.accdb", "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
-    "DIDE Priority Pathogens EBOLA - CYRIL.accdb", "DIDE Priority Pathogens EBOLA - DARIYA.accdb",
-    "DIDE Priority Pathogens EBOLA - ETTIE.accdb", "DIDE Priority Pathogens EBOLA - GINA.accdb",
-    "DIDE Priority Pathogens EBOLA - JACK.accdb", "DIDE Priority Pathogens EBOLA - JOSEPH.accdb",
-    "DIDE Priority Pathogens EBOLA - KELLY.accdb", "DIDE Priority Pathogens EBOLA - PATRICK.accdb",
-    "DIDE Priority Pathogens EBOLA - REBECCA.accdb", "DIDE Priority Pathogens EBOLA - RUTH.accdb",
-    "DIDE Priority Pathogens EBOLA - SABINE.accdb", "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb"),
-    from = "doubledb"
-    )
-infiles3 <- sharedfile_path(
-  c("DIDE Priority Pathogens ETTIE.accdb", "DIDE Priority Pathogens REBECCA.accdb",
-    "DIDE Priority Pathogens RICHARD.accdb", "DIDE Priority Pathogens SANGEETA.accdb",
-    "DIDE Priority Pathogens TRISTAN.accdb"
-  ), from = "doubledb2"
-)
-infiles <- c(infiles, infiles2, infiles3)
+orderly_shared_resource("utils.R" = "utils.R")
 
-library(dplyr)
-library(ids)
-library(odbc)
-library(purrr)
-library(readr)
-
+source("utils.R")
 source("validation.R")
+## First get the pathogen-specific nested list from the function
+## database_files and then plonk them into the function
+## sharedfile_path one by one. Careful as there may be one or more
+## shared locations from which to read the files.
+infiles <- database_files(pathogen)
+infiles <- imap(
+  infiles, function(filenames, dbname) {
+    sharedfile_path(filenames, from = dbname)
+  }
+)
 
 ## Extract one access DB at a time
 ## Modify primary key.
@@ -95,9 +70,9 @@ from <- map(
     res <- dbSendQuery(con, "SELECT * FROM [Article data - Table]")
     articles <- dbFetch(res)
     narticles <- nrow(articles)
-    
+
     if (narticles == 0) return()
-    
+
     ## pathogen-specific Covidence ID fixing before joining
     if (pathogen == "EBOLA") {
       articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
@@ -107,14 +82,14 @@ from <- map(
       articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
                               articles$Name_data_entry == "Ettie"] <- 5197
     }
-    
+
     ## Convert Covidence_ID to numeric.
     ## Covidence_ID is entered as a text, so
     ## also save the original i.e., as entered in the DB
     ## to allow errors induced by conversion to be fixed.
     articles$Covidence_ID_text <- articles$Covidence_ID
     articles$Covidence_ID <- as.integer(articles$Covidence_ID)
-    
+
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
     )
@@ -132,7 +107,7 @@ from <- map(
     models$Model_data_ID <- random_id(
       n = nmodels, use_openssl = FALSE
     )
-    
+
 
     res <- dbSendQuery(con, "SELECT * FROM [Parameter data - Table]")
     params <- dbFetch(res)
@@ -184,7 +159,7 @@ if(pathogen == "EBOLA") {
                                     Pathogen)))
   # models
   models$Covidence_ID <- as.numeric(models$Covidence_ID)
-  models <- models %>% 
+  models <- models %>%
     mutate_if(is.character, list(~na_if(.,""))) %>%
     mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
                              ifelse(Pathogen == "Unwin", "Ebola virus",
