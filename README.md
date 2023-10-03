@@ -40,9 +40,14 @@ Once data extractions are complete and you want to compile the databases togethe
 contain the fully qualified name of the folder where the database files are 
 located, *as seen from your machine*. For instance, I have mapped the 
 PriorityPathogens shared drive to Y: locally. Hence for me, the entries are 
-"Y:/Ebola/databases/Single extraction databases" etc.
-* Ensure that the "orderly.R" script in the db_extraction task has been
-updated with all the database file names you want to include.
+"Y:/Ebola/databases/Single extraction databases" etc. Note that you
+may not need all three enteries. For instance, if all the database
+files for a pathogen are placed in the same folder on the shared
+drive, then you only need one entry in the orderly_config.yml
+corresponding to this location.
+* Update the function database_files in shared/utils.R with all the database file names you want to
+  include. The comments provide detailed instructions on the format in
+  which the files should be listed.
 * Then run the following (specifying the pathogen):
 
 ```
@@ -67,7 +72,8 @@ Combined data for double extracted papers will be in:
 articles_double.csv, parameters_double.csv, models_double.csv, outbreaks_double.csv
 
 These files can be found within the “archive/db_extraction” folder in the 
-priority-pathogens directory.
+priority-pathogens directory. 
+
 
 ### Task 2: db_double
 
