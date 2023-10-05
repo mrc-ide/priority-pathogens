@@ -195,15 +195,22 @@ if('parameter_type' %in% colnames(df)) {
                  TRUE ~ parameter_type)
                  )
 
-    # Add ids for new parameters - hacky and needs to be fixed so that each new
-    # parameter has a unique parameter_data_id
+    # Add article id and parameter ids for new parameters
     df <- df %>%
       mutate(id = case_when(
         covidence_id == 104 & is.na(id) ~
           unique(id[covidence_id == 104 & parameter_type == "Risk factors"]),
+        TRUE ~ id)) %>%
+      mutate(id = case_when(
+        covidence_id == 2548 & is.na(id) ~
+          unique(id[covidence_id == 2548 & !is.na(id)]),
+        TRUE ~ id)) %>%
+      mutate(id = case_when(
+        covidence_id == 1044 & is.na(id) ~
+          unique(id[covidence_id == 1044 & !is.na(id)]),
         TRUE ~ id))
 
-      idx <- which(df$covidence_id == 104 & is.na(df$parameter_data_id))
+      idx <- which(df$covidence_id %in% c(104, 1044, 2548) & is.na(df$parameter_data_id))
       df$parameter_data_id[idx] <-
           random_id(n = length(idx), use_openssl = FALSE)
 
