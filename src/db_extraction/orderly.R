@@ -37,10 +37,13 @@ source("validation.R")
 infiles <- database_files(pathogen)
 infiles <- imap(
   infiles, function(filenames, dbname) {
-    sharedfile_path(filenames, from = dbname)
+    map(filenames, function(fname) {
+      sharedfile_path(fname, from = dbname)
+    }
+    )
   }
 )
-
+infiles <- unlist(infiles)
 ## Extract one access DB at a time
 ## Modify primary key.
 ## Do this for all DBs, create a master CSV
