@@ -15,7 +15,12 @@ orderly_parameters(pathogen = NULL)
 ## Outputs
 orderly_artefact(
   "Merged single and double extracted data as csv",
-  c("articles.csv", "models.csv", "parameters.csv")
+  c(
+    "articles.csv",
+    "models.csv",
+    "parameters.csv",
+    "outbreaks.csv"
+  )
 )
 
 # Get results from db_extraction
@@ -48,11 +53,32 @@ orderly_dependency(
 # src/db_compilation folder
 orderly_resource(
   c(
-    "qa_fixing.csv",
-    "params_fixing.csv",
-    "models_fixing.csv",
+    "ebola_qa_fixing.csv",
+    "ebola_params_fixing.csv",
+    "ebola_models_fixing.csv",
+    ## LASSA FIXING FILES
+    ## NIPAH FIXING FILES
     "cleaning.R"
   )
+)
+
+## Here we map the fixing files to the
+## pathogen.
+fixing_files <- list(
+  EBOLA = list(
+    params_fix = "ebola_params_fixing.csv",
+    models_fix = "ebola_models_fixing.csv",
+    qa_fix = "ebola_qa_fixing.csv"
+  )
+  ## LASSA Team update this and uncomment
+  ## Make sure to specify the pathogen as it is specified
+  ## when this task is run. Do not edit the names of the rest of
+  ## the list, as these names are used below.
+  ## ,LASSA = list(
+  ##     params_fix = "lassa_params_fixing.csv",
+  ##     models_fix = "lassa_models_fixing.csv",
+  ##     qa_fix = "lassa_qa_fixing.csv"
+  ## )
 )
 
 source("cleaning.R")
@@ -61,7 +87,7 @@ source("cleaning.R")
 article_single <- read_csv("single_extraction_articles.csv")
 model_single <- read_csv("single_extraction_models.csv")
 parameter_single <- read_csv("single_extraction_params.csv")
-outbreak_single <- NULL
+
 
 article_single <- article_single %>% clean_names()
 
@@ -73,10 +99,11 @@ parameter_single <- parameter_single %>% clean_names()
 article_double <- read_csv("double_extraction_articles.csv")
 model_double <- read_csv("double_extraction_models.csv")
 param_double <- read_csv("double_extraction_params.csv")
+
 qa_matching <- read_csv("qa_matching.csv")
 model_matching <- read_csv("models_matching.csv")
 parameter_matching <- read_csv("params_matching.csv")
-outbreak_matching <- NULL
+
 
 article_double <- article_double %>%
   clean_names() %>%
@@ -93,10 +120,10 @@ parameter_matching <- parameter_matching %>% clean_names()
 model_matching <- model_matching %>% clean_names()
 
 # Double extractions - needed to be resolved between extractors
-qa_fixed <- read_csv("qa_fixing.csv")
-model_fixed <- read_csv("models_fixing.csv")
-parameter_fixed <- read_csv("params_fixing.csv")
-outbreak_fixed <- NULL
+qa_fixed <- read_csv(fixing_files[[pathogen]][["qa_fix"]])
+model_fixed <- read_csv(fixing_files[[pathogen]][["models_fix"]])
+parameter_fixed <- read_csv(fixing_files[[pathogen]][["params_fix"]])
+
 
 ## create final datasets
 # Add outbreak_fixed for next pathogen
@@ -192,8 +219,16 @@ article_all <- add_qa_scores(article_all, parameter_all)
 # Add article QA scores as a parameter variable
 parameter_all <- parameter_all %>%
   left_join(
-    select(article_all, covidence_id, article_qa_score), by = "covidence_id")
+    select(article_all, covidence_id, article_qa_score),
+    by = "covidence_id"
+  )
 
 write_csv(parameter_all, "parameters.csv")
 write_csv(model_all, "models.csv")
 write_csv(article_all, "articles.csv")
+
+if (pathogen == "EBOLA") {
+  file.create("outbreaks.csv")
+}
+## Pathogens extracting outbreaks, write your CSV file
+## here.
