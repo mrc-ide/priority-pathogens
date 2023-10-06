@@ -1,0 +1,34 @@
+fixed,covidence_id,name_data_entry,access_model_id,pathogen,article_id,model_type,compartmental_type,stoch_deter,theoretical_model,interventions_type,code_available,transmission_route,assumptions,ebola_variant,num_rows,matching
+1,30,Christian,1,Ebola virus,1,Compartmental,SEIR,Deterministic,FALSE,Unspecified,FALSE,Human to human (direct non-sexual contact),Heterogenity in transmission rates - over time;Homogeneous mixing,Unspecified,1,0
+1,45,Anne,16,Ebola virus,25,Branching process,NA,Stochastic,FALSE,Other;Quarantine,TRUE,Human to human (direct non-sexual contact),Heterogenity in transmission rates - between groups,Unspecified,1,0
+1,65,Ettie Unwin,5,Ebola virus,12,Compartmental,Other compartmental,NA,FALSE,Hospitals;Safe burials,FALSE,Human to human (direct non-sexual contact),NA,Unspecified,1,0
+1,159,Dariya Nikitin,1,Ebola virus,2,Compartmental,SIR,Deterministic,FALSE,Unspecified,FALSE,Unspecified,Unspecified,Unspecified,1,0
+1,206,Dariya Nikitin,5,Ebola virus,5,Compartmental,Other compartmental,Deterministic,FALSE,Quarantine;Treatment,FALSE,Unspecified,Homogeneous mixing;Latent period is same as incubation period;Heterogenity in transmission rates - over time,Unspecified,1,0
+1,291,Rebecca Nash,1,Ebola virus,8,Compartmental,Other compartmental,Stochastic,FALSE,Quarantine;Safe burials;Treatment,FALSE,Human to human (direct non-sexual contact),Heterogenity in transmission rates - over time,Unspecified,1,0
+1,291,Rebecca Nash,2,Ebola virus,8,Compartmental,Other compartmental,Deterministic,FALSE,Quarantine;Safe burials;Treatment,FALSE,Human to human (direct non-sexual contact),Heterogenity in transmission rates - over time,Unspecified,1,0
+1,291,Rebecca Nash,3,Ebola virus,8,Compartmental,SEIR,Deterministic,FALSE,Quarantine;Safe burials;Treatment,FALSE,Human to human (direct non-sexual contact),Unspecified,Unspecified,1,0
+1,315,Sequoia,28,Ebola virus,40,Compartmental,Other compartmental,Stochastic,FALSE,Behaviour changes,FALSE,Human to human (direct non-sexual contact);Sexual,NA,Unspecified,1,0
+1,404,Ruth,3,Ebola virus,4,Compartmental,SIR,NA,FALSE,Treatment,FALSE,Human to human (direct non-sexual contact),NA,Unspecified,1,0
+1,411,Ettie Unwin,21,Ebola virus,38,Other,Not compartmental,NA,TRUE,NA,FALSE,NA,NA,Unspecified,1,0
+1,454,Sequoia,27,Ebola virus,39,Agent / Individual based,SEIR,Stochastic,TRUE,Behaviour changes;Hospitals;Other;Quarantine;Safe burials,FALSE,Unspecified,Unspecified,Unspecified,1,0
+1,507,Sabine,2,Ebola virus,3,Compartmental,Other compartmental,Stochastic,FALSE,Hospitals;Behaviour changes;Safe burials,FALSE,Unspecified,Heterogenity in transmission rates - between groups;Latent period is same as incubation period,Unspecified,1,0
+1,525,Christian,3,Ebola virus,5,Agent / Individual based,SEIR,Stochastic,FALSE,NA,FALSE,Unspecified,Heterogenity in transmission rates - between groups;Latent period is same as incubation period;Heterogenity in transmission rates - over time,Unspecified,1,0
+1,547,Ettie Unwin,22,Ebola virus,39,Other,Not compartmental,NA,FALSE,NA,FALSE,NA,NA,Unspecified,1,0
+1,590,Jack,1,Ebola virus,1,Other,NA,NA,FALSE,NA,FALSE,Human to human (direct non-sexual contact),NA,NA,1,0
+1,676,Ruth,1,Ebola virus,2,Compartmental,Other compartmental,NA,FALSE,Safe burial; Unspecified,FALSE,Human to human (direct non-sexual contact),Homogeneous mixing,Unspecified,1,0
+1,700,Rebecca Nash,19,Ebola virus,40,Compartmental,SIR,NA,FALSE,Hospitals,FALSE,Human to human (direct non-sexual contact),NA,Unspecified,1,0
+1,701,Sequoia,18,Ebola virus,35,Compartmental,SEIR,Stochastic,FALSE,Contact tracing,FALSE,Human to human (direct non-sexual contact),Unspecified,Zaire Ebola virus (EBOV),1,0
+1,754,Christian,4,Ebola virus,7,Compartmental,SIS,Deterministic,FALSE,NA,FALSE,Human to human (direct non-sexual contact),NA,Unspecified,1,0
+1,757,Cyril,2,Ebola virus,4,Compartmental,Other compartmental,NA,TRUE,Hospitals;Safe burials,FALSE,NA,NA,Unspecified,1,0
+1,865,Dariya Nikitin,3,Ebola virus,4,Compartmental,Other compartmental,Deterministic,FALSE,Unspecified,TRUE,Unspecified,Unspecified,Unspecified,1,0
+1,885,Anne,18,Ebola virus,36,Agent / Individual based,SEIR,Stochastic,FALSE,Other;Safe burials,FALSE,Unspecified,Heterogenity in transmission rates - over time;Latent period is same as incubation period,Unspecified,1,0
+1,20580,Ettie Unwin,4,Ebola virus,5,Compartmental,Other compartmental,NA,TRUE,Hospitals,FALSE,Human to human (direct non-sexual contact),Heterogenity in transmission rates - between groups,Unspecified,1,0
+1,20916,Rebecca,1,Ebola virus,1,Compartmental,Other compartmental,NA,TRUE,Quarantine,FALSE,NA,NA,Unspecified,1,0
+1,21510,Rebecca,5,Ebola virus,6,Agent / Individual based;Compartmental,Other compartmental,Deterministic,TRUE,Contact tracing;Other;Quarantine;Safe burials,FALSE,Human to human (direct non-sexual contact),Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,Unspecified,1,0
+1,21633,Ettie Unwin,6,Ebola virus,7,Compartmental,Other compartmental,Deterministic,FALSE,Hospitals,FALSE,Unspecified,Unspecified,Unspecified,1,0
+1,22647,Sangeeta Bhatia,4,Ebola virus,3,Compartmental,Other compartmental,NA,TRUE,NA,FALSE,Human to human (direct non-sexual contact),Unspecified,Unspecified,1,0
+1,23068,Rebecca,2,Ebola virus,2,Compartmental,SEIR,NA,TRUE,Unspecified,FALSE,Animal reservoir to human;Human to human (direct non-sexual contact),Unspecified,Unspecified,1,0
+1,23420,Ettie Unwin,3,Ebola virus,3,Compartmental,Other compartmental,NA,TRUE,Hospitals;Behaviour changes,FALSE,Human to human (direct non-sexual contact);Sexual,Heterogenity in transmission rates - between groups,Unspecified,1,0
+1,23425,Rebecca,3,Ebola virus,3,Compartmental,SEIR,NA,TRUE,Treatment,FALSE,Human to human (direct non-sexual contact),Unspecified,Unspecified,1,0
+1,23670,Rebecca,4,Ebola virus,5,Compartmental,Other compartmental,Deterministic,TRUE,Contact tracing;Hospitals;Quarantine;Safe burials;Vaccination,FALSE,Human to human (direct non-sexual contact),Unspecified,Unspecified,1,0
+1,23719,Rebecca,6,Ebola virus,7,Compartmental,Other compartmental,Deterministic,FALSE,Hospitals;Quarantine;Safe burials,FALSE,NA,NA,Unspecified,1,0
