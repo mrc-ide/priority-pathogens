@@ -67,7 +67,18 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens LASSA - Thom.accdb",
         "DIDE Priority Pathogens LASSA - Tristan.accdb"
       ),
-      doubledb = c(),
+      doubledb = c(
+        "DIDE Priority Pathogens LASSA - Christian.accdb",
+        "DIDE Priority Pathogens LASSA - Dariya.accdb",
+        "DIDE Priority Pathogens LASSA - Gina.accdb",
+        "DIDE Priority Pathogens LASSA - Joseph.accdb",
+        "DIDE Priority Pathogens LASSA - Kelly.accdb",
+        "DIDE Priority Pathogens LASSA - Patrick.accdb",
+        "DIDE Priority Pathogens LASSA - Richard.accdb",
+        "DIDE Priority Pathogens LASSA - Ruth.accdb",
+        "DIDE Priority Pathogens LASSA - Thom.accdb",
+        "DIDE Priority Pathogens LASSA - Tristan.accdb"
+      ),
       doubledb2 = c()
     )
     ## Nipah Database files
