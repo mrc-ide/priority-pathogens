@@ -57,6 +57,10 @@ orderly_resource(
     "ebola_params_fixing.csv",
     "ebola_models_fixing.csv",
     ## LASSA FIXING FILES
+    "lassa_qa_fixing.csv",
+    "lassa_params_fixing.csv",
+    "lassa_models_fixing.csv",
+    "lassa_outbreaks_fixing.csv",
     ## NIPAH FIXING FILES
     "cleaning.R"
   )
@@ -74,11 +78,12 @@ fixing_files <- list(
   ## Make sure to specify the pathogen as it is specified
   ## when this task is run. Do not edit the names of the rest of
   ## the list, as these names are used below.
-  ## ,LASSA = list(
-  ##     params_fix = "lassa_params_fixing.csv",
-  ##     models_fix = "lassa_models_fixing.csv",
-  ##     qa_fix = "lassa_qa_fixing.csv"
-  ## )
+  ,LASSA = list(
+     params_fix = "lassa_params_fixing.csv",
+     models_fix = "lassa_models_fixing.csv",
+     qa_fix = "lassa_qa_fixing.csv",
+     outbreaks_fix = "lassa_outbreaks_fixing.csv"
+  )
 )
 
 source("cleaning.R")
