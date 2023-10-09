@@ -32,17 +32,42 @@ validate_articles <- function(article_df) {
 }
 
 # Check for generic model errors
-validate_models <- function(model_df) {
+validate_models <- function(model_df,pathogen) {
   # Check for empty model entries
-  check_model_cols <- c("Model_type", "Compartmental_type", "Stoch_Deter",
-                        "Interventions_type", "Transmission_route",
-                        "Assumptions", "Ebola variant")
+  if(pathogen == 'EBOLA'){
+    check_model_cols <- c("Model_type", "Compartmental_type", "Stoch_Deter",
+                          "Interventions_type", "Transmission_route",
+                          "Assumptions", "Ebola variant")  
+  } else {
+    check_model_cols <- c("Model_type", "Compartmental_type", "Stoch_Deter",
+                          "Interventions_type", "Transmission_route",
+                          "Assumptions")  
+  }
+  
   check_empty_models <- model_df %>%
     filter_at(vars(all_of(check_model_cols)), all_vars(is.na(.)))
   if(nrow(check_empty_models) > 0) {
     warning("There are empty model entries")
   }
   check_empty_models
+}
+
+# Check for generic model errors
+validate_outbreaks <- function(outbreak_df,pathogen) {
+  # Check for empty model entries
+  if(pathogen == 'LASSA'){
+    check_outbreak_cols <- c("Outbreak_start_day", "Outbreak_start_month", "Outbreak_start_year",
+                             "Outbreak_end_day", "Outbreak_end_month", "Outbreak_date_year",
+                          "Outbreak_country", "Outbreak_location", "Cases_confirmed", "Cases_mode_detection",
+                          "Deaths", "Pre-Outbreak")  
+    
+    check_empty_outbreaks <- outbreak_df %>%
+      filter_at(vars(all_of(check_outbreak_cols)), all_vars(is.na(.)))
+    if(nrow(check_empty_outbreaks) > 0) {
+      warning("There are empty model entries")
+    }
+    check_empty_outbreaks
+  } 
 }
 
 # Check for generic parameter errors
