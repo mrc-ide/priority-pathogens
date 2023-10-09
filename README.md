@@ -44,11 +44,14 @@ Once data extractions are complete and you want to compile the databases togethe
 contain the fully qualified name of the folder where the database files are 
 located, *as seen from your machine*. For instance, I have mapped the 
 PriorityPathogens shared drive to Y: locally. Hence for me, the entries are 
-"Y:/Ebola/databases/Single extraction databases" etc. Note that you
-may not need all three enteries. For instance, if all the database
-files for a pathogen are placed in the same folder on the shared
-drive, then you only need one entry in the orderly_config.yml
+"Y:/Ebola/databases/Single extraction databases" etc. 
+    * You may not need all three enteries. For instance, if all the database
+files for a pathogen are placed in the same folder on the shared drive, then you only need one entry in the orderly_config.yml
 corresponding to this location.
+    * The shared drive should be visible to orderly when you run the
+      subsequent commands. That means, the drive should have been
+      mapped, and that you are connected to it. On Mac, this is done
+      by pressing CMD + K and entering the drive location.
 * Update the function database_files in shared/utils.R with all the database file names you want to
   include. The comments provide detailed instructions on the format in
   which the files should be listed.
@@ -174,7 +177,8 @@ We will place all outputs that need to be shared across users on the
    "path")
    ```
 Here, "name" can be anything, and "args" should be the fully
-   qualified name of the "orderly-outputs" folder as seen from Alice's machine.
+   qualified name of the "orderly-outputs" folder as seen from Alice's
+   machine. 
    
 3. Then Alice "pushes" the output of the "db_extraction" task to this
 location as follows
