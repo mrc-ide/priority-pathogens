@@ -12,16 +12,19 @@ library(readr)
 ## Downstream tasks can query on this parameter to
 ## pull in the correct files as dependancies.
 ## orderly_parameters(pathogen = 'EBOLA')
+## orderly_parameters(pathogen = 'LASSA')
 orderly_parameters(pathogen = NULL)
 
 orderly_artefact(
   "Merged data as csv and errors as RDS",
   c("single_extraction_articles.csv", "single_extraction_models.csv",
-    "single_extraction_params.csv",
+    "single_extraction_params.csv", 
     "double_extraction_articles.csv", "double_extraction_models.csv",
     "double_extraction_params.csv",
     ## Empty for ebola but creating for other
     ## pathogens
+    "single_extraction_outbreaks.csv",
+    "double_extraction_outbreaks.csv",
     "outbreaks.csv",
     "errors.rds"))
 
@@ -54,7 +57,8 @@ primary_key_col <- "Article_ID"
 outfiles <- list(
   articles = "articles.csv",
   models = "models.csv",
-  params = "parameters.csv"
+  params = "parameters.csv",
+  outbreaks = "outbreaks.csv"
   ## TODO add the name of outbreaks table
   ## and add a file name here,
   ## xxx = "outbreaks.csv"
@@ -101,8 +105,8 @@ from <- map(
     models <- dbFetch(res)
 
     models <- left_join(
-      articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       models,
+      articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       by = "Article_ID"
     )
     nmodels <- nrow(models)
@@ -117,8 +121,8 @@ from <- map(
 
 
     params <- left_join(
-      articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       params,
+      articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       by = "Article_ID"
     )
     nparams <- nrow(params)
@@ -126,12 +130,32 @@ from <- map(
     params$Parameter_data_ID <- random_id(
       n = nparams, use_openssl = FALSE
     )
+    
+    if(pathogen=="LASSA")
+    {
+      res <- dbSendQuery(con, "SELECT * FROM [Outbreak data - Table]")
+      outbreaks <- dbFetch(res)
+      
+      outbreaks <- left_join(
+        outbreaks,
+        articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
+        by = "Article_ID"
+      )
+      noutbreaks <- nrow(outbreaks)
+      outbreaks  <- outbreaks %>% mutate(access_outbreak_id = Outbreak_ID)
+      outbreaks$Outbreak_data_ID <- random_id(
+        n = noutbreaks, use_openssl = FALSE
+      )
+    }
+    
+    
     articles <- validate(articles)
     models <- validate(models)
     params <- validate(params)
+    outbreaks <- validate(outbreaks)
     # TODO Extract outbreaks table where relevant
     list(
-      articles = articles, models = models, params = params
+      articles = articles, models = models, params = params, outbreaks = outbreaks
     )
   }
 )
@@ -142,7 +166,7 @@ articles <- map_dfr(from, function(x) x[["articles"]])
 # SANGEETA TO DO: Make Covidence_ID numeric
 models <- map_dfr(from, function(x) x[["models"]])
 params <- map_dfr(from, function(x) x[["params"]])
-
+outbreaks <- map_dfr(from, function(x) x[["outbreaks"]])
 
 # Ebola-specific cleaning
 if(pathogen == "EBOLA") {
@@ -210,8 +234,9 @@ if(pathogen == "EBOLA") {
 
 ## Check data after pathogen-specific cleaning
 a_err <- validate_articles(articles)
-m_err <- validate_models(models)
+m_err <- validate_models(models, pathogen)
 p_err <- validate_params(params)
+o_err <- validate_outbreaks(outbreaks,pathogen)
 saveRDS(
   list(articles_errors = a_err,
        models_errors = m_err,
@@ -248,6 +273,24 @@ write_csv(
 write_csv(
   single_p, "single_extraction_params.csv"
 )
+
+if(pathogen=='LASSA')
+{
+  single_o <- outbreaks
+  write_csv(
+    single_o, "single_extraction_outbreaks.csv"
+  )
+
+  file.create("outbreaks.csv")
+  file.create("double_extraction_outbreaks.csv")
+}
+
 ## Empty outbreaks.csv for Ebola
 ## Amend this for other pathogens
-file.create("outbreaks.csv")
+if(pathogen=='EBOLA')
+{
+  file.create("outbreaks.csv")
+  file.create("single_extraction_outbreaks.csv")
+  file.create("double_extraction_outbreaks.csv")
+}
+
