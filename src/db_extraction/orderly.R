@@ -96,6 +96,7 @@ from <- map(
     ## to allow errors induced by conversion to be fixed.
     articles$Covidence_ID_text <- articles$Covidence_ID
     articles$Covidence_ID <- as.integer(articles$Covidence_ID)
+    articles$Covidence_ID <- gsub(" ","",articles$Covidence_ID)
 
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
