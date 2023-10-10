@@ -40,7 +40,7 @@ infiles <- imap(
     sharedfile_path(filenames, from = dbname)
   }
 )
-
+infiles <- unlist(infiles)
 ## Extract one access DB at a time
 ## Modify primary key.
 ## Do this for all DBs, create a master CSV
