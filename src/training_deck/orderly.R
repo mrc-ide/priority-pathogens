@@ -1,0 +1,6 @@
+library(orderly2)
+library(rmarkdown)
+orderly_resource('slides.Rmd')
+orderly_resource('unorganised_file_system.png')
+orderly_artefact("Slides", "slides.html")
+render("slides.Rmd")
