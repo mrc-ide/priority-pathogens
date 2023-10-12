@@ -17,11 +17,14 @@ orderly_parameters(pathogen = NULL)
 
 orderly_artefact(
   "Merged data as csv and errors as RDS",
-  c("single_extraction_articles.csv", "single_extraction_models.csv",
-    "single_extraction_params.csv", "single_extraction_outbreaks.csv", 
+  c(
+    "single_extraction_articles.csv", "single_extraction_models.csv",
+    "single_extraction_params.csv", "single_extraction_outbreaks.csv",
     "double_extraction_articles.csv", "double_extraction_models.csv",
     "double_extraction_params.csv", "double_extraction_outbreaks.csv",
-    "errors.rds"))
+    "errors.rds"
+  )
+)
 
 orderly_resource("validation.R")
 orderly_shared_resource("utils.R" = "utils.R")
@@ -37,8 +40,7 @@ infiles <- imap(
   infiles, function(filenames, dbname) {
     map(filenames, function(fname) {
       sharedfile_path(fname, from = dbname)
-    }
-    )
+    })
   }
 )
 infiles <- unlist(infiles)
@@ -61,7 +63,7 @@ from <- map(
     message("Reading ", infile)
     con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
 
-    if (is.null(con)){
+    if (is.null(con)) {
       message("Error in reading ", infile)
       return()
     }
@@ -70,16 +72,18 @@ from <- map(
     articles <- dbFetch(res)
     narticles <- nrow(articles)
 
-    if (narticles == 0) return()
+    if (narticles == 0) {
+      return()
+    }
 
     ## pathogen-specific Covidence ID fixing before joining
     if (pathogen == "EBOLA") {
       articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
-                              articles$Name_data_entry == "Christian"] <- 19880
+        articles$Name_data_entry == "Christian"] <- 19880
       articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
-                              articles$Name_data_entry == "Thomas Rawson"] <- 11565
+        articles$Name_data_entry == "Thomas Rawson"] <- 11565
       articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
-                              articles$Name_data_entry == "Ettie"] <- 5197
+        articles$Name_data_entry == "Ettie"] <- 5197
     }
 
     ## Convert Covidence_ID to numeric.
@@ -88,7 +92,7 @@ from <- map(
     ## to allow errors induced by conversion to be fixed.
     articles$Covidence_ID_text <- articles$Covidence_ID
     articles$Covidence_ID <- as.integer(articles$Covidence_ID)
-    articles$Covidence_ID <- gsub(" ","",articles$Covidence_ID)
+    articles$Covidence_ID <- gsub(" ", "", articles$Covidence_ID)
 
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
@@ -99,7 +103,7 @@ from <- map(
 
     models <- left_join(
       models,
-      articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
+      articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       by = "Article_ID"
     )
     nmodels <- nrow(models)
@@ -115,7 +119,7 @@ from <- map(
 
     params <- left_join(
       params,
-      articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
+      articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       by = "Article_ID"
     )
     nparams <- nrow(params)
@@ -123,36 +127,35 @@ from <- map(
     params$Parameter_data_ID <- random_id(
       n = nparams, use_openssl = FALSE
     )
-    
-    if(pathogen == "LASSA")
-    {
+
+    if (pathogen == "LASSA") {
       res <- dbSendQuery(con, "SELECT * FROM [Outbreak data - Table]")
       outbreaks <- dbFetch(res)
-      
+
       outbreaks <- left_join(
         outbreaks,
-        articles[ , c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
+        articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
         by = "Article_ID"
       )
       noutbreaks <- nrow(outbreaks)
-      outbreaks  <- outbreaks %>% mutate(access_outbreak_id = Outbreak_ID)
+      outbreaks <- outbreaks %>% mutate(access_outbreak_id = Outbreak_ID)
       outbreaks$Outbreak_data_ID <- random_id(
         n = noutbreaks, use_openssl = FALSE
       )
     }
-    
+
     articles <- validate(articles)
     models <- validate(models)
     params <- validate(params)
-    
-    if(pathogen == "EBOLA") {
+
+    if (pathogen == "EBOLA") {
       outbreaks <- NULL
     }
-    
-    if(pathogen == "LASSA") {
+
+    if (pathogen == "LASSA") {
       outbreaks <- validate(outbreaks)
     }
-    
+
     # TODO Extract outbreaks table where relevant
     list(
       articles = articles, models = models, params = params, outbreaks = outbreaks
@@ -167,69 +170,86 @@ models <- map_dfr(from, function(x) x[["models"]])
 params <- map_dfr(from, function(x) x[["params"]])
 
 if (pathogen == "LASSA") {
-outbreaks <- map_dfr(from, function(x) x[["outbreaks"]])
+  outbreaks <- map_dfr(from, function(x) x[["outbreaks"]])
 }
 
 # Ebola-specific cleaning
-if(pathogen == "EBOLA") {
+if (pathogen == "EBOLA") {
   # articles
   articles$Covidence_ID <- as.numeric(articles$Covidence_ID)
   articles <- articles %>%
-    filter(Article_ID!=14 | Name_data_entry!="Christian") %>%
+    filter(Article_ID != 14 | Name_data_entry != "Christian") %>%
     # For some reason surname and first name are the wrong way around
-    rename(temp_col = FirstAuthor_FirstName,
-           FirstAuthor_FirstName = FirstAauthor_Surname) %>%
+    rename(
+      temp_col = FirstAuthor_FirstName,
+      FirstAuthor_FirstName = FirstAauthor_Surname
+    ) %>%
     rename(FirstAauthor_Surname = temp_col) %>%
     filter(!(Covidence_ID %in% c(5349, 1850, 1860, 1863, 2205, 2202, 483))) %>%
-    mutate_at(vars(QA_M1, QA_M2, QA_A3, QA_A4, QA_D5, QA_D6, QA_D7),
-    ~ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .)) %>%
+    mutate_at(
+      vars(QA_M1, QA_M2, QA_A3, QA_A4, QA_D5, QA_D6, QA_D7),
+      ~ ifelse(Name_data_entry == "Anne" & Covidence_ID == 6346, "Yes", .)
+    ) %>%
     mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
-                             ifelse(Pathogen == "Unwin", "Ebola virus",
-                                    Pathogen)))
+      ifelse(Pathogen == "Unwin", "Ebola virus",
+        Pathogen
+      )
+    ))
   # models
   models$Covidence_ID <- as.numeric(models$Covidence_ID)
   models <- models %>%
-    mutate_if(is.character, list(~na_if(.,""))) %>%
+    mutate_if(is.character, list(~ na_if(., ""))) %>%
     mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
-                             ifelse(Pathogen == "Unwin", "Ebola virus",
-                                    Pathogen)))
+      ifelse(Pathogen == "Unwin", "Ebola virus",
+        Pathogen
+      )
+    ))
   model_cols <- colnames(models)
-  check_model_cols <- model_cols[! model_cols %in%
-                                   c("Article_ID", "ID", "Pathogen",
-                                     "Covidence_ID", "Name_data_entry",
-                                     "Model_data_ID", "Theoretical_model",
-                                     "Code_available", "access_model_id")]
+  check_model_cols <- model_cols[!model_cols %in%
+    c(
+      "Article_ID", "ID", "Pathogen",
+      "Covidence_ID", "Name_data_entry",
+      "Model_data_ID", "Theoretical_model",
+      "Code_available", "access_model_id"
+    )]
   models <- models %>%
     filter_at(vars(all_of(check_model_cols)), any_vars(!is.na(.)))
   # parameters
   params$Covidence_ID <- as.numeric(params$Covidence_ID)
-  params <- params %>% mutate_if(is.character, list(~na_if(.,""))) %>%
+  params <- params %>%
+    mutate_if(is.character, list(~ na_if(., ""))) %>%
     mutate(Pathogen = ifelse(Pathogen == "Sheppard", "Ebola virus",
-                             ifelse(Pathogen == "Unwin", "Ebola virus",
-                                    Pathogen)))
-    # Add parameter type for accidental extractor errors
+      ifelse(Pathogen == "Unwin", "Ebola virus",
+        Pathogen
+      )
+    ))
+  # Add parameter type for accidental extractor errors
   params$Parameter_type[
     params$Covidence_ID == "16757" &
-      params$Name_data_entry == "Ruth"] <- "Seroprevalence - IgG"
+      params$Name_data_entry == "Ruth"
+  ] <- "Seroprevalence - IgG"
   params$Parameter_type[
     params$Covidence_ID == "4764" &
-      params$Name_data_entry == "Kelly M"] <- "Risk factors"
-    # Remove remaining blank parameter type entries
+      params$Name_data_entry == "Kelly M"
+  ] <- "Risk factors"
+  # Remove remaining blank parameter type entries
   params <- params %>%
     filter_at(vars(Parameter_type), any_vars(!is.na(.)))
-    # Remove entries where all variables that aren't prepopulated are empty
+  # Remove entries where all variables that aren't prepopulated are empty
   param_cols <- colnames(params)
-  check_param_cols <- param_cols[! param_cols %in%
-                                   c("Article_ID", "ID", "Pathogen",
-                                     "Covidence_ID", "Name_data_entry",
-                                     "Parameter_data_ID", "Exponent",
-                                     "Distribution_par1_uncertainty",
-                                     "Distribution_par2_uncertainty",
-                                     "Method_from_supplement",
-                                     "Method_disaggregated",
-                                     "Method_disaggregated_only",
-                                     "Genomic_sequence_available",
-                                     "Inverse_param", "Parameter_FromFigure")]
+  check_param_cols <- param_cols[!param_cols %in%
+    c(
+      "Article_ID", "ID", "Pathogen",
+      "Covidence_ID", "Name_data_entry",
+      "Parameter_data_ID", "Exponent",
+      "Distribution_par1_uncertainty",
+      "Distribution_par2_uncertainty",
+      "Method_from_supplement",
+      "Method_disaggregated",
+      "Method_disaggregated_only",
+      "Genomic_sequence_available",
+      "Inverse_param", "Parameter_FromFigure"
+    )]
   params <- params %>%
     filter_at(vars(all_of(check_param_cols)), any_vars(!is.na(.)))
 }
@@ -239,19 +259,21 @@ a_err <- validate_articles(articles)
 m_err <- validate_models(models, pathogen)
 p_err <- validate_params(params)
 
-if(pathogen == "EBOLA") {
+if (pathogen == "EBOLA") {
   o_err <- NULL
 }
 
-if(pathogen == "LASSA") {
+if (pathogen == "LASSA") {
   o_err <- validate_outbreaks(outbreaks, pathogen)
 }
 
 saveRDS(
-  list(articles_errors = a_err,
-       models_errors = m_err,
-       params_errors = p_err,
-       outbreak_errors = o_err),
+  list(
+    articles_errors = a_err,
+    models_errors = m_err,
+    params_errors = p_err,
+    outbreak_errors = o_err
+  ),
   "errors.rds"
 )
 
@@ -285,8 +307,7 @@ write_csv(
   single_p, "single_extraction_params.csv"
 )
 
-if(pathogen=='LASSA')
-{
+if (pathogen == "LASSA") {
   single_o <- outbreaks
   write_csv(
     single_o, "single_extraction_outbreaks.csv"
@@ -297,9 +318,7 @@ if(pathogen=='LASSA')
 
 ## Empty outbreaks.csv for Ebola
 ## Amend this for other pathogens
-if(pathogen=='EBOLA')
-{
+if (pathogen == "EBOLA") {
   file.create("single_extraction_outbreaks.csv")
   file.create("double_extraction_outbreaks.csv")
 }
-
