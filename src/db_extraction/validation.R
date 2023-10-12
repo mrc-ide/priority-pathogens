@@ -31,8 +31,9 @@ validate_articles <- function(article_df) {
   )
 }
 
-# Check for generic model errors
-validate_models <- function(model_df,pathogen) {
+# Check for generic model errors. Doesn't need to accept pathogen as an argument
+# becase orderly makes it available in the parent scope.
+validate_models <- function(model_df) {
   # Check for empty model entries
   if(pathogen == 'EBOLA'){
     check_model_cols <- c("Model_type", "Compartmental_type", "Stoch_Deter",
@@ -53,7 +54,7 @@ validate_models <- function(model_df,pathogen) {
 }
 
 # Check for generic model errors
-validate_outbreaks <- function(outbreak_df,pathogen) {
+validate_outbreaks <- function(outbreak_df) {
   # Check for empty model entries
   if(pathogen == 'LASSA'){
     check_outbreak_cols <- c("Outbreak_start_day", "Outbreak_start_month", "Outbreak_start_year",
