@@ -18,12 +18,9 @@ orderly_parameters(pathogen = NULL)
 orderly_artefact(
   "Merged data as csv and errors as RDS",
   c("single_extraction_articles.csv", "single_extraction_models.csv",
-    "single_extraction_params.csv", 
+    "single_extraction_params.csv", "single_extraction_outbreaks.csv", 
     "double_extraction_articles.csv", "double_extraction_models.csv",
-    "double_extraction_params.csv",
-    ## Empty for ebola but creating for other pathogens:
-    "single_extraction_outbreaks.csv",
-    "double_extraction_outbreaks.csv",
+    "double_extraction_params.csv", "double_extraction_outbreaks.csv",
     "errors.rds"))
 
 orderly_resource("validation.R")
@@ -57,9 +54,6 @@ outfiles <- list(
   models = "models.csv",
   params = "parameters.csv",
   outbreaks = "outbreaks.csv"
-  ## TODO add the name of outbreaks table
-  ## and add a file name here,
-  ## xxx = "outbreaks.csv"
 )
 
 from <- map(
@@ -169,10 +163,12 @@ from <- map(
 from <- keep(from, function(x) !is.null(x))
 # Merge databases and then split again
 articles <- map_dfr(from, function(x) x[["articles"]])
-# SANGEETA TO DO: Make Covidence_ID numeric
 models <- map_dfr(from, function(x) x[["models"]])
 params <- map_dfr(from, function(x) x[["params"]])
+
+if (pathogen == "LASSA") {
 outbreaks <- map_dfr(from, function(x) x[["outbreaks"]])
+}
 
 # Ebola-specific cleaning
 if(pathogen == "EBOLA") {
@@ -243,14 +239,19 @@ a_err <- validate_articles(articles)
 m_err <- validate_models(models, pathogen)
 p_err <- validate_params(params)
 
-if(pathogen=='LASSA') {
-o_err <- validate_outbreaks(outbreaks, pathogen)
+if(pathogen == "EBOLA") {
+  o_err <- NULL
+}
+
+if(pathogen == "LASSA") {
+  o_err <- validate_outbreaks(outbreaks, pathogen)
 }
 
 saveRDS(
   list(articles_errors = a_err,
        models_errors = m_err,
-       params_errors = p_err),
+       params_errors = p_err,
+       outbreak_errors = o_err),
   "errors.rds"
 )
 
@@ -291,7 +292,6 @@ if(pathogen=='LASSA')
     single_o, "single_extraction_outbreaks.csv"
   )
 
-  file.create("outbreaks.csv")
   file.create("double_extraction_outbreaks.csv")
 }
 
@@ -299,7 +299,6 @@ if(pathogen=='LASSA')
 ## Amend this for other pathogens
 if(pathogen=='EBOLA')
 {
-  file.create("outbreaks.csv")
   file.create("single_extraction_outbreaks.csv")
   file.create("double_extraction_outbreaks.csv")
 }
