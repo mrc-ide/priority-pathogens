@@ -11,10 +11,11 @@ library(readr)
 ## is used
 ## Downstream tasks can query on this parameter to
 ## pull in the correct files as dependancies.
-## orderly_parameters(pathogen = 'EBOLA')
-## orderly_parameters(pathogen = 'LASSA')
-orderly_parameters(pathogen = NULL)
+## When running interactively, do not run this line , 
 
+orderly_parameters(pathogen = NULL)
+## set the pathogen variable directly as in the commented line below
+## pathogen <- "EBOLA"
 orderly_artefact(
   "Merged data as csv and errors as RDS",
   c(
@@ -44,6 +45,7 @@ infiles <- imap(
   }
 )
 infiles <- unlist(infiles)
+
 ## Extract one access DB at a time
 ## Modify primary key.
 ## Do this for all DBs, create a master CSV
@@ -91,8 +93,9 @@ from <- map(
     ## also save the original i.e., as entered in the DB
     ## to allow errors induced by conversion to be fixed.
     articles$Covidence_ID_text <- articles$Covidence_ID
-    articles$Covidence_ID <- as.integer(articles$Covidence_ID)
     articles$Covidence_ID <- gsub(" ", "", articles$Covidence_ID)
+    articles$Covidence_ID <- as.integer(articles$Covidence_ID)
+    
 
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
@@ -100,7 +103,7 @@ from <- map(
 
     res <- dbSendQuery(con, "SELECT * FROM [Model data - Table]")
     models <- dbFetch(res)
-
+    
     models <- left_join(
       models,
       articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
@@ -256,7 +259,7 @@ if (pathogen == "EBOLA") {
 
 ## Check data after pathogen-specific cleaning
 a_err <- validate_articles(articles)
-m_err <- validate_models(models, pathogen)
+m_err <- validate_models(models)
 p_err <- validate_params(params)
 
 if (pathogen == "EBOLA") {
