@@ -21,11 +21,9 @@ orderly_artefact(
     "single_extraction_params.csv", 
     "double_extraction_articles.csv", "double_extraction_models.csv",
     "double_extraction_params.csv",
-    ## Empty for ebola but creating for other
-    ## pathogens
+    ## Empty for ebola but creating for other pathogens:
     "single_extraction_outbreaks.csv",
     "double_extraction_outbreaks.csv",
-    "outbreaks.csv",
     "errors.rds"))
 
 orderly_resource("validation.R")
@@ -132,7 +130,7 @@ from <- map(
       n = nparams, use_openssl = FALSE
     )
     
-    if(pathogen=="LASSA")
+    if(pathogen == "LASSA")
     {
       res <- dbSendQuery(con, "SELECT * FROM [Outbreak data - Table]")
       outbreaks <- dbFetch(res)
@@ -149,11 +147,18 @@ from <- map(
       )
     }
     
-    
     articles <- validate(articles)
     models <- validate(models)
     params <- validate(params)
-    outbreaks <- validate(outbreaks)
+    
+    if(pathogen == "EBOLA") {
+      outbreaks <- NULL
+    }
+    
+    if(pathogen == "LASSA") {
+      outbreaks <- validate(outbreaks)
+    }
+    
     # TODO Extract outbreaks table where relevant
     list(
       articles = articles, models = models, params = params, outbreaks = outbreaks
@@ -237,7 +242,11 @@ if(pathogen == "EBOLA") {
 a_err <- validate_articles(articles)
 m_err <- validate_models(models, pathogen)
 p_err <- validate_params(params)
-o_err <- validate_outbreaks(outbreaks,pathogen)
+
+if(pathogen=='LASSA') {
+o_err <- validate_outbreaks(outbreaks, pathogen)
+}
+
 saveRDS(
   list(articles_errors = a_err,
        models_errors = m_err,
