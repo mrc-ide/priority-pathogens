@@ -10,12 +10,14 @@ library(readr)
 ## use capital case; see code below where this pathogen
 ## is used
 ## Downstream tasks can query on this parameter to
-## pull in the correct files as dependancies.
-## When running interactively, do not run this line , 
-
+## pull in the correct files as dependencies.
+## When running as an orderly task leave line 16 as it is
+## When running interactively, COMMENT OUT THIS LINE:
 orderly_parameters(pathogen = NULL)
-## set the pathogen variable directly as in the commented line below
-## pathogen <- "EBOLA"
+
+## and then set the pathogen variable directly as in the commented line below
+#pathogen <- "EBOLA"
+
 orderly_artefact(
   "Merged data as csv and errors as RDS",
   c(
