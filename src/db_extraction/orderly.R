@@ -24,7 +24,7 @@ orderly_parameters(pathogen = NULL)
 ######################################
 ## Downstream tasks can query on this parameter to
 ## pull in the correct files as dependencies.
-## When running as an orderly task leave line 16 as it is
+## When running as an orderly task leave line 13 as it is
 
 orderly_artefact(
   "Merged data as csv and errors as RDS",
