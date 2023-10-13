@@ -13,10 +13,11 @@ library(readr)
 ## pull in the correct files as dependencies.
 ## When running as an orderly task leave line 16 as it is
 ## When running interactively, COMMENT OUT THIS LINE:
-orderly_parameters(pathogen = NULL)
+#orderly_parameters(pathogen = NULL)
 
-## and then set the pathogen variable directly as in the commented line below
-#pathogen <- "EBOLA"
+## and then uncomment the line below and set the pathogen variable directly
+## then save the orderly.R script before running interactively
+pathogen <- "EBOLA"
 
 orderly_artefact(
   "Merged data as csv and errors as RDS",
