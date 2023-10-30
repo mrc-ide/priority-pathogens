@@ -47,6 +47,7 @@ source("validation.R")
 ## sharedfile_path one by one. Careful as there may be one or more
 ## shared locations from which to read the files.
 infiles <- database_files(pathogen)
+
 infiles <- imap(
   infiles, function(filenames, dbname) {
     map(filenames, function(fname) {
@@ -54,6 +55,7 @@ infiles <- imap(
     })
   }
 )
+
 infiles <- unlist(infiles)
 
 ## Extract one access DB at a time
@@ -113,6 +115,7 @@ all_articles <- map(
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
     )
+    dbClearResult(res)
     articles
   }
 )
@@ -129,9 +132,11 @@ all_models <- map(
     models$Model_data_ID <- random_id(
       n = nmodels, use_openssl = FALSE
     )
+    dbClearResult(res)
     models
   }
 )
+
 saveRDS(all_models, "all_models_raw.rds")
 
 all_params <- map(
@@ -143,9 +148,11 @@ all_params <- map(
     params$Parameter_data_ID <- random_id(
       n = nparams, use_openssl = FALSE
     )
+    dbClearResult(res)
     params
   }
 )
+
 saveRDS(all_params, "all_params_raw.rds")
 
 # Check if we have extracted outbreaks for this pathogen
@@ -171,6 +178,12 @@ if (!outbreaks_ex) {
 saveRDS(all_outbreaks, "all_outbreaks_raw.rds")
 # Close all connections
 walk(all_conns, function(con) dbDisconnect(con))
+
+# Get rid of NULL or 0-length results
+null_articles <- map_lgl(all_articles, function(x) is.null(x))
+all_articles <- all_articles[!null_articles]
+all_models <- all_models[! null_articles]
+all_params <- all_params[! null_articles]
 
 from <- pmap(
   list(
@@ -216,8 +229,7 @@ if (outbreaks_ex) {
 
   
 
-# Filter out empty databases
-from <- keep(from, function(x) !is.null(x))
+
 # Merge databases and then split again
 articles <- map_dfr(from, function(x) x[["articles"]])
 models <- map_dfr(from, function(x) x[["models"]])
