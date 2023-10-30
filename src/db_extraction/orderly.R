@@ -170,6 +170,7 @@ if (!outbreaks_ex) {
       outbreaks$Outbreak_data_ID <- random_id(
         n = noutbreaks, use_openssl = FALSE
       )
+      dbClearResult(res)
       outbreaks
     }
   )
@@ -191,11 +192,14 @@ from <- pmap(
     models = all_models,
     params = all_params
   ), function(articles, models, params) {
-    models <- left_join(
-      models,
-      articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
-      by = "Article_ID"
-    )
+
+      models <- left_join(
+        models,
+        articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
+        by = "Article_ID"
+      )
+    
+   
     params <- left_join(
       params,
       articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
@@ -228,12 +232,26 @@ if (outbreaks_ex) {
 }
 
   
-
-
+# Remove any entries with 0 rows
 # Merge databases and then split again
-articles <- map_dfr(from, function(x) x[["articles"]])
-models <- map_dfr(from, function(x) x[["models"]])
-params <- map_dfr(from, function(x) x[["params"]])
+articles <- map_dfr(from, function(x) {
+  out <- x[["articles"]]
+  if (nrow(out) == 0) return(NULL)
+  out
+  }
+)
+
+models <- map_dfr(from, function(x){
+  out <- x[["models"]]
+  if (nrow(out) == 0) return(NULL)
+  out
+})
+
+params <- map_dfr(from, function(x){
+  out <-  x[["params"]]
+  if (nrow(out) == 0) return(NULL)
+  out
+})
 
 if (pathogen == "LASSA") {
   outbreaks <- map_dfr(from, function(x) x[["outbreaks"]])

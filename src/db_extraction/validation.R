@@ -1,10 +1,11 @@
 # check that none of the fields contain a comma
 # Implement other checks here.
 validate <- function(df) {
-  out <- apply(df, 2, function(x) {
+ 
+  mutate(df, across(everything(), function(x) {
     gsub(pattern = ",", replacement = ";", x = x)
-  })
-  as.data.frame(out)
+  }))
+    
 }
 
 # Check for generic article errors
