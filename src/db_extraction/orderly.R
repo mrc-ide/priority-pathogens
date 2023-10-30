@@ -10,14 +10,14 @@ library(readr)
 ## use capital case; see code below where this pathogen
 ################### README ###################
 ## IMPORTANT WHEN RUNNING INTERACTIVELY, FIRST COMMENT OUT THIS LINE:
-# orderly_parameters(pathogen = NULL)
+orderly_parameters(pathogen = NULL)
 ## orderly will scan orderly.R in the interactive mode, so that
 ## even if the above line is not run, you WILL get an error
 ## It is therefore important that the line is commented out *BEFORE*
 ## you start executing the script line by line.
 ## In the interactive mode, uncomment the line below and set the pathogen variable directly
 ## like this
-pathogen <- "EBOLA"
+## pathogen <- "EBOLA"
 ## then run as normal.
 ## ONCE DONE, PLEASE COMMENT OUT THE DIRECT SETTING OF THE VARIABLE pathogen
 ## and uncomment the call to orderly_parameters.
@@ -74,7 +74,7 @@ all_conns <- map(
   infiles, function(infile) {
     message("Reading ", infile)
     con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
-    
+
     if (is.null(con)) {
       message("Error in reading ", infile)
       return()
@@ -88,20 +88,19 @@ all_articles <- map(
     res <- dbSendQuery(con, "SELECT * FROM [Article data - Table]")
     articles <- dbFetch(res)
     narticles <- nrow(articles)
-    
+
     if (narticles == 0) {
       return()
     }
     ## pathogen-specific Covidence ID fixing before joining
-    if (pathogen == "EBOLA") {
-      articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
-                              articles$Name_data_entry == "Christian"] <- 19880
-      articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
-                              articles$Name_data_entry == "Thomas Rawson"] <- 11565
-      articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
-                              articles$Name_data_entry == "Ettie"] <- 5197
-    }
-    
+    ## Fixes for Ebola
+    articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
+      articles$Name_data_entry == "Christian"] <- 19880
+    articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
+      articles$Name_data_entry == "Thomas Rawson"] <- 11565
+    articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
+      articles$Name_data_entry == "Ettie"] <- 5197
+
     ## Convert Covidence_ID to numeric.
     ## Covidence_ID is entered as a text, so
     ## also save the original i.e., as entered in the DB
@@ -109,8 +108,8 @@ all_articles <- map(
     articles$Covidence_ID_text <- articles$Covidence_ID
     articles$Covidence_ID <- gsub(" ", "", articles$Covidence_ID)
     articles$Covidence_ID <- as.integer(articles$Covidence_ID)
-    
-    
+
+
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
     )
@@ -128,7 +127,8 @@ all_models <- map(
       n = nmodels, use_openssl = FALSE
     )
     models
-  })
+  }
+)
 
 all_params <- map(
   infiles, function(infile) {
@@ -140,22 +140,31 @@ all_params <- map(
       n = nparams, use_openssl = FALSE
     )
     params
-  })
+  }
+)
+
+all_outbreaks <- map(
+  infiles, function(infile) {
+    res <- dbSendQuery(con, "SELECT * FROM [Outbreak data - Table]")
+    outbreaks <- dbFetch(res)
+    noutbreaks <- nrow(outbreaks)
+    outbreaks <- outbreaks %>% mutate(access_outbreak_id = Outbreak_ID)
+    outbreaks$Outbreak_data_ID <- random_id(
+      n = noutbreaks, use_openssl = FALSE
+    )
+    outbreaks
+  }
+)
+
 
 from <- map(
   infiles, function(infile) {
-
-
-
-
-   
-
     models <- left_join(
       models,
       articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       by = "Article_ID"
     )
- 
+
 
 
 
@@ -169,18 +178,10 @@ from <- map(
 
 
     if (pathogen == "LASSA") {
-      res <- dbSendQuery(con, "SELECT * FROM [Outbreak data - Table]")
-      outbreaks <- dbFetch(res)
-
       outbreaks <- left_join(
         outbreaks,
         articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
         by = "Article_ID"
-      )
-      noutbreaks <- nrow(outbreaks)
-      outbreaks <- outbreaks %>% mutate(access_outbreak_id = Outbreak_ID)
-      outbreaks$Outbreak_data_ID <- random_id(
-        n = noutbreaks, use_openssl = FALSE
       )
     }
 
@@ -196,7 +197,7 @@ from <- map(
       outbreaks <- validate(outbreaks)
     }
 
-    # TODO Extract outbreaks table where relevant
+
     list(
       articles = articles, models = models, params = params, outbreaks = outbreaks
     )
