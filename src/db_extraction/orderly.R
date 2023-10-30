@@ -216,46 +216,28 @@ from <- pmap(
 )
 
 if (outbreaks_ex) {
-  pmap(
+  outbreaks <- pmap_dfr(
     list(
       articles = all_articles,
       outbreaks = all_outbreaks
     ), function(articles, outbreaks) {
-      outbreaks <- left_join(
+      left_join(
         outbreaks,
         articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
         by = "Article_ID"
       )
-      list(outbreaks = outbreaks)
     }
-    )
+  )
+} else {
+  outbreaks <- data.frame()
 }
 
   
-# Remove any entries with 0 rows
+
 # Merge databases and then split again
-articles <- map_dfr(from, function(x) {
-  out <- x[["articles"]]
-  if (nrow(out) == 0) return(NULL)
-  out
-  }
-)
-
-models <- map_dfr(from, function(x){
-  out <- x[["models"]]
-  if (nrow(out) == 0) return(NULL)
-  out
-})
-
-params <- map_dfr(from, function(x){
-  out <-  x[["params"]]
-  if (nrow(out) == 0) return(NULL)
-  out
-})
-
-if (pathogen == "LASSA") {
-  outbreaks <- map_dfr(from, function(x) x[["outbreaks"]])
-}
+articles <- map_dfr(from, function(x) x[["articles"]])
+models <- map_dfr(from, function(x) x[["models"]])
+params <- map_dfr(from, function(x) x[["params"]])
 
 # Ebola-specific cleaning
 if (pathogen == "EBOLA") {
@@ -343,13 +325,13 @@ a_err <- validate_articles(articles)
 m_err <- validate_models(models)
 p_err <- validate_params(params)
 
-if (pathogen == "EBOLA") {
+if (outbreaks_ex) {
+  o_err <- validate_outbreaks(outbreaks, pathogen)
+} else {
   o_err <- NULL
 }
 
-if (pathogen == "LASSA") {
-  o_err <- validate_outbreaks(outbreaks, pathogen)
-}
+
 
 saveRDS(
   list(
@@ -366,10 +348,18 @@ double_articles <- count(articles, Covidence_ID) %>% filter(n >= 2)
 double_a <- articles[articles$Covidence_ID %in% double_articles$Covidence_ID, ]
 double_m <- models[models$Covidence_ID %in% double_articles$Covidence_ID, ]
 double_p <- params[params$Covidence_ID %in% double_articles$Covidence_ID, ]
+if (outbreaks_ex) {
+  # this will be empty for Lassa
+  double_o <- outbreaks[outbreaks$Covidence_ID %in% double_articles$Covidence_ID, ]
+} else double_o <- NULL
 
 single_a <- articles[!articles$Covidence_ID %in% double_articles$Covidence_ID, ]
 single_m <- models[!models$Covidence_ID %in% double_articles$Covidence_ID, ]
 single_p <- params[!params$Covidence_ID %in% double_articles$Covidence_ID, ]
+if (outbreaks_ex) {
+  # this will be empty for Lassa
+  single_o <- outbreaks[!outbreaks$Covidence_ID %in% double_articles$Covidence_ID, ]
+} else single_o <- NULL
 
 write_csv(
   double_a, "double_extraction_articles.csv"
@@ -391,18 +381,13 @@ write_csv(
   single_p, "single_extraction_params.csv"
 )
 
-if (pathogen == "LASSA") {
-  single_o <- outbreaks
-  write_csv(
-    single_o, "single_extraction_outbreaks.csv"
-  )
+write_csv(
+  single_o, "single_extraction_outbreaks.csv"
+)
 
-  file.create("double_extraction_outbreaks.csv")
-}
+write_csv(
+  double_o, "single_extraction_outbreaks.csv"
+)
 
-## Empty outbreaks.csv for Ebola
-## Amend this for other pathogens
-if (pathogen == "EBOLA") {
-  file.create("single_extraction_outbreaks.csv")
-  file.create("double_extraction_outbreaks.csv")
-}
+
+
