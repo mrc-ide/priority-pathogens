@@ -10,14 +10,14 @@ library(readr)
 ## use capital case; see code below where this pathogen
 ################### README ###################
 ## IMPORTANT WHEN RUNNING INTERACTIVELY, FIRST COMMENT OUT THIS LINE:
-orderly_parameters(pathogen = NULL)
+# orderly_parameters(pathogen = NULL)
 ## orderly will scan orderly.R in the interactive mode, so that
 ## even if the above line is not run, you WILL get an error
 ## It is therefore important that the line is commented out *BEFORE*
 ## you start executing the script line by line.
 ## In the interactive mode, uncomment the line below and set the pathogen variable directly
 ## like this
-## pathogen <- "EBOLA"
+ pathogen <- "EBOLA"
 ## then run as normal.
 ## ONCE DONE, PLEASE COMMENT OUT THE DIRECT SETTING OF THE VARIABLE pathogen
 ## and uncomment the call to orderly_parameters.
@@ -116,6 +116,9 @@ all_articles <- map(
     articles
   }
 )
+# Save all objects directly as extracted from the database for ease of 
+# debugging.
+saveRDS(all_articles, "all_articles_raw.rds")
 
 all_models <- map(
   all_conns, function(con) {
@@ -129,9 +132,10 @@ all_models <- map(
     models
   }
 )
+saveRDS(all_models, "all_models_raw.rds")
 
 all_params <- map(
-  infiles, function(infile) {
+  all_conns, function(con) {
     res <- dbSendQuery(con, "SELECT * FROM [Parameter data - Table]")
     params <- dbFetch(res)
     nparams <- nrow(params)
@@ -142,67 +146,76 @@ all_params <- map(
     params
   }
 )
+saveRDS(all_params, "all_params_raw.rds")
 
-all_outbreaks <- map(
-  infiles, function(infile) {
-    res <- dbSendQuery(con, "SELECT * FROM [Outbreak data - Table]")
-    outbreaks <- dbFetch(res)
-    noutbreaks <- nrow(outbreaks)
-    outbreaks <- outbreaks %>% mutate(access_outbreak_id = Outbreak_ID)
-    outbreaks$Outbreak_data_ID <- random_id(
-      n = noutbreaks, use_openssl = FALSE
-    )
-    outbreaks
-  }
-)
+# Check if we have extracted outbreaks for this pathogen
+all_tables <- dbListTables(all_conns[[1]])
+outbreaks_ex <-  ("[Outbreak data - Table]" %in% all_tables)
+if (!outbreaks_ex) {
+  all_outbreaks <- data.frame()
+} else {
+  all_outbreaks <- map(
+    all_conns, function(con) {
+      res <- dbSendQuery(con, "SELECT * FROM [Outbreak data - Table]")
+      outbreaks <- dbFetch(res)
+      noutbreaks <- nrow(outbreaks)
+      outbreaks <- outbreaks %>% mutate(access_outbreak_id = Outbreak_ID)
+      outbreaks$Outbreak_data_ID <- random_id(
+        n = noutbreaks, use_openssl = FALSE
+      )
+      outbreaks
+    }
+  )
+}
 
+saveRDS(all_outbreaks, "all_outbreaks_raw.rds")
+# Close all connections
+walk(all_conns, function(con) dbDisconnect(con))
 
-from <- map(
-  infiles, function(infile) {
+from <- pmap(
+  list(
+    articles = all_articles,
+    models = all_models,
+    params = all_params
+  ), function(articles, models, params) {
     models <- left_join(
       models,
       articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       by = "Article_ID"
     )
-
-
-
-
-
-
     params <- left_join(
       params,
       articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
       by = "Article_ID"
     )
+    articles <- validate(articles)
+    models <- validate(models)
+    params <- validate(params)
 
+    list(
+      articles = articles, models = models, params = params
+    )
+  }
+)
 
-    if (pathogen == "LASSA") {
+if (outbreaks_ex) {
+  pmap(
+    list(
+      articles = all_articles,
+      outbreaks = all_outbreaks
+    ), function(articles, outbreaks) {
       outbreaks <- left_join(
         outbreaks,
         articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
         by = "Article_ID"
       )
+      list(outbreaks = outbreaks)
     }
-
-    articles <- validate(articles)
-    models <- validate(models)
-    params <- validate(params)
-
-    if (pathogen == "EBOLA") {
-      outbreaks <- NULL
-    }
-
-    if (pathogen == "LASSA") {
-      outbreaks <- validate(outbreaks)
-    }
-
-
-    list(
-      articles = articles, models = models, params = params, outbreaks = outbreaks
     )
-  }
-)
+}
+
+  
+
 # Filter out empty databases
 from <- keep(from, function(x) !is.null(x))
 # Merge databases and then split again
