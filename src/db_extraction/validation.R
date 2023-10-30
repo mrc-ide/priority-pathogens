@@ -4,7 +4,13 @@ validate <- function(df) {
   out <- apply(df, 2, function(x) {
     gsub(pattern = ",", replacement = ";", x = x)
   })
-  as.data.frame(out)
+  out <- as.data.frame(out)
+  if("out" %in% colnames(out)) {
+    out <- t(out)
+    rownames(out) <- NULL
+    out <- as.data.frame(out)
+  }
+  out
 }
 
 # Check for generic article errors
