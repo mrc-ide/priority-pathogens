@@ -59,18 +59,6 @@ infiles <- imap(
 infiles <- unlist(infiles)
 
 ## Extract one access DB at a time
-## Modify primary key.
-## Do this for all DBs, create a master CSV
-## model, parameter and outbreak
-## are all tied together using
-## Article_ID
-primary_key_col <- "Article_ID"
-outfiles <- list(
-  articles = "articles.csv",
-  models = "models.csv",
-  params = "parameters.csv",
-  outbreaks = "outbreaks.csv"
-)
 
 all_conns <- map(
   infiles, function(infile) {
@@ -157,7 +145,7 @@ saveRDS(all_params, "all_params_raw.rds")
 
 # Check if we have extracted outbreaks for this pathogen
 all_tables <- dbListTables(all_conns[[1]])
-outbreaks_ex <-  ("[Outbreak data - Table]" %in% all_tables)
+outbreaks_ex <-  ("Outbreak data - Table" %in% all_tables)
 if (!outbreaks_ex) {
   all_outbreaks <- data.frame()
 } else {
@@ -326,7 +314,7 @@ m_err <- validate_models(models)
 p_err <- validate_params(params)
 
 if (outbreaks_ex) {
-  o_err <- validate_outbreaks(outbreaks, pathogen)
+  o_err <- validate_outbreaks(outbreaks)
 } else {
   o_err <- NULL
 }
@@ -346,20 +334,26 @@ saveRDS(
 ## Write each DB to the same file now.
 double_articles <- count(articles, Covidence_ID) %>% filter(n >= 2)
 double_a <- articles[articles$Covidence_ID %in% double_articles$Covidence_ID, ]
+single_a <- articles[!articles$Covidence_ID %in% double_articles$Covidence_ID, ]
+
 double_m <- models[models$Covidence_ID %in% double_articles$Covidence_ID, ]
+single_m <- models[!models$Covidence_ID %in% double_articles$Covidence_ID, ]
+
 double_p <- params[params$Covidence_ID %in% double_articles$Covidence_ID, ]
+single_p <- params[!params$Covidence_ID %in% double_articles$Covidence_ID, ]
+
 if (outbreaks_ex) {
   # this will be empty for Lassa
   double_o <- outbreaks[outbreaks$Covidence_ID %in% double_articles$Covidence_ID, ]
-} else double_o <- data.frame()
-
-single_a <- articles[!articles$Covidence_ID %in% double_articles$Covidence_ID, ]
-single_m <- models[!models$Covidence_ID %in% double_articles$Covidence_ID, ]
-single_p <- params[!params$Covidence_ID %in% double_articles$Covidence_ID, ]
-if (outbreaks_ex) {
-  # this will be empty for Lassa
   single_o <- outbreaks[!outbreaks$Covidence_ID %in% double_articles$Covidence_ID, ]
-} else single_o <- data.frame()
+} else {
+  single_o <- data.frame()
+  double_o <- data.frame()
+}
+
+
+
+
 
 write_csv(
   double_a, "double_extraction_articles.csv"
@@ -388,6 +382,3 @@ write_csv(
 write_csv(
   double_o, "double_extraction_outbreaks.csv"
 )
-
-
-
