@@ -10,14 +10,14 @@ library(readr)
 ## use capital case; see code below where this pathogen
 ################### README ###################
 ## IMPORTANT WHEN RUNNING INTERACTIVELY, FIRST COMMENT OUT THIS LINE:
-# orderly_parameters(pathogen = NULL)
+ orderly_parameters(pathogen = NULL)
 ## orderly will scan orderly.R in the interactive mode, so that
 ## even if the above line is not run, you WILL get an error
 ## It is therefore important that the line is commented out *BEFORE*
 ## you start executing the script line by line.
 ## In the interactive mode, uncomment the line below and set the pathogen variable directly
 ## like this
- pathogen <- "EBOLA"
+ # pathogen <- "EBOLA"
 ## then run as normal.
 ## ONCE DONE, PLEASE COMMENT OUT THE DIRECT SETTING OF THE VARIABLE pathogen
 ## and uncomment the call to orderly_parameters.
@@ -351,7 +351,7 @@ double_p <- params[params$Covidence_ID %in% double_articles$Covidence_ID, ]
 if (outbreaks_ex) {
   # this will be empty for Lassa
   double_o <- outbreaks[outbreaks$Covidence_ID %in% double_articles$Covidence_ID, ]
-} else double_o <- NULL
+} else double_o <- data.frame()
 
 single_a <- articles[!articles$Covidence_ID %in% double_articles$Covidence_ID, ]
 single_m <- models[!models$Covidence_ID %in% double_articles$Covidence_ID, ]
@@ -359,7 +359,7 @@ single_p <- params[!params$Covidence_ID %in% double_articles$Covidence_ID, ]
 if (outbreaks_ex) {
   # this will be empty for Lassa
   single_o <- outbreaks[!outbreaks$Covidence_ID %in% double_articles$Covidence_ID, ]
-} else single_o <- NULL
+} else single_o <- data.frame()
 
 write_csv(
   double_a, "double_extraction_articles.csv"
@@ -386,7 +386,7 @@ write_csv(
 )
 
 write_csv(
-  double_o, "single_extraction_outbreaks.csv"
+  double_o, "double_extraction_outbreaks.csv"
 )
 
 
