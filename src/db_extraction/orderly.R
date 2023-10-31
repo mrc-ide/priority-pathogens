@@ -107,9 +107,10 @@ all_articles <- map(
     articles
   }
 )
-# Save all objects directly as extracted from the database for ease of 
+# Save all objects directly as extracted from the database for ease of
 # debugging.
 saveRDS(all_articles, "all_articles_raw.rds")
+orderly_artefact("All articles", "all_articles_raw.rds")
 
 all_models <- map(
   all_conns, function(con) {
@@ -126,6 +127,7 @@ all_models <- map(
 )
 
 saveRDS(all_models, "all_models_raw.rds")
+orderly_artefact("All Models", "all_models_raw.rds")
 
 all_params <- map(
   all_conns, function(con) {
@@ -142,6 +144,7 @@ all_params <- map(
 )
 
 saveRDS(all_params, "all_params_raw.rds")
+orderly_artefact("All parameters", "all_params_raw.rds")
 
 # Check if we have extracted outbreaks for this pathogen
 all_tables <- dbListTables(all_conns[[1]])
@@ -186,8 +189,8 @@ from <- pmap(
         articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
         by = "Article_ID"
       )
-    
-   
+
+
     params <- left_join(
       params,
       articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
@@ -220,7 +223,7 @@ if (outbreaks_ex) {
   outbreaks <- data.frame()
 }
 
-  
+
 
 # Merge databases and then split again
 articles <- map_dfr(from, function(x) x[["articles"]])
