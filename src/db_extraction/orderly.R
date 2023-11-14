@@ -233,7 +233,7 @@ params <- map_dfr(from, function(x) x[["params"]])
 # Pathogen-specific cleaning
 articles <- clean_articles(articles)
 models <- clean_models(models)
-models <- clean_params(params)
+params <- clean_params(params)
 
 ## Check data after pathogen-specific cleaning
 a_err <- validate_articles(articles)
