@@ -108,11 +108,19 @@ if('parameter_type' %in% colnames(df)) {
     relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
 
+  
   ## Pathogen-specific parameter data cleaning
   if (pathogen == "EBOLA") {
 
-    # merge ebola_variant and ebola_variant_p
     df <- df %>%
+      
+      # Remove parameters from theoretical model paper and correspondence
+      filter(!(covidence_id %in% c(5765, 5870))) %>%
+      
+      # Remove duplicate Chan entry
+      distinct_at(vars(-parameter_data_id)) %>%
+      
+      # merge ebola_variant and ebola_variant_p
       mutate(
         ebola_variant_p = case_when(
           ebola_variant_p == "Bundibugyo virus (BDBV)¬†" ~ ebola_variant,
@@ -124,24 +132,20 @@ if('parameter_type' %in% colnames(df)) {
             "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
           TRUE ~ ebola_variant_p)) %>%
       select(-c(ebola_variant_p, ebola_variant)) %>%
-      rename(ebola_variant = ebola_variant_fix)
-
-    # fix the population start and population end month
-    df <- df %>%
+      rename(ebola_variant = ebola_variant_fix) %>%
+      
+      # fix the population start and population end month
       mutate(
         population_study_end_month =
           case_when(population_study_end_month == "3" ~ "Mar",
-                    TRUE ~ population_study_end_month)) %>%
-      mutate(
+                    TRUE ~ population_study_end_month),
         population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
-        population_study_end_month = substr(population_study_end_month, 1, 3)) %>%
-      mutate(
+        population_study_end_month = substr(population_study_end_month, 1, 3),
         population_study_start_month = gsub("[^a-zA-Z]", "", population_study_start_month),
-        population_study_start_month = substr(population_study_start_month, 1, 3))
+        population_study_start_month = substr(population_study_start_month, 1, 3)) %>%
 
     # clean the other human delays and merge the common ones into parameter_type
-    df <- df %>%
-      mutate(other_delay_start = case_when(
+    mutate(other_delay_start = case_when(
         other_delay_start == "Other: Health center visit" ~ "Seeking Care",
         other_delay_start %in% c("Infection", "Contact with Primary Case") ~ "Exposure/Infection",
         other_delay_start == "Funeral Start" ~ "Other",
@@ -193,10 +197,62 @@ if('parameter_type' %in% colnames(df)) {
                    "Symptom Onset/Fever to Seeking Care"
                    ) ~ paste("Human delay -", other_delay),
                  TRUE ~ parameter_type)
-                 )
-
+                 ) %>%
+      # Inverse parameters
+      mutate(parameter_type = ifelse(
+        inverse_param == TRUE,
+        paste(parameter_type, " (inverse parameter)"), parameter_type)) %>%
+    
+   # Fix entry errors 
+      mutate(
+        # Add missed Country
+        population_country = ifelse(
+          covidence_id == 1170, "Sierra Leone", population_country),
+        
+        # Correct entry cov ID 1653
+        population_study_start_year = ifelse(
+          covidence_id == 1653, 2014, population_study_start_year),
+        population_study_end_year = ifelse(
+          covidence_id == 1653, 2014, population_study_end_year),
+        
+        # Correct entry cov ID 4900
+        parameter_lower_bound = ifelse(
+          covidence_id == 4900 &
+            parameter_type ==
+            "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
+          3.4, parameter_lower_bound),
+        parameter_upper_bound = ifelse(
+          covidence_id == 4900 &
+            parameter_type ==
+            "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
+          6.0, parameter_upper_bound),
+        parameter_value_type = ifelse(
+          covidence_id == 4900 &
+            parameter_type ==
+            "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
+          "Mean", parameter_value_type),
+        
+        # Correct entry cov ID 16951
+          parameter_unit = ifelse(
+            covidence_id == 16951 &
+              parameter_type ==
+              "Human delay - Symptom Onset/Fever to Reporting",
+            "Days", parameter_unit),
+          parameter_value_type = ifelse(
+            covidence_id == 16951 &
+              parameter_type ==
+              "Human delay - Symptom Onset/Fever to Reporting",
+            "Median", parameter_value_type),
+        
+        # Correct entry cov ID 4787
+        parameter_from_figure = ifelse(
+          covidence_id == 4787 &
+            parameter_type == "Reproduction number",
+          TRUE, parameter_from_figure
+        )) %>%
+      
+    
     # Add article id and parameter ids for new parameters
-    df <- df %>%
       mutate(id = case_when(
         covidence_id == 104 & is.na(id) ~
           unique(id[covidence_id == 104 & parameter_type == "Risk factors"]),
