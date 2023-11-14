@@ -32,6 +32,19 @@ clean_articles <- function(articles) {
         FirstAuthor_FirstName = FirstAauthor_Surname
       ) %>%
       rename(FirstAauthor_Surname = temp_col) %>%
+      mutate(
+        FirstAauthor_Surname = case_when(
+          Name_data_entry == "Cyril" & Covidence_ID == 2921 ~ "Leroy",
+          Name_data_entry == "Patrick" & Covidence_ID == 6472 ~ "Emond",
+          TRUE ~ FirstAauthor_Surname
+        )) %>%
+      mutate(
+        FirstAuthor_FirstName = case_when(
+          Name_data_entry == "Cyril" & Covidence_ID == 2921 ~ "Eric M.",
+          Name_data_entry == "Patrick" & Covidence_ID == 6472 ~ "RT",
+          TRUE ~ FirstAuthor_FirstName
+        )
+      ) %>%
       filter(!(Covidence_ID %in% c(
         5349, 1850, 1860, 1863, 2205, 2202, 483,
         5870
