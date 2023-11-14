@@ -19,16 +19,24 @@ validate_articles <- function(article_df) {
     warning("There are duplicate article entries by the same extractor")
   }
   # 2) Check for missing covidence IDs
-  if(any(is.na(articles$Covidence_ID))) {
-    missing_ids <- articles[is.na(articles$Covidence_ID),]
+  if(any(is.na(article_df$Covidence_ID))) {
+    missing_ids <- article_df[is.na(article_df$Covidence_ID),]
     warning("There are article entries missing Covidence IDs")
   } else {
     missing_ids <- NA
   }
+  # 3) Check for dates that don't make sense
+  article_df$Year_publication <- as.numeric(article_df$Year_publication)
+  if(!any(article_df$Year_publication %in% 1900:2023)) {
+    incorrect_dates <- article_df[!article_df$Year_publication %in% 1900:2023,]
+  } else {
+    incorrect_dates <- NA
+  }
   ## Returning data.frames so that people can process programmatically if needed.
   list(
     duplicate_articles = article_dupes,
-    missing_covidence_ids = missing_ids
+    missing_covidence_ids = missing_ids,
+    incorrect_publication_dates = incorrect_dates
   )
 }
 
