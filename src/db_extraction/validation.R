@@ -74,7 +74,7 @@ validate_outbreaks <- function(outbreak_df) {
     check_empty_outbreaks <- outbreak_df %>%
       filter_at(vars(all_of(check_outbreak_cols)), all_vars(is.na(.)))
     if(nrow(check_empty_outbreaks) > 0) {
-      warning("There are empty model entries")
+      warning("There are empty outbreak entries")
     }
     check_empty_outbreaks
   } 
