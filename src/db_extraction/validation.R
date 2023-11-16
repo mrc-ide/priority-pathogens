@@ -29,6 +29,7 @@ validate_articles <- function(article_df) {
   article_df$Year_publication <- as.numeric(article_df$Year_publication)
   if(!any(article_df$Year_publication %in% 1900:2023)) {
     incorrect_dates <- article_df[!article_df$Year_publication %in% 1900:2023,]
+    warning("There are article entries with publication dates outside the range 1900 to 2023")
   } else {
     incorrect_dates <- NA
   }
