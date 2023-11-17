@@ -84,12 +84,14 @@ all_articles <- map(
     }
     ## pathogen-specific Covidence ID fixing before joining
     ## Fixes for Ebola
-    articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
-      articles$Name_data_entry == "Christian"] <- 19880
-    articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
-      articles$Name_data_entry == "Thomas Rawson"] <- 11565
-    articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
-      articles$Name_data_entry == "Ettie"] <- 5197
+    if (pathogen == "EBOLA") {
+      articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
+                              articles$Name_data_entry == "Christian"] <- 19880
+      articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
+                              articles$Name_data_entry == "Thomas Rawson"] <- 11565
+      articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
+                              articles$Name_data_entry == "Ettie"] <- 5197
+    }
 
     ## Convert Covidence_ID to numeric.
     ## Covidence_ID is entered as a text, so
@@ -309,6 +311,44 @@ if (pathogen == "EBOLA") {
     )]
   params <- params %>%
     filter_at(vars(all_of(check_param_cols)), any_vars(!is.na(.)))
+} else if (pathogen == "LASSA") {
+  
+  articles$Covidence_ID  <- as.numeric(articles$Covidence_ID)
+  outbreaks$Covidence_ID <- as.numeric(outbreaks$Covidence_ID)
+  models$Covidence_ID    <- as.numeric(models$Covidence_ID)
+  params$Covidence_ID    <- as.numeric(params$Covidence_ID)
+  
+  #these articles have been kicked back since extractions
+  articles  <- articles  %>% filter(!Covidence_ID %in% c(440,605,1417))
+  outbreaks <- outbreaks %>% filter(!Covidence_ID %in% c(440,605,1417))
+  models    <- models    %>% filter(!Covidence_ID %in% c(440,605,1417))
+  params    <- params    %>% filter(!Covidence_ID %in% c(440,605,1417))
+  
+  #covidence ID typo
+  articles$Covidence_ID[ articles$Covidence_ID  == 3158] <- 3153
+  outbreaks$Covidence_ID[outbreaks$Covidence_ID == 3158] <- 3153
+  models$Covidence_ID[   models$Covidence_ID    == 3158] <- 3153
+  params$Covidence_ID[   params$Covidence_ID    == 3158] <- 3153
+  
+  #blank outbreaks
+  outbreaks <- outbreaks %>% filter(!(Covidence_ID == 845 & Outbreak_ID == 1))
+  
+  #non-transmission models
+  models <- models %>% filter(!(Covidence_ID == 441 & access_model_id == 2))
+  
+  #blank parameters
+  params <- params %>% filter(!is.na(params$Article_ID))
+  
+  #removed parameters
+  prows  <- data.frame(Covidence_ID    = c(1433,670,1413,1413),
+                       access_param_id = c(28,3,15,16))
+  params <- params %>%
+            filter(!(Covidence_ID %in% prows$Covidence_ID & 
+                     access_param_id %in% prows$access_param_id))
+
+  #missing parameter types
+  params$Parameter_type[params$Covidence_ID==2684&params$access_param_id==37] <- 'Risk factors'
+  
 }
 
 ## Check data after pathogen-specific cleaning
