@@ -47,7 +47,7 @@ clean_articles <- function(articles) {
       ) %>%
       filter(!(Covidence_ID %in% c(
         5349, 1850, 1860, 1863, 2205, 2202, 483,
-        5870
+        5870, 12100
       ))) %>%
       mutate_at(
         vars(QA_M1, QA_M2, QA_A3, QA_A4, QA_D5, QA_D6, QA_D7),
