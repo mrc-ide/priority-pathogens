@@ -340,8 +340,8 @@ if (pathogen == "EBOLA") {
   params <- params %>% filter(!is.na(params$Article_ID))
   
   #removed parameters
-  prows  <- data.frame(Covidence_ID    = c(1433,670,1413,1413),
-                       access_param_id = c(28,3,15,16))
+  prows  <- data.frame(Covidence_ID    = c(1433,670,1413,1413,873),
+                       access_param_id = c(28,3,15,16,19))
   params <- params %>%
             filter(!(Covidence_ID %in% prows$Covidence_ID & 
                      access_param_id %in% prows$access_param_id))
