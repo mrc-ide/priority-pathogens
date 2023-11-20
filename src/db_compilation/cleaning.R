@@ -247,9 +247,30 @@ if('parameter_type' %in% colnames(df)) {
         # Correct entry cov ID 4787
         parameter_from_figure = ifelse(
           covidence_id == 4787 &
-            parameter_type == "Reproduction number",
+            parameter_class == "Reproduction number",
           TRUE, parameter_from_figure
-        )) %>%
+        ),
+        
+        # Correct parameter_value_type for Reproduction number NA/unspecified entries
+        parameter_value_type =
+          case_when(
+            parameter_class == "Reproduction number" &
+              is.na(parameter_value_type) &
+              covidence_id %in% c(3814, 3777, 2882, 9378, 2065, 1053, 18372,
+                              5033, 4991, 16599, 17200, 17730, 18944, 23719,
+                              11620, 11565) ~ "Unspecified",
+            parameter_class == "Reproduction number" &
+              is.na(parameter_value_type) &
+              covidence_id %in% c(1053, 8709, 19236, 4966) ~ "Mean",
+            parameter_class == "Reproduction number" &
+              covidence_id == 944 ~ "Mean",
+            parameter_class == "Reproduction number" &
+              covidence_id == 6003 ~ "Median",
+            parameter_class == "Reproduction number" &
+              is.na(parameter_value_type) &
+              covidence_id == 17881 ~ "Median",
+            TRUE ~ parameter_value_type
+            )) %>%
       
     
     # Add article id and parameter ids for new parameters
