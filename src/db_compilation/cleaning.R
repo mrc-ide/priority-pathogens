@@ -85,6 +85,7 @@ if('article_title' %in% colnames(df)){
     #title consistency
           mutate(article_title = gsub(";", ",", article_title)) %>%
           mutate(article_title = gsub("\n", " ", article_title)) %>%
+          mutate(article_title = gsub("\\s+", " ", article_title)) %>%
           mutate(article_title = str_to_title(article_title)) %>%
     #missing dois
           mutate(doi = sub(".*?10\\.", "10.", doi)) %>%
@@ -158,9 +159,21 @@ if('outbreak_id' %in% colnames(df)){
                                      'Democratic Republic of the Congo'),
       outbreak_country = str_replace(outbreak_country, 'Yuogslavia',
                                      'Yugoslavia'))
-  
+    
   if (pathogen == "LASSA") {
-    ###
+    #clean locations
+    df <- df %>%
+          mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
+          mutate(outbreak_location = gsub("and", ";", outbreak_location)) %>%
+          mutate(outbreak_location = sub("^\\s+", "", outbreak_location)) %>%      
+          mutate(outbreak_location = str_to_title(outbreak_location)) %>%      
+          mutate(outbreak_location = case_when(
+                 covidence_id == 560 & access_outbreak_id == 3 ~ 'Kenema Government Hospital',
+                 TRUE ~ outbreak_location)) %>%
+    #unspecified case detection mode 
+          mutate(cases_mode_detection = case_when(
+                 is.na(cases_mode_detection) ~ 'Unspecified',
+                 TRUE ~ cases_mode_detection))
   } 
   df <- df %>% select(-c("access_outbreak_id"))
 }
