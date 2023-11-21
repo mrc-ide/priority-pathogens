@@ -41,11 +41,12 @@ clean_dfs <- function(df, pathogen){
                 "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
               TRUE ~ ebola_variant))
       }
+      df <- df %>% select(-c("access_model_id"))
   }
 
   if('outbreak_id' %in% colnames(df)){
     df <- df %>%
-      select(-c("article_id", "access_outbreak_id", "name_data_entry")) %>%
+      select(-c("article_id", "outbreak_id", "name_data_entry")) %>%
       relocate(c(id, outbreak_data_id, covidence_id, pathogen)) %>%
       arrange(covidence_id) %>%
       mutate(
@@ -59,6 +60,8 @@ clean_dfs <- function(df, pathogen){
                                        'Democratic Republic of the Congo'),
         outbreak_country = str_replace(outbreak_country, 'Yuogslavia',
                                        'Yugoslavia'))
+    
+    df <- df %>% select(-c("access_outbreak_id"))
   }
 
   if('parameter_type' %in% colnames(df)) {
@@ -250,9 +253,11 @@ clean_dfs <- function(df, pathogen){
   
   
   
-  
+  df <- df %>% select(-c("access_param_id"))
   }
+  
   df
+  
 }
 
 # Add qa scores to article data
