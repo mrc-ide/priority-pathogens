@@ -278,11 +278,12 @@ outbreak_all <- rbind(
   outbreak_fixed
 )
 
-# # Cleaning
-# article_all <- clean_dfs(article_all, pathogen)
-# parameter_all <- clean_dfs(parameter_all, pathogen)
-# model_all <- clean_dfs(model_all, pathogen)
- 
+# Cleaning
+article_all   <- clean_dfs(article_all, pathogen)
+outbreak_all  <- clean_dfs(outbreak_all, pathogen)
+model_all     <- clean_dfs(model_all, pathogen)
+parameter_all <- clean_dfs(parameter_all, pathogen)
+
 # # Add article QA scores to article data
 # article_all <- add_qa_scores(article_all, parameter_all)
 # 
@@ -292,7 +293,7 @@ outbreak_all <- rbind(
 #     select(article_all, covidence_id, article_qa_score),
 #     by = "covidence_id"
 #   )
-
+print(class(article_all))
 write_csv(article_all, "articles.csv")
 if (pathogen == "EBOLA") {
   file.create("outbreaks.csv")

@@ -337,15 +337,15 @@ if (pathogen == "EBOLA") {
   models <- models %>% filter(!(Covidence_ID == 441 & access_model_id == 2))
   
   #blank parameters
-  params <- params %>% filter(!is.na(params$Article_ID))
+  params <- params %>% filter(!is.na(as.numeric(params$Article_ID)))
   
   #removed parameters
-  prows  <- data.frame(Covidence_ID    = c(1433,670,1413,1413,873),
-                       access_param_id = c(28,3,15,16,19))
+  rmrows <- paste(c(1433,670,1413,1413,873), c(28,3,15,16,19), sep='_')
   params <- params %>%
-            filter(!(Covidence_ID %in% prows$Covidence_ID & 
-                     access_param_id %in% prows$access_param_id))
-
+            mutate(temp_col = paste(Covidence_ID, access_param_id, sep='_')) %>%
+            filter(!temp_col %in% rmrows) %>%
+            select(-temp_col)
+  
   #missing parameter types
   params$Parameter_type[params$Covidence_ID==2684&params$access_param_id==37] <- 'Risk factors'
   
