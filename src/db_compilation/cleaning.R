@@ -138,7 +138,38 @@ if('model_type' %in% colnames(df)){
             "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
           TRUE ~ ebola_variant))
   } else if (pathogen == "LASSA") {
-  ###  
+    #reclassified models
+    df <- df %>%
+          mutate(model_type = case_when(
+                 covidence_id == 2620 ~ 'Other',
+                 TRUE ~ model_type),
+                 stoch_deter = case_when(
+                 covidence_id == 285  ~ 'Stochastic',
+                 TRUE ~ stoch_deter),
+    #missed transmission pathways
+                 transmission_route = case_when(
+                 covidence_id %in% c(558,560) ~ 'Human to human (direct contact);Vector/Animal to human',
+                 TRUE ~ transmission_route),
+    #assumptions should apply to human mixing only
+                 assumptions = case_when(
+                 covidence_id %in% c(4133,4113,4237,4243,4316,4340,2578,2707,4207,
+                                     4487,4193,4162,2801,4517,4597,4827,4213) ~ 'Homogeneous mixing',
+                 covidence_id %in% c(558) ~ 'Heterogenity in transmission rates - over time',
+                 covidence_id %in% c(2620,4343) ~ 'Heterogenity in transmission rates - between groups',
+                 covidence_id %in% c(2617) ~ 'Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time',
+                 covidence_id %in% c(4118) ~ 'Heterogenity in transmission rates - over time;Latent period is same as incubation period',
+                 TRUE ~ assumptions),
+    #compartments should apply to humans only
+                 compartmental_type = case_when(
+                 covidence_id %in% c(2617, 2620) ~ 'Not compartmental',
+                 covidence_id %in% c(4517, 4827, 4597, 2578, 2707, 4136, 4144, 4207, 4371) ~ 'Other compartmental',
+                 covidence_id %in% c(4162, 4487, 3659, 4243, 4316, 4131) ~ 'SEIR',
+                 covidence_id %in% c(4193, 4213, 4237, 4251) ~ 'SIR',
+                 TRUE ~ compartmental_type),
+    #unspecified interventions
+                 interventions_type = case_when(
+                 covidence_id %in% c(558,560) | is.na(interventions_type) ~ 'Unspecified',
+                 TRUE ~ interventions_type))
   } 
   df <- df %>% select(-c("access_model_id"))
 }
