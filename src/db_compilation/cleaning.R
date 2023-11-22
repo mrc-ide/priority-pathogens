@@ -372,14 +372,66 @@ if('parameter_type' %in% colnames(df)) {
         population_study_start_month = substring(population_study_start_month, 1, 3),
         population_study_end_month = substring(population_study_end_month, 1, 3))
   } else if (pathogen == "LASSA") {
-  
-  #removed parameters
-  rmrows <- paste(c(61,152), c(3,1), sep='_')
-  df <- df %>%
-        mutate(temp_col = paste(covidence_id, access_param_id, sep='_')) %>%
-        filter(!temp_col %in% rmrows) %>%
-        select(-temp_col)
-  
+    #removed parameters
+    rmrows <- paste(c(61,152), c(3,1), sep='_')
+    df <- df %>%
+          mutate(temp_col = paste(covidence_id, access_param_id, sep='_')) %>%
+          filter(!temp_col %in% rmrows) %>%
+          select(-temp_col) %>%
+    #correct parameter types
+          mutate(parameter_type = case_when(
+                 covidence_id == 854 & access_param_id %in% c(5, 6) ~ 'Human delay - time in care (length of stay)',
+                 TRUE ~ parameter_type),
+                 other_delay_start = case_when(
+                 covidence_id == 854 & access_param_id %in% c(5, 6) ~ NA_character_,
+                 TRUE ~ other_delay_start),
+                 other_delay_end = case_when(
+                 covidence_id == 854 & access_param_id %in% c(5, 6) ~ NA_character_,
+                 TRUE ~ other_delay_end),
+    #numeric parameter values        
+                 parameter_value = as.numeric(parameter_value),
+    #parameter value type consistency
+                 parameter_value_type = case_when(
+                 is.na(parameter_value) ~ NA_character_,
+                 !is.na(parameter_value) & is.na(parameter_value_type) ~ 'Unspecified',
+                 TRUE ~ parameter_value_type),
+    #unspecified cfr/ifr methods
+                 cfr_ifr_method = case_when(
+                 parameter_class == 'Severity' & is.na(cfr_ifr_method) ~ 'Unspecified',
+                 TRUE ~ cfr_ifr_method),
+    #specify other risk factor outcomes
+                 riskfactor_outcome = case_when(
+                 covidence_id == 2627 & access_param_id == 22 ~ 'Reproduction Number',
+                 covidence_id == 3153 & access_param_id == 33 ~ 'Onset-Admission Delay',
+                 covidence_id == 920 & access_param_id == 4 ~ 'Viremia',
+                 covidence_id == 1328 & access_param_id %in% c(16, 17, 18, 19) ~ 'Occurrence',
+                 covidence_id == 441 & access_param_id %in% c(6,7) ~ 'Occurrence',
+                 covidence_id == 2661 & access_param_id %in% c(15) ~ 'Occurrence',
+                 covidence_id == 2661 & access_param_id == 16 ~ 'Incidence',
+                 TRUE ~ riskfactor_outcome),
+    #unnecessary risk factor occupations
+                 riskfactor_occupation = case_when(
+                 !is.na(riskfactor_occupation) & riskfactor_occupation == "Unspecified" ~ NA_character_,
+                 TRUE ~ riskfactor_occupation),
+    #location consistency
+                 population_location = str_to_title(sub("^\\s+", "", population_location)),
+    #unspecified timing
+                 method_moment_value = case_when(
+                 is.na(method_moment_value) ~ 'Unspecified',
+                 TRUE ~ method_moment_value),
+    #correct contexts
+                 population_sample_type = case_when(
+                 covidence_id == 669 ~ 'Household based', 
+                 covidence_id == 652 ~ 'Community based', 
+                 TRUE ~ population_sample_type),
+                 population_group = case_when(
+                 covidence_id == 669 ~ 'Mixed groups',
+                 covidence_id == 652 ~ 'Other',
+                 TRUE ~ population_group),
+    #unspecified sex
+                 population_sex = case_when(
+                 is.na(population_sex) ~ 'Unspecified',
+                 TRUE ~ population_sex))
   }
   df <- df %>% select(-c("access_param_id"))
 }
