@@ -93,7 +93,11 @@ clean_models <- function(models) {
         "Code_available", "access_model_id"
       )]
     models <- models %>%
-      filter_at(vars(all_of(check_model_cols)), any_vars(!is.na(.)))
+      filter_at(vars(all_of(check_model_cols)), any_vars(!is.na(.))) %>%
+      filter(!(Covidence_ID %in% c(
+        5349, 1850, 1860, 1863, 2205, 2202, 483,
+        5870, 12100
+      )))
   }
   models
 }
@@ -139,7 +143,11 @@ clean_params <- function(params) {
         "Inverse_param", "Parameter_FromFigure"
       )]
     params <- params %>%
-      filter_at(vars(all_of(check_param_cols)), any_vars(!is.na(.)))
+      filter_at(vars(all_of(check_param_cols)), any_vars(!is.na(.))) %>%
+      filter(!(Covidence_ID %in% c(
+        5349, 1850, 1860, 1863, 2205, 2202, 483,
+        5870, 12100
+      )))
   }
   params
 }
