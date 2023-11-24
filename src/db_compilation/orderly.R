@@ -56,7 +56,7 @@ orderly_resource(
     "ebola_qa_fixing.csv",
     "ebola_params_fixing.csv",
     "ebola_models_fixing.csv",
-    "assign_ebola_outbreak.R",
+    "ebola_functions.R",
     ## LASSA FIXING FILES
     "lassa_qa_fixing.csv",
     "lassa_params_fixing.csv",
@@ -88,7 +88,7 @@ fixing_files <- list(
 )
 
 source("cleaning.R")
-source("assign_ebola_outbreak.R")
+source("ebola_functions.R")
 
 # Single extractions
 article_single <- read_csv("single_extraction_articles.csv")
@@ -232,6 +232,7 @@ parameter_all <- parameter_all %>%
 
 if (pathogen == "EBOLA") {
   parameter_all <- assign_ebola_outbreak(parameter_all)
+  parameter_all <- assign_ebola_species(parameter_all)
 }
 
 write_csv(parameter_all, "parameters.csv")
