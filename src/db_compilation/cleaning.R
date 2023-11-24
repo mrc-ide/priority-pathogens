@@ -25,10 +25,18 @@ clean_dfs <- function(df, pathogen) {
       mutate(
         article_label = as.character(
           paste0(first_author_surname, " ", year_publication)
-        ),
+        )
       )
+    
+    # edit qa score for Maganga 2014
+    if (pathogen == "EBOLA") {
+      df <- df %>%
+        mutate(
+          qa_m1 = case_when(covidence_id == 3138 ~ "No", TRUE ~ qa_m1),
+          qa_a3 = case_when(covidence_id == 3138 ~ "No", TRUE ~ qa_a3)
+        )
   }
-
+}
   if ("model_type" %in% colnames(df)) {
     df <- df %>%
       select(-c("article_id", "access_model_id", "name_data_entry")) %>%
@@ -391,6 +399,14 @@ clean_dfs <- function(df, pathogen) {
     df <- df %>%
       mutate(
 
+        # Rounding of parameter values and uncertainty
+        across(
+          c(parameter_value, parameter_lower_bound, parameter_upper_bound,
+                 parameter_uncertainty_single_value,
+                 parameter_uncertainty_lower_value,
+                 parameter_uncertainty_upper_value),
+          ~round(., digits = 2)),
+        
         # Parameter value
         # Combine central upper and lower bounds
         parameter_bounds =
@@ -408,6 +424,7 @@ clean_dfs <- function(df, pathogen) {
           ifelse(parameter_uncertainty_singe_type == "Standard deviation (Sd)",
             "Standard deviation", parameter_uncertainty_singe_type
           ),
+        
         # Combine uncertainty types and values
         comb_uncertainty_type =
           case_when(
