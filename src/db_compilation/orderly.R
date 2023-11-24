@@ -131,6 +131,10 @@ qa_fixed <- read_csv(fixing_files[[pathogen]][["qa_fix"]])
 model_fixed <- read_csv(fixing_files[[pathogen]][["models_fix"]])
 parameter_fixed <- read_csv(fixing_files[[pathogen]][["params_fix"]])
 
+# Some pathogen fixing files have TRUE instead of 1 in the fixed column
+qa_fixed <- qa_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
+model_fixed <- model_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
+parameter_fixed <- parameter_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
 
 ## create final datasets
 # Add outbreak_fixed for next pathogen
