@@ -56,7 +56,6 @@ orderly_resource(
     "ebola_qa_fixing.csv",
     "ebola_params_fixing.csv",
     "ebola_models_fixing.csv",
-    "ebola_functions.R",
     ## LASSA FIXING FILES
     "lassa_qa_fixing.csv",
     "lassa_params_fixing.csv",
@@ -66,6 +65,8 @@ orderly_resource(
     "cleaning.R"
   )
 )
+
+orderly_shared_resource("ebola_functions.R" = "ebola_functions.R")
 
 ## Here we map the fixing files to the
 ## pathogen.
