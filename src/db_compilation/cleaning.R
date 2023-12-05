@@ -83,6 +83,12 @@ clean_dfs <- function(df, pathogen) {
   if ("parameter_type" %in% colnames(df)) {
     df <- df %>%
       mutate(
+        # Change variable types
+        cfr_ifr_numerator = as.integer(cfr_ifr_numerator),
+        population_study_start_day = as.numeric(population_study_start_day),
+        
+        method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
+        
         # Group parameters
         parameter_class = case_when(
           grepl("Human delay", parameter_type) ~ "Human delay",
@@ -131,6 +137,8 @@ clean_dfs <- function(df, pathogen) {
       df <- df %>%
         # Remove parameters from theoretical model paper and correspondence
         filter(!(covidence_id %in% c(5765, 5870))) %>%
+        # Remove duplicate entry from single extracted paper not identified as distinct
+        filter(!(covidence_id == 3532 & access_param_id == 37)) %>%
         # Population country
         mutate(
           population_country =
@@ -141,6 +149,12 @@ clean_dfs <- function(df, pathogen) {
               population_country ==
                 "The Gambia, Guinea, Liberia, Nigeria, Senegal, Sierra Leone, United Kingdom, United States" ~
                 "Multi-country (n = 8)",
+              population_country ==
+                "Guinea, Italy, Liberia, Mali, Nigeria, Senegal, Sierra Leone, Spain, United Kingdom, United States" ~
+                "Multi-country (n = 10)",
+              population_country ==
+                "DRC, Republic of the Congo, Côte d'Ivoire, Gabon, South Africa, South Sudan, Uganda" ~
+                "Multi-country (n = 7)",
               is.na(population_country) ~ "Unspecified",
               TRUE ~ population_country
             )
@@ -238,25 +252,6 @@ clean_dfs <- function(df, pathogen) {
             covidence_id == 1170, "Sierra Leone", population_country
           ),
 
-          # Correct entry cov ID 1012
-          population_study_start_year = ifelse(
-            covidence_id == 1012, 2014, population_study_start_year
-          ),
-          population_study_start_month = ifelse(
-            covidence_id == 1012, "Jul", population_study_start_month
-          ),
-          population_study_start_day = ifelse(
-            covidence_id == 1012, 1, population_study_start_day
-          ),
-
-          # Correct entry cov ID 1653
-          population_study_start_year = ifelse(
-            covidence_id == 1653, 2014, population_study_start_year
-          ),
-          population_study_end_year = ifelse(
-            covidence_id == 1653, 2014, population_study_end_year
-          ),
-
           # Correct entry cov ID 4900
           parameter_lower_bound = ifelse(
             covidence_id == 4900 &
@@ -276,7 +271,14 @@ clean_dfs <- function(df, pathogen) {
                 "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
             "Mean", parameter_value_type
           ),
-
+              
+          # Correct entry cov ID 1889
+          parameter_value = ifelse(
+            covidence_id == 1889 &
+              parameter_type == "Severity - case fatality rate (CFR)",
+            95.5, parameter_value
+          ),
+          
           # Correct entry cov ID 16951
           parameter_unit = ifelse(
             covidence_id == 16951 &
@@ -296,6 +298,13 @@ clean_dfs <- function(df, pathogen) {
             covidence_id == 4787 &
               parameter_class == "Reproduction number",
             TRUE, parameter_from_figure
+          ),
+          
+          # Correct missing parameter units for severity
+          parameter_unit = case_when(
+            covidence_id %in% c(4967, 5404, 4900, 2150) &
+              parameter_class == "Severity" ~ "Percentage (%)",
+            TRUE ~ parameter_unit
           ),
 
           # Correct parameter_value_type for Reproduction number NA/unspecified entries
@@ -321,16 +330,62 @@ clean_dfs <- function(df, pathogen) {
               TRUE ~ parameter_value_type
             ),
 
-          # fix the population start and population end month
+          # fix the survey dates
+          population_study_start_day =
+            case_when(
+              covidence_id == 4364 & parameter_class == "Severity" ~ 30,
+              covidence_id == 1012 ~ 1,
+              TRUE ~ population_study_start_day
+            ),
+
+          population_study_end_day =
+            case_when(
+              covidence_id == 4364 & parameter_class == "Severity" ~ 28,
+              TRUE ~ population_study_end_day
+            ),
+          
+          population_study_start_month =
+            case_when(
+              covidence_id == 1686 ~ "Dec",
+              covidence_id == 1888 ~ "Oct",
+              covidence_id == 4364 & parameter_class == "Severity" ~ "Dec",
+              covidence_id == 1012 ~ "Jul",
+              TRUE ~ population_study_start_month
+            ),
+          
           population_study_end_month =
             case_when(
               population_study_end_month == "3" ~ "Mar",
+              covidence_id == 1686 ~ "Jan",
+              covidence_id == 1888 ~ "Feb",
+              covidence_id == 4364 & parameter_class == "Severity" ~ "Sep",
               TRUE ~ population_study_end_month
             ),
+          
           population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
           population_study_end_month = substr(population_study_end_month, 1, 3),
           population_study_start_month = gsub("[^a-zA-Z]", "", population_study_start_month),
           population_study_start_month = substr(population_study_start_month, 1, 3),
+          
+          population_study_start_year =
+            case_when(
+              covidence_id == 1686 ~ 2014,
+              covidence_id == 1012 ~ 2014,
+              covidence_id == 1888 ~ 2000,
+              covidence_id == 4364 & parameter_class == "Severity" ~ 2013,
+              covidence_id == 1653 ~ 2014,
+              TRUE ~ population_study_start_year
+            ),
+
+          population_study_end_year =
+            case_when(
+              covidence_id == 904 & parameter_value == 65.9 ~ 2014,
+              covidence_id == 1686 ~ 2015,
+              covidence_id == 1888 ~ 2001,
+              covidence_id == 4364 & parameter_class == "Severity" ~ 2015,
+              covidence_id == 1653 ~ 2014,
+              TRUE ~ population_study_end_year
+            ),
 
           # create combined variable for survey date
           survey_start_date =
@@ -375,6 +430,7 @@ clean_dfs <- function(df, pathogen) {
                 paste(survey_start_date, "-", "Unspecified"),
               survey_start_date == "Unspecified" & survey_end_date != "Unspecified" ~
                 paste("Unspecified", "-", survey_end_date),
+              survey_start_date == survey_end_date ~ paste(survey_start_date),
               TRUE ~ paste(survey_start_date, "-", survey_end_date)
             ),
 
