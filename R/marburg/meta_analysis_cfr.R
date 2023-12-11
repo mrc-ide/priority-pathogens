@@ -1,10 +1,12 @@
 library(meta)
 library(metafor)
+library(stringr)
+library(tidyr)
 
-param_df    <- read.csv("data/marburg/final/parameter_final.csv")
-outbreak_df <- read.csv("data/marburg/final/outbreak_final.csv")
-article_df  <- read.csv("data/marburg/final/article_clean.csv")
-article <- read.csv("data/marburg/final/article_final.csv")
+param_df    <- read.csv("../../data/marburg/final/parameter_final.csv")
+outbreak_df <- read.csv("../../data/marburg/final/outbreak_final.csv")
+article_df  <- read.csv("../../data/marburg/final/article_clean.csv")
+article <- read.csv("../../data/marburg/final/article_final.csv")
 
 # merge with article ID article labels
 df <- merge(param_df, article_df %>% dplyr::select(article_id, first_author_first_name, year_publication),

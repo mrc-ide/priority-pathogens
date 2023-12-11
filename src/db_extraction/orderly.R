@@ -319,10 +319,10 @@ if (pathogen == "EBOLA") {
   params$Covidence_ID    <- as.numeric(params$Covidence_ID)
   
   #these articles have been kicked back since extractions
-  articles  <- articles  %>% filter(!Covidence_ID %in% c(440,605,1417))
-  outbreaks <- outbreaks %>% filter(!Covidence_ID %in% c(440,605,1417))
-  models    <- models    %>% filter(!Covidence_ID %in% c(440,605,1417))
-  params    <- params    %>% filter(!Covidence_ID %in% c(440,605,1417))
+  articles  <- articles  %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+  outbreaks <- outbreaks %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+  models    <- models    %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+  params    <- params    %>% filter(!Covidence_ID %in% c(440,605,917,1417))
   
   #covidence ID typo
   articles$Covidence_ID[ articles$Covidence_ID  == 3158] <- 3153

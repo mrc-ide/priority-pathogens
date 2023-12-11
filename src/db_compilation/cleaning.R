@@ -422,7 +422,8 @@ if('parameter_type' %in% colnames(df)) {
     #correct contexts
                  population_sample_type = case_when(
                  covidence_id == 669 ~ 'Household based', 
-                 covidence_id == 652 ~ 'Community based', 
+                 covidence_id == 652 ~ 'Community based',
+                 covidence_id == 4684 ~ 'Community based', 
                  TRUE ~ population_sample_type),
                  population_group = case_when(
                  covidence_id == 669 ~ 'Mixed groups',
