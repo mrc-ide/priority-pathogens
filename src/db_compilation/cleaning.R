@@ -1,4 +1,4 @@
-# Functions for cleaning data and adding qa scores
+# Functions for cleaning data and adding QA scores
 library(dplyr)
 library(janitor)
 library(rio)
@@ -6,12 +6,19 @@ library(tidyr)
 library(stringr)
 library(ids)
 
-# copied across some of this from data_cleaning.R script:
-#' input: data frame to clean
-#' process: clean names, removes old ids and extractor names, adds a grouping
-#' variable for classification of the parameter type
-#' output: df
+##########################
+# Main cleaning function #
+##########################
+
+#' Input: article/model/parameter/outbreak data frame to clean
+#' Process: clean names, removes old ids and extractor names, adds a grouping
+#' variable for classification of the parameter type, fix entry errors
+#' output: clean article/model/parameter/outbreak df
 clean_dfs <- function(df, pathogen) {
+  ####################
+  # Article cleaning #
+  ####################
+
   if ("article_title" %in% colnames(df)) {
     df <- df %>%
       select(-c("article_id", "covidence_id_text", "name_data_entry")) %>%
@@ -27,24 +34,36 @@ clean_dfs <- function(df, pathogen) {
           paste0(first_author_surname, " ", year_publication)
         )
       )
-    
-    # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
-    # discussion with co-authors)
+
+    ######################################
+    # Pathogen-specific article cleaning #
+    ######################################
+
     if (pathogen == "EBOLA") {
+      # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
+      # discussion with co-authors)
       df <- df %>%
         mutate(
           qa_m1 = case_when(covidence_id == 3138 ~ "No", TRUE ~ qa_m1),
           qa_a3 = case_when(covidence_id == 3138 ~ "No", TRUE ~ qa_a3)
         )
+    }
   }
-}
+
+  ##################
+  # Model cleaning #
+  ##################
+
   if ("model_type" %in% colnames(df)) {
     df <- df %>%
       select(-c("article_id", "access_model_id", "name_data_entry")) %>%
       relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
       arrange(covidence_id)
 
-    # Pathogen-specific model data cleaning
+    #########################################
+    # Pathogen-specific model data cleaning #
+    #########################################
+
     if (pathogen == "EBOLA") {
       # edit ebola_variant names
       df <- df %>%
@@ -58,6 +77,10 @@ clean_dfs <- function(df, pathogen) {
         )
     }
   }
+
+  #####################
+  # Outbreak cleaning #
+  #####################
 
   if ("outbreak_id" %in% colnames(df)) {
     df <- df %>%
@@ -81,15 +104,18 @@ clean_dfs <- function(df, pathogen) {
       )
   }
 
+  ######################
+  # Parameter cleaning #
+  ######################
+
   if ("parameter_type" %in% colnames(df)) {
     df <- df %>%
       mutate(
         # Change variable types
         cfr_ifr_numerator = as.integer(cfr_ifr_numerator),
         population_study_start_day = as.numeric(population_study_start_day),
-        
         method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
-        
+
         # Group parameters
         parameter_class = case_when(
           grepl("Human delay", parameter_type) ~ "Human delay",
@@ -132,7 +158,10 @@ clean_dfs <- function(df, pathogen) {
         population_country = str_replace_all(population_country, ",", ", ")
       )
 
-    ## Pathogen-specific parameter data cleaning
+    #############################################
+    # Pathogen-specific parameter data cleaning #
+    #############################################
+
     if (pathogen == "EBOLA") {
       df <- df %>%
         # Remove parameters from theoretical model papers/synthetic data papers/
@@ -143,9 +172,13 @@ clean_dfs <- function(df, pathogen) {
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(
-          across(starts_with("population"),
-                 ~ ifelse(covidence_id == 18236 & is.na(.),
-                          first(.[covidence_id == 18236]), .))) %>%
+          across(
+            starts_with("population"),
+            ~ ifelse(covidence_id == 18236 & is.na(.),
+              first(.[covidence_id == 18236]), .
+            )
+          )
+        ) %>%
         ungroup() %>%
         # Population country
         mutate(
@@ -246,38 +279,45 @@ clean_dfs <- function(df, pathogen) {
               ) ~ paste("Human delay -", other_delay),
               TRUE ~ parameter_type
             ),
-          delay_short = 
-              case_when(
-                parameter_class == "Human delay" ~
-                  gsub("^Human delay - ", "", parameter_type), TRUE ~ NA),
+          delay_short =
+            case_when(
+              parameter_class == "Human delay" ~
+                gsub("^Human delay - ", "", parameter_type), TRUE ~ NA
+            ),
           delay_short = str_to_sentence(delay_short),
           delay_short =
             ifelse(delay_short == "Time in care (length of stay)",
-                   "Admission to care to death/discharge", delay_short),
+              "Admission to care to death/discharge", delay_short
+            ),
           delay_start =
             case_when(
-                startsWith(delay_short, "Admission to care") ~ "Admission to care",
-                startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
-                startsWith(delay_short, "Other human delay") ~ "Other",
-                startsWith(delay_short, "Death to burial") ~ "Death to burial",
-                delay_short %in%
-                  c("Incubation period", "Latent period", "Infectious period",
-                    "Generation time", "Serial interval") ~ "Infection process",
-                TRUE ~ "Other"
-              ),
+              startsWith(delay_short, "Admission to care") ~ "Admission to care",
+              startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
+              startsWith(delay_short, "Other human delay") ~ "Other",
+              startsWith(delay_short, "Death to burial") ~ "Death to burial",
+              delay_short %in%
+                c(
+                  "Incubation period", "Latent period", "Infectious period",
+                  "Generation time", "Serial interval"
+                ) ~ "Infection process",
+              TRUE ~ "Other"
+            ),
           delay_short =
             str_replace_all(
-              delay_short, c("care/hospitalisation" = "care",
-                             "care/hospital" = "care",
-                             "onset/fever" = "onset")),
-            parameter_unit =
-              case_when(
-                parameter_class == "Human delay" &
-                  parameter_unit == "Per day" ~ "Days",
-                parameter_class == "Human delay" &
-                  parameter_unit == "Per week" ~ "Weeks",
-                TRUE ~ parameter_unit
+              delay_short, c(
+                "care/hospitalisation" = "care",
+                "care/hospital" = "care",
+                "onset/fever" = "onset"
               )
+            ),
+          parameter_unit =
+            case_when(
+              parameter_class == "Human delay" &
+                parameter_unit == "Per day" ~ "Days",
+              parameter_class == "Human delay" &
+                parameter_unit == "Per week" ~ "Weeks",
+              TRUE ~ parameter_unit
+            )
         ) %>%
         mutate(
           # Fix entry errors
@@ -305,14 +345,14 @@ clean_dfs <- function(df, pathogen) {
                 "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
             "Mean", parameter_value_type
           ),
-              
+
           # Correct entry cov ID 1889
           parameter_value = ifelse(
             covidence_id == 1889 &
               parameter_type == "Severity - case fatality rate (CFR)",
             95.5, parameter_value
           ),
-          
+
           # Correct entry cov ID 16951
           parameter_unit = ifelse(
             covidence_id == 16951 &
@@ -326,12 +366,12 @@ clean_dfs <- function(df, pathogen) {
                 "Human delay - Symptom Onset/Fever to Reporting",
             "Median", parameter_value_type
           ),
-          
+
           # Correct entry cov ID 3470
           parameter_unit = ifelse(
             covidence_id == 3470 &
               parameter_type ==
-              "Human delay - latent period",
+                "Human delay - latent period",
             "Days", parameter_unit
           ),
 
@@ -341,22 +381,22 @@ clean_dfs <- function(df, pathogen) {
               parameter_class == "Reproduction number",
             TRUE, parameter_from_figure
           ),
-          
+
           # Correct entry cov ID 18236
           population_country = ifelse(
             covidence_id == 18236 &
               parameter_type ==
-              "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
+                "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
             "Guinea", population_country
           ),
-          
+
           # Correct entry cov ID 18372
           population_country = ifelse(
             covidence_id == 18372 &
               parameter_class == "Human delay",
             "DRC", population_country
           ),
-          
+
           # Correct entry cov ID 17715
           parameter_value = case_when(
             covidence_id == 17715 & parameter_class == "Human delay" ~ 31.25,
@@ -382,13 +422,13 @@ clean_dfs <- function(df, pathogen) {
             covidence_id == 17715 & parameter_class == "Human delay" ~ FALSE,
             TRUE ~ inverse_param
           ),
-          
+
           # Correct cov id 5935
           inverse_param = case_when(
             covidence_id == 5935 & parameter_class == "Human delay" ~ TRUE,
             TRUE ~ inverse_param
           ),
-          
+
           # Correct missing parameter units for severity
           parameter_unit = case_when(
             covidence_id %in% c(4967, 5404, 4900, 2150) &
@@ -428,15 +468,13 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 17956 & parameter_class == "Human delay" ~ 3,
               TRUE ~ population_study_start_day
             ),
-
           population_study_end_day =
             case_when(
               covidence_id == 4364 & parameter_class == "Severity" ~ 28,
-              covidence_id == 18372 & parameter_class == "Human delay" ~ 2, 
+              covidence_id == 18372 & parameter_class == "Human delay" ~ 2,
               covidence_id == 17956 & parameter_class == "Human delay" ~ 27,
               TRUE ~ population_study_end_day
             ),
-          
           population_study_start_month =
             case_when(
               covidence_id == 1686 ~ "Dec",
@@ -447,7 +485,6 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 17956 & parameter_class == "Human delay" ~ "Jul",
               TRUE ~ population_study_start_month
             ),
-          
           population_study_end_month =
             case_when(
               population_study_end_month == "3" ~ "Mar",
@@ -458,12 +495,10 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 17956 & parameter_class == "Human delay" ~ "Jun",
               TRUE ~ population_study_end_month
             ),
-          
           population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
           population_study_end_month = substr(population_study_end_month, 1, 3),
           population_study_start_month = gsub("[^a-zA-Z]", "", population_study_start_month),
           population_study_start_month = substr(population_study_start_month, 1, 3),
-          
           population_study_start_year =
             case_when(
               covidence_id == 1686 ~ 2014,
@@ -475,7 +510,6 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 17956 & parameter_class == "Human delay" ~ 2014,
               TRUE ~ population_study_start_year
             ),
-
           population_study_end_year =
             case_when(
               covidence_id == 904 & parameter_value == 65.9 ~ 2014,
@@ -487,7 +521,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 17956 & parameter_class == "Human delay" ~ 2015,
               TRUE ~ population_study_end_year
             ),
-          
+
           # Inverse parameters
           parameter_type = ifelse(
             inverse_param == TRUE,
@@ -559,18 +593,21 @@ clean_dfs <- function(df, pathogen) {
         random_id(n = length(idx), use_openssl = FALSE)
     }
 
-    
+
     df <- df %>%
       mutate(
 
         # Rounding of parameter values and uncertainty
         across(
-          c(parameter_value, parameter_lower_bound, parameter_upper_bound,
-                 parameter_uncertainty_single_value,
-                 parameter_uncertainty_lower_value,
-                 parameter_uncertainty_upper_value),
-          ~round(., digits = 2)),
-        
+          c(
+            parameter_value, parameter_lower_bound, parameter_upper_bound,
+            parameter_uncertainty_single_value,
+            parameter_uncertainty_lower_value,
+            parameter_uncertainty_upper_value
+          ),
+          ~ round(., digits = 2)
+        ),
+
         # Parameter value
         # Combine central upper and lower bounds
         parameter_bounds =
@@ -580,7 +617,7 @@ clean_dfs <- function(df, pathogen) {
           ),
 
         # Uncertainty
-        parameter_uncertainty_type =case_when(
+        parameter_uncertainty_type = case_when(
           parameter_uncertainty_type ==
             "CI95%" ~ "95% CI",
           parameter_uncertainty_type ==
@@ -602,7 +639,7 @@ clean_dfs <- function(df, pathogen) {
             "Standard Error (SE)" ~ "Standard Error",
           TRUE ~ parameter_uncertainty_singe_type
         ),
-        
+
         # Combine uncertainty types and values
         comb_uncertainty_type =
           case_when(
@@ -632,12 +669,12 @@ clean_dfs <- function(df, pathogen) {
           case_when(
             parameter_type == "Growth rate ®" ~ "Growth rate (r)",
             parameter_type == "Reproduction number (Effective; Re)" ~
-            "Reproduction number (Effective, Re)",
+              "Reproduction number (Effective, Re)",
             parameter_type == "Mutations ‚Äì substitution rate" ~
-            "Mutations – substitution rate",
+              "Mutations – substitution rate",
             TRUE ~ parameter_type
           )
-        ) %>%
+      ) %>%
       select(-c("article_id", "access_param_id", "name_data_entry")) %>%
       relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
       arrange(covidence_id)
@@ -654,9 +691,13 @@ clean_dfs <- function(df, pathogen) {
   df
 }
 
-# Add qa scores to article data
+#################################
+# Add QA scores to article data #
+#################################
+
 # input: articles data and parameter data
 # output: articles data with two new variables: model_only and article_qa_score
+
 add_qa_scores <- function(articles_df, params_df) {
   # add a model_only variable to article data (as denominator for qa will be different)
   articles_df <- articles_df %>%
