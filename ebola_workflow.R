@@ -23,10 +23,11 @@ orderly_run("db_compilation", parameters = list(pathogen = "EBOLA"))
 orderly_run("ebola_reproduction_number", parameters = list(pathogen = "EBOLA"))
 
 # Severity (CFR/IFR)
+# To do: naive vs adjusted
 orderly_run("ebola_severity", parameters = list(pathogen = "EBOLA"))
 
 # Human Delays
-# To do: look into dealing with inverse parameters
+orderly_run("ebola_delays", parameters = list(pathogen = "EBOLA"))
 
 # Risk factors
 

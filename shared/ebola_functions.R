@@ -72,9 +72,9 @@ assign_ebola_outbreak <- function(df) {
             "Équateur province"
           ) ~ "DRC, 2020",
         population_study_start_year %in% c(2018, 2019) & population_country ==
-          "DRC" ~ "DRC & Uganda, 2018-2020",
+          "DRC" ~ "DRC, 2018-2020",
         population_study_start_year == 2020 & population_country ==
-          "Uganda" ~ "DRC & Uganda, 2018-2020",
+          "Uganda" ~ "DRC, 2018-2020",
         population_study_start_year == 2021 & population_country ==
           "Guinea" ~ "Guinea, 2021",
         population_study_start_year == 2022 & population_country ==
@@ -106,7 +106,7 @@ order_ebola_outbreaks <- function(outbreak_var) {
         "DRC, 2014",
         "DRC, 2017",
         "DRC, 2018",
-        "DRC & Uganda, 2018-2020",
+        "DRC, 2018-2020",
         "DRC, 2020",
         "Guinea, 2021",
         "Uganda, 2022",
@@ -138,7 +138,7 @@ assign_ebola_species <- function(df) {
         ebola_variant == "Bundibugyo virus (BDBV);Sudan virus (SUDV)" ~
           "Bundibugyo & Sudan",
         outbreak %in% c("DRC, 1976", "DRC, 1995") ~ "Zaire",
-        outbreak == "DRC & Uganda, 2018-2020" ~ "Zaire",
+        outbreak == "DRC, 2018-2020" ~ "Zaire",
         ebola_variant == "Unspecified" &
           outbreak %in% c(
             "DRC, 2007",

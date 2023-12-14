@@ -62,7 +62,8 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
     theme(
       legend.text = element_text(size = 10),
       strip.text = element_text(size = 10),
-      legend.title = element_blank()
+      legend.title = element_blank(),
+      axis.title.x = element_text(vjust = -1)
     ) +
     scale_color_manual(values = mypalette) +
     guides(
@@ -79,6 +80,10 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
 
   if (param == "Severity") {
     plot <- plot + coord_cartesian(xlim = c(0, 100))
+  }
+  
+  if (param == "Human delay") {
+    plot <- plot + xlab("Delay (Days)")
   }
 
   plot
