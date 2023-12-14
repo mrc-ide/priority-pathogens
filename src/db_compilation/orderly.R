@@ -225,6 +225,7 @@ article_all <- clean_dfs(article_all, pathogen)
 parameter_all <- clean_dfs(parameter_all, pathogen)
 model_all <- clean_dfs(model_all, pathogen)
 
+if (pathogen == "EBOLA") {
 # Add article QA scores to article data
 article_all <- add_qa_scores(article_all, parameter_all)
 
@@ -235,7 +236,6 @@ parameter_all <- parameter_all %>%
     by = "covidence_id"
   )
 
-if (pathogen == "EBOLA") {
   parameter_all <- assign_ebola_outbreak(parameter_all)
   parameter_all <- assign_ebola_species(parameter_all)
 }
