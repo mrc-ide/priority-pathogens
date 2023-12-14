@@ -3,6 +3,7 @@
 create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
                         facet_by = "outbreak", symbol_by_type = TRUE,
                         symbol_col_by = "population_country") {
+  
   mypalette <- hue_pal()(length(unique(df[[symbol_col_by]])))
   names(mypalette) <- sort(unique(df[[symbol_col_by]]))
 
@@ -37,7 +38,7 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       )
   }
 
-  base_plot <- base_plot +
+  plot <- base_plot +
     scale_y_discrete(labels = setNames(
       df$article_label,
       df$article_label_unique
@@ -71,13 +72,13 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
 
 
   if (param == "Reproduction number") {
-    plot <- base_plot +
+    plot <- plot +
       coord_cartesian(xlim = c(0, 10)) +
       geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")
   }
 
   if (param == "Severity") {
-    plot <- base_plot + coord_cartesian(xlim = c(0, 100))
+    plot <- plot + coord_cartesian(xlim = c(0, 100))
   }
 
   plot
@@ -98,9 +99,12 @@ round_range <- function(range_string, digits = 0) {
 # df = clean data frame
 # if param = reproduction number r_type is either "Basic (R0)" or "Effective (Re)"
 # optional rounding, either "integer" (rounds to whole number) or "1d" (1 digit)
+# delay_type is the delay grouping e.g. "Admission to care", "Symptom onset", "Infection process", "Death to burial"
+# group is the variable used for grouping in the table
 
-create_table <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
-                         rounding = "none") {
+create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
+                         group = "outbreak", qa_filter = TRUE, rounding = "none") {
+  
   df <- df %>%
     filter(parameter_class == param)
 
@@ -122,9 +126,18 @@ create_table <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       )
   }
 
+  if (group == "outbreak") {
+    group = "Outbreak"
+  }
+  
   if (param == "Reproduction number") {
     df <- df %>%
       filter(parameter_type_short == r_type)
+  }
+  
+  if (param == "Human delay") {
+    df <- df %>%
+      filter(delay_start == delay_type)
   }
 
   if (qa_filter) {
@@ -149,63 +162,99 @@ create_table <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       `Uncertainty type` = comb_uncertainty_type,
       `Uncertainty` = comb_uncertainty,
       `Method` = method_r,
+      delay_short,
       `Adjustment` = cfr_ifr_method,
       `Numerator` = cfr_ifr_numerator,
       `Denominator` = cfr_ifr_denominator,
       `Population Group` = population_group,
       `Population Sample` = population_sample_type,
+      `Sample size` = population_sample_size,
       `Survey date` = survey_date,
       `Survey start day` = population_study_start_day,
       `Survey start month` = population_study_start_month,
       `Survey start year` = population_study_start_year,
-      `Timing of survey` = method_moment_value
-    )) %>%
-    arrange(
-      `Outbreak`,
-      Country,
-      `Survey start year`,
-      `Survey start month`,
-      `Survey start day`
-    ) %>%
-    group_by(`Outbreak`) %>%
+      `Timing of survey` = method_moment_value,
+      `Inverse` = inverse_param
+    ))
+  
+  if (group != "Outbreak") {
+    r_tbl <- r_tbl %>%
+      arrange(
+        !!sym(group),
+        `Outbreak`,
+        Country,
+        `Survey start year`,
+        `Survey start month`,
+        `Survey start day`
+        )
+  } else {
+    r_tbl <- r_tbl %>%
+      arrange(
+        `Outbreak`,
+        Country,
+        `Survey start year`,
+        `Survey start month`,
+        `Survey start day`
+      )
+    }
+  
+    r_tbl <- r_tbl %>%
+      group_by(!!sym(group)) %>%
     mutate(
       index_of_change = row_number(),
       index_of_change = ifelse(
         index_of_change == max(index_of_change), 1, 0
+        )
+      ) %>%
+    as_grouped_data(groups = {{group}} )
+    
+    if (param == "Reproduction number") {
+      r_tbl <- r_tbl %>% as_flextable(
+        col_keys = c(
+          "Outbreak", "Article", "Country", "Survey date",
+          "Central estimate", "Central range", "Central type",
+          "Uncertainty", "Uncertainty type", "Method", "Disaggregated by"
+        ),
+        hide_grouplabel = TRUE
       )
-    ) %>%
-    as_grouped_data(groups = "Outbreak") %>%
-    flextable(
-      col_keys = c(
-        "Outbreak", "Article", "Country", "Survey date",
-        "Central estimate", "Numerator", "Denominator",
-        "Central range", "Central type",
-        "Uncertainty", "Uncertainty type", "Method", "Adjustment",
-        "Population Sample", "Disaggregated by"
+    }
+    
+    if (param == "Severity") {
+      r_tbl <- r_tbl %>% as_flextable(
+        col_keys = c(
+          "Outbreak", "Article", "Country", "Survey date",
+          "Central estimate", "Numerator", "Denominator",
+          "Central range", "Uncertainty", "Uncertainty type", "Adjustment",
+          "Population Sample", "Disaggregated by"
+        ),
+        hide_grouplabel = TRUE
       )
-    ) %>%
-    fontsize(i = 1, size = 12, part = "header") %>%
-    border_remove() %>%
+    }
+    
+    if (param == "Human delay") {
+      r_tbl <- r_tbl %>% as_flextable(
+        col_keys = c(
+          "Outbreak", "Article", "Country", "Survey date", "Central estimate",
+          "Central range", "Central type", "Uncertainty", "Uncertainty type",
+          "Population Sample", "Sample size", "Disaggregated by"
+        ),
+        hide_grouplabel = TRUE
+      )
+    }
+    
+    r_tbl <- r_tbl %>%
+      fontsize(i = 1, size = 12, part = "header") %>%
     autofit() %>%
     theme_booktabs() %>%
-    vline(j = c(4), border = border_style) %>%
+    vline(j = "Survey date", border = border_style) %>%
     hline(i = ~ index_of_change == 1) %>%
+      hline(i = ~ is.na(`Outbreak`)) %>%
+      bold(j = 1, i = ~ is.na(`Outbreak`), bold = TRUE, part = "body" ) %>% 
     bold(i = 1, bold = TRUE, part = "header") %>%
     add_footer_lines("") %>%
     align(align = "left", part = "all")
 
-  if (param != "Reproduction number") {
-    tbl <- delete_columns(r_tbl, c("Method", "Central type"))
-  }
-
-  if (param != "Severity") {
-    tbl <- delete_columns(r_tbl, c(
-      "Adjustment", "Numerator", "Denominator",
-      "Population Sample"
-    ))
-  }
-
-  tbl
+  r_tbl
 }
 
 
