@@ -218,7 +218,6 @@ if (outbreaks_ex) {
 }
 
 
-
 # Merge databases and then split again
 articles <- map_dfr(from, function(x) x[["articles"]])
 models <- map_dfr(from, function(x) x[["models"]])
@@ -228,6 +227,9 @@ params <- map_dfr(from, function(x) x[["params"]])
 articles <- clean_articles(articles)
 models <- clean_models(models)
 params <- clean_params(params)
+if (outbreaks_ex) {
+outbreaks <- clean_outbreaks(outbreaks)
+}
 
 ## Check data after pathogen-specific cleaning
 a_err <- validate_articles(articles)

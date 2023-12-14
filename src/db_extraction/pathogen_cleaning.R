@@ -68,6 +68,17 @@ clean_articles <- function(articles) {
       )
 
   }
+  
+  if (pathogen == "LASSA") {
+    articles$Covidence_ID  <- as.numeric(articles$Covidence_ID)
+    
+    #these articles have been kicked back since extractions
+    articles  <- articles  %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+    
+    #covidence ID typo
+    articles$Covidence_ID[ articles$Covidence_ID  == 3158] <- 3153
+  }
+  
   articles
 }
 
@@ -99,6 +110,17 @@ clean_models <- function(models) {
         5870, 12100
       )))
   }
+  
+  if (pathogen == "LASSA") {
+    models$Covidence_ID    <- as.numeric(models$Covidence_ID)
+    #these articles have been kicked back since extractions
+    models <- models %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+    #covidence ID typo
+    models$Covidence_ID[models$Covidence_ID == 3158] <- 3153
+    #non-transmission models
+    models <- models %>% filter(!(Covidence_ID == 441 & access_model_id == 2))
+  }
+  
   models
 }
 
@@ -149,5 +171,46 @@ clean_params <- function(params) {
         5870, 12100
       )))
   }
+  
+  if (pathogen == "LASSA") {
+    params$Covidence_ID    <- as.numeric(params$Covidence_ID)
+    # remove blank parameters
+    params <- params %>% filter(!is.na(as.numeric(params$Article_ID)))
+    #these articles have been kicked back since extractions
+    params <- params %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+    #covidence ID typo
+    params$Covidence_ID[params$Covidence_ID == 3158] <- 3153
+    
+    #removed parameters
+    rmrows <- paste(c(1433,670,1413,1413,873), c(28,3,15,16,19), sep='_')
+    params <- params %>%
+      mutate(temp_col = paste(Covidence_ID, access_param_id, sep='_')) %>%
+      filter(!temp_col %in% rmrows) %>%
+      select(-temp_col)
+    
+    #missing parameter types
+    params$Parameter_type[params$Covidence_ID==2684 &
+                            params$access_param_id==37] <- 'Risk factors'
+  }
+  
   params
 }
+
+#######################################
+# Pathogen-specific OUTBREAK cleaning #
+#######################################
+
+clean_outbreaks <- function(outbreaks) {
+  if (pathogen == "LASSA") {
+    outbreaks$Covidence_ID <- as.numeric(outbreaks$Covidence_ID)
+    #covidence ID typo
+    outbreaks$Covidence_ID[outbreaks$Covidence_ID == 3158] <- 3153
+    #remove blank outbreaks
+    outbreaks <- outbreaks %>%
+      filter(!(Covidence_ID == 845 & Outbreak_ID == 1)) %>%
+      # remove entries from articles kicked back since extractions
+      outbreaks <- outbreaks %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+}
+outbreaks
+}
+
