@@ -8,6 +8,7 @@ library(ggforce)
 library(flextable)
 library(officer)
 library(purrr)
+library(scales)
 
 orderly_strict_mode()
 

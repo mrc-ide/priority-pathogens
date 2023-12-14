@@ -10,6 +10,7 @@ library(officer)
 library(purrr)
 library(janitor)
 library(stringr)
+library(scales)
 
 orderly_strict_mode()
 
