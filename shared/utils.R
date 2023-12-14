@@ -18,7 +18,7 @@
 database_files <- function(pathogen) {
   infiles <- list(
     EBOLA = list(
-      singledb = c(
+      ebolasingledb = c(
         "DIDE Priority Pathogens EBOLA - ANNE.accdb",
         "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
         "DIDE Priority Pathogens EBOLA - CYRIL.accdb",
@@ -39,7 +39,7 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens EBOLA - THOM.accdb",
         "DIDE Priority Pathogens EBOLA - TRISTAN.accdb"
       ),
-      doubledb = c(
+      eboladoubledb = c(
         "DIDE Priority Pathogens EBOLA - ANNE.accdb", "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
         "DIDE Priority Pathogens EBOLA - CYRIL.accdb", "DIDE Priority Pathogens EBOLA - DARIYA.accdb",
         "DIDE Priority Pathogens EBOLA - ETTIE.accdb", "DIDE Priority Pathogens EBOLA - GINA.accdb",
@@ -48,13 +48,38 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens EBOLA - REBECCA.accdb", "DIDE Priority Pathogens EBOLA - RUTH.accdb",
         "DIDE Priority Pathogens EBOLA - SABINE.accdb", "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb"
       ),
-      doubledb2 = c(
+      eboladoubledb2 = c(
         "DIDE Priority Pathogens ETTIE.accdb", "DIDE Priority Pathogens REBECCA.accdb",
         "DIDE Priority Pathogens RICHARD.accdb", "DIDE Priority Pathogens SANGEETA.accdb",
         "DIDE Priority Pathogens TRISTAN.accdb"
       )
+    ),
+    LASSA = list(
+      lassasingledb = c(
+        "DIDE Priority Pathogens LASSA - Christian.accdb",
+        "DIDE Priority Pathogens LASSA - Dariya.accdb",
+        "DIDE Priority Pathogens LASSA - Gina.accdb",
+        "DIDE Priority Pathogens LASSA - Joseph.accdb",
+        "DIDE Priority Pathogens LASSA - Kelly.accdb",
+        "DIDE Priority Pathogens LASSA - Patrick.accdb",
+        "DIDE Priority Pathogens LASSA - Richard.accdb",
+        "DIDE Priority Pathogens LASSA - Ruth.accdb",
+        "DIDE Priority Pathogens LASSA - Thom.accdb",
+        "DIDE Priority Pathogens LASSA - Tristan.accdb"
+      ),
+      lassadoubledb = c(
+        "DIDE Priority Pathogens LASSA - Christian.accdb",
+        "DIDE Priority Pathogens LASSA - Dariya.accdb",
+        "DIDE Priority Pathogens LASSA - Gina.accdb",
+        "DIDE Priority Pathogens LASSA - Joseph.accdb",
+        "DIDE Priority Pathogens LASSA - Kelly.accdb",
+        "DIDE Priority Pathogens LASSA - Patrick.accdb",
+        "DIDE Priority Pathogens LASSA - Richard.accdb",
+        "DIDE Priority Pathogens LASSA - Ruth.accdb",
+        "DIDE Priority Pathogens LASSA - Thom.accdb",
+        "DIDE Priority Pathogens LASSA - Tristan.accdb"
+      )
     )
-    ## LASSA Database files
     ## Nipah Database files
   )
 
