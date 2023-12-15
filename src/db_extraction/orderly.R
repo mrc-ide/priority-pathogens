@@ -64,7 +64,9 @@ infiles <- unlist(infiles)
 all_conns <- map(
   infiles, function(infile) {
     message("Reading ", infile)
-    con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
+    con <- dbConnect(
+      drv = odbc(), .connection_string =
+        paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
 
     if (is.null(con)) {
       message("Error in reading ", infile)
@@ -161,6 +163,9 @@ if (!outbreaks_ex) {
     }
   )
 }
+
+saveRDS(all_outbreaks, "all_outbreaks_raw.rds")
+orderly_artefact("All outbreaks", "all_outbreaks_raw.rds")
 
 # Close all connections
 walk(all_conns, function(con) dbDisconnect(con))
