@@ -84,7 +84,7 @@ all_articles <- map(
       return()
     }
 
-    ## If Covidence IDs are missing, they should be added in here before joining
+    ## If Covidence IDs are missing/typos, they should be added in here before joining
     articles <- fix_cov_ids(articles)
     
     ## Convert Covidence_ID to numeric.

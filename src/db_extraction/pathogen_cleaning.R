@@ -13,6 +13,10 @@ fix_cov_ids <- function(articles) {
     articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
       articles$Name_data_entry == "Ettie"] <- 5197
   }
+  if (pathogen == "LASSA") {
+    #covidence ID typo
+    articles$Covidence_ID[ articles$Covidence_ID  == 3158] <- 3153
+  }
   articles
 }
 
@@ -71,12 +75,8 @@ clean_articles <- function(articles) {
   
   if (pathogen == "LASSA") {
     articles$Covidence_ID  <- as.numeric(articles$Covidence_ID)
-    
     #these articles have been kicked back since extractions
     articles  <- articles  %>% filter(!Covidence_ID %in% c(440,605,917,1417))
-    
-    #covidence ID typo
-    articles$Covidence_ID[ articles$Covidence_ID  == 3158] <- 3153
   }
   
   articles
@@ -115,8 +115,6 @@ clean_models <- function(models) {
     models$Covidence_ID    <- as.numeric(models$Covidence_ID)
     #these articles have been kicked back since extractions
     models <- models %>% filter(!Covidence_ID %in% c(440,605,917,1417))
-    #covidence ID typo
-    models$Covidence_ID[models$Covidence_ID == 3158] <- 3153
     #non-transmission models
     models <- models %>% filter(!(Covidence_ID == 441 & access_model_id == 2))
   }
@@ -178,9 +176,6 @@ clean_params <- function(params) {
     params <- params %>% filter(!is.na(as.numeric(params$Article_ID)))
     #these articles have been kicked back since extractions
     params <- params %>% filter(!Covidence_ID %in% c(440,605,917,1417))
-    #covidence ID typo
-    params$Covidence_ID[params$Covidence_ID == 3158] <- 3153
-    
     #removed parameters
     rmrows <- paste(c(1433,670,1413,1413,873), c(28,3,15,16,19), sep='_')
     params <- params %>%
@@ -203,8 +198,6 @@ clean_params <- function(params) {
 clean_outbreaks <- function(outbreaks) {
   if (pathogen == "LASSA") {
     outbreaks$Covidence_ID <- as.numeric(outbreaks$Covidence_ID)
-    #covidence ID typo
-    outbreaks$Covidence_ID[outbreaks$Covidence_ID == 3158] <- 3153
     #remove blank outbreaks
     outbreaks <- outbreaks %>%
       filter(!(Covidence_ID == 845 & Outbreak_ID == 1)) %>%
