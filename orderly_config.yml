@@ -1,8 +1,8 @@
 minimum_orderly_version: "1.99.0"
 plugins:
   orderly.sharedfile:
-    lassasingledb: "Y:/Lassa/Databases/Single Extractions/complete_dbs"
-    lassadoubledb: "Y:/Lassa/Databases/Double Extractions"
+    lassasingledb: "Z:/Lassa/Databases/Single Extractions"
+    lassadoubledb: "Z:/Lassa/Databases/Double Extractions"
     eboladoubledb2: "Z:/Ebola/databases/NEW DOUBLE EXTRACTION DATABASES"
     eboladoubledb: "Z:/Ebola/databases/Double extraction databases"
     ebolasingledb: "Z:/Ebola/databases/Single extraction databases"
