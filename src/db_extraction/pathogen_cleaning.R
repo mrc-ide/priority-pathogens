@@ -198,11 +198,11 @@ clean_params <- function(params) {
 clean_outbreaks <- function(outbreaks) {
   if (pathogen == "LASSA") {
     outbreaks$Covidence_ID <- as.numeric(outbreaks$Covidence_ID)
-    #remove blank outbreaks
     outbreaks <- outbreaks %>%
+      #remove blank outbreaks
       filter(!(Covidence_ID == 845 & Outbreak_ID == 1)) %>%
       # remove entries from articles kicked back since extractions
-      outbreaks <- outbreaks %>% filter(!Covidence_ID %in% c(440,605,917,1417))
+      filter(!Covidence_ID %in% c(440,605,917,1417))
 }
 outbreaks
 }
