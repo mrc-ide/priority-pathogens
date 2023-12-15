@@ -162,7 +162,6 @@ if (!outbreaks_ex) {
   )
 }
 
-saveRDS(all_outbreaks, "all_outbreaks_raw.rds")
 # Close all connections
 walk(all_conns, function(con) dbDisconnect(con))
 
