@@ -67,8 +67,14 @@ can be put together with unique ids);
 2. combine all the individual extraction databases into article,
 model, parameter and outbreak .csv files;
 3. identify which papers have been double extracted (using duplicated
-covidence ids) and create separate article, model, parameter and outbreak files for single and
-double extracted papers.
+covidence ids) and create separate article, model, parameter and outbreak files
+for single and double extracted papers.
+4. produce an errors.rds file which is intended to be helpful during the early
+stages of cleaning. This will highlight any entries with missing covidence IDs,
+publication dates that appear incorrect, duplicate entries, empty entries,
+parameter entries with an empty 'parameter_type' variable, etc. You can address
+these errors by adding to the pathogen_cleaning.R script. (You can do more thorough
+cleaning later in the db_compilation step.)
 
 Combined data for single extracted papers will be in:
 articles_single.csv, parameters_single.csv, models_single.csv, outbreaks_single.csv
