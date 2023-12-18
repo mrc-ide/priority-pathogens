@@ -73,6 +73,9 @@ species_levels <- factor(df$ebola_species, levels = c(sort(
 ), "Unspecified"))
 
 df_plot <- df %>%
+  mutate(
+    population_country = as.factor(population_country)
+  ) %>%
   filter(parameter_class == parameter) %>%
   filter(parameter_from_figure == "FALSE") %>%
   filter(!covidence_id == 4966) %>% # entry without values
@@ -144,6 +147,7 @@ basic_r_outbreak_qa <- create_plot(
   r_type = "Basic (R0)",
   qa_filter = TRUE,
   facet_by = "outbreak",
+  symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
 )
 
@@ -153,6 +157,7 @@ basic_r_country_qa <- create_plot(
   r_type = "Basic (R0)",
   qa_filter = TRUE,
   facet_by = "population_country",
+  symbol_shape_by = "parameter_value_type",
   symbol_col_by = "outbreak"
 )
 
@@ -162,6 +167,7 @@ eff_r_outbreak_qa <- create_plot(
   r_type = "Effective (Re)",
   qa_filter = TRUE,
   facet_by = "outbreak",
+  symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
 )
 
@@ -171,6 +177,7 @@ eff_r_country_qa <- create_plot(
   r_type = "Effective (Re)",
   qa_filter = TRUE,
   facet_by = "population_country",
+  symbol_shape_by = "parameter_value_type",
   symbol_col_by = "outbreak"
 )
 

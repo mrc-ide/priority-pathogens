@@ -58,6 +58,9 @@ df <- left_join(
   arrange(article_label, -year_publication)
 
 sev_dat <- df %>%
+  mutate(
+    population_country = as.factor(population_country)
+  ) %>%
   filter(parameter_class == parameter) %>%
   filter(parameter_from_figure == "FALSE") %>%
   filter(!covidence_id == 23507) %>% # incorrect entry
@@ -70,6 +73,9 @@ sev_dat <- df %>%
       case_when(article_label == "WHO/International Study Team 1978" ~
         "WHO/Int. Study Team 1978", TRUE ~ article_label),
     outbreak = order_ebola_outbreaks(outbreak),
+    cfr_ifr_method = case_when(
+      is.na(cfr_ifr_method) ~ "Unspecified", TRUE ~ cfr_ifr_method
+    ),
     population_study_start_month =
       factor(population_study_start_month,
         levels = c(
@@ -173,7 +179,7 @@ plot_outbreak_qa <- create_plot(
   ordered_dat,
   param = parameter,
   qa_filter = TRUE,
-  symbol_by_type = FALSE,
+  symbol_shape_by = "cfr_ifr_method",
   facet_by = "outbreak",
   symbol_col_by = "population_country"
 )
@@ -182,7 +188,7 @@ plot_country_qa <- create_plot(
   ordered_dat,
   param = parameter,
   qa_filter = TRUE,
-  symbol_by_type = FALSE,
+  symbol_shape_by = "cfr_ifr_method",
   facet_by = "population_country",
   symbol_col_by = "outbreak"
 )
@@ -192,7 +198,7 @@ plot_outbreak_all <- create_plot(
   ordered_dat,
   param = parameter,
   qa_filter = FALSE,
-  symbol_by_type = FALSE,
+  symbol_shape_by = "cfr_ifr_method",
   facet_by = "outbreak",
   symbol_col_by = "population_country"
 )
@@ -201,7 +207,7 @@ plot_country_all <- create_plot(
   ordered_dat,
   param = parameter,
   qa_filter = FALSE,
-  symbol_by_type = FALSE,
+  symbol_shape_by = "cfr_ifr_method",
   facet_by = "population_country",
   symbol_col_by = "outbreak"
 )

@@ -66,6 +66,9 @@ df <- left_join(
   arrange(article_label, -year_publication)
 
 delay_dat <- df %>%
+  mutate(
+    population_country = as.factor(population_country)
+  ) %>%
   filter(parameter_class == parameter) %>%
   filter(parameter_from_figure == "FALSE") %>%
   filter(!(delay_short %in% "Other human delay (go to section)")) %>%
@@ -190,7 +193,6 @@ symp_plot_qa <- create_plot(
   symp_dat,
   param = parameter,
   qa_filter = TRUE,
-  symbol_by_type = FALSE,
   facet_by = "delay_short",
   symbol_col_by = "outbreak"
 )
@@ -203,7 +205,6 @@ adm_plot_qa <- create_plot(
   adm_dat,
   param = parameter,
   qa_filter = TRUE,
-  symbol_by_type = FALSE,
   facet_by = "delay_short",
   symbol_col_by = "outbreak"
 )
@@ -216,7 +217,6 @@ infp_plot_qa <- create_plot(
   infp_dat,
   param = parameter,
   qa_filter = TRUE,
-  symbol_by_type = FALSE,
   facet_by = "delay_short",
   symbol_col_by = "outbreak"
 )
@@ -229,7 +229,6 @@ dtb_plot_qa <- create_plot(
   dtb_dat,
   param = parameter,
   qa_filter = TRUE,
-  symbol_by_type = FALSE,
   facet_by = "delay_short",
   symbol_col_by = "outbreak"
 )
