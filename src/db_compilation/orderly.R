@@ -94,6 +94,7 @@ article_single <- read_csv("single_extraction_articles.csv")
 model_single <- read_csv("single_extraction_models.csv")
 parameter_single <- read_csv("single_extraction_params.csv")
 if (pathogen == "LASSA") {
+  article_single <- article_single %>% select(-Covidence_ID_text)
   outbreak_single <- read_csv("single_extraction_outbreaks.csv")
   outbreak_single <- outbreak_single %>% clean_names()
 }
@@ -128,24 +129,23 @@ model_matching <- read_csv("models_matching.csv")
 parameter_matching <- read_csv("params_matching.csv")
 if (pathogen == "LASSA") {
   outbreak_matching <- read_csv("outbreaks_matching.csv")
-  outbreak_matching <- outbreak_matching %>% clean_names()
+  outbreak_matching <- outbreak_matching %>% clean_names() %>% select(-c("num_rows", "matching"))
 }
 
-qa_matching <- qa_matching %>% clean_names()
-parameter_matching <- parameter_matching %>% clean_names()
-model_matching <- model_matching %>% clean_names()
+qa_matching <- qa_matching %>% clean_names() %>% select(-c("num_rows", "matching"))
+parameter_matching <- parameter_matching %>% clean_names() %>% select(-c("num_rows", "matching"))
+model_matching <- model_matching %>% clean_names() %>% select(-c("num_rows", "matching"))
 
 if (pathogen == "LASSA") {
-qa_matching <- qa_matching %>% select(-c("num_rows", "matching")) 
-parameter_matching <- parameter_matching %>% select(-c("num_rows", "matching")) %>%
-                  mutate(covidence_id=as.numeric(covidence_id),
-                         article_id=as.numeric(article_id),
-                         access_param_id=as.numeric(access_param_id))
-model_matching <- model_matching %>% select(-c("num_rows", "matching")) %>%
+  parameter_matching <- parameter_matching %>%
+                        mutate(covidence_id=as.numeric(covidence_id),
+                               article_id=as.numeric(article_id),
+                               access_param_id=as.numeric(access_param_id))
+model_matching <- model_matching %>%
                   mutate(covidence_id=as.numeric(covidence_id),
                          article_id=as.numeric(article_id),
                          access_model_id=as.numeric(access_model_id))
-outbreak_matching <- outbreak_matching %>% select(-c("num_rows", "matching")) %>%
+outbreak_matching <- outbreak_matching %>%
                   mutate(covidence_id=as.numeric(covidence_id),
                          article_id=as.numeric(article_id),
                          access_outbreak_id=as.numeric(access_outbreak_id))
@@ -156,54 +156,70 @@ qa_fixed <- read_csv(fixing_files[[pathogen]][["qa_fix"]])
 model_fixed <- read_csv(fixing_files[[pathogen]][["models_fix"]])
 parameter_fixed <- read_csv(fixing_files[[pathogen]][["params_fix"]])
 if (pathogen == "LASSA") {
-outbreak_fixed <- read_csv(fixing_files[[pathogen]][["outbreaks_fix"]])
+  outbreak_fixed <- read_csv(fixing_files[[pathogen]][["outbreaks_fix"]])
 }
 
-# Some pathogen fixing files have TRUE instead of 1 in the fixed column
-qa_fixed        <- qa_fixed %>% clean_names() %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
-outbreak_fixed  <- outbreak_fixed %>% clean_names() %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
-model_fixed     <- model_fixed %>% clean_names() %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
-parameter_fixed <- parameter_fixed %>% clean_names() %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
+qa_fixed        <- qa_fixed %>% clean_names()
+model_fixed     <- model_fixed %>% clean_names()
+parameter_fixed <- parameter_fixed %>% clean_names()
 
 if (pathogen == "LASSA") {
+  qa_fixed <- qa_fixed %>%
+    rename(fixed = match)
   parameter_fixed <- parameter_fixed %>%
+    rename(fixed = match) %>%
     mutate(covidence_id=as.numeric(covidence_id),
-           article_id=as.numeric(article_id),
-           access_param_id=as.numeric(access_param_id))
+           article_id=as.numeric(article_id))#,
+  #access_param_id=as.numeric(access_param_id))
   model_fixed <- model_fixed %>%
+    rename(fixed = match) %>%
     mutate(covidence_id=as.numeric(covidence_id),
-           article_id=as.numeric(article_id),
-           access_model_id=as.numeric(access_model_id))
+           article_id=as.numeric(article_id))#,
+  #access_model_id=as.numeric(access_model_id))
   outbreak_fixed <- outbreak_fixed %>%
+    clean_names() %>%
+    rename(fixed = match) %>%
     mutate(covidence_id=as.numeric(covidence_id),
            article_id=as.numeric(article_id),
-           access_outbreak_id=as.numeric(access_outbreak_id))
+           #access_outbreak_id=as.numeric(access_outbreak_id),
+           fixed = ifelse(fixed == TRUE, 1, fixed))
+}
+
+# and some pathogen fixing files have TRUE instead of 1 in the fixed column
+qa_fixed        <- qa_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
+model_fixed     <- model_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
+parameter_fixed <- parameter_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
+
+if (pathogen == 'LASSA') {
+  rm_cols <- "fixed"
+} else {
+  rm_cols <- c("fixed", "num_rows", "matching")
 }
 
 ## create final datasets
-# Add outbreak_fixed for next pathogen
 qa_fixed <- qa_fixed %>%
   filter(fixed == 1) %>%
-  select(-c("fixed", "num_rows", "matching"))
+  select(-rm_cols)
 
 parameter_fixed <- parameter_fixed %>%
   filter(fixed == 1) %>%
-  select(-c("fixed", "num_rows", "matching"))
- 
+  select(-rm_cols)
+
 model_fixed <- model_fixed %>%
   filter(fixed == 1) %>%
-  select(-c("fixed", "num_rows", "matching"))
+  select(-rm_cols)
 
-outbreak_fixed <- outbreak_fixed %>%
-  filter(fixed == 1) %>%
-  select(-c("fixed", "num_rows", "matching"))
+if (pathogen == "LASSA") {
+  outbreak_fixed <- outbreak_fixed %>%
+    filter(fixed == 1) %>%
+    select(-rm_cols)
+}
 
 if (pathogen == "EBOLA") {
 # join article data to qa files
 article_double_details <- article_double %>% select(-c(starts_with("qa")))
 
 article_matching <- qa_matching %>%
-  select(-c("num_rows", "matching")) %>%
   left_join(article_double_details,
     by = c("id", "covidence_id", "name_data_entry")
   ) %>%
@@ -227,13 +243,22 @@ param_double_ids <- param_double %>%
      "id", "parameter_data_id"
    ))
 
-parameter_fixed <- parameter_fixed %>%
-   left_join(param_double_ids,
-     by = c(
-       "article_id", "name_data_entry",
-       "access_param_id", "covidence_id","id", "parameter_data_id"
-     )
-   )
+if (pathogen == 'LASSA') {
+  parameter_fixed <- parameter_fixed %>%
+    left_join(param_double_ids,
+              by = c(
+                "article_id", "name_data_entry", "covidence_id",
+                "id", "parameter_data_id"
+              )
+    )
+} else {
+  parameter_fixed <- parameter_fixed %>%
+    left_join(param_double_ids,
+              by = c(
+                "article_id", "name_data_entry", "access_param_id", "covidence_id"
+              )
+    )
+}
 
 model_double_ids <- model_double %>%
   select(c(
@@ -241,13 +266,23 @@ model_double_ids <- model_double %>%
     "id", "model_data_id"
   ))
 
-model_fixed <- model_fixed %>%
-  left_join(model_double_ids,
-    by = c(
-      "article_id", "name_data_entry",
-      "access_model_id", "covidence_id", "id", "model_data_id"
+if (pathogen == 'LASSA') {
+  model_fixed <- model_fixed %>%
+    left_join(model_double_ids,
+              by = c(
+                "article_id", "name_data_entry",
+                "covidence_id", "id", "model_data_id"
+              )
     )
-  )
+} else {
+  model_fixed <- model_fixed %>%
+    left_join(model_double_ids,
+              by = c(
+                "article_id", "name_data_entry", "access_model_id", "covidence_id"
+              )
+    )
+}
+
 
 if (pathogen == "LASSA") {
 outbreak_double_ids <- outbreak_double %>%
@@ -260,7 +295,7 @@ outbreak_fixed <- outbreak_fixed %>%
   left_join(outbreak_double_ids,
             by = c(
               "article_id", "name_data_entry",
-              "access_outbreak_id", "covidence_id","id", "outbreak_data_id"
+              "covidence_id", "id", "outbreak_data_id"
             )
   )
 }

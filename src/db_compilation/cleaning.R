@@ -21,7 +21,7 @@ clean_dfs <- function(df, pathogen) {
 
   if ("article_title" %in% colnames(df)) {
     df <- df %>%
-      select(-c("article_id", "covidence_id_text", "name_data_entry")) %>%
+      select(-c("article_id", "name_data_entry")) %>%
       rename(first_author_surname = first_aauthor_surname) %>%
       relocate(c(
         id, covidence_id, pathogen,
