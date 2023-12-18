@@ -28,7 +28,10 @@ orderly_artefact(
     "R_tables/unfiltered/eff_r_tab_all.png",
     "R_tables/qa_filtered/range_outbreak.png",
     "R_tables/qa_filtered/range_country.png",
-    "R_tables/qa_filtered/range_species.png"
+    "R_tables/qa_filtered/range_species.png",
+    "R_tables/qa_filtered/eff_range_outbreak.png",
+    "R_tables/qa_filtered/eff_range_country.png",
+    "R_tables/qa_filtered/eff_range_species.png"
   )
 )
 
@@ -125,9 +128,18 @@ dir.create("R_tables/unfiltered")
 
 # PLOTS
 
+plot_dat <- ordered_dat %>%
+  filter(!parameter_value_type == "Standard Deviation",
+         !outbreak == "Unspecified") %>%
+  mutate(
+    parameter_value_type =
+      case_when(parameter_value_type %in% c("Unspecified", "Other")
+                ~ "Other/Unspecified", TRUE ~ parameter_value_type)
+  )
+
 # Plots with qa_filter of >=50
 basic_r_outbreak_qa <- create_plot(
-  ordered_dat,
+  plot_dat,
   param = parameter,
   r_type = "Basic (R0)",
   qa_filter = TRUE,
@@ -136,7 +148,7 @@ basic_r_outbreak_qa <- create_plot(
 )
 
 basic_r_country_qa <- create_plot(
-  ordered_dat,
+  plot_dat,
   param = parameter,
   r_type = "Basic (R0)",
   qa_filter = TRUE,
@@ -145,7 +157,7 @@ basic_r_country_qa <- create_plot(
 )
 
 eff_r_outbreak_qa <- create_plot(
-  ordered_dat,
+  plot_dat,
   param = parameter,
   r_type = "Effective (Re)",
   qa_filter = TRUE,
@@ -154,7 +166,7 @@ eff_r_outbreak_qa <- create_plot(
 )
 
 eff_r_country_qa <- create_plot(
-  ordered_dat,
+  plot_dat,
   param = parameter,
   r_type = "Effective (Re)",
   qa_filter = TRUE,
@@ -221,7 +233,7 @@ save_as_image(eff_r_tab, path = "R_tables/unfiltered/eff_r_tab_all.png")
 # For the basic reproduction number, summary table giving the range of central
 # values for each mean, median, and other/unspecified parameter types:
 
-range_dat <- ordered_dat %>%
+basic_range_dat <- ordered_dat %>%
   filter(
     parameter_type_short == "Basic (R0)",
     !parameter_value_type == "Standard Deviation"
@@ -233,21 +245,21 @@ range_dat <- ordered_dat %>%
   )
 
 range_outbreak <- create_range_table(
-  df = range_dat,
+  df = basic_range_dat,
   main_group = "outbreak", main_group_label = "Outbreak",
   sub_group = "parameter_value_type", sub_group_label = "Estimate Type",
   qa_filter = TRUE
 )
 
 range_country <- create_range_table(
-  df = range_dat,
+  df = basic_range_dat,
   main_group = "population_country", main_group_label = "Country",
   sub_group = "parameter_value_type", sub_group_label = "Estimate Type",
   qa_filter = TRUE
 )
 
 range_species <- create_range_table(
-  df = range_dat,
+  df = basic_range_dat,
   main_group = "ebola_species", main_group_label = "Species",
   sub_group = "parameter_value_type", sub_group_label = "Estimate Type",
   qa_filter = TRUE
@@ -257,3 +269,43 @@ range_species <- create_range_table(
 save_as_image(range_outbreak, path = "R_tables/qa_filtered/range_outbreak.png")
 save_as_image(range_country, path = "R_tables/qa_filtered/range_country.png")
 save_as_image(range_species, path = "R_tables/qa_filtered/range_species.png")
+
+
+# Same for effective R
+eff_range_dat <- ordered_dat %>%
+  filter(
+    parameter_type_short == "Effective (Re)",
+    !parameter_value_type == "Standard Deviation"
+  ) %>%
+  mutate(
+    parameter_value_type =
+      case_when(parameter_value_type %in% c("Unspecified", "Other")
+                ~ "Other/Unspecified", TRUE ~ parameter_value_type)
+  )
+
+eff_range_outbreak <- create_range_table(
+  df = eff_range_dat,
+  main_group = "outbreak", main_group_label = "Outbreak",
+  sub_group = "parameter_value_type", sub_group_label = "Estimate Type",
+  qa_filter = TRUE
+)
+
+eff_range_country <- create_range_table(
+  df = eff_range_dat,
+  main_group = "population_country", main_group_label = "Country",
+  sub_group = "parameter_value_type", sub_group_label = "Estimate Type",
+  qa_filter = TRUE
+)
+
+eff_range_species <- create_range_table(
+  df = eff_range_dat,
+  main_group = "ebola_species", main_group_label = "Species",
+  sub_group = "parameter_value_type", sub_group_label = "Estimate Type",
+  qa_filter = TRUE
+)
+
+# Save
+save_as_image(eff_range_outbreak, path = "R_tables/qa_filtered/eff_range_outbreak.png")
+save_as_image(eff_range_country, path = "R_tables/qa_filtered/eff_range_country.png")
+save_as_image(eff_range_species, path = "R_tables/qa_filtered/eff_range_species.png")
+
