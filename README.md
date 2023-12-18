@@ -142,8 +142,8 @@ the orderly task.
   ##     qa_fix = "lassa_qa_fixing.csv"
   ## )
 )
-
   ```
+  
 * Then run the following, specifying the pathogen e.g.:
 
 ```
