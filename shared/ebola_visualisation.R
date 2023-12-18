@@ -1,11 +1,11 @@
 ## Function to create plot
 
 create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
-                        facet_by = "outbreak", symbol_by_type = TRUE,
+                        facet_by = NA, symbol_shape_by = NA,
                         symbol_col_by = "population_country") {
   
-  mypalette <- hue_pal()(length(unique(df[[symbol_col_by]])))
-  names(mypalette) <- sort(unique(df[[symbol_col_by]]))
+  mypalette <- hue_pal()(length(levels(df[[symbol_col_by]])))
+  names(mypalette) <- sort(levels(df[[symbol_col_by]]))
 
   if (param == "Reproduction number") {
     df <- df %>%
@@ -25,11 +25,11 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
     )) +
     theme_minimal()
 
-  if (symbol_by_type) {
+  if (!is.na(symbol_shape_by)) {
     base_plot <- base_plot +
       geom_point(aes(
         x = parameter_value, y = article_label_unique,
-        shape = parameter_value_type
+        shape = !!sym(symbol_shape_by),
       ), size = 2.5)
   } else {
     base_plot <- base_plot +
@@ -58,7 +58,6 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       width = 0.4, lwd = 1
     ) +
     labs(x = param, y = "", linetype = "", colour = "") +
-    facet_col(facets = vars(!!sym(facet_by)), scales = "free_y", space = "free") +
     theme(
       legend.text = element_text(size = 10),
       strip.text = element_text(size = 10),
@@ -70,8 +69,12 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       colour = guide_legend(order = 1, ncol = 1),
       linetype = guide_legend(order = 2, ncol = 1)
     )
-
-
+  
+  if (!is.na(facet_by)) {
+    plot <- plot +
+      facet_col(facets = vars(!!sym(facet_by)), scales = "free_y", space = "free")
+  }
+  
   if (param == "Reproduction number") {
     plot <- plot +
       coord_cartesian(xlim = c(0, 10)) +
@@ -99,13 +102,16 @@ round_range <- function(range_string, digits = 0) {
   returned_range
 }
 
-## Function to create table of parameter values
+## Function to create table of parameter values - sorry, this is NOT generic
 
 # df = clean data frame
-# if param = reproduction number r_type is either "Basic (R0)" or "Effective (Re)"
-# optional rounding, either "integer" (rounds to whole number) or "1d" (1 digit)
-# delay_type is the delay grouping e.g. "Admission to care", "Symptom onset", "Infection process", "Death to burial"
-# group is the variable used for grouping in the table
+# param = the parameter_class you're interested in (e.g. "Reproduction number,
+# "Human delay", "Severity", etc)
+# r_type = if param = reproduction number r_type is either "Basic (R0)" or "Effective (Re)"
+# rounding = optional rounding, either "integer" (rounds to whole number) or "1d" (1 digit)
+# delay_type = if param = "Human delay", delay_type is the delay grouping e.g.
+# "Admission to care", "Symptom onset", "Infection process", "Death to burial"
+# group = the variable used for grouping in the table
 
 create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
                          group = "outbreak", qa_filter = TRUE, rounding = "none") {
@@ -269,14 +275,21 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
 generate_min_max_columns <- function(data) {
   data %>%
     mutate(
-      min_range = pmin(parameter_value, parameter_upper_bound,
+      min_central = pmin(parameter_value, parameter_upper_bound,
         parameter_lower_bound,
         na.rm = TRUE
       ),
-      max_range = pmax(parameter_value, parameter_upper_bound,
+      max_central = pmax(parameter_value, parameter_upper_bound,
         parameter_lower_bound,
         na.rm = TRUE
-      )
+      ),
+      min_uncertainty = pmin(parameter_uncertainty_single_value,
+                             parameter_uncertainty_upper_value,
+                             parameter_uncertainty_lower_value, na.rm = TRUE
+                             ),
+      max_uncertainty = pmax(parameter_uncertainty_single_value,
+                             parameter_uncertainty_upper_value,
+                             parameter_uncertainty_lower_value, na.rm = TRUE)
     )
 }
 
@@ -306,16 +319,20 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
 
   with_ranges <- grouped_dat %>%
     summarise(
-      min = min(min_range, na.rm = TRUE),
-      max = max(max_range, na.rm = TRUE),
-      est_range = ifelse(min == max, as.character(min),
-        paste(min, max, sep = " - ")
-      ),
-      n_estimates = n()
+      min = min(min_central, na.rm = TRUE),
+      max = max(max_central, na.rm = TRUE),
+      n_estimates = n(),
+      min_unc = suppressWarnings(min(min_uncertainty, na.rm = TRUE)),
+      max_unc = suppressWarnings(max(max_uncertainty, na.rm = TRUE))
     ) %>%
     mutate(
-      across(c(min, max), ~ ifelse(is.infinite(.), NA, .))
-    )
+      across(c(min, min_unc, max, max_unc), ~ ifelse(is.infinite(.), NA, .)),
+      est_range = ifelse(min == max, as.character(min),
+                         paste(min, max, sep = " - ")
+      ),
+      est_unc = ifelse(min_unc == max_unc, as.character(min_unc),
+                       paste(min_unc, max_unc, sep = " - ")
+    ))
 
   labels <- setNames(
     as.list(
@@ -327,14 +344,16 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
   if (rounding == "integer") {
     with_ranges <- with_ranges %>%
       mutate(
-        est_range = sapply(est_range, round_range)
+        est_range = sapply(est_range, round_range),
+        est_unc = sapply(est_unc, round_range)
       )
   }
 
   if (rounding == "1d") {
     with_ranges <- with_ranges %>%
       mutate(
-        est_range = sapply(est_range, round_range, digits = 1)
+        est_range = sapply(est_range, round_range, digits = 1),
+        est_unc = sapply(est_unc, round_range, digits = 1)
       )
   }
 
@@ -343,7 +362,8 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
       {{ main_group }},
       {{ sub_group }},
       `Central Estimate Range` = est_range,
-      `Number of Estimates` = n_estimates
+      `Uncertainty Range` = est_unc,
+      `Number of Papers` = n_estimates
     )) %>%
     group_by(!!sym(main_group)) %>%
     mutate(
@@ -359,7 +379,7 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
     flextable(
       col_keys = c(
         {{ main_group }}, {{ sub_group }},
-        "Central Estimate Range", "Number of Estimates"
+        "Central Estimate Range", "Uncertainty Range", "Number of Papers"
       )
     )
 
