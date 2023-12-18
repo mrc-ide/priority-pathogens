@@ -128,7 +128,7 @@ the orderly task.
 * Update the list fixing_files in orderly.R, creating a new component
   with your pathogen name and add the files here. 
   
-  ```
+```
   fixing_files <- list(
   EBOLA = list(
     params_fix = "ebola_params_fixing.csv",
@@ -142,7 +142,7 @@ the orderly task.
   ##     qa_fix = "lassa_qa_fixing.csv"
   ## )
 )
-  ```
+```
   
 * Then run the following, specifying the pathogen e.g.:
 
