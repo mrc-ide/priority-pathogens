@@ -190,29 +190,24 @@ qa_fixed        <- qa_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
 model_fixed     <- model_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
 parameter_fixed <- parameter_fixed %>% mutate(fixed = ifelse(fixed == TRUE, 1, fixed))
 
-if (pathogen == 'LASSA') {
-  rm_cols <- "fixed"
-} else {
-  rm_cols <- c("fixed", "num_rows", "matching")
-}
 
 ## create final datasets
 qa_fixed <- qa_fixed %>%
   filter(fixed == 1) %>%
-  select(-rm_cols)
+  select(-any_of(c("fixed", "num_rows", "matching")))
 
 parameter_fixed <- parameter_fixed %>%
   filter(fixed == 1) %>%
-  select(-rm_cols)
+  select(-any_of(c("fixed", "num_rows", "matching")))
 
 model_fixed <- model_fixed %>%
   filter(fixed == 1) %>%
-  select(-rm_cols)
+  select(-any_of(c("fixed", "num_rows", "matching")))
 
 if (pathogen == "LASSA") {
   outbreak_fixed <- outbreak_fixed %>%
     filter(fixed == 1) %>%
-    select(-rm_cols)
+    select(-any_of(c("fixed", "num_rows", "matching")))
 }
 
 if (pathogen == "EBOLA") {
