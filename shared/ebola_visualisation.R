@@ -253,9 +253,9 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     theme_booktabs() %>%
     vline(j = "Survey date", border = border_style) %>%
     hline(i = ~ index_of_change == 1) %>%
-      hline(i = ~ is.na(`Outbreak`)) %>%
-      bold(j = 1, i = ~ is.na(`Outbreak`), bold = TRUE, part = "body" ) %>% 
     bold(i = 1, bold = TRUE, part = "header") %>%
+      hline(i = ~ is.na(`Survey date`)) %>%
+      bold(j = 1, i = ~ is.na(`Survey date`), bold = TRUE, part = "body" ) %>%
     add_footer_lines("") %>%
     align(align = "left", part = "all")
 
