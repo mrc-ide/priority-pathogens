@@ -100,7 +100,26 @@ df_plot <- df %>%
           "Sep", "Oct", "Nov", "Dec"
         )
       )
-  )
+  ) %>%
+  # modify standard deviation and standard error to visualise uncertainty in plots
+mutate(
+  parameter_uncertainty_type =
+    case_when(is.na(parameter_uncertainty_type) &
+                parameter_uncertainty_singe_type == "Standard Deviation" ~
+                "Standard Deviation",
+              is.na(parameter_uncertainty_type) &
+                parameter_uncertainty_singe_type == "Standard Error" ~
+                "Standard Error",
+              TRUE ~ parameter_uncertainty_type),
+  parameter_uncertainty_lower_value =
+    case_when(parameter_uncertainty_type %in% c("Standard Deviation", "Standard Error") ~
+                parameter_value - parameter_uncertainty_single_value,
+              TRUE ~ parameter_uncertainty_lower_value),
+  parameter_uncertainty_upper_value =
+    case_when(parameter_uncertainty_type %in% c("Standard Deviation", "Standard Error") ~
+                parameter_value + parameter_uncertainty_single_value,
+              TRUE ~ parameter_uncertainty_upper_value)
+)
 
 ordered_dat <- df_plot %>%
   group_by(population_country) %>%

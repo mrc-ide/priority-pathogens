@@ -9,6 +9,8 @@ library(flextable)
 library(officer)
 library(purrr)
 library(scales)
+library(cowplot)
+library(stringr)
 
 orderly_strict_mode()
 
@@ -19,10 +21,15 @@ orderly_artefact(
   "Plots and tables for severity parameters",
   c(
     "Severity_plots/plot_outbreak_filtered.png",
+    "Severity_plots/plot_split_outbreak_filtered.png",
     "Severity_plots/plot_country_filtered.png",
     "Severity_plots/plot_outbreak_unfiltered.png",
     "Severity_plots/plot_country_unfiltered.png",
     "Severity_tables/qa_filtered/tab_filtered.png",
+    "Severity_tables/qa_filtered/range_outbreak.png",
+    "Severity_tables/qa_filtered/range_outbreak_country.png",
+    "Severity_tables/qa_filtered/range_country_outbreak.png",
+    "Severity_tables/qa_filtered/range_species_outbreak.png",
     "Severity_tables/unfiltered/tab_unfiltered.png"
   )
 )
@@ -136,6 +143,25 @@ sev_dat <- df %>%
           "Percentage (%)",
         TRUE ~ parameter_unit
       )
+  ) %>%
+  # modify standard deviation and standard error to visualise uncertainty in plots
+  mutate(
+    parameter_uncertainty_type =
+      case_when(is.na(parameter_uncertainty_type) &
+                  parameter_uncertainty_singe_type == "Standard Deviation" ~
+                  "Standard Deviation",
+                is.na(parameter_uncertainty_type) &
+                  parameter_uncertainty_singe_type == "Standard Error" ~
+                  "Standard Error",
+                TRUE ~ parameter_uncertainty_type),
+    parameter_uncertainty_lower_value =
+      case_when(parameter_uncertainty_type %in% c("Standard Deviation", "Standard Error") ~
+                  parameter_value - parameter_uncertainty_single_value,
+                TRUE ~ parameter_uncertainty_lower_value),
+    parameter_uncertainty_upper_value =
+      case_when(parameter_uncertainty_type %in% c("Standard Deviation", "Standard Error") ~
+                  parameter_value + parameter_uncertainty_single_value,
+                TRUE ~ parameter_uncertainty_upper_value)
   )
 
 # Order data for plots
@@ -193,6 +219,38 @@ plot_country_qa <- create_plot(
   symbol_col_by = "outbreak"
 )
 
+# Split outbreak plot with WA on left and all other outbreaks on the right
+wa_dat <- ordered_dat %>% filter(outbreak == "West Africa 2013-2016")
+other_dat <- ordered_dat %>% filter(outbreak != "West Africa 2013-2016")
+
+wa_outbreak_qa <- create_plot(
+  wa_dat,
+  param = parameter,
+  qa_filter = TRUE,
+  symbol_shape_by = "cfr_ifr_method",
+  facet_by = "outbreak",
+  symbol_col_by = "population_country"
+)
+
+other_outbreak_qa <- create_plot(
+  other_dat,
+  param = parameter,
+  qa_filter = TRUE,
+  symbol_shape_by = "cfr_ifr_method",
+  facet_by = "outbreak",
+  symbol_col_by = "population_country"
+)
+
+# Get the original legend from outbreak qa plot
+outbreak_legend <- get_legend(plot_outbreak_qa + theme(legend.position = "right"))
+
+panels <- plot_grid(other_outbreak_qa + theme(legend.position = "none"),
+                    wa_outbreak_qa + theme(legend.position = "none"),
+                    nrow = 1, align = "hv")
+
+plot_split_outbreak <- plot_grid(panels, outbreak_legend,
+                                 ncol = 2, align = "hv", rel_widths = c(1, 0.2))
+
 # Plot with NO qa_filter
 plot_outbreak_all <- create_plot(
   ordered_dat,
@@ -212,9 +270,14 @@ plot_country_all <- create_plot(
   symbol_col_by = "outbreak"
 )
 
+
 # Save
 ggsave("Severity_plots/plot_outbreak_filtered.png", plot_outbreak_qa,
   width = 9, height = 16, units = "in", bg = "white"
+)
+
+ggsave("Severity_plots/plot_split_outbreak_filtered.png", plot_split_outbreak,
+       width = 16, height = 9, units = "in", bg = "white"
 )
 
 ggsave("Severity_plots/plot_country_filtered.png", plot_country_qa,
@@ -265,6 +328,12 @@ range_outbreak_country <- create_range_table(
   qa_filter = TRUE, rounding = "integer"
 )
 
+range_outbreak <- create_range_table(
+  df = ordered_dat,
+  main_group = "outbreak", main_group_label = "Outbreak",
+  qa_filter = TRUE, rounding = "integer"
+)
+
 range_country_outbreak <- create_range_table(
   df = ordered_dat,
   main_group = "population_country", main_group_label = "Country",
@@ -285,6 +354,9 @@ range_species_outbreak <- create_range_table(
 # Save
 save_as_image(range_outbreak_country,
   path = "Severity_tables/qa_filtered/range_outbreak_country.png"
+)
+save_as_image(range_outbreak,
+              path = "Severity_tables/qa_filtered/range_outbreak.png"
 )
 save_as_image(range_country_outbreak,
   path = "Severity_tables/qa_filtered/range_country_outbreak.png"
