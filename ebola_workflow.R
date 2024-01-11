@@ -23,15 +23,15 @@ orderly_run("db_compilation", parameters = list(pathogen = "EBOLA"))
 orderly_run("ebola_reproduction_number", parameters = list(pathogen = "EBOLA"))
 
 # Severity (CFR/IFR)
-# To do: naive vs adjusted
 orderly_run("ebola_severity", parameters = list(pathogen = "EBOLA"))
 
 # Human Delays
 orderly_run("ebola_delays", parameters = list(pathogen = "EBOLA"))
 
-# Risk factors
+# Seroprevalence (Note: not finished - this is rough and more cleaning needed)
+orderly_run("ebola_seroprevalence", parameters = list(pathogen = "EBOLA"))
 
-# Seroprevalence
+# Risk factors
 
 # Mutations
 
@@ -43,7 +43,10 @@ orderly_run("ebola_delays", parameters = list(pathogen = "EBOLA"))
 
 # Doubling time
 
+# Figures for main manuscript
+orderly_run("ebola_figures", parameters = list(pathogen = "EBOLA"))
 
+# Figures for supplementary material
 
 
 
