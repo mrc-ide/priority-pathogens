@@ -64,7 +64,8 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       legend.title = element_blank(),
       axis.title.x = element_text(vjust = -1)
     ) +
-    scale_color_manual(values = mypalette) +
+    scale_color_manual(values = mypalette,
+                       labels = function(x) str_wrap(x, width = 25)) +
     guides(
       colour = guide_legend(order = 1, ncol = 1),
       linetype = guide_legend(order = 2, ncol = 1)
@@ -102,7 +103,7 @@ round_range <- function(range_string, digits = 0) {
   returned_range
 }
 
-## Function to create table of parameter values - sorry, this is NOT generic
+## Function to create table of parameter values - this is NOT generic
 
 # df = clean data frame
 # param = the parameter_class you're interested in (e.g. "Reproduction number,
@@ -161,6 +162,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
 
   r_tbl <- df %>%
     select(c(
+      parameter_type,
       Article = article_label,
       `Outbreak` = outbreak,
       Country = population_country,
@@ -173,6 +175,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       `Uncertainty type` = comb_uncertainty_type,
       `Uncertainty` = comb_uncertainty,
       `Method` = method_r,
+      `Timing` = method_moment_value,
       delay_short,
       `Adjustment` = cfr_ifr_method,
       `Numerator` = cfr_ifr_numerator,
@@ -188,7 +191,8 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       `Inverse` = inverse_param
     ))
   
-  if (group != "Outbreak") {
+  if (param != "Seroprevalence") {
+    if (group != "Outbreak") {
     r_tbl <- r_tbl %>%
       arrange(
         !!sym(group),
@@ -208,6 +212,18 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
         `Survey start day`
       )
     }
+  }
+  
+  if (param == "Seroprevalence") {
+    r_tbl <- r_tbl %>%
+      arrange(
+        !!sym(group),
+        Country,
+        `Survey start year`,
+        `Survey start month`,
+        `Survey start day`
+      )
+  }
   
     r_tbl <- r_tbl %>%
       group_by(!!sym(group)) %>%
@@ -253,6 +269,17 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       )
     }
     
+    if (param == "Seroprevalence") {
+      r_tbl <- r_tbl %>% as_flextable(
+        col_keys = c(
+          "Country", "Location", "Article", "Timing", "Survey date",
+          "Central estimate", "Central range", "Central type", "Uncertainty",
+          "Uncertainty type", "Population Sample", "Sample size", "Disaggregated by"
+        ),
+        hide_grouplabel = TRUE
+      )
+    }
+    
     r_tbl <- r_tbl %>%
       fontsize(i = 1, size = 12, part = "header") %>%
     autofit() %>%
@@ -283,11 +310,11 @@ generate_min_max_columns <- function(data) {
         parameter_lower_bound,
         na.rm = TRUE
       ),
-      min_uncertainty = pmin(parameter_uncertainty_single_value,
+      min_uncertainty = pmin(#parameter_uncertainty_single_value,
                              parameter_uncertainty_upper_value,
                              parameter_uncertainty_lower_value, na.rm = TRUE
                              ),
-      max_uncertainty = pmax(parameter_uncertainty_single_value,
+      max_uncertainty = pmax(#parameter_uncertainty_single_value,
                              parameter_uncertainty_upper_value,
                              parameter_uncertainty_lower_value, na.rm = TRUE)
     )
@@ -314,9 +341,14 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
     dat <- dat %>% filter(article_qa_score >= 50)
   }
 
-  grouped_dat <- dat %>%
-    group_by(!!sym(main_group), !!sym(sub_group))
-
+  if (is.na(sub_group)) {
+    grouped_dat <- dat %>%
+      group_by(!!sym(main_group))
+  } else {
+    grouped_dat <- dat %>%
+      group_by(!!sym(main_group), !!sym(sub_group))
+  }
+  
   with_ranges <- grouped_dat %>%
     summarise(
       min = min(min_central, na.rm = TRUE),
@@ -334,12 +366,21 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
                        paste(min_unc, max_unc, sep = " - ")
     ))
 
+  if (is.na(sub_group)) {
   labels <- setNames(
     as.list(
-      c(paste0(main_group_label), paste0(sub_group_label))
+      c(paste0(main_group_label))
     ),
-    names(with_ranges[1:2])
+    names(with_ranges[1])
   )
+  } else {
+    labels <- setNames(
+      as.list(
+        c(paste0(main_group_label), paste0(sub_group_label))
+      ),
+      names(with_ranges[1:2])
+    )
+  }
 
   if (rounding == "integer") {
     with_ranges <- with_ranges %>%
@@ -357,31 +398,60 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
       )
   }
 
-  grouped_tab <- with_ranges %>%
-    select(c(
-      {{ main_group }},
-      {{ sub_group }},
-      `Central Estimate Range` = est_range,
-      `Uncertainty Range` = est_unc,
-      `Number of Papers` = n_estimates
-    )) %>%
-    group_by(!!sym(main_group)) %>%
-    mutate(
-      index_of_change = row_number(),
-      index_of_change = ifelse(
-        index_of_change == max(index_of_change), 1, 0
+  if (is.na(sub_group)) {
+    grouped_tab <- with_ranges %>%
+      select(c(
+        {{ main_group }},
+        `Central Estimate Range` = est_range,
+        `Uncertainty Range` = est_unc,
+        `Number of Papers` = n_estimates
+      )) %>%
+      group_by(!!sym(main_group)) %>%
+      mutate(
+        index_of_change = row_number(),
+        index_of_change = ifelse(
+          index_of_change == max(index_of_change), 1, 0
+        )
+      ) %>%
+      as_grouped_data(groups = {{ main_group }}) %>%
+      mutate(
+        index_of_change = ifelse(is.na(index_of_change), 0, index_of_change)
+      ) %>%
+      flextable(
+        col_keys = c(
+          {{ main_group }},
+          "Central Estimate Range", "Uncertainty Range", "Number of Papers"
+        )
       )
-    ) %>%
-    as_grouped_data(groups = {{ main_group }}) %>%
-    mutate(
-      index_of_change = ifelse(is.na(index_of_change), 0, index_of_change)
-    ) %>%
-    flextable(
-      col_keys = c(
-        {{ main_group }}, {{ sub_group }},
-        "Central Estimate Range", "Uncertainty Range", "Number of Papers"
+    
+  } else {
+    
+    grouped_tab <- with_ranges %>%
+      select(c(
+        {{ main_group }},
+        {{ sub_group }},
+        `Central Estimate Range` = est_range,
+        `Uncertainty Range` = est_unc,
+        `Number of Papers` = n_estimates
+      )) %>%
+      group_by(!!sym(main_group)) %>%
+      mutate(
+        index_of_change = row_number(),
+        index_of_change = ifelse(
+          index_of_change == max(index_of_change), 1, 0
+        )
+      ) %>%
+      as_grouped_data(groups = {{ main_group }}) %>%
+      mutate(
+        index_of_change = ifelse(is.na(index_of_change), 0, index_of_change)
+      ) %>%
+      flextable(
+        col_keys = c(
+          {{ main_group }}, {{ sub_group }},
+          "Central Estimate Range", "Uncertainty Range", "Number of Papers"
+        )
       )
-    )
+  }
 
   tab_ranges <- grouped_tab %>%
     fontsize(i = 1, size = 12, part = "header") %>%
