@@ -9,15 +9,17 @@ assign_ebola_outbreak <- function(df) {
         population_study_start_year == 1976 & population_country ==
           "DRC" ~ "DRC, 1976",
         population_study_start_year == 1976 & population_country ==
-          "DRC" ~ "DRC, 1976",
-        population_study_start_year == 1976 & population_country ==
           "Sudan" ~ "South Sudan, 1976",
         population_study_start_year == 1976 & population_country ==
           "DRC,Sudan" ~ "DRC & South Sudan, 1976",
         population_study_start_year == 1979 & population_country ==
           "South Sudan" ~ "South Sudan, 1979",
+        population_study_start_year == 1994 & population_country ==
+          "Gabon" ~ "Gabon, 1994",
         population_study_start_year == 1995 & population_country ==
           "DRC" ~ "DRC, 1995",
+        population_study_start_year == 1996 & population_country ==
+          "Gabon" ~ "Gabon, 1996",
         population_study_start_year == 2000 & population_country ==
           "Uganda" ~ "Uganda, 2000-2001",
         population_study_start_year == 2005 & population_country ==
@@ -45,14 +47,21 @@ assign_ebola_outbreak <- function(df) {
               "Guinea, Liberia, Nigeria, Sierra Leone",
               "Liberia",
               "Liberia, Nigeria",
-              "Nigeria"
+              "Nigeria",
+              "Mali"
             ) ~ "West Africa 2013-2016",
         population_study_start_year == 2014 & population_country ==
           "DRC" ~ "DRC, 2014",
         population_study_start_year == 2016 & population_country ==
           "Sierra Leone" ~ "West Africa 2013-2016",
+        population_study_start_year == 2016 & population_country ==
+          "Guinea" ~ "West Africa 2013-2016",
         population_study_start_year == 2017 & population_country ==
           "DRC" ~ "DRC, 2017",
+        # post-outbreak seroprevalence
+        population_study_start_year == 2017 &
+          population_country == "Sierra Leone" &
+          parameter_class == "Seroprevalence" ~ "West Africa 2013-2016",
         # Always check these as there were separate DRC outbreaks in 2018 and 2020 too
         # 2018 - DRC - Équateur Province
         # 2018 - 2020 DRC (and Uganda) - North Kivu, Ituri and South Kivu Provinces
@@ -95,7 +104,9 @@ order_ebola_outbreaks <- function(outbreak_var) {
         "South Sudan, 1976",
         "DRC & South Sudan, 1976",
         "South Sudan, 1979",
+        "Gabon, 1994",
         "DRC, 1995",
+        "Gabon, 1996",
         "Uganda, 2000-2001",
         "Republic of the Congo, 2005",
         "DRC, 2007",
