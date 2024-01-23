@@ -44,8 +44,8 @@ clean_dfs <- function(df, pathogen) {
       # discussion with co-authors)
       df <- df %>%
         mutate(
-          qa_m1 = case_when(covidence_id == 3138 ~ "No", TRUE ~ qa_m1),
-          qa_a3 = case_when(covidence_id == 3138 ~ "No", TRUE ~ qa_a3)
+          qa_m1 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_m1),
+          qa_a3 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_a3)
         )
     }
     
@@ -54,28 +54,28 @@ clean_dfs <- function(df, pathogen) {
       df <- df %>% 
         mutate(journal = str_to_title(journal)) %>%
         mutate(journal = sub("^The\\s+", "", journal)) %>%
-        mutate(journal = ifelse(journal == 'Bmj','British Medical Journal',
-                                ifelse(journal == 'Transactions Of The Royal Society Tropical Medicine And Hygiene','Transactions Of The Royal Society Of Tropical Medicine And Hygiene',        
+        mutate(journal = ifelse(journal %in% 'Bmj','British Medical Journal',
+                                ifelse(journal %in% 'Transactions Of The Royal Society Tropical Medicine And Hygiene','Transactions Of The Royal Society Of Tropical Medicine And Hygiene',        
                                        journal))) %>%
         #journal typos
         mutate(journal = case_when(
-          covidence_id == 870 ~ 'Transactions Of The Royal Society Of Tropical Medicine And Hygiene',
-          covidence_id == 2684 ~ 'International Journal Of Infectious Diseases',
-          covidence_id == 669 ~ 'American Journal Of Tropical Medicine And Hygiene',
-          covidence_id == 4237 ~ 'Chaos Solitons & Fractals',
-          covidence_id == 2655 ~ 'Lancet Infectious Diseases',
+          covidence_id %in% 870 ~ 'Transactions Of The Royal Society Of Tropical Medicine And Hygiene',
+          covidence_id %in% 2684 ~ 'International Journal Of Infectious Diseases',
+          covidence_id %in% 669 ~ 'American Journal Of Tropical Medicine And Hygiene',
+          covidence_id %in% 4237 ~ 'Chaos Solitons & Fractals',
+          covidence_id %in% 2655 ~ 'Lancet Infectious Diseases',
           TRUE ~ journal)) %>%
         #year typos
         mutate(year_publication = case_when(
-          covidence_id == 1012 ~ 2008,
-          covidence_id == 1368 ~ 2001,
-          covidence_id == 1444 ~ 2017,
-          covidence_id == 2008 ~ 1983,
+          covidence_id %in% 1012 ~ 2008,
+          covidence_id %in% 1368 ~ 2001,
+          covidence_id %in% 1444 ~ 2017,
+          covidence_id %in% 2008 ~ 1983,
           TRUE ~ year_publication)) %>%
         #volume typos
         mutate(volume = case_when(
-          covidence_id == 1012 ~ 42,
-          covidence_id == 4251 ~ 2020,
+          covidence_id %in% 1012 ~ 42,
+          covidence_id %in% 4251 ~ 2020,
           TRUE ~ volume)) %>%
         #issue typos
         mutate(issue = case_when(
@@ -94,21 +94,21 @@ clean_dfs <- function(df, pathogen) {
           covidence_id %in% c(1413, 2567, 2610, 2661, 3215, 3258, 3635) ~ NA,
           TRUE ~ page_first)) %>%
         mutate(page_last = case_when(
-          covidence_id == 263 ~ 28,
-          covidence_id == 757 ~ 977,
-          covidence_id == 1235 ~ 1205,
-          covidence_id == 4745 ~ 784,
+          covidence_id %in% 263 ~ 28,
+          covidence_id %in% 757 ~ 977,
+          covidence_id %in% 1235 ~ 1205,
+          covidence_id %in% 4745 ~ 784,
           TRUE ~ page_last)) %>%
         #title typos
         mutate(article_title = case_when(
-          covidence_id == 444 ~ 'Genetic characterization of Lassa virus strains isolated from 2012 to 2016 in southeastern Nigeria',
-          covidence_id == 545 ~ 'Lassa Virus Activity in Guinea - Distribution of Human Antiviral Antibody-Defined Using Enzyme-Linked-Immunosorbent-Assay with Recombinant Antigen',
-          covidence_id == 645 ~ 'Clinical Observations in 42 Patients with Lassa Fever',
-          covidence_id == 874 ~ 'Lassa Fever in Eastern Province of Sierra Leone, 1970-1972 .2. Clinical Observations and Virological Studies on Selected Hospital Cases',
-          covidence_id == 1012 ~ 'Strain-specific antibody response to Lassa virus in the local population of west Africa',
-          covidence_id == 2648 ~ 'Rodent-borne infections in rural Ghanaian farming communities',
-          covidence_id == 4371 ~ 'Assessing the dynamics of Lassa fever with impact of environmental sanitation: optimal control and cost-effectiveness analysis',
-          covidence_id == 4727 ~ 'Lassa Fever among Children in Eastern Province, Sierra Leone: A 7-year Retrospective Analysis (2012-2018)',
+          covidence_id %in% 444 ~ 'Genetic characterization of Lassa virus strains isolated from 2012 to 2016 in southeastern Nigeria',
+          covidence_id %in% 545 ~ 'Lassa Virus Activity in Guinea - Distribution of Human Antiviral Antibody-Defined Using Enzyme-Linked-Immunosorbent-Assay with Recombinant Antigen',
+          covidence_id %in% 645 ~ 'Clinical Observations in 42 Patients with Lassa Fever',
+          covidence_id %in% 874 ~ 'Lassa Fever in Eastern Province of Sierra Leone, 1970-1972 .2. Clinical Observations and Virological Studies on Selected Hospital Cases',
+          covidence_id %in% 1012 ~ 'Strain-specific antibody response to Lassa virus in the local population of west Africa',
+          covidence_id %in% 2648 ~ 'Rodent-borne infections in rural Ghanaian farming communities',
+          covidence_id %in% 4371 ~ 'Assessing the dynamics of Lassa fever with impact of environmental sanitation: optimal control and cost-effectiveness analysis',
+          covidence_id %in% 4727 ~ 'Lassa Fever among Children in Eastern Province, Sierra Leone: A 7-year Retrospective Analysis (2012-2018)',
           TRUE ~ article_title)) %>%
         #title consistency
         mutate(article_title = gsub(";", ",", article_title)) %>%
@@ -118,12 +118,12 @@ clean_dfs <- function(df, pathogen) {
         #missing dois
         mutate(doi = sub(".*?10\\.", "10.", doi)) %>%
         mutate(doi = case_when(
-          covidence_id == 2656 ~ '10.1016/j.ijid.2019.03.030',
-          covidence_id == 2662 ~ '10.1016/S2214-109X(20)30518-0',
-          covidence_id == 1426 ~ '10.1016/j.cell.2015.07.020',
-          covidence_id == 441  ~ '10.1016/j.sste.2014.04.005',
-          covidence_id == 444  ~ '10.1371/journal.pntd.0006971',
-          covidence_id == 461  ~ '10.1016/S1473-3099(18)30121-X',
+          covidence_id %in% 2656 ~ '10.1016/j.ijid.2019.03.030',
+          covidence_id %in% 2662 ~ '10.1016/S2214-109X(20)30518-0',
+          covidence_id %in% 1426 ~ '10.1016/j.cell.2015.07.020',
+          covidence_id %in% 441  ~ '10.1016/j.sste.2014.04.005',
+          covidence_id %in% 444  ~ '10.1371/journal.pntd.0006971',
+          covidence_id %in% 461  ~ '10.1016/S1473-3099(18)30121-X',
           TRUE ~ doi)) %>%
         #paper copies
         mutate(paper_copy_only = case_when(
@@ -131,19 +131,19 @@ clean_dfs <- function(df, pathogen) {
           TRUE ~ paper_copy_only)) %>%
         #name typos
         mutate(first_author_surname = case_when(
-          covidence_id == 2648 ~ 'Shirley C.',
-          covidence_id == 1447 ~ 'N.A.',
+          covidence_id %in% 2648 ~ 'Shirley C.',
+          covidence_id %in% 1447 ~ 'N.A.',
           TRUE ~ first_author_surname)) %>%
         mutate(first_author_first_name = sub(".*\\.(.*)", "\\1", first_author_first_name)) %>%
         mutate(first_author_first_name = sub("^\\s+", "", first_author_first_name)) %>%                 
         mutate(first_author_first_name = case_when(
-          covidence_id == 2648 ~ 'Nimo-Paintsil',
-          covidence_id == 2585 ~ 'Dalhat',
-          covidence_id == 1033 ~ 'Ehichioya',
-          covidence_id == 661 ~ 'Kerneis',
+          covidence_id %in% 2648 ~ 'Nimo-Paintsil',
+          covidence_id %in% 2585 ~ 'Dalhat',
+          covidence_id %in% 1033 ~ 'Ehichioya',
+          covidence_id %in% 661 ~ 'Kerneis',
           TRUE ~ first_author_first_name))          
       #revised qa after parameter removed: now outbreak only
-      df[df$covidence_id==152, c("qa_m1", "qa_m2", "qa_a3","qa_a4", "qa_d6", "qa_d7")] <- NA
+      df[df$covidence_id %in% 152, c("qa_m1", "qa_m2", "qa_a3","qa_a4", "qa_d6", "qa_d7")] <- NA
     }
     
   }
@@ -167,8 +167,8 @@ clean_dfs <- function(df, pathogen) {
       df <- df %>%
         mutate(
           ebola_variant = case_when(
-            covidence_id == 15947 ~ "Bundibugyo virus (BDBV)",
-            covidence_id == 5675 ~
+            covidence_id %in% 15947 ~ "Bundibugyo virus (BDBV)",
+            covidence_id %in% 5675 ~
               "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
             TRUE ~ ebola_variant
           )
@@ -179,10 +179,10 @@ clean_dfs <- function(df, pathogen) {
       #reclassified models
       df <- df %>%
         mutate(model_type = case_when(
-          covidence_id == 2620 ~ 'Other',
+          covidence_id %in% 2620 ~ 'Other',
           TRUE ~ model_type),
           stoch_deter = case_when(
-            covidence_id == 285  ~ 'Stochastic',
+            covidence_id %in% 285  ~ 'Stochastic',
             TRUE ~ stoch_deter),
           #missed transmission pathways
           transmission_route = case_when(
@@ -241,7 +241,7 @@ clean_dfs <- function(df, pathogen) {
         mutate(outbreak_location = sub("^\\s+", "", outbreak_location)) %>%      
         mutate(outbreak_location = str_to_title(outbreak_location)) %>%      
         mutate(outbreak_location = case_when(
-          covidence_id == 560 & access_outbreak_id == 3 ~ 'Kenema Government Hospital',
+          covidence_id %in% 560 & access_outbreak_id %in% 3 ~ 'Kenema Government Hospital',
           TRUE ~ outbreak_location)) %>%
         #unspecified case detection mode 
         mutate(cases_mode_detection = case_when(
@@ -323,14 +323,14 @@ clean_dfs <- function(df, pathogen) {
         # correspondence/wrong entries
         filter(!(covidence_id %in% c(5765, 5870, 1510, 17096))) %>%
         # Remove duplicate entry from single extracted paper not identified as distinct
-        filter(!(covidence_id == 3532 & access_param_id == 37)) %>%
+        filter(!(covidence_id %in% 3532 & access_param_id %in% 37)) %>%
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(
           across(
             starts_with("population"),
-            ~ ifelse(covidence_id == 18236 & is.na(.),
-              first(.[covidence_id == 18236]), .
+            ~ ifelse(covidence_id %in% 18236 & is.na(.),
+              first(.[covidence_id %in% 18236]), .
             )
           )
         ) %>%
@@ -339,16 +339,16 @@ clean_dfs <- function(df, pathogen) {
         mutate(
           population_country =
             case_when(
-              population_country ==
+              population_country %in%
                 "France, Germany, Italy, Mali, Netherlands, Nigeria, Norway, Senegal, Spain, Switzerland, United Kingdom, United States" ~
                 "Multi-country: Africa, Europe, USA (n = 12)",
-              population_country ==
+              population_country %in%
                 "The Gambia, Guinea, Liberia, Nigeria, Senegal, Sierra Leone, United Kingdom, United States" ~
                 "Multi-country: Africa, Europe, USA (n = 8)",
-              population_country ==
+              population_country %in%
                 "Guinea, Italy, Liberia, Mali, Nigeria, Senegal, Sierra Leone, Spain, United Kingdom, United States" ~
                 "Multi-country: Africa, Europe, USA (n = 10)",
-              population_country ==
+              population_country %in%
                 "DRC, Republic of the Congo, Côte d'Ivoire, Gabon, South Africa, South Sudan, Uganda" ~
                 "Multi-country: Africa (n = 7)",
               # 11688 = Guinea, Liberia, Nigeria, Sierra Leone, Spain, USA
@@ -364,7 +364,7 @@ clean_dfs <- function(df, pathogen) {
         # merge ebola_variant and ebola_variant_p
         mutate(
           ebola_variant_p = case_when(
-            ebola_variant_p == "Bundibugyo virus (BDBV)¬†" ~ ebola_variant,
+            ebola_variant_p %in% "Bundibugyo virus (BDBV)¬†" ~ ebola_variant,
             TRUE ~ ebola_variant_p
           ),
           ebola_variant_fix = case_when(
@@ -379,21 +379,21 @@ clean_dfs <- function(df, pathogen) {
         # clean the other human delays and merge the common ones into parameter_type
         mutate(
           other_delay_start = case_when(
-            other_delay_start == "Other: Health center visit" ~ "Seeking Care",
+            other_delay_start %in% "Other: Health center visit" ~ "Seeking Care",
             other_delay_start %in% c("Infection", "Contact with Primary Case") ~ "Exposure/Infection",
-            other_delay_start == "Funeral Start" ~ "Other",
-            other_delay_start == "Positive Test" ~ "Positive test",
-            other_delay_start == "Sampling date" ~ "Sample collection",
+            other_delay_start %in% "Funeral Start" ~ "Other",
+            other_delay_start %in% "Positive Test" ~ "Positive test",
+            other_delay_start %in% "Sampling date" ~ "Sample collection",
             other_delay_start %in% c(
               "Other: Enter Timepoint in Text Box",
               "Other: Not specified 'duration of illness of those who died'",
               "Other: alert of illness onset"
             ) ~ "Symptom Onset/Fever",
-            other_delay_start == "Testing" ~ "Test",
+            other_delay_start %in% "Testing" ~ "Test",
             TRUE ~ other_delay_start
           ),
           other_delay_end = case_when(
-            other_delay_end == "Death in the community" ~ "Death in community",
+            other_delay_end %in% "Death in the community" ~ "Death in community",
             other_delay_end %in% c("Negative RT-PCR", "Negative Test") ~ "Negative test",
             other_delay_end %in% c(
               "Clearance of Ebola virus RNA from seminal fluid in 50% of male survivors",
@@ -406,7 +406,7 @@ clean_dfs <- function(df, pathogen) {
             other_delay_end %in% c(
               "Removal from community", "Household quarantine", "Isolation"
             ) ~ "Quarantine",
-            other_delay_end == "Symptom Resolution" ~ "Recovery/non-Infectiousness",
+            other_delay_end %in% "Symptom Resolution" ~ "Recovery/non-Infectiousness",
             other_delay_end %in% c(
               "Detection", "Notification", "Reporting of symptoms",
               "Other: Case report completion",
@@ -442,12 +442,12 @@ clean_dfs <- function(df, pathogen) {
             ),
           delay_short =
             case_when(
-              parameter_class == "Human delay" ~
+              parameter_class %in% "Human delay" ~
                 gsub("^Human delay - ", "", parameter_type), TRUE ~ NA
             ),
           delay_short = str_to_sentence(delay_short),
           delay_short =
-            ifelse(delay_short == "Time in care (length of stay)",
+            ifelse(delay_short %in% "Time in care (length of stay)",
               "Admission to care to death/discharge", delay_short
             ),
           delay_start =
@@ -473,10 +473,10 @@ clean_dfs <- function(df, pathogen) {
             ),
           parameter_unit =
             case_when(
-              parameter_class == "Human delay" &
-                parameter_unit == "Per day" ~ "Days",
-              parameter_class == "Human delay" &
-                parameter_unit == "Per week" ~ "Weeks",
+              parameter_class %in% "Human delay" &
+                parameter_unit %in% "Per day" ~ "Days",
+              parameter_class %in% "Human delay" &
+                parameter_unit %in% "Per week" ~ "Weeks",
               TRUE ~ parameter_unit
             )
         ) %>%
@@ -484,185 +484,185 @@ clean_dfs <- function(df, pathogen) {
           # Fix entry errors
           # Add missed Country
           population_country = ifelse(
-            covidence_id == 1170, "Sierra Leone", population_country
+            covidence_id %in% 1170, "Sierra Leone", population_country
           ),
 
           # Correct entry cov ID 4900
           parameter_lower_bound = ifelse(
-            covidence_id == 4900 &
-              parameter_type ==
+            covidence_id %in% 4900 &
+              parameter_type %in%
                 "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
             3.4, parameter_lower_bound
           ),
           parameter_upper_bound = ifelse(
-            covidence_id == 4900 &
-              parameter_type ==
+            covidence_id %in% 4900 &
+              parameter_type %in%
                 "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
             6.0, parameter_upper_bound
           ),
           parameter_value_type = ifelse(
-            covidence_id == 4900 &
-              parameter_type ==
+            covidence_id %in% 4900 &
+              parameter_type %in%
                 "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
             "Mean", parameter_value_type
           ),
 
           # Correct entry cov ID 1889
           parameter_value = ifelse(
-            covidence_id == 1889 &
-              parameter_type == "Severity - case fatality rate (CFR)",
+            covidence_id %in% 1889 &
+              parameter_type %in% "Severity - case fatality rate (CFR)",
             95.5, parameter_value
           ),
 
           # Correct entry cov ID 16951
           parameter_unit = ifelse(
-            covidence_id == 16951 &
-              parameter_type ==
+            covidence_id %in% 16951 &
+              parameter_type %in%
                 "Human delay - Symptom Onset/Fever to Reporting",
             "Days", parameter_unit
           ),
           parameter_value_type = ifelse(
-            covidence_id == 16951 &
-              parameter_type ==
+            covidence_id %in% 16951 &
+              parameter_type %in%
                 "Human delay - Symptom Onset/Fever to Reporting",
             "Median", parameter_value_type
           ),
 
           # Correct entry cov ID 3470
           parameter_unit = ifelse(
-            covidence_id == 3470 &
-              parameter_type ==
+            covidence_id %in% 3470 &
+              parameter_type %in%
                 "Human delay - latent period",
             "Days", parameter_unit
           ),
 
           # Correct entry cov ID 4787
           parameter_from_figure = ifelse(
-            covidence_id == 4787 &
-              parameter_class == "Reproduction number",
+            covidence_id %in% 4787 &
+              parameter_class %in% "Reproduction number",
             TRUE, parameter_from_figure
           ),
 
           # Correct entry cov ID 18236
           population_country = ifelse(
-            covidence_id == 18236 &
-              parameter_type ==
+            covidence_id %in% 18236 &
+              parameter_type %in%
                 "Human delay - Symptom Onset/Fever to Admission to Care/Hospitalisation",
             "Guinea", population_country
           ),
 
           # Correct entry cov ID 18372
           population_country = ifelse(
-            covidence_id == 18372 &
-              parameter_class == "Human delay",
+            covidence_id %in% 18372 &
+              parameter_class %in% "Human delay",
             "DRC", population_country
           ),
 
           # Correct entry cov ID 17715
           parameter_value = case_when(
-            covidence_id == 17715 & parameter_class == "Human delay" ~ 31.25,
+            covidence_id %in% 17715 & parameter_class %in% "Human delay" ~ 31.25,
             TRUE ~ parameter_value
           ),
           parameter_value_type = case_when(
-            covidence_id == 17715 & parameter_class == "Human delay" ~ "Mean",
+            covidence_id %in% 17715 & parameter_class %in% "Human delay" ~ "Mean",
             TRUE ~ parameter_value_type
           ),
           parameter_uncertainty_type = case_when(
-            covidence_id == 17715 & parameter_class == "Human delay" ~ "Range",
+            covidence_id %in% 17715 & parameter_class %in% "Human delay" ~ "Range",
             TRUE ~ parameter_uncertainty_type
           ),
           parameter_uncertainty_lower_value = case_when(
-            covidence_id == 17715 & parameter_class == "Human delay" ~ 11,
+            covidence_id %in% 17715 & parameter_class %in% "Human delay" ~ 11,
             TRUE ~ parameter_uncertainty_lower_value
           ),
           parameter_uncertainty_upper_value = case_when(
-            covidence_id == 17715 & parameter_class == "Human delay" ~ 71,
+            covidence_id %in% 17715 & parameter_class %in% "Human delay" ~ 71,
             TRUE ~ parameter_uncertainty_upper_value
           ),
           inverse_param = case_when(
-            covidence_id == 17715 & parameter_class == "Human delay" ~ FALSE,
+            covidence_id %in% 17715 & parameter_class %in% "Human delay" ~ FALSE,
             TRUE ~ inverse_param
           ),
 
           # Correct cov if 5889
           parameter_uncertainty_type = case_when(
-            covidence_id == 5889 & parameter_class == "Human delay" ~ "HDPI 95%",
+            covidence_id %in% 5889 & parameter_class %in% "Human delay" ~ "HDPI 95%",
             TRUE ~ parameter_uncertainty_type
           ),
           
           # Correct cov id 5935
           inverse_param = case_when(
-            covidence_id == 5935 & parameter_class == "Human delay" ~ TRUE,
+            covidence_id %in% 5935 & parameter_class %in% "Human delay" ~ TRUE,
             TRUE ~ inverse_param
           ),
 
           # Correct missing parameter units for severity
           parameter_unit = case_when(
             covidence_id %in% c(4967, 5404, 4900, 2150) &
-              parameter_class == "Severity" ~ "Percentage (%)",
+              parameter_class %in% "Severity" ~ "Percentage (%)",
             TRUE ~ parameter_unit
           ),
 
           # Correct parameter_value_type for Reproduction number NA/unspecified entries
           parameter_value_type =
             case_when(
-              parameter_class == "Reproduction number" &
+              parameter_class %in% "Reproduction number" &
                 is.na(parameter_value_type) &
                 covidence_id %in% c(
                   3814, 3777, 2882, 9378, 2065, 1053, 18372,
                   5033, 4991, 16599, 17200, 17730, 18944, 23719,
                   11620, 11565
                 ) ~ "Unspecified",
-              parameter_class == "Reproduction number" &
+              parameter_class %in% "Reproduction number" &
                 is.na(parameter_value_type) &
                 covidence_id %in% c(1053, 8709, 19236, 4966) ~ "Mean",
-              parameter_class == "Reproduction number" &
-                covidence_id == 944 ~ "Mean",
-              parameter_class == "Reproduction number" &
-                covidence_id == 6003 ~ "Median",
-              parameter_class == "Reproduction number" &
+              parameter_class %in% "Reproduction number" &
+                covidence_id %in% 944 ~ "Mean",
+              parameter_class %in% "Reproduction number" &
+                covidence_id %in% 6003 ~ "Median",
+              parameter_class %in% "Reproduction number" &
                 is.na(parameter_value_type) &
-                covidence_id == 17881 ~ "Median",
+                covidence_id %in% 17881 ~ "Median",
               TRUE ~ parameter_value_type
             ),
 
           # fix the survey dates
           population_study_start_day =
             case_when(
-              covidence_id == 4364 & parameter_class == "Severity" ~ 30,
-              covidence_id == 1012 ~ 1,
-              covidence_id == 18372 & parameter_class == "Human delay" ~ 5,
-              covidence_id == 17956 & parameter_class == "Human delay" ~ 3,
+              covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 30,
+              covidence_id %in% 1012 ~ 1,
+              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 5,
+              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 3,
               TRUE ~ population_study_start_day
             ),
           population_study_end_day =
             case_when(
-              covidence_id == 4364 & parameter_class == "Severity" ~ 28,
-              covidence_id == 18372 & parameter_class == "Human delay" ~ 2,
-              covidence_id == 17956 & parameter_class == "Human delay" ~ 27,
-              covidence_id == 11688 ~ 12,
+              covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 28,
+              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2,
+              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 27,
+              covidence_id %in% 11688 ~ 12,
               TRUE ~ population_study_end_day
             ),
           population_study_start_month =
             case_when(
-              covidence_id == 1686 ~ "Dec",
-              covidence_id == 1888 ~ "Oct",
-              covidence_id == 4364 & parameter_class == "Severity" ~ "Dec",
-              covidence_id == 18372 & parameter_class == "Human delay" ~ "Aug",
-              covidence_id == 1012 ~ "Jul",
-              covidence_id == 17956 & parameter_class == "Human delay" ~ "Jul",
-              covidence_id == 11688 ~ "Jan",
+              covidence_id %in% 1686 ~ "Dec",
+              covidence_id %in% 1888 ~ "Oct",
+              covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Dec",
+              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ "Aug",
+              covidence_id %in% 1012 ~ "Jul",
+              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ "Jul",
+              covidence_id %in% 11688 ~ "Jan",
               TRUE ~ population_study_start_month
             ),
           population_study_end_month =
             case_when(
-              population_study_end_month == "3" ~ "Mar",
-              covidence_id == 1686 ~ "Jan",
-              covidence_id == 1888 ~ "Feb",
-              covidence_id == 4364 & parameter_class == "Severity" ~ "Sep",
-              covidence_id == 18372 & parameter_class == "Human delay" ~ "Feb",
-              covidence_id == 17956 & parameter_class == "Human delay" ~ "Jun",
-              covidence_id == 11688 ~ "Oct",
+              population_study_end_month %in% "3" ~ "Mar",
+              covidence_id %in% 1686 ~ "Jan",
+              covidence_id %in% 1888 ~ "Feb",
+              covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Sep",
+              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ "Feb",
+              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ "Jun",
+              covidence_id %in% 11688 ~ "Oct",
               TRUE ~ population_study_end_month
             ),
           population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
@@ -671,32 +671,32 @@ clean_dfs <- function(df, pathogen) {
           population_study_start_month = substr(population_study_start_month, 1, 3),
           population_study_start_year =
             case_when(
-              covidence_id == 1686 ~ 2014,
-              covidence_id == 1012 ~ 2014,
-              covidence_id == 1888 ~ 2000,
-              covidence_id == 4364 & parameter_class == "Severity" ~ 2013,
-              covidence_id == 1653 ~ 2014,
-              covidence_id == 18372 & parameter_class == "Human delay" ~ 2018,
-              covidence_id == 17956 & parameter_class == "Human delay" ~ 2014,
-              covidence_id == 11688 ~ 2014,
+              covidence_id %in% 1686 ~ 2014,
+              covidence_id %in% 1012 ~ 2014,
+              covidence_id %in% 1888 ~ 2000,
+              covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2013,
+              covidence_id %in% 1653 ~ 2014,
+              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2018,
+              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 2014,
+              covidence_id %in% 11688 ~ 2014,
               TRUE ~ population_study_start_year
             ),
           population_study_end_year =
             case_when(
-              covidence_id == 904 & parameter_value == 65.9 ~ 2014,
-              covidence_id == 1686 ~ 2015,
-              covidence_id == 1888 ~ 2001,
-              covidence_id == 4364 & parameter_class == "Severity" ~ 2015,
-              covidence_id == 1653 ~ 2014,
-              covidence_id == 18372 & parameter_class == "Human delay" ~ 2020,
-              covidence_id == 17956 & parameter_class == "Human delay" ~ 2015,
-              covidence_id == 11688 ~ 2014,
+              covidence_id %in% 904 & parameter_value %in% 65.9 ~ 2014,
+              covidence_id %in% 1686 ~ 2015,
+              covidence_id %in% 1888 ~ 2001,
+              covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2015,
+              covidence_id %in% 1653 ~ 2014,
+              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
+              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 2015,
+              covidence_id %in% 11688 ~ 2014,
               TRUE ~ population_study_end_year
             ),
 
           # Inverse parameters
           parameter_type = ifelse(
-            inverse_param == TRUE,
+            inverse_param %in% TRUE,
             paste(parameter_type, " (inverse parameter)"), parameter_type
           ),
 
@@ -737,25 +737,25 @@ clean_dfs <- function(df, pathogen) {
             ),
           survey_date =
             case_when(
-              survey_start_date == "Unspecified" & survey_end_date == "Unspecified" ~
+              survey_start_date %in% "Unspecified" & survey_end_date %in% "Unspecified" ~
                 "Unspecified",
-              survey_start_date != "Unspecified" & survey_end_date == "Unspecified" ~
+              survey_start_date != "Unspecified" & survey_end_date %in% "Unspecified" ~
                 paste(survey_start_date, "-", "Unspecified"),
-              survey_start_date == "Unspecified" & survey_end_date != "Unspecified" ~
+              survey_start_date %in% "Unspecified" & survey_end_date != "Unspecified" ~
                 paste("Unspecified", "-", survey_end_date),
-              survey_start_date == survey_end_date ~ paste(survey_start_date),
+              survey_start_date %in% survey_end_date ~ paste(survey_start_date),
               TRUE ~ paste(survey_start_date, "-", survey_end_date)
             ),
 
           # Add article id and parameter ids for new parameters
           id =
             case_when(
-              covidence_id == 104 & is.na(id) ~
-                unique(id[covidence_id == 104 & parameter_type == "Risk factors"]),
-              covidence_id == 2548 & is.na(id) ~
-                unique(id[covidence_id == 2548 & !is.na(id)]),
-              covidence_id == 1044 & is.na(id) ~
-                unique(id[covidence_id == 1044 & !is.na(id)]),
+              covidence_id %in% 104 & is.na(id) ~
+                unique(id[covidence_id %in% 104 & parameter_type %in% "Risk factors"]),
+              covidence_id %in% 2548 & is.na(id) ~
+                unique(id[covidence_id %in% 2548 & !is.na(id)]),
+              covidence_id %in% 1044 & is.na(id) ~
+                unique(id[covidence_id %in% 1044 & !is.na(id)]),
               TRUE ~ id
             )
         )
@@ -774,13 +774,13 @@ clean_dfs <- function(df, pathogen) {
         select(-temp_col) %>%
         #correct parameter types
         mutate(parameter_type = case_when(
-          covidence_id == 854 & access_param_id %in% c(5, 6) ~ 'Human delay - time in care (length of stay)',
+          covidence_id %in% 854 & access_param_id %in% c(5, 6) ~ 'Human delay - time in care (length of stay)',
           TRUE ~ parameter_type),
           other_delay_start = case_when(
-            covidence_id == 854 & access_param_id %in% c(5, 6) ~ NA_character_,
+            covidence_id %in% 854 & access_param_id %in% c(5, 6) ~ NA_character_,
             TRUE ~ other_delay_start),
           other_delay_end = case_when(
-            covidence_id == 854 & access_param_id %in% c(5, 6) ~ NA_character_,
+            covidence_id %in% 854 & access_param_id %in% c(5, 6) ~ NA_character_,
             TRUE ~ other_delay_end),
           #numeric parameter values        
           parameter_value = as.numeric(parameter_value),
@@ -791,21 +791,21 @@ clean_dfs <- function(df, pathogen) {
             TRUE ~ parameter_value_type),
           #unspecified cfr/ifr methods
           cfr_ifr_method = case_when(
-            parameter_class == 'Severity' & is.na(cfr_ifr_method) ~ 'Unspecified',
+            parameter_class %in% 'Severity' & is.na(cfr_ifr_method) ~ 'Unspecified',
             TRUE ~ cfr_ifr_method),
           #specify other risk factor outcomes
           riskfactor_outcome = case_when(
-            covidence_id == 2627 & access_param_id == 22 ~ 'Reproduction Number',
-            covidence_id == 3153 & access_param_id == 33 ~ 'Onset-Admission Delay',
-            covidence_id == 920 & access_param_id == 4 ~ 'Viremia',
-            covidence_id == 1328 & access_param_id %in% c(16, 17, 18, 19) ~ 'Occurrence',
-            covidence_id == 441 & access_param_id %in% c(6,7) ~ 'Occurrence',
-            covidence_id == 2661 & access_param_id %in% c(15) ~ 'Occurrence',
-            covidence_id == 2661 & access_param_id == 16 ~ 'Incidence',
+            covidence_id %in% 2627 & access_param_id %in% 22 ~ 'Reproduction Number',
+            covidence_id %in% 3153 & access_param_id %in% 33 ~ 'Onset-Admission Delay',
+            covidence_id %in% 920 & access_param_id %in% 4 ~ 'Viremia',
+            covidence_id %in% 1328 & access_param_id %in% c(16, 17, 18, 19) ~ 'Occurrence',
+            covidence_id %in% 441 & access_param_id %in% c(6,7) ~ 'Occurrence',
+            covidence_id %in% 2661 & access_param_id %in% c(15) ~ 'Occurrence',
+            covidence_id %in% 2661 & access_param_id %in% 16 ~ 'Incidence',
             TRUE ~ riskfactor_outcome),
           #unnecessary risk factor occupations
           riskfactor_occupation = case_when(
-            !is.na(riskfactor_occupation) & riskfactor_occupation == "Unspecified" ~ NA_character_,
+            !is.na(riskfactor_occupation) & riskfactor_occupation %in% "Unspecified" ~ NA_character_,
             TRUE ~ riskfactor_occupation),
           #location consistency
           population_location = str_to_title(sub("^\\s+", "", population_location)),
@@ -815,13 +815,13 @@ clean_dfs <- function(df, pathogen) {
             TRUE ~ method_moment_value),
           #correct contexts
           population_sample_type = case_when(
-            covidence_id == 669 ~ 'Household based', 
-            covidence_id == 652 ~ 'Community based',
-            covidence_id == 4684 ~ 'Community based', 
+            covidence_id %in% 669 ~ 'Household based', 
+            covidence_id %in% 652 ~ 'Community based',
+            covidence_id %in% 4684 ~ 'Community based', 
             TRUE ~ population_sample_type),
           population_group = case_when(
-            covidence_id == 669 ~ 'Mixed groups',
-            covidence_id == 652 ~ 'Other',
+            covidence_id %in% 669 ~ 'Mixed groups',
+            covidence_id %in% 652 ~ 'Other',
             TRUE ~ population_group),
           #unspecified sex
           population_sex = case_when(
@@ -855,24 +855,24 @@ clean_dfs <- function(df, pathogen) {
 
         # Uncertainty
         parameter_uncertainty_type = case_when(
-          parameter_uncertainty_type ==
+          parameter_uncertainty_type %in%
             "CI95%" ~ "95% CI",
-          parameter_uncertainty_type ==
+          parameter_uncertainty_type %in%
             "CRI95%" ~ "95% CrI",
-          parameter_uncertainty_type ==
+          parameter_uncertainty_type %in%
             "CI90%" ~ "90% CI",
-          parameter_uncertainty_type ==
+          parameter_uncertainty_type %in%
             "CRI90%" ~ "90% CrI",
-          parameter_uncertainty_type ==
+          parameter_uncertainty_type %in%
             "Highest Posterior Density Interval 95%" ~ "HPDI 95%",
-          parameter_uncertainty_type ==
+          parameter_uncertainty_type %in%
             "Inter Quartile Range (IQR)" ~ "IQR",
           TRUE ~ parameter_uncertainty_type
         ),
         parameter_uncertainty_singe_type = case_when(
-          parameter_uncertainty_singe_type ==
+          parameter_uncertainty_singe_type %in%
             "Standard deviation (Sd)" ~ "Standard Deviation",
-          parameter_uncertainty_singe_type ==
+          parameter_uncertainty_singe_type %in%
             "Standard Error (SE)" ~ "Standard Error",
           TRUE ~ parameter_uncertainty_singe_type
         ),
@@ -897,17 +897,17 @@ clean_dfs <- function(df, pathogen) {
 
         # shorten a longer method_r name
         method_r =
-          ifelse(method_r == "Renewal equations / Branching process",
+          ifelse(method_r %in% "Renewal equations / Branching process",
             "Branching process", method_r
           ),
 
         # parameter_type name consistency
         parameter_type =
           case_when(
-            parameter_type == "Growth rate ®" ~ "Growth rate (r)",
-            parameter_type == "Reproduction number (Effective; Re)" ~
+            parameter_type %in% "Growth rate ®" ~ "Growth rate (r)",
+            parameter_type %in% "Reproduction number (Effective; Re)" ~
               "Reproduction number (Effective, Re)",
-            parameter_type == "Mutations ‚Äì substitution rate" ~
+            parameter_type %in% "Mutations ‚Äì substitution rate" ~
               "Mutations – substitution rate",
             TRUE ~ parameter_type
           )
@@ -938,9 +938,9 @@ add_qa_scores <- function(articles_df, params_df) {
     ) %>%
     # if an article is model_only, make 5-7 NA for consistency between scores
     mutate(
-      qa_d5 = ifelse(model_only == 1, NA, qa_d5),
-      qa_d6 = ifelse(model_only == 1, NA, qa_d6),
-      qa_d7 = ifelse(model_only == 1, NA, qa_d7)
+      qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
+      qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
+      qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
     ) %>%
     # add qa score to article data
     mutate(
@@ -949,7 +949,7 @@ add_qa_scores <- function(articles_df, params_df) {
           select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7)
         )),
       yes_score = rowSums(
-        select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
+        select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) %in% "Yes",
         na.rm = TRUE
       ),
       article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
