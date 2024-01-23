@@ -14,6 +14,9 @@ assign_ebola_outbreak <- function(df) {
           "DRC,Sudan" ~ "DRC & South Sudan, 1976",
         population_study_start_year == 1979 & population_country ==
           "South Sudan" ~ "South Sudan, 1979",
+        # Need to mention DRC 1981-1985 not official outbreak in figure legend (*)
+        population_study_start_year == 1981 & population_country ==
+          "DRC" ~ "DRC 1981-1985*",
         population_study_start_year == 1994 & population_country ==
           "Gabon" ~ "Gabon, 1994",
         population_study_start_year == 1995 & population_country ==
@@ -41,15 +44,19 @@ assign_ebola_outbreak <- function(df) {
               "Guinea, Sierra Leone",
               "Liberia, Sierra Leone",
               "USA and Europe",
-              "Multi-country (n = 12)",
-              "Multi-country (n = 8)",
-              "Multi-country (n = 10)",
+              "Multi-country: Africa, Europe, USA (n = 6)",
+              "Multi-country: Africa, Europe, USA (n = 8)",
+              "Multi-country: Europe & USA (n = 9)",
+              "Multi-country: Africa, Europe, USA (n = 10)",
+              "Multi-country: Africa, Europe, USA (n = 12)",
               "Guinea, Liberia, Nigeria, Sierra Leone",
               "Liberia",
               "Liberia, Nigeria",
               "Nigeria",
               "Mali"
             ) ~ "West Africa 2013-2016",
+        # Seroprevalence survey post WA outbreak also used to calculate CFR
+        covidence_id %in% 1044 ~ "West Africa 2013-2016",
         population_study_start_year == 2014 & population_country ==
           "DRC" ~ "DRC, 2014",
         population_study_start_year == 2016 & population_country ==
@@ -104,6 +111,7 @@ order_ebola_outbreaks <- function(outbreak_var) {
         "South Sudan, 1976",
         "DRC & South Sudan, 1976",
         "South Sudan, 1979",
+        "DRC 1981-1985*",
         "Gabon, 1994",
         "DRC, 1995",
         "Gabon, 1996",
