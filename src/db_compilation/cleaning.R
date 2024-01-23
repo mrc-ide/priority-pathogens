@@ -341,16 +341,22 @@ clean_dfs <- function(df, pathogen) {
             case_when(
               population_country ==
                 "France, Germany, Italy, Mali, Netherlands, Nigeria, Norway, Senegal, Spain, Switzerland, United Kingdom, United States" ~
-                "Multi-country (n = 12)",
+                "Multi-country: Africa, Europe, USA (n = 12)",
               population_country ==
                 "The Gambia, Guinea, Liberia, Nigeria, Senegal, Sierra Leone, United Kingdom, United States" ~
-                "Multi-country (n = 8)",
+                "Multi-country: Africa, Europe, USA (n = 8)",
               population_country ==
                 "Guinea, Italy, Liberia, Mali, Nigeria, Senegal, Sierra Leone, Spain, United Kingdom, United States" ~
-                "Multi-country (n = 10)",
+                "Multi-country: Africa, Europe, USA (n = 10)",
               population_country ==
                 "DRC, Republic of the Congo, Côte d'Ivoire, Gabon, South Africa, South Sudan, Uganda" ~
-                "Multi-country (n = 7)",
+                "Multi-country: Africa (n = 7)",
+              # 11688 = Guinea, Liberia, Nigeria, Sierra Leone, Spain, USA
+              covidence_id %in% 11688 ~
+                "Multi-country: Africa, Europe, USA (n = 6)",
+              # 509 = USA, Germany, Switzerland, UK, Spain, Norway, Italy, France, Netherlands
+              covidence_id %in% 509 ~
+                "Multi-country: Europe & USA (n = 9)",
               is.na(population_country) ~ "Unspecified",
               TRUE ~ population_country
             )
@@ -578,6 +584,12 @@ clean_dfs <- function(df, pathogen) {
             TRUE ~ inverse_param
           ),
 
+          # Correct cov if 5889
+          parameter_uncertainty_type = case_when(
+            covidence_id == 5889 & parameter_class == "Human delay" ~ "HDPI 95%",
+            TRUE ~ parameter_uncertainty_type
+          ),
+          
           # Correct cov id 5935
           inverse_param = case_when(
             covidence_id == 5935 & parameter_class == "Human delay" ~ TRUE,
@@ -628,6 +640,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 4364 & parameter_class == "Severity" ~ 28,
               covidence_id == 18372 & parameter_class == "Human delay" ~ 2,
               covidence_id == 17956 & parameter_class == "Human delay" ~ 27,
+              covidence_id == 11688 ~ 12,
               TRUE ~ population_study_end_day
             ),
           population_study_start_month =
@@ -638,6 +651,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 18372 & parameter_class == "Human delay" ~ "Aug",
               covidence_id == 1012 ~ "Jul",
               covidence_id == 17956 & parameter_class == "Human delay" ~ "Jul",
+              covidence_id == 11688 ~ "Jan",
               TRUE ~ population_study_start_month
             ),
           population_study_end_month =
@@ -648,6 +662,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 4364 & parameter_class == "Severity" ~ "Sep",
               covidence_id == 18372 & parameter_class == "Human delay" ~ "Feb",
               covidence_id == 17956 & parameter_class == "Human delay" ~ "Jun",
+              covidence_id == 11688 ~ "Oct",
               TRUE ~ population_study_end_month
             ),
           population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
@@ -663,6 +678,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 1653 ~ 2014,
               covidence_id == 18372 & parameter_class == "Human delay" ~ 2018,
               covidence_id == 17956 & parameter_class == "Human delay" ~ 2014,
+              covidence_id == 11688 ~ 2014,
               TRUE ~ population_study_start_year
             ),
           population_study_end_year =
@@ -674,6 +690,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id == 1653 ~ 2014,
               covidence_id == 18372 & parameter_class == "Human delay" ~ 2020,
               covidence_id == 17956 & parameter_class == "Human delay" ~ 2015,
+              covidence_id == 11688 ~ 2014,
               TRUE ~ population_study_end_year
             ),
 
