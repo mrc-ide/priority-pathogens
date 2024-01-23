@@ -47,7 +47,7 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       y = article_label_unique, yend = article_label_unique,
       x = parameter_lower_bound, xend = parameter_upper_bound,
       group = parameter_data_id
-    ), lwd = 1.5, alpha = 0.4) +
+    ), lwd = 2.5, alpha = 0.4) +
     geom_errorbar(
       aes(
         y = article_label_unique,
@@ -62,10 +62,11 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       legend.text = element_text(size = 10),
       strip.text = element_text(size = 10),
       legend.title = element_blank(),
-      axis.title.x = element_text(vjust = -1)
+      axis.title.x = element_text(vjust = -1),
+      legend.spacing.x = unit(6, 'mm')
     ) +
     scale_color_manual(values = mypalette,
-                       labels = function(x) str_wrap(x, width = 25)) +
+                       labels = function(x) str_wrap(x, width = 43)) +
     guides(
       colour = guide_legend(order = 1, ncol = 1),
       linetype = guide_legend(order = 2, ncol = 1)
@@ -78,12 +79,12 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
   
   if (param == "Reproduction number") {
     plot <- plot +
-      coord_cartesian(xlim = c(0, 10)) +
+      scale_x_continuous(limits = c(0, 10), expand = c(0, 0), oob = scales::squish) +
       geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")
   }
 
   if (param == "Severity") {
-    plot <- plot + coord_cartesian(xlim = c(0, 100))
+    plot <- plot + coord_cartesian(xlim = c(0, 100), expand = FALSE, clip = "off")
   }
   
   if (param == "Human delay") {
