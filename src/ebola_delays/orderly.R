@@ -41,13 +41,10 @@ orderly_artefact(
     "Delay_tables/qa_filtered/adm_ranges_table.png",
     "Delay_tables/qa_filtered/infp_ranges_table.png",
     "Delay_tables/qa_filtered/select_ranges_table.png",
-    "Meta_plots/Variance/incubation_period.png",
-    "Meta_plots/Variance/serial_interval.png",
-    "Meta_plots/Variance/onset_to_death.png",
-    "Meta_plots/Variance/meta_delays_variance.png",
-    "Meta_plots/Uncertainty/infectious_period.png",
-    "Meta_plots/Uncertainty/serial_interval.png",
-    "Meta_plots/Uncertainty/meta_delays_uncertainty.png"
+    "Meta_plots/incubation_period.png",
+    "Meta_plots/serial_interval.png",
+    "Meta_plots/onset_to_death.png",
+    "Meta_plots/meta_delays_variance.png"
   )
 )
 
@@ -312,8 +309,6 @@ dir.create("Delay_tables")
 dir.create("Delay_tables/qa_filtered")
 dir.create("Delay_tables/unfiltered")
 dir.create("Meta_plots")
-dir.create("Meta_plots/Variance")
-dir.create("Meta_plots/Uncertainty")
 
 #########
 # PLOTS #
@@ -543,13 +538,14 @@ save_as_image(selection_ranges_outbreak,
 )
 
 
-## META ANALYSIS
+##########################
+# VARIANCE META-ANALYSIS #
+##########################
 
-# Note SDs were checked and assigned either sd_sample or sd_mean and considered separately
+# Note SDs were checked and assigned either sd_sample or sd_mean
 # Entries we can use for the meta-analysis:
-# mean and SD (everything to be converted to this format)
+# mean and SD of sample (everything to be converted to this format)
 # mean and SE (can convert SE to SD using sample sizes before supplying to metamean)
-# mean and CI/CrI (can convert CI/CrI to SD using sample sizes before supplying to metamean - see link below)
 # https://handbook-5-1.cochrane.org/chapter_7/7_7_3_2_obtaining_standard_deviations_from_standard_errors_and.htm
 # median and IQR (input as is into metamean - converted to mean/SD using Cai method)
 # median and range (input as is into metamean - converted to mean/SD using Cai method)
@@ -589,41 +585,17 @@ meta_dat <- delay_dat %>%
       parameter_uncertainty_lower_value, TRUE ~ NA),
     max = case_when(parameter_value_type %in% "Median" &
       parameter_uncertainty_type %in% "Range" ~
-      parameter_uncertainty_upper_value, TRUE ~ NA),
-    ci_min = case_when(parameter_value_type %in% "Mean" &
-      parameter_uncertainty_type %in% "95% CI" ~
-      parameter_uncertainty_lower_value, TRUE ~ NA),
-    ci_max = case_when(parameter_value_type %in% "Mean" &
-      parameter_uncertainty_type %in% "95% CI" ~
-      parameter_uncertainty_upper_value, TRUE ~ NA),
-    cri_min = case_when(parameter_value_type %in% "Mean" &
-      parameter_uncertainty_type %in% "95% CrI" ~
-      parameter_uncertainty_lower_value, TRUE ~ NA),
-    cri_max = case_when(parameter_value_type %in% "Mean" &
-      parameter_uncertainty_type %in% "95% CrI" ~
       parameter_uncertainty_upper_value, TRUE ~ NA)
   ) %>%
-  # convert SEs and CIs/CrIs for means into SD using sample size (see cochrane chapter above)
+  # convert SEs for means into SD using sample size (see cochrane chapter above)
   mutate(
     sd = case_when(
       is.na(sd) & !is.na(serr) ~ serr * sqrt(population_sample_size),
-      # confidence intervals
-      is.na(sd) & !is.na(ci_min) & population_sample_size >= 60 ~
-        sqrt(population_sample_size) * (ci_max - ci_min) / 3.92,
-      is.na(sd) & !is.na(ci_min) & population_sample_size < 60 ~
-        sqrt(population_sample_size) * (ci_max - ci_min) /
-          (2 * qt((1 + 0.95) / 2, df = population_sample_size - 1)),
-      # credible intervals
-      is.na(sd) & !is.na(cri_min) & population_sample_size >= 60 ~
-        sqrt(population_sample_size) * (cri_max - cri_min) / 3.92,
-      is.na(sd) & !is.na(cri_min) & population_sample_size < 60 ~
-        sqrt(population_sample_size) * (cri_max - cri_min) /
-          (2 * qt((1 + 0.95) / 2, df = population_sample_size - 1)),
       TRUE ~ sd
     )
   ) %>%
   # remove converted uncertainty variables
-  select(-c(serr, ci_min, ci_max, cri_min, cri_max)) %>%
+  select(-c(serr)) %>%
   # remove rows where all uncertainty variables are empty
   filter(!is.na(sd) | !is.na(q1) | !is.na(q3) | !is.na(min) | !is.na(max))
 
@@ -634,16 +606,6 @@ meta_var <- meta_dat %>%
     "Standard Error"
   ) |
     parameter_uncertainty_type %in% c("IQR", "Range"))
-
-# meta for uncertainty: sd of mean, confidence intervals, credible intervals
-meta_unc <- meta_dat %>%
-  filter(parameter_uncertainty_singe_type %in% c("SD of the mean") |
-    parameter_uncertainty_type %in% c("95% CI", "95% CrI"))
-
-
-##########################
-# VARIANCE META-ANALYSIS #
-##########################
 
 # Variance data (incubation period, serial interval, symptom onset to death)
 sotd_var <- meta_var %>% filter(delay_short %in% "Symptom onset to death") # 17
@@ -675,7 +637,7 @@ sotd_var_ma <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/Variance/onset_to_death.png", width = 9500, height = 5500, res = 1000)
+png(file = "Meta_plots/onset_to_death.png", width = 9500, height = 5500, res = 1000)
 forest.meta(sotd_var_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -708,7 +670,7 @@ incub_var_ma <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/Variance/incubation_period.png", width = 9500, height = 4000, res = 1000)
+png(file = "Meta_plots/incubation_period.png", width = 9500, height = 4000, res = 1000)
 forest.meta(incub_var_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -740,7 +702,7 @@ serial_var_ma <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/Variance/serial_interval.png", width = 9500, height = 4000, res = 1000)
+png(file = "Meta_plots/serial_interval.png", width = 9500, height = 4000, res = 1000)
 forest.meta(serial_var_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -752,95 +714,10 @@ forest.meta(serial_var_ma,
 )
 dev.off()
 
-
-#############################
-# UNCERTAINTY META-ANALYSIS #
-#############################
-
-# Uncertainty data (infectious period and serial interval)
-inf_unc <- meta_unc %>% filter(delay_short %in% "Infectious period") # 6
-serial_unc <- meta_unc %>% filter(delay_short %in% "Serial interval") # 4
-
-# Not included as too few data points:
-# incub_unc <- meta_unc %>% filter(delay_short %in% "Incubation period") # 2
-# latent_unc <- meta_unc %>% filter(delay_short == "Latent period") # 1
-# sotd_unc <- meta_unc %>% filter(delay_short %in% "Symptom onset to death") # 0
-# sotr_unc <- meta_unc %>% filter(delay_short %in% "Symptom onset to recovery/non-infectiousness") # 0
-
-# Infectious period meta-analysis
-set.seed(6)
-inf_unc_ma <- metamean(
-  data = inf_unc,
-  n = population_sample_size,
-  mean = xbar,
-  sd = sd,
-  studlab = article_label,
-  median = median,
-  q1 = q1,
-  q3 = q3,
-  min = min,
-  max = max,
-  method.mean = "Cai",
-  method.sd = "Cai",
-  sm = "MRAW",
-  method.tau = "ML"
-)
-
-png(file = "Meta_plots/Uncertainty/infectious_period.png", width = 9500, height = 4000, res = 1000)
-forest.meta(inf_unc_ma,
-  digits = 2, digits.sd = 2, digits.weight = 2,
-  layout = "RevMan5",
-  weight.study = "same",
-  col.square.lines = "black", col.square = "maroon",
-  col.study = "black", col.inside = "black", col.diamond.lines = "black",
-  col.diamond.common = "maroon", col.diamond.random = "maroon",
-  at = seq(2, 18, by = 2),
-  xlim = c(2, 18),
-  xlab = "Mean infectious period (days)", fontsize = 10
-)
-dev.off()
-
-# Serial interval meta-analysis for uncertainty
-set.seed(6)
-serial_unc_ma <- metamean(
-  data = serial_unc,
-  n = population_sample_size,
-  mean = xbar,
-  sd = sd,
-  studlab = article_label,
-  median = median,
-  q1 = q1,
-  q3 = q3,
-  min = min,
-  max = max,
-  method.mean = "Cai",
-  method.sd = "Cai",
-  sm = "MRAW",
-  method.tau = "ML"
-)
-
-png(file = "Meta_plots/Uncertainty/serial_interval.png", width = 9500, height = 3500, res = 1000)
-forest.meta(serial_unc_ma,
-  digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
-  weight.study = "same", col.square.lines = "black", col.square = "maroon",
-  col.study = "black", col.inside = "black", col.diamond.lines = "black",
-  col.diamond.common = "maroon", col.diamond.random = "maroon",
-  at = seq(8, 22, by = 3),
-  xlim = c(8, 22),
-  xlab = "Mean serial interval (days)", fontsize = 10
-)
-dev.off()
-
-
-
 # combine variance plots
-p1_var <- png::readPNG("Meta_plots/Variance/incubation_period.png", native = TRUE)
-p2_var <- png::readPNG("Meta_plots/Variance/serial_interval.png", native = TRUE)
-p3_var <- png::readPNG("Meta_plots/Variance/onset_to_death.png", native = TRUE)
-
-# combine uncertainty plots
-p1_unc <- png::readPNG("Meta_plots/Uncertainty/infectious_period.png", native = TRUE)
-p2_unc <- png::readPNG("Meta_plots/Uncertainty/serial_interval.png", native = TRUE)
+p1_var <- png::readPNG("Meta_plots/incubation_period.png", native = TRUE)
+p2_var <- png::readPNG("Meta_plots/serial_interval.png", native = TRUE)
+p3_var <- png::readPNG("Meta_plots/onset_to_death.png", native = TRUE)
 
 # Create plots for each image
 plot1_var <- rasterGrob(p1_var, width = 0.9)
@@ -853,21 +730,11 @@ heights_var <- c(
   heightDetails(plot3_var)
 )
 
-plot1_unc <- rasterGrob(p1_unc, width = 0.9)
-plot2_unc <- rasterGrob(p2_unc, width = 0.9)
-
-heights_unc <- c(
-  heightDetails(plot1_unc),
-  heightDetails(plot2_unc)
-)
-
 # Normalise the heights to make them proportional
 p_heights_var <- heights_var / sum(heights_var)
-p_heights_unc <- heights_unc / sum(heights_unc)
 
 # Arrange and display the plots in a grid
 md_var <- grid.arrange(plot1_var, plot2_var, plot3_var, ncol = 1, heights = p_heights_var)
-md_unc <- grid.arrange(plot1_unc, plot2_unc, ncol = 1, heights = p_heights_unc)
 
-ggsave("Meta_plots/Variance/meta_delays_variance.png", plot = md_var, width = 7, height = 9)
-ggsave("Meta_plots/Uncertainty/meta_delays_uncertainty.png", plot = md_unc, width = 7, height = 4.5)
+ggsave("Meta_plots/meta_delays_variance.png", plot = md_var, width = 7, height = 9)
+
