@@ -11,7 +11,7 @@ assign_ebola_outbreak <- function(df) {
         population_study_start_year %in% 1976 & population_country %in%
           "Sudan" ~ "South Sudan, 1976",
         population_study_start_year %in% 1976 & population_country %in%
-          "DRC,Sudan" ~ "DRC & South Sudan, 1976",
+          "DRC, Sudan" ~ "DRC & South Sudan, 1976",
         population_study_start_year %in% 1979 & population_country %in%
           "South Sudan" ~ "South Sudan, 1979",
         # Need to mention DRC 1981-1985 not official outbreak in figure legend (*)
@@ -21,6 +21,8 @@ assign_ebola_outbreak <- function(df) {
           "Gabon" ~ "Gabon, 1994",
         population_study_start_year %in% 1995 & population_country %in%
           "DRC" ~ "DRC, 1995",
+        population_study_start_year %in% 1995 &
+          population_study_end_year %in% 2016 ~ "Multiple outbreaks",
         population_study_start_year %in% 1996 & population_country %in%
           "Gabon" ~ "Gabon, 1996",
         population_study_start_year %in% 2000 & population_country %in%
@@ -55,6 +57,9 @@ assign_ebola_outbreak <- function(df) {
               "Nigeria",
               "Mali"
             ) ~ "West Africa 2013-2016",
+        # No specific dates/start dates provided for these, but checked the papers
+        covidence_id %in% c(590, 11565, 4568, 11620, 5997) ~
+          "West Africa 2013-2016",
         # Seroprevalence survey post WA outbreak also used to calculate CFR
         covidence_id %in% 1044 ~ "West Africa 2013-2016",
         population_study_start_year %in% 2014 & population_country %in%

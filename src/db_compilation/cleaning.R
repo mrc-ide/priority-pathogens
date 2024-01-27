@@ -321,7 +321,7 @@ clean_dfs <- function(df, pathogen) {
       df <- df %>%
         # Remove parameters from theoretical model papers/synthetic data papers/
         # correspondence/wrong entries
-        filter(!(covidence_id %in% c(5765, 5870, 1510, 17096))) %>%
+        filter(!(covidence_id %in% c(5765, 5870, 1510, 17096, 4301))) %>%
         # Remove duplicate entry from single extracted paper not identified as distinct
         filter(!(covidence_id %in% 3532 & access_param_id %in% 37)) %>%
         # Correct missing context for cov ID 18236
@@ -357,6 +357,9 @@ clean_dfs <- function(df, pathogen) {
               # 509 = USA, Germany, Switzerland, UK, Spain, Norway, Italy, France, Netherlands
               covidence_id %in% 509 ~
                 "Multi-country: Europe & USA (n = 9)",
+              # Was unspecified and checked the paper
+              covidence_id %in% 4568 ~ "Guinea, Liberia, Sierra Leone",
+              covidence_id %in% 18535 ~ "DRC",
               is.na(population_country) ~ "Unspecified",
               TRUE ~ population_country
             )
@@ -379,9 +382,9 @@ clean_dfs <- function(df, pathogen) {
         # clean the other human delays and merge the common ones into parameter_type
         mutate(
           other_delay_start = case_when(
-            other_delay_start %in% "Other: Health center visit" ~ "Seeking Care",
+            other_delay_start %in% "Other: Health center visit" ~ "Health center visit",
             other_delay_start %in% c("Infection", "Contact with Primary Case") ~ "Exposure/Infection",
-            other_delay_start %in% "Funeral Start" ~ "Other",
+            other_delay_start %in% "Funeral Start" ~ "Funeral start",
             other_delay_start %in% "Positive Test" ~ "Positive test",
             other_delay_start %in% "Sampling date" ~ "Sample collection",
             other_delay_start %in% c(
@@ -395,14 +398,9 @@ clean_dfs <- function(df, pathogen) {
           other_delay_end = case_when(
             other_delay_end %in% "Death in the community" ~ "Death in community",
             other_delay_end %in% c("Negative RT-PCR", "Negative Test") ~ "Negative test",
-            other_delay_end %in% c(
-              "Clearance of Ebola virus RNA from seminal fluid in 50% of male survivors",
-              "Clearance of Ebola virus RNA from seminal fluid in 90% of male survivors",
-              "Release of sequencing data to response teams",
-              "Funeral End",
-              "Other: Enter Timepoint in Text Box",
-              "Other: first undetectable viremia"
-            ) ~ "Other",
+            other_delay_end %in% "Funeral End" ~ "Funeral end",
+            other_delay_end %in% "Other: first undetectable viremia" ~ "First undetectable viremia",
+            other_delay_end %in% "Other: Enter Timepoint in Text Box" ~ "Other",
             other_delay_end %in% c(
               "Removal from community", "Household quarantine", "Isolation"
             ) ~ "Quarantine",
@@ -424,45 +422,16 @@ clean_dfs <- function(df, pathogen) {
             ),
           parameter_type =
             case_when(
-              other_delay %in% c(
-                "Symptom Onset/Fever to Admission to Care/Hospitalisation",
-                "Symptom Onset/Fever to Death",
-                "Admission to Care/Hospitalisation to Death",
-                "Admission to Care/Hospitalisation to Discharge from Care/Hospital",
-                "Symptom Onset/Fever to Reporting",
-                "Symptom Onset/Fever to Recovery/non-Infectiousness",
-                "Admission to Care/Hospitalisation to Recovery/non-Infectiousness",
-                "Symptom Onset/Fever to Discharge from Care/Hospital",
-                "Death to Burial",
-                "Symptom Onset/Fever to Quarantine",
-                "Symptom Onset/Fever to Test",
-                "Symptom Onset/Fever to Seeking Care"
-              ) ~ paste("Human delay -", other_delay),
+              !is.na(other_delay) ~ paste("Human delay -", other_delay),
               TRUE ~ parameter_type
             ),
           delay_short =
             case_when(
               parameter_class %in% "Human delay" ~
-                gsub("^Human delay - ", "", parameter_type), TRUE ~ NA
+                gsub("^Human delay - ", "", parameter_type),
+              TRUE ~ NA
             ),
           delay_short = str_to_sentence(delay_short),
-          delay_short =
-            ifelse(delay_short %in% "Time in care (length of stay)",
-              "Admission to care to death/discharge", delay_short
-            ),
-          delay_start =
-            case_when(
-              startsWith(delay_short, "Admission to care") ~ "Admission to care",
-              startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
-              startsWith(delay_short, "Other human delay") ~ "Other",
-              startsWith(delay_short, "Death to burial") ~ "Death to burial",
-              delay_short %in%
-                c(
-                  "Incubation period", "Latent period", "Infectious period",
-                  "Generation time", "Serial interval"
-                ) ~ "Infection process",
-              TRUE ~ "Other"
-            ),
           delay_short =
             str_replace_all(
               delay_short, c(
@@ -471,10 +440,36 @@ clean_dfs <- function(df, pathogen) {
                 "onset/fever" = "onset"
               )
             ),
+          delay_short =
+            case_when(
+              delay_short %in% "Exposure/infection to infectiousness" ~
+                "Latent period",
+              delay_short %in% "Exposure/infection to symptom onset" ~
+                "Incubation period",
+              delay_short %in% "Time in care (length of stay)" ~
+                "Admission to care to death/discharge",
+              TRUE ~ delay_short
+            ),
+          delay_start =
+            case_when(
+              startsWith(delay_short, "Admission to care") ~ "Admission to care",
+              startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
+              startsWith(delay_short, "Death to burial") ~ "Death to burial",
+              startsWith(delay_short, "Exposure/infection") ~ "Exposure/infection",
+              delay_short %in%
+                c(
+                  "Incubation period", "Latent period", "Infectious period",
+                  "Generation time", "Serial interval"
+                ) ~ "Infection process",
+              TRUE ~ "Other"
+            ),
           parameter_unit =
             case_when(
               parameter_class %in% "Human delay" &
                 parameter_unit %in% "Per day" ~ "Days",
+              parameter_class %in% "Human delay" &
+                is.na(parameter_unit) &
+              covidence_id %in% c(3776, 16951, 18371) ~ "Days",
               parameter_class %in% "Human delay" &
                 parameter_unit %in% "Per week" ~ "Weeks",
               TRUE ~ parameter_unit
@@ -484,7 +479,7 @@ clean_dfs <- function(df, pathogen) {
           # Fix entry errors
           # Add missed Country
           population_country = ifelse(
-            covidence_id %in% 1170, "Sierra Leone", population_country
+            covidence_id %in% c(1170, 18371), "Sierra Leone", population_country
           ),
 
           # Correct entry cov ID 4900
@@ -527,6 +522,14 @@ clean_dfs <- function(df, pathogen) {
                 "Human delay - Symptom Onset/Fever to Reporting",
             "Median", parameter_value_type
           ),
+          
+          # Correct entry cov ID 57
+          parameter_unit = ifelse(
+            covidence_id %in% 57 &
+              parameter_type %in%
+              "Human delay - Symptom Onset/Fever to Death",
+            "Days", parameter_unit
+          ),
 
           # Correct entry cov ID 3470
           parameter_unit = ifelse(
@@ -557,7 +560,43 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Human delay",
             "DRC", population_country
           ),
+          
+          # Correct entry cov ID 8691
+          parameter_lower_bound = ifelse(
+            covidence_id %in% 8691 &
+              delay_short %in% "Symptom onset to death",
+            7, parameter_lower_bound
+          ),
 
+          # Correct entry cov ID 16951
+          parameter_uncertainty_type = case_when(
+            covidence_id %in% 16951 &
+              delay_short %in% "Health center visit to symptom onset" ~ "Range",
+            TRUE ~ parameter_uncertainty_type
+          ),
+          parameter_uncertainty_lower_value = case_when(
+            covidence_id %in% 16951 &
+              delay_short %in% "Health center visit to symptom onset" ~
+              parameter_lower_bound,
+            TRUE ~ parameter_uncertainty_lower_value
+          ),
+          parameter_uncertainty_upper_value = case_when(
+            covidence_id %in% 16951 &
+              delay_short %in% "Health center visit to symptom onset" ~
+              parameter_upper_bound,
+            TRUE ~ parameter_uncertainty_upper_value
+          ),
+          parameter_lower_bound = case_when(
+            covidence_id %in% 16951 &
+              delay_short %in% "Health center visit to symptom onset" ~ NA,
+            TRUE ~ parameter_lower_bound
+          ),
+          parameter_upper_bound = case_when(
+            covidence_id %in% 16951 &
+              delay_short %in% "Health center visit to symptom onset" ~ NA,
+            TRUE ~ parameter_upper_bound
+          ),
+          
           # Correct entry cov ID 17715
           parameter_value = case_when(
             covidence_id %in% 17715 & parameter_class %in% "Human delay" ~ 31.25,
@@ -603,19 +642,18 @@ clean_dfs <- function(df, pathogen) {
             TRUE ~ parameter_unit
           ),
 
-          # Correct parameter_value_type for Reproduction number NA/unspecified entries
+          # Correct parameter_value_type for NA/unspecified entries
           parameter_value_type =
             case_when(
               parameter_class %in% "Reproduction number" &
                 is.na(parameter_value_type) &
                 covidence_id %in% c(
-                  3814, 3777, 2882, 9378, 2065, 1053, 18372,
-                  5033, 4991, 16599, 17200, 17730, 18944, 23719,
-                  11620, 11565
+                  65, 507, 701, 3814, 3777, 2882, 9378, 2065, 1053, 18372,
+                  5033, 4991, 16599, 17200, 17730, 18944, 23719, 11620, 11565
                 ) ~ "Unspecified",
               parameter_class %in% "Reproduction number" &
                 is.na(parameter_value_type) &
-                covidence_id %in% c(1053, 8709, 19236, 4966) ~ "Mean",
+                covidence_id %in% c(30, 754, 885, 1053, 8709, 19236, 4966) ~ "Mean",
               parameter_class %in% "Reproduction number" &
                 covidence_id %in% 944 ~ "Mean",
               parameter_class %in% "Reproduction number" &
@@ -623,20 +661,37 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Reproduction number" &
                 is.na(parameter_value_type) &
                 covidence_id %in% 17881 ~ "Median",
+              
+              parameter_class %in% "Human delay" &
+                is.na(parameter_value_type) &
+                covidence_id %in% c(30, 57, 885, 5005, 9546, 16599,
+                                    18372, 19236) ~ "Mean",
+              parameter_class %in% "Human delay" &
+                is.na(parameter_value_type) &
+                covidence_id %in% c(1071, 3776, 8691) ~ "Median",
+              parameter_class %in% "Human delay" &
+                is.na(parameter_value_type) &
+                covidence_id %in% c(6472, 7199) ~ "Unspecified",
               TRUE ~ parameter_value_type
             ),
 
           # fix the survey dates
           population_study_start_day =
             case_when(
+              covidence_id %in% 404 ~ 1,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 30,
               covidence_id %in% 1012 ~ 1,
+              covidence_id %in% 1170 ~ 27,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 5,
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 3,
+              covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ 30,
+              covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 14,
               TRUE ~ population_study_start_day
             ),
           population_study_end_day =
             case_when(
+              covidence_id %in% 404 ~ 12,
+              covidence_id %in% 1170 ~ 31,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 28,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2,
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 27,
@@ -645,6 +700,8 @@ clean_dfs <- function(df, pathogen) {
             ),
           population_study_start_month =
             case_when(
+              covidence_id %in% 404 ~ "Mar",
+              covidence_id %in% 1170 ~ "May",
               covidence_id %in% 1686 ~ "Dec",
               covidence_id %in% 1888 ~ "Oct",
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Dec",
@@ -652,16 +709,21 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 1012 ~ "Jul",
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ "Jul",
               covidence_id %in% 11688 ~ "Jan",
+              covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ "Apr",
+              covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Mar",
               TRUE ~ population_study_start_month
             ),
           population_study_end_month =
             case_when(
               population_study_end_month %in% "3" ~ "Mar",
+              covidence_id %in% 404 ~ "Jul",
+              covidence_id %in% 1170 ~ "Aug",
               covidence_id %in% 1686 ~ "Jan",
               covidence_id %in% 1888 ~ "Feb",
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Sep",
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ "Feb",
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ "Jun",
+              covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Apr",
               covidence_id %in% 11688 ~ "Oct",
               TRUE ~ population_study_end_month
             ),
@@ -671,26 +733,38 @@ clean_dfs <- function(df, pathogen) {
           population_study_start_month = substr(population_study_start_month, 1, 3),
           population_study_start_year =
             case_when(
+              covidence_id %in% 404 ~ 1995,
+              covidence_id %in% 1170 ~ 2014,
               covidence_id %in% 1686 ~ 2014,
               covidence_id %in% 1012 ~ 2014,
+              covidence_id %in% 1653 ~ 2014,
               covidence_id %in% 1888 ~ 2000,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2013,
-              covidence_id %in% 1653 ~ 2014,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2018,
+              covidence_id %in% 18535 ~ 1995,
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 2014,
               covidence_id %in% 11688 ~ 2014,
+              covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ 2018,
+              covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 2014,
+              covidence_id %in% 23986 ~ 1995,
               TRUE ~ population_study_start_year
             ),
           population_study_end_year =
             case_when(
+              covidence_id %in% 404 ~ 1995,
               covidence_id %in% 904 & parameter_value %in% 65.9 ~ 2014,
+              covidence_id %in% 1170 ~ 2014,
+              covidence_id %in% 1653 ~ 2014,
               covidence_id %in% 1686 ~ 2015,
               covidence_id %in% 1888 ~ 2001,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2015,
-              covidence_id %in% 1653 ~ 2014,
-              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
-              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 2015,
               covidence_id %in% 11688 ~ 2014,
+              covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
+              covidence_id %in% 18535 ~ 1995,
+              covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 2015,
+              covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 2016,
+              covidence_id %in% 23507 ~ 2016,
+              covidence_id %in% 23986 ~ 1995,
               TRUE ~ population_study_end_year
             ),
 
@@ -737,13 +811,13 @@ clean_dfs <- function(df, pathogen) {
             ),
           survey_date =
             case_when(
-              survey_start_date %in% "Unspecified" & survey_end_date %in% "Unspecified" ~
+              survey_start_date == "Unspecified" & survey_end_date == "Unspecified" ~
                 "Unspecified",
-              survey_start_date != "Unspecified" & survey_end_date %in% "Unspecified" ~
+              survey_start_date != "Unspecified" & survey_end_date == "Unspecified" ~
                 paste(survey_start_date, "-", "Unspecified"),
-              survey_start_date %in% "Unspecified" & survey_end_date != "Unspecified" ~
+              survey_start_date == "Unspecified" & survey_end_date != "Unspecified" ~
                 paste("Unspecified", "-", survey_end_date),
-              survey_start_date %in% survey_end_date ~ paste(survey_start_date),
+              survey_start_date == survey_end_date ~ paste(survey_start_date),
               TRUE ~ paste(survey_start_date, "-", survey_end_date)
             ),
 
@@ -949,7 +1023,7 @@ add_qa_scores <- function(articles_df, params_df) {
           select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7)
         )),
       yes_score = rowSums(
-        select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) %in% "Yes",
+        select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
         na.rm = TRUE
       ),
       article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)

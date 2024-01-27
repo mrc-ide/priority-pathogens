@@ -37,10 +37,14 @@ orderly_artefact(
     "Delay_tables/unfiltered/admission_table.png",
     "Delay_tables/unfiltered/inf_process_table.png",
     "Delay_tables/unfiltered/death_to_burial_table.png",
+    "Delay_tables/unfiltered/exposure_table.png",
+    "Delay_tables/unfiltered/other_table.png",
     "Delay_tables/qa_filtered/symp_ranges_table.png",
     "Delay_tables/qa_filtered/adm_ranges_table.png",
     "Delay_tables/qa_filtered/infp_ranges_table.png",
     "Delay_tables/qa_filtered/select_ranges_table.png",
+    "Delay_tables/qa_filtered/exposure_table.png",
+    "Delay_tables/qa_filtered/other_table.png",
     "Meta_plots/incubation_period.png",
     "Meta_plots/serial_interval.png",
     "Meta_plots/onset_to_death.png",
@@ -72,7 +76,10 @@ parameter <- "Human delay"
 # Changed ID to covidence_id because some entries weren't getting labels
 df <- left_join(
   params,
-  articles[, c("covidence_id", "first_author_surname", "year_publication", "article_label", "doi")],
+  articles[, c(
+    "covidence_id", "first_author_surname", "year_publication",
+    "article_label", "doi"
+  )],
   by = "covidence_id"
 ) %>%
   arrange(article_label, -year_publication)
@@ -83,7 +90,6 @@ delay_dat <- df %>%
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE) %>%
-  filter(!delay_short %in% "Other human delay (go to section)") %>%
   # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
   filter(!(covidence_id %in% 17715)) %>%
   # Remove Baller 2022 - table and text don't match
@@ -94,26 +100,11 @@ delay_dat <- df %>%
       case_when(article_label == "WHO/International Study Team 1978" ~
         "WHO/Int. Study Team 1978", TRUE ~ article_label),
     outbreak = order_ebola_outbreaks(outbreak),
-    delay_short =
-      factor(delay_short,
-        levels = c(
-          "Incubation period", "Latent period",
-          "Infectious period", "Generation time",
-          "Serial interval", "Symptom onset to test",
-          "Symptom onset to reporting",
-          "Symptom onset to seeking care",
-          "Symptom onset to admission to care",
-          "Symptom onset to quarantine",
-          "Symptom onset to recovery/non-infectiousness",
-          "Symptom onset to discharge from care",
-          "Symptom onset to death",
-          "Admission to care to recovery/non-infectiousness",
-          "Admission to care to discharge from care",
-          "Admission to care to death",
-          "Admission to care to death/discharge",
-          "Death to burial"
-        )
-      ),
+    delay_short = str_replace(delay_short, "\\bigg\\b", "IgG"),
+    delay_short = str_replace(delay_short, "\\bigm\\b", "IgM"),
+    delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
+    delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
+    delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
     population_study_start_month =
       factor(population_study_start_month,
         levels = c(
@@ -235,7 +226,7 @@ delay_dat <- df %>%
       ),
     parameter_unit =
       case_when(
-        covidence_id %in% c(16599, 17956, 17097) ~ "Days",
+        covidence_id %in% c(16599, 17956, 17097, 23669) ~ "Days",
         parameter_unit %in% "Hours" ~ "Days",
         TRUE ~ parameter_unit
       )
@@ -288,7 +279,8 @@ ordered_dat <- delay_dat %>%
   mutate(
     range_midpoint =
       ifelse(is.na(parameter_value) & !is.na(parameter_upper_bound),
-        (parameter_upper_bound - parameter_lower_bound) / 2 + parameter_lower_bound, NA
+        (parameter_upper_bound - parameter_lower_bound) /
+          2 + parameter_lower_bound, NA
       ),
     temp_order_by = ifelse(!is.na(parameter_value),
       parameter_value,
@@ -316,7 +308,38 @@ dir.create("Meta_plots")
 
 # Symptom onset to X with qa_filter of >=50
 symp_dat <- ordered_dat %>%
-  filter(delay_start %in% "Symptom onset")
+  filter(delay_start %in% "Symptom onset") %>%
+  filter(!delay_short %in% c("Symptom onset to other")) %>%
+  mutate(
+    delay_short =
+      case_when(
+        delay_short %in% c(
+          "Symptom onset to death in hospital",
+          "Symptom onset to death in community"
+        ) ~
+          "Symptom onset to death", TRUE ~ delay_short
+      ),
+    delay_short =
+      factor(delay_short,
+        levels = c(
+          "Symptom onset to test",
+          "Symptom onset to test result",
+          "Symptom onset to negative test",
+          "Symptom onset to IgM antibody detection",
+          "Symptom onset to IgG antibody detection",
+          "Symptom onset to reporting",
+          "Symptom onset to WHO notification",
+          "Symptom onset to seeking care",
+          "Symptom onset to quarantine",
+          "Symptom onset to diagnosis",
+          "Symptom onset to admission to care",
+          "Symptom onset to recovery/non-infectiousness",
+          "Symptom onset to first undetectable viremia",
+          "Symptom onset to discharge from care",
+          "Symptom onset to death"
+        )
+      )
+  )
 
 symp_plot_qa <- create_plot(
   symp_dat,
@@ -328,7 +351,20 @@ symp_plot_qa <- create_plot(
 
 # Admission to X with qa_filter of >=50
 adm_dat <- ordered_dat %>%
-  filter(delay_start == "Admission to care")
+  filter(delay_start == "Admission to care") %>%
+  mutate(
+    delay_short =
+      factor(delay_short,
+        levels = c(
+          "Admission to care to recovery/non-infectiousness",
+          "Admission to care to discharge from care",
+          "Admission to care to death",
+          "Admission to care to death/discharge",
+          "Admission to care to death/recovery",
+          "Admission to care to negative test"
+        )
+      )
+  )
 
 adm_plot_qa <- create_plot(
   adm_dat,
@@ -340,7 +376,17 @@ adm_plot_qa <- create_plot(
 
 # Infection process with qa_filter of >=50
 infp_dat <- ordered_dat %>%
-  filter(delay_start %in% "Infection process")
+  filter(delay_start %in% "Infection process") %>%
+  mutate(
+    delay_short =
+      factor(delay_short,
+        levels = c(
+          "Incubation period", "Latent period",
+          "Infectious period", "Generation time",
+          "Serial interval"
+        )
+      )
+  )
 
 infp_plot_qa <- create_plot(
   infp_dat,
@@ -350,7 +396,7 @@ infp_plot_qa <- create_plot(
   symbol_col_by = "outbreak"
 )
 
-# Death to burial with qa_filter of >=50
+# Death to burial with qa_filter >=50
 dtb_dat <- ordered_dat %>%
   filter(delay_start %in% "Death to burial")
 
@@ -361,7 +407,6 @@ dtb_plot_qa <- create_plot(
   facet_by = "delay_short",
   symbol_col_by = "outbreak"
 )
-
 
 ggsave("Delay_plots/symp_plot_filtered.png", symp_plot_qa,
   width = 9, height = 16, units = "in", bg = "white"
@@ -420,6 +465,31 @@ dtb_table_qa <- create_table(
   qa_filter = TRUE
 )
 
+# Exposure/infection table with qa_filter of >=50
+eti_table_qa <- create_table(
+  delay_dat,
+  param = parameter,
+  delay_type = "Exposure/infection",
+  group = "delay_short",
+  qa_filter = TRUE
+)
+
+# All delays other than symptom, admission, and infection process with qa_filter of >=50
+other_dat <- ordered_dat %>%
+  filter(!delay_start %in% c(
+    "Symptom onset",
+    "Admission to care",
+    "Infection process"
+  )) %>%
+  group_by(delay_start)
+
+other_table_qa <- create_table(
+  other_dat,
+  param = parameter,
+  group = "delay_short",
+  qa_filter = TRUE
+)
+
 # Save
 save_as_image(so_table_qa,
   path = "Delay_tables/qa_filtered/symptom_onset_table.png"
@@ -432,6 +502,12 @@ save_as_image(ip_table_qa,
 )
 save_as_image(dtb_table_qa,
   path = "Delay_tables/qa_filtered/death_to_burial_table.png"
+)
+save_as_image(eti_table_qa,
+  path = "Delay_tables/qa_filtered/exposure_table.png"
+)
+save_as_image(other_table_qa,
+  path = "Delay_tables/qa_filtered/other_table.png"
 )
 
 # Symptom onset to X table with NO qa_filter
@@ -470,6 +546,23 @@ dtb_table_all <- create_table(
   qa_filter = FALSE
 )
 
+# Exposure/infection table with NO qa_filter
+eti_table_all <- create_table(
+  delay_dat,
+  param = parameter,
+  delay_type = "Exposure/infection",
+  group = "delay_short",
+  qa_filter = FALSE
+)
+
+# All delays other than symptom, admission, and infection process with NO qa_filter
+other_table_all <- create_table(
+  other_dat,
+  param = parameter,
+  group = "delay_short",
+  qa_filter = FALSE
+)
+
 # Save
 save_as_image(so_table_all,
   path = "Delay_tables/unfiltered/symptom_onset_table.png"
@@ -482,6 +575,12 @@ save_as_image(ip_table_all,
 )
 save_as_image(dtb_table_all,
   path = "Delay_tables/unfiltered/death_to_burial_table.png"
+)
+save_as_image(eti_table_all,
+  path = "Delay_tables/unfiltered/exposure_table.png"
+)
+save_as_image(other_table_all,
+  path = "Delay_tables/unfiltered/other_table.png"
 )
 
 ################
@@ -587,7 +686,7 @@ meta_dat <- delay_dat %>%
       parameter_uncertainty_type %in% "Range" ~
       parameter_uncertainty_upper_value, TRUE ~ NA)
   ) %>%
-  # convert SEs for means into SD using sample size (see cochrane chapter above)
+  # convert SEs for means into SD using sample size
   mutate(
     sd = case_when(
       is.na(sd) & !is.na(serr) ~ serr * sqrt(population_sample_size),
@@ -608,7 +707,7 @@ meta_var <- meta_dat %>%
     parameter_uncertainty_type %in% c("IQR", "Range"))
 
 # Variance data (incubation period, serial interval, symptom onset to death)
-sotd_var <- meta_var %>% filter(delay_short %in% "Symptom onset to death") # 17
+sotd_var <- meta_var %>% filter(delay_short %in% "Symptom onset to death") # 17 --> 20
 incub_var <- meta_var %>% filter(delay_short %in% "Incubation period") # 8
 serial_var <- meta_var %>% filter(delay_short %in% "Serial interval") # 8
 
@@ -637,14 +736,14 @@ sotd_var_ma <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/onset_to_death.png", width = 9500, height = 5500, res = 1000)
+png(file = "Meta_plots/onset_to_death.png", width = 9500, height = 6000, res = 1000)
 forest.meta(sotd_var_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
   col.study = "black", col.inside = "black", col.diamond.lines = "black",
   col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
-  at = seq(5, 14, by = 3),
-  xlim = c(5, 14),
+  at = seq(0, 15, by = 3),
+  xlim = c(0, 15),
   xlab = "Symptom onset to death (days)", fontsize = 10
 )
 dev.off()
@@ -670,7 +769,7 @@ incub_var_ma <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/incubation_period.png", width = 9500, height = 4000, res = 1000)
+png(file = "Meta_plots/incubation_period.png", width = 9500, height = 3500, res = 1000)
 forest.meta(incub_var_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -702,7 +801,7 @@ serial_var_ma <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/serial_interval.png", width = 9500, height = 4000, res = 1000)
+png(file = "Meta_plots/serial_interval.png", width = 9500, height = 3800, res = 1000)
 forest.meta(serial_var_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -736,5 +835,4 @@ p_heights_var <- heights_var / sum(heights_var)
 # Arrange and display the plots in a grid
 md_var <- grid.arrange(plot1_var, plot2_var, plot3_var, ncol = 1, heights = p_heights_var)
 
-ggsave("Meta_plots/meta_delays_variance.png", plot = md_var, width = 7, height = 9)
-
+ggsave("Meta_plots/meta_delays_variance.png", plot = md_var, width = 7, height = 10)

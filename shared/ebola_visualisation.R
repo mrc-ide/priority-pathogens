@@ -148,7 +148,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       filter(parameter_type_short == r_type)
   }
   
-  if (param == "Human delay") {
+  if (!is.na(delay_type)) {
     df <- df %>%
       filter(delay_start == delay_type)
   }
