@@ -45,7 +45,22 @@ clean_dfs <- function(df, pathogen) {
       df <- df %>%
         mutate(
           qa_m1 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_m1),
-          qa_a3 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_a3)
+          qa_a3 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_a3),
+          # clean up author names (remove initials and fully capitalised names)
+          first_author_surname = str_replace(first_author_surname, "\\b[A-Z]\\.", ""),
+          first_author_surname = case_when(
+            first_author_surname %in% "OUEMBA TASSE ́" ~ "Ouemba Tasse",
+            first_author_surname %in% "R Glynn" ~ "Glynn",
+            first_author_surname %in% "JUGA" ~ "Juga",
+            first_author_surname %in% "KI" ~ "Ki",
+            TRUE ~ first_author_surname
+          )
+        ) %>%
+        # Update article label
+        mutate(
+          article_label = as.character(
+            paste0(first_author_surname, " ", year_publication)
+          )
         )
     }
     
@@ -324,6 +339,11 @@ clean_dfs <- function(df, pathogen) {
         filter(!(covidence_id %in% c(5765, 5870, 1510, 17096, 4301))) %>%
         # Remove duplicate entry from single extracted paper not identified as distinct
         filter(!(covidence_id %in% 3532 & access_param_id %in% 37)) %>%
+        # Remove risk factor for covidence ID 17054
+        filter(!(covidence_id %in% 17054 & parameter_type %in% "Risk factors")) %>%
+        # Remove one risk factor from covidence ID 4764
+        filter(!(riskfactor_name %in% "Other" &
+                   covidence_id %in% 4764 & access_param_id %in% 74)) %>%
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(
@@ -351,6 +371,12 @@ clean_dfs <- function(df, pathogen) {
               population_country %in%
                 "DRC, Republic of the Congo, Côte d'Ivoire, Gabon, South Africa, South Sudan, Uganda" ~
                 "Multi-country: Africa (n = 7)",
+              population_country %in%
+                "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon" ~
+                "Multi-country: Africa (n = 6)",
+              population_country %in%
+                "Cameroon, DRC, Republic of the Congo, Ghana, Uganda" ~
+                "Multi-country: Africa (n = 5)",
               # 11688 = Guinea, Liberia, Nigeria, Sierra Leone, Spain, USA
               covidence_id %in% 11688 ~
                 "Multi-country: Africa, Europe, USA (n = 6)",
@@ -475,6 +501,84 @@ clean_dfs <- function(df, pathogen) {
               TRUE ~ parameter_unit
             )
         ) %>%
+        # clean the other risk factors and create new variable
+        mutate(
+          riskfactor_outcome =
+            case_when(
+              covidence_id %in% 16579 & riskfactor_outcome %in% "Other" ~ "Infection",
+              TRUE ~ riskfactor_outcome),
+          # Variable for "other" risk factor outcomes
+          other_rf_outcome =
+            case_when(
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 562 ~ "Admitted patient testing PCR positive",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% c(16279, 19084) ~ "RNA persistence",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 1561 ~ "Outbreak", # environmental factors as risk factor for ebola outbreak
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% c(1749, 4253, 4257) ~ "Household transmission",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 17861 ~ "Hospitalisation",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 2160 ~ "Importation", # with travel restrictions implemented
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 3487 &
+                access_param_id %in% c(29, 30) ~ "Viremia at admission",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 3487 &
+                access_param_id %in% c(31, 32) ~ "Highest viremia during hospitalisation",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% c(5005, 18536) ~ "Onward transmission", # 5005: SES for onward transmission
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 5567 &
+                riskfactor_name %in% c("Age;Occupation;Other", "Age") ~ "Primary case within household",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 5567 &
+                riskfactor_name %in% c("Age;Other", "Occupation;Sex") ~ "Non-primary case within household",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 15448 ~ "Reporting death of household member/relative",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 16699 ~ "Exposure", # Rf SES
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 17157 &
+                access_param_id %in% 300 ~ "Onset to admission delay",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 17139 ~ "Length of stay",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 17157 &
+                access_param_id %in% 301 ~ "Length of stay",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 17275 &
+                access_param_id %in% 295 ~ "Onset to admission delay",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 17275 &
+                access_param_id %in% 296 ~ "Length of stay",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 17981 ~ "Spillover",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 18103 ~ "Testing positive out of all individuals with possible infection",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 18354 ~ "Loss to follow-up of contacts",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 18605 &
+                access_param_id %in% 297 ~ "Onset to admission delay",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 18605 &
+                access_param_id %in% 298 ~ "Length of stay",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 4764 &
+                access_param_id %in% c(71, 72) ~ "Importation", # phylogeographic GLM
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 4764 &
+                access_param_id %in% c(73) ~ "Cumulative case counts", # Bayesian GLM
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 15436 ~ "Intravenous fluid exposure",
+              riskfactor_outcome %in% "Other" &
+                covidence_id %in% 1375 ~ "Developing symptomatic disease given reported contact",
+              TRUE ~ NA
+            )
+        ) %>%
         mutate(
           # Fix entry errors
           # Add missed Country
@@ -482,6 +586,15 @@ clean_dfs <- function(df, pathogen) {
             covidence_id %in% c(1170, 18371), "Sierra Leone", population_country
           ),
 
+          # Correct entry cov ID 16279
+          parameter_type = ifelse(
+            covidence_id %in% 16279 &
+              parameter_type %in%
+              "Human delay - Symptom Onset/Fever to Death" &
+              parameter_class %in% "Risk factors",
+            "Risk factors", parameter_type
+          ),
+          
           # Correct entry cov ID 4900
           parameter_lower_bound = ifelse(
             covidence_id %in% 4900 &
