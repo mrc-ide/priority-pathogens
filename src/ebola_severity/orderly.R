@@ -55,12 +55,11 @@ source("ebola_visualisation.R")
 
 parameter <- "Severity"
 
-
-
 df <- left_join(
   params,
-  articles[, c("id", "first_author_surname", "year_publication", "article_label")],
-  by = "id"
+  articles[, c("covidence_id", "first_author_surname", "year_publication",
+               "article_label", "doi", "notes")],
+  by = "covidence_id"
 ) %>%
   arrange(article_label, -year_publication)
 
@@ -68,8 +67,8 @@ sev_dat <- df %>%
   mutate(
     population_country = as.factor(population_country)
   ) %>%
-  filter(parameter_class == parameter) %>%
-  filter(parameter_from_figure == "FALSE") %>%
+  filter(parameter_class %in% parameter) %>%
+  filter(!parameter_from_figure %in% TRUE) %>%
   filter(!covidence_id == 23507) %>% # incorrect entry
   filter(!covidence_id == 5654) %>% # dupe of separate Cherif 2018, but less info
   filter(!covidence_id == 2124) %>% # dupe of separate Sadek 1999, but less info
@@ -170,7 +169,7 @@ ordered_dat <- sev_dat %>%
   mutate(
     range_midpoint =
       ifelse(is.na(parameter_value) & !is.na(parameter_upper_bound),
-        parameter_upper_bound - parameter_lower_bound, NA
+             (parameter_upper_bound - parameter_lower_bound)/2 + parameter_lower_bound, NA
       ),
     temp_order_by = ifelse(!is.na(parameter_value),
       parameter_value,
@@ -249,7 +248,7 @@ panels <- plot_grid(other_outbreak_qa + theme(legend.position = "none"),
                     nrow = 1, align = "hv")
 
 plot_split_outbreak <- plot_grid(panels, outbreak_legend,
-                                 ncol = 2, align = "hv", rel_widths = c(1, 0.2))
+                                 ncol = 2, align = "hv", rel_widths = c(1, 0.3))
 
 # Plot with NO qa_filter
 plot_outbreak_all <- create_plot(
