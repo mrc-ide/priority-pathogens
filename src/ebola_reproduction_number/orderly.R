@@ -11,6 +11,7 @@ library(purrr)
 library(janitor)
 library(stringr)
 library(scales)
+library(epitrix)
 
 orderly_strict_mode()
 
@@ -35,8 +36,8 @@ orderly_artefact(
   )
 )
 
-#orderly_parameters(pathogen = "EBOLA")
-orderly_parameters(pathogen = NULL)
+orderly_parameters(pathogen = "EBOLA")
+#orderly_parameters(pathogen = NULL)
 
 # Get data from db_compilation
 orderly_dependency(
@@ -62,8 +63,9 @@ parameter <- "Reproduction number"
 
 df <- left_join(
   params,
-  articles[, c("id", "first_author_surname", "year_publication", "article_label")],
-  by = "id"
+  articles[, c("covidence_id", "first_author_surname", "year_publication",
+               "article_label", "doi", "notes")],
+  by = "covidence_id"
 ) %>%
   arrange(article_label, -year_publication)
 
@@ -76,14 +78,14 @@ df_plot <- df %>%
   mutate(
     population_country = as.factor(population_country)
   ) %>%
-  filter(parameter_class == parameter) %>%
-  filter(parameter_from_figure == "FALSE") %>%
-  filter(!covidence_id == 4966) %>% # entry without values
+  filter(parameter_class %in% parameter) %>%
+  filter(!parameter_from_figure %in% TRUE) %>%
+  filter(!covidence_id %in% 4966) %>% # entry without values
   group_by(parameter_type) %>%
   mutate(
     parameter_type_short =
-      ifelse(parameter_type == "Reproduction number (Basic R0)", "Basic (R0)",
-        ifelse(parameter_type == "Reproduction number (Effective, Re)",
+      ifelse(parameter_type %in% "Reproduction number (Basic R0)", "Basic (R0)",
+        ifelse(parameter_type %in% "Reproduction number (Effective, Re)",
           "Effective (Re)", NA
         )
       ),
@@ -101,14 +103,56 @@ df_plot <- df %>%
         )
       )
   ) %>%
+  mutate(
+  # Account for distributions
+  parameter_value_type =
+  case_when(
+    is.na(parameter_value) & distribution_type %in% "Gamma" &
+      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
+      "Mean", TRUE ~ parameter_value_type
+  ),
+parameter_value =
+  case_when(
+    is.na(parameter_value) & distribution_type %in% "Gamma" &
+      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
+      gamma_shapescale2mucv(
+        shape = distribution_par1_value,
+        scale = distribution_par2_value
+      )$mu,
+    TRUE ~ parameter_value
+  ),
+parameter_uncertainty_single_value =
+  case_when(
+    distribution_type %in% "Gamma" & is.na(parameter_uncertainty_singe_type) &
+      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
+      gamma_shapescale2mucv(
+        shape = distribution_par1_value,
+        scale = distribution_par2_value
+      )$mu *
+      gamma_shapescale2mucv(
+        shape = distribution_par1_value,
+        scale = distribution_par2_value
+      )$cv,
+    distribution_type == "Gamma" & is.na(parameter_uncertainty_singe_type) &
+      distribution_par2_type == "Mean sd" ~ distribution_par2_value,
+    TRUE ~ parameter_uncertainty_single_value
+  ),
+parameter_uncertainty_singe_type =
+  case_when(
+    distribution_type %in% "Gamma" & is.na(parameter_uncertainty_singe_type) &
+      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
+      "Standard Deviation",
+    distribution_type %in% "Gamma" & is.na(parameter_uncertainty_singe_type) &
+      distribution_par2_type %in% "Mean sd" ~ "Standard Deviation",
+    TRUE ~ parameter_uncertainty_singe_type
+  ),
   # modify standard deviation and standard error to visualise uncertainty in plots
-mutate(
   parameter_uncertainty_type =
     case_when(is.na(parameter_uncertainty_type) &
-                parameter_uncertainty_singe_type == "Standard Deviation" ~
+                parameter_uncertainty_singe_type %in% "Standard Deviation" ~
                 "Standard Deviation",
               is.na(parameter_uncertainty_type) &
-                parameter_uncertainty_singe_type == "Standard Error" ~
+                parameter_uncertainty_singe_type %in% "Standard Error" ~
                 "Standard Error",
               TRUE ~ parameter_uncertainty_type),
   parameter_uncertainty_lower_value =
@@ -126,7 +170,7 @@ ordered_dat <- df_plot %>%
   mutate(
     range_midpoint =
       ifelse(is.na(parameter_value) & !is.na(parameter_upper_bound),
-        parameter_upper_bound - parameter_lower_bound, NA
+             (parameter_upper_bound - parameter_lower_bound)/2 + parameter_lower_bound, NA
       ),
     temp_order_by = ifelse(!is.na(parameter_value),
       parameter_value,
@@ -151,13 +195,13 @@ dir.create("R_tables/unfiltered")
 # PLOTS
 
 plot_dat <- ordered_dat %>%
-  filter(!parameter_value_type == "Standard Deviation",
-         !outbreak == "Unspecified") %>%
+  filter(!parameter_value_type %in% "Standard Deviation") %>% #,
+         #!outbreak %in% "Unspecified") %>%
   mutate(
     parameter_value_type =
-      case_when(parameter_value_type %in% c("Unspecified", "Other")
-                ~ "Other/Unspecified", TRUE ~ parameter_value_type)
-  )
+      case_when(parameter_value_type %in% c("Unspecified", "Other", NA) ~ "Other/Unspecified",
+                TRUE ~ parameter_value_type)
+   )
 
 # Plots with qa_filter of >=50
 basic_r_outbreak_qa <- create_plot(
@@ -202,19 +246,19 @@ eff_r_country_qa <- create_plot(
 
 # Save
 ggsave("R_plots/basic_r_outbreak_filtered.png", basic_r_outbreak_qa,
-  width = 8, height = 11, units = "in", bg = "white"
+  width = 9, height = 11, units = "in", bg = "white"
 )
 
 ggsave("R_plots/basic_r_country_filtered.png", basic_r_country_qa,
-  width = 8, height = 11, units = "in", bg = "white"
+  width = 9, height = 11, units = "in", bg = "white"
 )
 
 ggsave("R_plots/eff_r_outbreak_filtered.png", eff_r_outbreak_qa,
-  width = 8, height = 5, units = "in", bg = "white"
+  width = 9, height = 5, units = "in", bg = "white"
 )
 
 ggsave("R_plots/eff_r_country_filtered.png", eff_r_country_qa,
-  width = 8, height = 5, units = "in", bg = "white"
+  width = 9, height = 5, units = "in", bg = "white"
 )
 
 # SUMMARY TABLES
@@ -261,8 +305,8 @@ save_as_image(eff_r_tab, path = "R_tables/unfiltered/eff_r_tab_all.png")
 
 basic_range_dat <- ordered_dat %>%
   filter(
-    parameter_type_short == "Basic (R0)",
-    !parameter_value_type == "Standard Deviation"
+    parameter_type_short %in% "Basic (R0)",
+    !parameter_value_type %in% "Standard Deviation"
   ) %>%
   mutate(
     parameter_value_type =
@@ -300,8 +344,8 @@ save_as_image(range_species, path = "R_tables/qa_filtered/range_species.png")
 # Same for effective R
 eff_range_dat <- ordered_dat %>%
   filter(
-    parameter_type_short == "Effective (Re)",
-    !parameter_value_type == "Standard Deviation"
+    parameter_type_short %in% "Effective (Re)",
+    !parameter_value_type %in% "Standard Deviation"
   ) %>%
   mutate(
     parameter_value_type =
