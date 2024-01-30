@@ -31,7 +31,14 @@ orderly_run("ebola_delays", parameters = list(pathogen = "EBOLA"))
 # Seroprevalence (Note: not finished - this is rough and more cleaning needed)
 orderly_run("ebola_seroprevalence", parameters = list(pathogen = "EBOLA"))
 
+# TO DO FOR SEROPREVALENCE:
+# check parameter_value, lower bound, upper bound empty entries - might just have data available?
+# unspecified survey dates, country
+
 # Risk factors
+orderly_run("ebola_risk_factors", parameters = list(pathogen = "EBOLA"))
+# TO DO FOR RISK FACTORS:
+# combine some tables into multi-panel for supplements
 
 # Mutations
 
