@@ -18,16 +18,13 @@ orderly_strict_mode()
 orderly_artefact(
   "Tables for risk factors",
   c(
-    "Risk_tables/qa_filtered/basic_r_tab_filtered.png",
-    "Risk_tables/qa_filtered/eff_r_tab_filtered.png",
-    "Risk_tables/unfiltered/basic_r_tab_all.png",
-    "Risk_tables/unfiltered/eff_r_tab_all.png",
-    "Risk_tables/qa_filtered/range_outbreak.png",
-    "Risk_tables/qa_filtered/range_country.png",
-    "Risk_tables/qa_filtered/range_species.png",
-    "Risk_tables/qa_filtered/eff_range_outbreak.png",
-    "Risk_tables/qa_filtered/eff_range_country.png",
-    "Risk_tables/qa_filtered/eff_range_species.png"
+    "Risk_tables/risk_factors_for_death.png",
+    "Risk_tables/risk_factors_for_infection.png",
+    "Risk_tables/risk_factors_for_serology.png",
+    "Risk_tables/risk_factors_for_recovery.png",
+    "Risk_tables/risk_factors_for_severe_disease.png",
+    "Risk_tables/risk_factors_for_symptoms.png",
+    "Risk_tables/other_risk_factor_outcomes.png"
   )
 )
 
@@ -80,6 +77,9 @@ rf_dat <- df %>%
 
 unique(rf_dat$riskfactor_outcome)
 table(rf_dat$riskfactor_outcome, useNA = "ifany")
+
+# Create directory for results
+dir.create("Risk_tables")
 
 ####################################
 # Risk factors for death (n = 136) #
@@ -148,6 +148,8 @@ death_rf_ft <- deaths_comb %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "right")
 
+save_as_image(death_rf_ft, path = "Risk_tables/risk_factors_for_death.png")
+
 #######################################
 # Risk factors for infection (n = 61) #
 #######################################
@@ -209,6 +211,8 @@ infection_rf_ft <- infections_comb %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "right")
 
+save_as_image(infection_rf_ft, path = "Risk_tables/risk_factors_for_infection.png")
+
 ######################################
 # Risk factors for Serology (n = 44) #
 ######################################
@@ -262,6 +266,8 @@ serology_rf_ft <- serology_comb %>%
   add_footer_lines("") %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "right")
+
+save_as_image(serology_rf_ft, path = "Risk_tables/risk_factors_for_serology.png")
 
 ############################################
 # Factors associated with Recovery (n = 7) #
@@ -317,6 +323,8 @@ recovery_rf_ft <- recovery_comb %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "right")
 
+save_as_image(recovery_rf_ft, path = "Risk_tables/risk_factors_for_recovery.png")
+
 ###########################################
 # Risk factors for Severe disease (n = 3) #
 ###########################################
@@ -366,6 +374,8 @@ severe_rf_ft <- severe_comb %>%
   add_footer_lines("") %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "right")
+
+save_as_image(severe_rf_ft, path = "Risk_tables/risk_factors_for_severe_disease.png")
 
 #####################################
 # Risk factors for Symptoms (n = 2) #
@@ -417,6 +427,7 @@ symptom_rf_ft <- symptom_comb %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "right")
 
+save_as_image(symptom_rf_ft, path = "Risk_tables/risk_factors_for_symptoms.png")
 
 #######################
 # 58 "Other" outcomes #
@@ -458,3 +469,5 @@ other_rf_outcomes_ft <- outcome_summary %>%
   add_footer_lines("") %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "right")
+
+save_as_image(other_rf_outcomes_ft, path = "Risk_tables/other_risk_factor_outcomes.png")
