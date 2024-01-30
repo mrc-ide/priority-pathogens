@@ -418,7 +418,6 @@ symptom_rf_ft <- symptom_comb %>%
   align_nottext_col(align = "right")
 
 
-
 #######################
 # 58 "Other" outcomes #
 #######################
@@ -431,4 +430,31 @@ test_other <- other_dat %>% select(
   covidence_id, other_rf_outcome, riskfactor_name,
   riskfactor_significant, riskfactor_adjusted, doi, notes
 )
-table(other_dat$other_rf_outcome)
+
+outcome_summary <- other_dat %>%
+  group_by(other_rf_outcome) %>%
+  summarise(
+    count_occurrences = n(),
+    count_unique_ids = n_distinct(covidence_id)
+  )
+
+
+other_rf_outcomes_ft <- outcome_summary %>%
+  mutate(
+    `Other outcomes considered for risk factors` = other_rf_outcome,
+    `Number of parameters` = count_occurrences,
+    `Number of papers` = count_unique_ids
+  ) %>%
+  select(
+    `Other outcomes considered for risk factors`, `Number of parameters`,
+    `Number of papers`
+  ) %>%
+  arrange(desc(`Number of papers`), desc(`Number of parameters`)) %>%
+  flextable() %>%
+  fontsize(i = 1, size = 12, part = "header") %>%
+  autofit() %>%
+  theme_booktabs() %>%
+  bold(i = 1, bold = TRUE, part = "header") %>%
+  add_footer_lines("") %>%
+  align(align = "left", part = "all") %>%
+  align_nottext_col(align = "right")
