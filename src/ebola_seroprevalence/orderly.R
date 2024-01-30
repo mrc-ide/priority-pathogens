@@ -103,7 +103,8 @@ ordered_dat <- sero_dat %>%
   mutate(
     range_midpoint =
       ifelse(is.na(parameter_value) & !is.na(parameter_upper_bound),
-             parameter_upper_bound - parameter_lower_bound, NA
+             (parameter_upper_bound - parameter_lower_bound) /
+               2 + parameter_lower_bound, NA
       ),
     temp_order_by = ifelse(!is.na(parameter_value),
                            parameter_value,
