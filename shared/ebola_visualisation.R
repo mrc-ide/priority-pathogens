@@ -281,6 +281,17 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       )
     }
     
+    if (param %in% "Growth rate") {
+      r_tbl <- r_tbl %>% as_flextable(
+        col_keys = c(
+          "Outbreak", "Article", "Country", "Survey date",
+          "Central estimate", "Unit", "Central range", "Central type",
+          "Uncertainty", "Uncertainty type", "Disaggregated by"
+        ),
+        hide_grouplabel = TRUE
+      )
+    }
+    
     r_tbl <- r_tbl %>%
       fontsize(i = 1, size = 12, part = "header") %>%
     autofit() %>%

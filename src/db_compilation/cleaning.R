@@ -542,6 +542,12 @@ clean_dfs <- function(df, pathogen) {
               parameter_type %in% "Overdispersion" &
                 is.na(parameter_unit) &
                 covidence_id %in% c(2065, 4787, 5940, 23720) ~ "No units",
+              parameter_class %in% "Growth rate" &
+                is.na(parameter_unit) &
+                covidence_id %in% 2506 ~ "Unspecified",
+              parameter_class %in% "Growth rate" &
+                is.na(parameter_unit) &
+                covidence_id %in% 15958 ~ "Per week",
               TRUE ~ parameter_unit
             )
         ) %>%
@@ -836,6 +842,9 @@ clean_dfs <- function(df, pathogen) {
               parameter_type %in% "Overdispersion" &
                 is.na(parameter_value_type) &
                 covidence_id %in% c(4787) ~ "Mean",
+              parameter_class %in% "Growth rate" &
+                is.na(parameter_value_type) &
+                covidence_id %in% c(442, 507) ~ "Unspecified",
               TRUE ~ parameter_value_type
             ),
 
