@@ -845,6 +845,9 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Growth rate" &
                 is.na(parameter_value_type) &
                 covidence_id %in% c(442, 507) ~ "Unspecified",
+              parameter_class %in% "Doubling time" &
+                is.na(parameter_value_type) &
+                covidence_id %in% 6346 ~ "Unspecified",
               TRUE ~ parameter_value_type
             ),
 

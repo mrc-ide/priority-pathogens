@@ -90,6 +90,12 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
   if (param == "Human delay") {
     plot <- plot + xlab("Delay (Days)")
   }
+  
+  if (param == "Doubling time") {
+    plot <- plot +
+      coord_cartesian(xlim = c(10, 70), expand = FALSE, clip = "off") +
+      xlab("Doubling time (Days)")
+  }
 
   plot
 }
@@ -281,7 +287,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       )
     }
     
-    if (param %in% "Growth rate") {
+    if (param %in% c("Growth rate", "Doubling time")) {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
           "Outbreak", "Article", "Country", "Survey date",
