@@ -236,7 +236,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       ) %>%
     as_grouped_data(groups = {{group}} )
     
-    if (param == "Reproduction number") {
+    if (param %in% c("Reproduction number", "Overdispersion")) {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
           "Outbreak", "Article", "Country", "Survey date",
