@@ -4,6 +4,7 @@ library(janitor)
 library(orderly2)
 library(readr)
 library(stringr)
+library(stringi)
 
 orderly_strict_mode()
 
