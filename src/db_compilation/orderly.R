@@ -3,7 +3,7 @@ library(dplyr)
 library(janitor)
 library(orderly2)
 library(readr)
-
+library(stringr)
 
 orderly_strict_mode()
 
