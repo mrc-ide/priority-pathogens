@@ -104,49 +104,8 @@ df_plot <- df %>%
       )
   ) %>%
   mutate(
-  # Account for distributions
-  parameter_value_type =
-  case_when(
-    is.na(parameter_value) & distribution_type %in% "Gamma" &
-      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
-      "Mean", TRUE ~ parameter_value_type
-  ),
-parameter_value =
-  case_when(
-    is.na(parameter_value) & distribution_type %in% "Gamma" &
-      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
-      gamma_shapescale2mucv(
-        shape = distribution_par1_value,
-        scale = distribution_par2_value
-      )$mu,
-    TRUE ~ parameter_value
-  ),
-parameter_uncertainty_single_value =
-  case_when(
-    distribution_type %in% "Gamma" & is.na(parameter_uncertainty_singe_type) &
-      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
-      gamma_shapescale2mucv(
-        shape = distribution_par1_value,
-        scale = distribution_par2_value
-      )$mu *
-      gamma_shapescale2mucv(
-        shape = distribution_par1_value,
-        scale = distribution_par2_value
-      )$cv,
-    distribution_type == "Gamma" & is.na(parameter_uncertainty_singe_type) &
-      distribution_par2_type == "Mean sd" ~ distribution_par2_value,
-    TRUE ~ parameter_uncertainty_single_value
-  ),
-parameter_uncertainty_singe_type =
-  case_when(
-    distribution_type %in% "Gamma" & is.na(parameter_uncertainty_singe_type) &
-      distribution_par1_type %in% "Shape" & distribution_par2_type %in% "Scale" ~
-      "Standard Deviation",
-    distribution_type %in% "Gamma" & is.na(parameter_uncertainty_singe_type) &
-      distribution_par2_type %in% "Mean sd" ~ "Standard Deviation",
-    TRUE ~ parameter_uncertainty_singe_type
-  ),
-  # modify standard deviation and standard error to visualise uncertainty in plots
+    # Checked data and no need to account for distributions
+    # modify standard deviation and standard error to visualise uncertainty in plots
   parameter_uncertainty_type =
     case_when(is.na(parameter_uncertainty_type) &
                 parameter_uncertainty_singe_type %in% "Standard Deviation" ~
