@@ -4,7 +4,7 @@ assign_ebola_outbreak <- function(df) {
   df <- df %>%
     mutate(
       outbreak = case_when(
-        population_study_start_year %in% 1976 & population_study_end_year %in% c(2012, 2014) ~
+        population_study_start_year %in% 1976 & population_study_end_year %in% c(1995, 2008, 2012, 2014) ~
           "Multiple outbreaks",
         population_study_start_year %in% 2000 & population_study_end_year %in% c(2014, 2015) ~
           "Multiple outbreaks",
@@ -46,6 +46,7 @@ assign_ebola_outbreak <- function(df) {
               "Guinea, Liberia, Sierra Leone",
               "Sierra Leone",
               "Guinea, Sierra Leone",
+              "Guinea, Mali, Sierra Leone",
               "Liberia, Sierra Leone",
               "USA and Europe",
               "Multi-country: Africa, Europe, USA (n = 6)",
@@ -57,10 +58,11 @@ assign_ebola_outbreak <- function(df) {
               "Liberia",
               "Liberia, Nigeria",
               "Nigeria",
-              "Mali"
+              "Mali",
+              "DRC, Guinea, Liberia, Sierra Leone"
             ) ~ "West Africa 2013-2016",
         # No specific dates/start dates provided for these, but checked the papers
-        covidence_id %in% c(590, 11565, 4568, 11620, 5997) ~
+        covidence_id %in% c(590, 11565, 4568, 11620, 5997, 17835) ~
           "West Africa 2013-2016",
         # Seroprevalence survey post WA outbreak also used to calculate CFR
         covidence_id %in% 1044 ~ "West Africa 2013-2016",
