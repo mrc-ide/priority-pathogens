@@ -381,6 +381,8 @@ clean_dfs <- function(df, pathogen) {
         # Remove one risk factor from covidence ID 4764
         filter(!(riskfactor_name %in% "Other" &
           covidence_id %in% 4764 & access_param_id %in% 74)) %>%
+        # Remove 3 attack rates that are actually death rates
+        filter(!(covidence_id %in% 3681 & parameter_class %in% "Attack rate")) %>%
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(
@@ -435,6 +437,8 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% c(18372, 18535) ~ "DRC",
               covidence_id %in% c(17835, 18236, 18536) ~ "Guinea",
               covidence_id %in% c(1170, 18371) ~ "Sierra Leone",
+              # Correction
+              parameter_class %in% "Attack rate" & covidence_id %in% 6472 ~ "DRC",
               is.na(population_country) ~ "Unspecified",
               TRUE ~ population_country
             )
@@ -599,6 +603,9 @@ clean_dfs <- function(df, pathogen) {
                 parameter_value %in% 4.1 ~ "SNPs/nucleotide sequenced",
               parameter_class %in% "Mutations" &
                 covidence_id %in% c(4763, 5197) ~ "Substitutions/site/year",
+              # attack rate
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 4991 ~ "No units",
                 TRUE ~ parameter_unit
             )
         ) %>%
@@ -693,6 +700,8 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 16951 ~ NA,
               parameter_class %in% "Mutations" &
                 covidence_id %in% 6340 ~ NA,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 6472 ~ 0.1,
               TRUE ~ parameter_lower_bound
             ),
           
@@ -706,6 +715,8 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 16951 ~ NA,
               parameter_class %in% "Mutations" &
                 covidence_id %in% 6340 ~ NA,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 6472 ~ 0.8,
               TRUE ~ parameter_upper_bound
             ),
           
@@ -799,6 +810,12 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Mutations" &
                 is.na(parameter_value_type) &
                 covidence_id %in% c(1407, 4763, 5197) ~ "Mean",
+              # Attack rate
+              parameter_class %in% "Attack rate" &
+                is.na(parameter_value_type) &
+                covidence_id %in% c(5404, 4829, 4991) ~ "Other", # "Rates"
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 6472 ~ "Unspecified",
               TRUE ~ parameter_value_type
             ),
 
@@ -1094,7 +1111,8 @@ clean_dfs <- function(df, pathogen) {
             parameter_uncertainty_lower_value,
             parameter_uncertainty_upper_value
           ),
-          ~ ifelse(parameter_class != "Mutations", round(., digits = 2), .)
+          ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate"), round(., digits = 2),
+                   ifelse(parameter_class %in% "Attack rate", round(., digits = 3), .))
         ),
 
         # Parameter value
@@ -1105,7 +1123,7 @@ clean_dfs <- function(df, pathogen) {
             NA
           ),
 
-        # Uncertainty
+        # Uncertainty type
         parameter_uncertainty_type = case_when(
           parameter_uncertainty_type %in%
             "CI95%" ~ "95% CI",
@@ -1121,6 +1139,7 @@ clean_dfs <- function(df, pathogen) {
             "Inter Quartile Range (IQR)" ~ "IQR",
           TRUE ~ parameter_uncertainty_type
         ),
+        # Single uncertainty type
         parameter_uncertainty_singe_type = case_when(
           parameter_uncertainty_singe_type %in%
             "Standard deviation (Sd)" ~ "Standard Deviation",
