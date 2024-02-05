@@ -18,7 +18,8 @@ orderly_strict_mode()
 orderly_artefact(
   "Table for attack rate",
   c(
-    "Attack_rate_results/table.png"
+    "Attack_rate_results/table_filtered.png",
+    "Attack_rate_results/table_unfiltered.png"
   )
 )
 
@@ -73,20 +74,29 @@ ar_dat <- left_join(
       ),
     parameter_value_type =
       case_when(parameter_value_type %in% c("Unspecified", "Other")
-                ~ "Other/Unspecified", TRUE ~ parameter_value_type)
+                ~ "Other/Unspecified", TRUE ~ parameter_value_type),
+    # Deal with "approximate" sample size identified in one paper (not in
+    # cleaning.R to avoid messing with variable class)
+    population_sample_size = as.character(population_sample_size),
+    population_sample_size =
+      case_when(
+        covidence_id %in% 2240 ~ "~1000",
+        TRUE ~ population_sample_size
+      )
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE)
 
 
 # Check for NA and unspecified and add fixes to cleaning.R:
-ar_dat$parameter_value_type # check 14 NA
+ar_dat$parameter_value_type # check 14 NA (x)
 ar_dat$population_country # all fine
 ar_dat$survey_date # all fine
 ar_dat$outbreak # all fine
-ar_dat$parameter_unit # check 8 NA
-ar_dat$population_sample_type # check 2 NA
+ar_dat$parameter_unit # check 8 NA - 3x "no units" checked (x)
+ar_dat$population_sample_type # check 2 NA (x)
 ar_dat$population_sample_size
+ar_dat$exponent
 
 # Create directory for results
 dir.create("Attack_rate_results")
@@ -113,7 +123,12 @@ ordered_dat <- ar_dat %>%
   )
 
 # Create table
-# No need for qa filter as all entries score >50
+ar_tab_qa <- create_table(
+  ordered_dat,
+  param = parameter,
+  qa_filter = TRUE
+)
+
 ar_tab <- create_table(
   ordered_dat,
   param = parameter,
@@ -121,4 +136,5 @@ ar_tab <- create_table(
 )
 
 # Save
-save_as_image(ar_tab, path = "Attack_rate_results/table.png")
+save_as_image(ar_tab_qa, path = "Attack_rate_results/table_filtered.png")
+save_as_image(ar_tab, path = "Attack_rate_results/table_unfiltered.png")

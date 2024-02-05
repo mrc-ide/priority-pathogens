@@ -372,8 +372,8 @@ clean_dfs <- function(df, pathogen) {
     if (pathogen == "EBOLA") {
       df <- df %>%
         # Remove parameters from theoretical model papers/synthetic data papers
-        # (e.g. 2857)/correspondence/wrong entries
-        filter(!(covidence_id %in% c(1510, 2857, 4301, 5765, 5870, 17096))) %>%
+        # (e.g. 2857, 2858)/correspondence/wrong entries
+        filter(!(covidence_id %in% c(1510, 2857, 2858, 4301, 5765, 5870, 17096))) %>%
         # Remove duplicate entry from single extracted paper not identified as distinct
         filter(!(covidence_id %in% 3532 & access_param_id %in% 37)) %>%
         # Remove risk factor for covidence ID 17054
@@ -553,6 +553,10 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 4763 ~ 1.07,
               parameter_class %in% "Mutations" &
                 covidence_id %in% 6340 ~ 1.075,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 2240 ~ 2.5,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 241 ~ 0.043,
               TRUE ~ parameter_value
             ),
           # Exponent
@@ -560,6 +564,8 @@ clean_dfs <- function(df, pathogen) {
             case_when(
               parameter_class %in% "Mutations" &
                 covidence_id %in% 6340 ~ -3,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% c(241, 2240, 2241, 6472, 7199) ~ 0,
               TRUE ~ exponent
             ),
           # Parameter_type
@@ -606,6 +612,8 @@ clean_dfs <- function(df, pathogen) {
               # attack rate
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 4991 ~ "No units",
+              parameter_class %in% "Attack rate" &
+                  covidence_id %in% c(241, 2240, 2241, 4253) ~ "Percentage (%)",
                 TRUE ~ parameter_unit
             )
         ) %>%
@@ -702,6 +710,15 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 6340 ~ NA,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 6472 ~ 0.1,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 11467 ~ 7,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 2241 ~ 0.01,
+              parameter_class %in% "Attack rate" &
+                population_sample_size %in% 280 &
+                covidence_id %in% 7199 ~ 0.34,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 241 ~ 0.003,
               TRUE ~ parameter_lower_bound
             ),
           
@@ -717,7 +734,27 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 6340 ~ NA,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 6472 ~ 0.8,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 11467 ~ 19,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 2241 ~ 0.238,
+              parameter_class %in% "Attack rate" &
+                population_sample_size %in% 280 &
+                covidence_id %in% 7199 ~ 1.42,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 241 ~ 0.185,
               TRUE ~ parameter_upper_bound
+            ),
+          
+          # Disaggregated by
+          method_disaggregated_by =
+            case_when(
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 11467 ~ "Age",
+              parameter_class %in% "Attack rate" &
+                population_sample_type %in% "Household based" &
+                covidence_id %in% 7199 ~ "Level of exposure",
+              TRUE ~ method_disaggregated_by
             ),
           
           # Uncertainty lower bounds
@@ -813,7 +850,8 @@ clean_dfs <- function(df, pathogen) {
               # Attack rate
               parameter_class %in% "Attack rate" &
                 is.na(parameter_value_type) &
-                covidence_id %in% c(5404, 4829, 4991) ~ "Other", # "Rates"
+                covidence_id %in% c(241, 1030, 1053, 2240, 2241, 3052, 4829,
+                                    4991, 5404, 7199, 11467) ~ "Other", # "Rates"
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 6472 ~ "Unspecified",
               TRUE ~ parameter_value_type
@@ -913,6 +951,34 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 2016,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
               TRUE ~ population_study_end_year
+            ),
+          
+          # Sample size
+          population_sample_size =
+            case_when(
+              parameter_class %in% "Attack rate" &
+              covidence_id %in% 3052 ~ 17,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 2240 ~ 1000,
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 1053 ~ 301,
+              parameter_class %in% "Attack rate" &
+                population_sample_type %in% "Household based" &
+                covidence_id %in% 7199 ~ 17,
+              TRUE ~ population_sample_size
+            ),
+          
+          # Sample type
+          population_sample_type =
+            case_when(
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 2240 ~ "Contact based",
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% 2241 ~ "Community based",
+              parameter_class %in% "Attack rate" &
+                parameter_value %in% 12 &
+                covidence_id %in% 7199 ~ "Household based",
+              TRUE ~ population_sample_type
             ),
 
           # Clean genome_site for mutation rates
