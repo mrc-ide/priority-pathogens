@@ -2,7 +2,7 @@
 
 create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
                         facet_by = NA, symbol_shape_by = NA,
-                        symbol_col_by = "population_country") {
+                        symbol_col_by = "population_country", axis_label = NA) {
   
   mypalette <- hue_pal()(length(levels(df[[symbol_col_by]])))
   names(mypalette) <- sort(levels(df[[symbol_col_by]]))
@@ -96,6 +96,12 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
       coord_cartesian(xlim = c(10, 70), expand = FALSE, clip = "off") +
       xlab("Doubling time (Days)")
   }
+  
+  if (param == "Mutations") {
+    plot <- plot +
+      #scale_x_continuous(limits = c(0, 10), expand = c(0, 0), oob = scales::squish) +
+      xlab(axis_label)
+  }
 
   plot
 }
@@ -116,7 +122,7 @@ round_range <- function(range_string, digits = 0) {
 # param = the parameter_class you're interested in (e.g. "Reproduction number,
 # "Human delay", "Severity", etc)
 # r_type = if param = reproduction number r_type is either "Basic (R0)" or "Effective (Re)"
-# rounding = optional rounding, either "integer" (rounds to whole number) or "1d" (1 digit)
+# rounding = optional rounding, either "integer" (rounds to whole number), "1d" (1 digit) or "2d" (2 digits)
 # delay_type = if param = "Human delay", delay_type is the delay grouping e.g.
 # "Admission to care", "Symptom onset", "Infection process", "Death to burial"
 # group = the variable used for grouping in the table
@@ -142,6 +148,15 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
         parameter_value = round(parameter_value, digits = 1),
         parameter_bounds = sapply(parameter_bounds, round_range, digits = 1),
         comb_uncertainty = sapply(comb_uncertainty, round_range, digits = 1)
+      )
+  }
+  
+  if (rounding == "2d") {
+    df <- df %>%
+      mutate(
+        parameter_value = round(parameter_value, digits = 2),
+        parameter_bounds = sapply(parameter_bounds, round_range, digits = 2),
+        comb_uncertainty = sapply(comb_uncertainty, round_range, digits = 2)
       )
   }
 
@@ -282,6 +297,18 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
           "Country", "Location", "Article", "Timing", "Survey date",
           "Central estimate", "Central range", "Central type", "Uncertainty",
           "Uncertainty type", "Population Sample", "Sample size", "Disaggregated by"
+        ),
+        hide_grouplabel = TRUE
+      )
+    }
+    
+    if (param == "Mutations") {
+      r_tbl <- r_tbl %>% as_flextable(
+        col_keys = c(
+          "Country", "Article", "Survey date",
+          "Central estimate", "Central range", "Unit",
+          "Central type", "Uncertainty", "Uncertainty type", "Population Sample",
+          "Sample size", "Disaggregated by"
         ),
         hide_grouplabel = TRUE
       )

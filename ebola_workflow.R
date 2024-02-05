@@ -41,8 +41,10 @@ orderly_run("ebola_risk_factors", parameters = list(pathogen = "EBOLA"))
 # combine some tables into multi-panel for supplements
 
 # Mutations
+orderly_run("ebola_mutations", parameters = list(pathogen = "EBOLA"))
 
 # Attack rate
+
 
 # Overdispersion
 orderly_run("ebola_overdispersion", parameters = list(pathogen = "EBOLA"))
