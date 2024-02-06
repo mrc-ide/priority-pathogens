@@ -44,7 +44,8 @@ orderly_run("ebola_risk_factors", parameters = list(pathogen = "EBOLA"))
 orderly_run("ebola_mutations", parameters = list(pathogen = "EBOLA"))
 
 # Attack rate
-
+orderly_run("ebola_attack_rate", parameters = list(pathogen = "EBOLA"))
+# TO DO FOR ATTACK RATE: Add attack_rate_type for last 2 papers
 
 # Overdispersion
 orderly_run("ebola_overdispersion", parameters = list(pathogen = "EBOLA"))
