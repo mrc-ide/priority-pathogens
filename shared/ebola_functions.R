@@ -31,8 +31,9 @@ assign_ebola_outbreak <- function(df) {
           "Uganda" ~ "Uganda, 2000-2001",
         population_study_start_year %in% 2005 & population_country %in%
           "Republic of the Congo" ~ "Republic of the Congo, 2005",
-        population_study_start_year %in% 2007 & population_country %in%
-          "DRC" ~ "DRC, 2007",
+        population_study_start_year %in% 2007 &
+          population_country %in% "DRC" &
+          !covidence_id %in% 1912 ~ "DRC, 2007",
         population_study_start_year %in% 2007 & population_country %in%
           "Uganda" ~ "Uganda, 2007",
         population_study_start_year %in% 2008 & population_country %in%
@@ -100,6 +101,8 @@ assign_ebola_outbreak <- function(df) {
           "DRC" ~ "DRC, 2018-2020",
         population_study_start_year %in% 2020 & population_country %in%
           "Uganda" ~ "DRC, 2018-2020",
+        # No survey dates provided but checked the paper
+        covidence_id %in% 18091 ~ "DRC, 2018-2020",
         population_study_start_year %in% 2021 & population_country %in%
           "Guinea" ~ "Guinea, 2021",
         population_study_start_year %in% 2022 & population_country %in%

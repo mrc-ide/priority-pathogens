@@ -87,6 +87,11 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
     plot <- plot + coord_cartesian(xlim = c(0, 100), expand = FALSE, clip = "off")
   }
   
+  if (param == "Seroprevalence") {
+    plot <- plot + xlab("Seroprevalence (%)") +
+      coord_cartesian(xlim = c(0, 100), expand = FALSE, clip = "off")
+  }
+  
   if (param == "Human delay") {
     plot <- plot + xlab("Delay (Days)")
   }

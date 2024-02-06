@@ -44,11 +44,10 @@ source("ebola_visualisation.R")
 
 parameter <- "Seroprevalence"
 
-
-
 df <- left_join(
   params,
-  articles[, c("id", "first_author_surname", "year_publication", "article_label")],
+  articles[, c("id", "first_author_surname", "year_publication", "article_label",
+               "notes", "doi")],
   by = "id"
 ) %>%
   arrange(article_label, -year_publication)
@@ -96,6 +95,19 @@ mutate(
                 parameter_value + parameter_uncertainty_single_value,
               TRUE ~ parameter_uncertainty_upper_value)
 )
+
+# Checked:
+# Lopez id 2470 - cannot find in paper, removed in cleaning.R
+# Lindblade id 2532 - cannot find in paper, removed in cleaning.R
+# Johnson id 11425 - unspecified survey date, timing, central type
+# Johnson id 11421 - unspecified survey date, timing, central type
+# Diallo id 16201 - found survey dates, sample type, country
+# Nkuba-Ndaye id 18091 - no specific survey dates but outbreak DRC 2018-2020
+# Mulangu id 1912 - found survey dates, survey in villages with no history of EVD outbreaks
+# Mulangu id 1911 - found survey dates
+# Mathiot id 2354 - unspecified survey date, added sample type, looked at zaire and sudan species separately
+# Halfmann id 16757 - sample type "Other" as it was survivors and close contacts (either relatives of HCWs)
+
 
 # Order data for plots
 ordered_dat <- sero_dat %>%

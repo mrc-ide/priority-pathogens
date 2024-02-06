@@ -315,6 +315,7 @@ clean_dfs <- function(df, pathogen) {
         cfr_ifr_numerator = as.integer(cfr_ifr_numerator),
         population_study_start_day = as.numeric(population_study_start_day),
         method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
+        population_location = str_replace_all(population_location, ";", ","),
 
         # Group parameters
         parameter_class = case_when(
@@ -384,6 +385,8 @@ clean_dfs <- function(df, pathogen) {
           covidence_id %in% 4764 & access_param_id %in% 74)) %>%
         # Remove 3 attack rates that are actually death rates
         filter(!(covidence_id %in% 3681 & parameter_class %in% "Attack rate")) %>%
+        # Remove seroprevalence parameters that cannot be found in the paper
+        filter(!(covidence_id %in% c(2470, 2532) & parameter_class %in% "Seroprevalence")) %>%
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(
@@ -397,6 +400,32 @@ clean_dfs <- function(df, pathogen) {
         ungroup() %>%
         # Population country
         mutate(
+          
+          # When "multi-country" change "location" to the full country list
+          population_location =
+            case_when(
+              is.na(population_location) &
+              population_country %in% c(
+                "France, Germany, Italy, Mali, Netherlands, Nigeria, Norway, Senegal, Spain, Switzerland, United Kingdom, United States",
+                "The Gambia, Guinea, Liberia, Nigeria, Senegal, Sierra Leone, United Kingdom, United States",
+                "Guinea, Italy, Liberia, Mali, Nigeria, Senegal, Sierra Leone, Spain, United Kingdom, United States",
+                "DRC, Republic of the Congo, Côte d'Ivoire, Gabon, South Africa, South Sudan, Uganda",
+                "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon",
+                "Cameroon, DRC, Republic of the Congo, Ghana, Uganda"
+              ) ~ population_country,
+              is.na(population_location) & covidence_id %in% 11688 ~
+                "Guinea, Liberia, Nigeria, Sierra Leone, Spain, United States",
+              is.na(population_location) & covidence_id %in% 509 ~
+                "France, Germany, Italy, Netherlands, Norway, Switzerland, Spain, United Kingdom, United States",
+              is.na(population_location) & covidence_id %in% 23720 ~
+                "Congo, Guinea, Liberia, Nigeria, Sierra Leone, Uganda",
+              is.na(population_location) & covidence_id %in% 654 ~
+                "DRC, Italy, Ivory Coast, South Sudan, Philippines, US",
+              is.na(population_location) & covidence_id %in% 2548 ~
+                "DRC, Gabon, Italy, Ivory Coast, Philippines, Republic of the Congo, Sudan, Uganda, United States",
+              TRUE ~ population_location
+            ),
+    
           population_country =
             case_when(
               population_country %in%
@@ -438,6 +467,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% c(18372, 18535) ~ "DRC",
               covidence_id %in% c(17835, 18236, 18536) ~ "Guinea",
               covidence_id %in% c(1170, 18371) ~ "Sierra Leone",
+              covidence_id %in% 16201 ~ "Guinea",
               # Correction
               parameter_class %in% "Attack rate" & covidence_id %in% 6472 ~ "DRC",
               is.na(population_country) ~ "Unspecified",
@@ -558,6 +588,9 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 2240 ~ 2.5,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 241 ~ 0.043,
+              parameter_class %in% "Seroprevalence" &
+                covidence_id %in% c(3822, 4168, 16643) ~
+                cfr_ifr_numerator/cfr_ifr_denominator * 100,
               TRUE ~ parameter_value
             ),
           # Exponent
@@ -591,6 +624,9 @@ clean_dfs <- function(df, pathogen) {
               parameter_type %in% "Overdispersion" &
                 is.na(parameter_unit) &
                 covidence_id %in% c(2065, 4787, 5940, 23720) ~ "No units",
+              # seroprevalence
+              parameter_class %in% "Seroprevalence" &
+                covidence_id %in% c(3822, 4168, 16643) ~ "Percentage (%)",
               # growth rate
               parameter_class %in% "Growth rate" &
                 is.na(parameter_unit) &
@@ -886,6 +922,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 30,
               covidence_id %in% 1012 ~ 1,
               covidence_id %in% 1170 ~ 27,
+              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 23,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 5,
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 3,
               covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ 30,
@@ -896,6 +933,7 @@ clean_dfs <- function(df, pathogen) {
             case_when(
               covidence_id %in% 404 ~ 12,
               covidence_id %in% 1170 ~ 31,
+              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 11,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 28,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2,
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 27,
@@ -909,6 +947,8 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 1407 ~ "Mar",
               covidence_id %in% 1686 ~ "Dec",
               covidence_id %in% 1888 ~ "Oct",
+              covidence_id %in% 1912 ~ "Aug",
+              covidence_id %in% 1911 ~ "Aug",
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Dec",
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ "Aug",
               covidence_id %in% 1012 ~ "Jul",
@@ -916,6 +956,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 11688 ~ "Jan",
               covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ "Apr",
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Mar",
+              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ "Mar",
               TRUE ~ population_study_start_month
             ),
           population_study_end_month =
@@ -926,11 +967,14 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 1407 ~ "Dec",
               covidence_id %in% 1686 ~ "Jan",
               covidence_id %in% 1888 ~ "Feb",
+              covidence_id %in% 1911 ~ "Aug",
+              covidence_id %in% 1912 ~ "Sep",
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Sep",
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ "Feb",
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ "Jun",
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Apr",
               covidence_id %in% 11688 ~ "Oct",
+              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ "Jul",
               TRUE ~ population_study_end_month
             ),
           population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
@@ -942,9 +986,12 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 654 ~ 1976,
               covidence_id %in% c(404, 18535, 23986) ~ 1995,
               covidence_id %in% c(1888, 23720) ~ 2000,
+              covidence_id %in% 1911 ~ 2002,
+              covidence_id %in% 1912 ~ 2007,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2013,
               covidence_id %in% c(1170, 1686, 1407, 1012, 1653, 4209, 11688) ~ 2014,
               covidence_id %in% c(17956, 23669) & parameter_class %in% "Human delay" ~ 2014,
+              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 2015,
               covidence_id %in% c(16951, 18372) & parameter_class %in% "Human delay" ~ 2018,
               TRUE ~ population_study_start_year
             ),
@@ -952,12 +999,15 @@ clean_dfs <- function(df, pathogen) {
             case_when(
               covidence_id %in% c(404, 18535, 23986) ~ 1995,
               covidence_id %in% 1888 ~ 2001,
+              covidence_id %in% 1911 ~ 2002,
+              covidence_id %in% 1912 ~ 2007,
               covidence_id %in% c(1170, 1407, 1653, 4209, 11688) ~ 2014,
               covidence_id %in% 904 & parameter_value %in% 65.9 ~ 2014,
               covidence_id %in% c(1686, 23720) ~ 2015,
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 2015,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2015,
               covidence_id %in% 23507 ~ 2016,
+              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 2016,
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 2016,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
               TRUE ~ population_study_end_year
@@ -996,6 +1046,12 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Attack rate" &
                 parameter_value %in% 12 &
                 covidence_id %in% 7199 ~ "Household based",
+              parameter_class %in% "Seroprevalence" &
+                covidence_id %in% 16201 ~ "Hospital based",
+              parameter_class %in% "Seroprevalence" &
+                covidence_id %in% 2354 ~ "Population based",
+              parameter_class %in% "Seroprevalence" &
+                covidence_id %in% 16757 ~ "Other",
               TRUE ~ population_sample_type
             ),
           
