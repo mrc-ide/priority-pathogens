@@ -210,7 +210,8 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       `Survey start month` = population_study_start_month,
       `Survey start year` = population_study_start_year,
       `Timing of survey` = method_moment_value,
-      `Inverse` = inverse_param
+      `Inverse` = inverse_param,
+      `Attack rate type` = attack_rate_type
     ))
   
   if (param != "Seroprevalence") {
@@ -328,10 +329,10 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     if (param %in% "Attack rate") {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Outbreak", "Article", "Country", "Survey date",
-          "Central estimate", "Unit", "Central range", "Central type",
-          "Population Sample", "Sample size",
-          "Uncertainty", "Uncertainty type", "Disaggregated by"
+          "Outbreak", "Article", "Country", "Survey date", "Attack rate type",
+          "Central estimate", "Unit", "Central range", "Uncertainty",
+          "Uncertainty type", "Population Sample", "Sample size",
+          "Population Group", "Disaggregated by"
         ),
         hide_grouplabel = TRUE
       )

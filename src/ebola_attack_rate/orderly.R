@@ -60,6 +60,9 @@ ar_dat <- left_join(
   mutate(
     population_country = as.factor(population_country),
     article_label_unique = make.unique(article_label),
+    article_label =
+      case_when(article_label == "WHO/International Study Team 1978" ~
+                  "WHO/Int. Study Team 1978", TRUE ~ article_label),
     outbreak = order_ebola_outbreaks(outbreak),
     ebola_species = factor(ebola_species, levels = c(
       sort(setdiff(unique(ebola_species), "Unspecified"), decreasing = FALSE),
@@ -94,9 +97,11 @@ ar_dat$population_country # all fine
 ar_dat$survey_date # all fine
 ar_dat$outbreak # all fine
 ar_dat$parameter_unit # check 8 NA - 3x "no units" checked (x)
-ar_dat$population_sample_type # check 2 NA (x)
+ar_dat$population_sample_type # check 2 NA - Emond 1977 (id 6472) very vague, keep "Unspecified"
+ar_dat$population_group # Emond 1977 (id 6472) very vague, keep "Unspecified"
 ar_dat$population_sample_size
 ar_dat$exponent
+ar_dat$attack_rate_type
 
 # Create directory for results
 dir.create("Attack_rate_results")
@@ -119,7 +124,8 @@ ordered_dat <- ar_dat %>%
     article_label_unique = factor(
       article_label_unique,
       levels = unique(article_label_unique)
-    )
+    ),
+    parameter_value = as.character(parameter_value) # otherwise percentages .000
   )
 
 # Create table

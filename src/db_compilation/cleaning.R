@@ -59,6 +59,7 @@ clean_dfs <- function(df, pathogen) {
           doi = case_when(
             covidence_id %in% 3058 ~ "10.3201/eid2201.151410",
             covidence_id %in% 1407 ~ "10.1038/nature14612",
+            covidence_id %in% 6472 ~ "10.1136/bmj.2.6086.539",
             TRUE ~ doi
           )
         ) %>%
@@ -715,7 +716,7 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 2241 ~ 0.01,
               parameter_class %in% "Attack rate" &
-                population_sample_size %in% 280 &
+                population_sample_type %in% "Community based" &
                 covidence_id %in% 7199 ~ 0.34,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 241 ~ 0.003,
@@ -752,8 +753,17 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 11467 ~ "Age",
               parameter_class %in% "Attack rate" &
+                covidence_id %in% 6472 ~ "Unspecified",
+              parameter_class %in% "Attack rate" &
                 population_sample_type %in% "Household based" &
                 covidence_id %in% 7199 ~ "Level of exposure",
+              # "Other" disaggregations:
+              # 4253 - adjustments to try and remove bias
+              # 4991 - 9 combinations of possible incubation period and
+              # infectious period distributions
+              parameter_class %in% "Attack rate" &
+                !is.na(parameter_lower_bound) &
+                covidence_id %in% c(4253, 4991) ~ "Other",
               TRUE ~ method_disaggregated_by
             ),
           
@@ -968,6 +978,14 @@ clean_dfs <- function(df, pathogen) {
               TRUE ~ population_sample_size
             ),
           
+          # Population group
+          population_group =
+            case_when(
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% c(1053, 2240, 2241) ~ "Persons under investigation",
+              TRUE ~ population_group
+            ),
+          
           # Sample type
           population_sample_type =
             case_when(
@@ -979,6 +997,28 @@ clean_dfs <- function(df, pathogen) {
                 parameter_value %in% 12 &
                 covidence_id %in% 7199 ~ "Household based",
               TRUE ~ population_sample_type
+            ),
+          
+          # Create attack_rate_type variable 
+          attack_rate_type =
+            case_when(
+              # Primary attack rate (population based)
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% c(241, 1030, 2241, 3052, 5404) ~ "Primary",
+              parameter_class %in% "Attack rate" &
+                population_sample_type %in% "Community based" &
+                covidence_id %in% 7199 ~ "Primary",
+                # Secondary attack rate (contact based)
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% c(1053, 1749, 2240, 4253, 4829, 4991, 6472,
+                                    11467) ~ "Secondary",
+              parameter_class %in% "Attack rate" &
+                population_sample_type %in% "Household based" &
+              covidence_id %in% 7199 ~ "Secondary",
+              # Check
+              parameter_class %in% "Attack rate" &
+                covidence_id %in% c(1044, 2328) ~ "CHECK WITH TEAM",
+              TRUE ~ NA
             ),
 
           # Clean genome_site for mutation rates
