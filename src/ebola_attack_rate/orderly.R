@@ -62,7 +62,7 @@ ar_dat <- left_join(
     article_label_unique = make.unique(article_label),
     article_label =
       case_when(article_label == "WHO/International Study Team 1978" ~
-        "WHO/Int. Study Team 1978", TRUE ~ article_label),
+                  "WHO/Int. Study Team 1978", TRUE ~ article_label),
     outbreak = order_ebola_outbreaks(outbreak),
     ebola_species = factor(ebola_species, levels = c(
       sort(setdiff(unique(ebola_species), "Unspecified"), decreasing = FALSE),
