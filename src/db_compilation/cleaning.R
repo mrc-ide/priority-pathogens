@@ -1060,7 +1060,7 @@ clean_dfs <- function(df, pathogen) {
             case_when(
               # Primary attack rate (population based)
               parameter_class %in% "Attack rate" &
-                covidence_id %in% c(241, 1030, 2241, 3052, 5404) ~ "Primary",
+                covidence_id %in% c(241, 1030, 1044, 2241, 2328, 3052, 5404) ~ "Primary",
               parameter_class %in% "Attack rate" &
                 population_sample_type %in% "Community based" &
                 covidence_id %in% 7199 ~ "Primary",
@@ -1071,9 +1071,6 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Attack rate" &
                 population_sample_type %in% "Household based" &
               covidence_id %in% 7199 ~ "Secondary",
-              # Check
-              parameter_class %in% "Attack rate" &
-                covidence_id %in% c(1044, 2328) ~ "CHECK WITH TEAM",
               TRUE ~ NA
             ),
 
