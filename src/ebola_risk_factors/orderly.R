@@ -236,10 +236,10 @@ serology_insig_unspec <- data.frame(table(unlist(str_split(serology_dat$riskfact
 serology_comb <- bind_rows(
   "Significant_Adjusted" = serology_sig_adj,
   "Insignificant_Adjusted" = serology_insig_adj,
-  "Unspecified_Adjusted" = serology_unspec_adj,
   "Significant_Unadjusted" = serology_sig_unadj,
   "Insignificant_Unadjusted" = serology_insig_unadj,
-  "Unspecified_Unadjusted" = serology_unspec_unadj,
+  "Significant_Unspecified" = serology_sig_unspec,
+  "Insignificant_Unspecified" = serology_insig_unspec,
   .id = "Type"
 )
 
@@ -292,10 +292,10 @@ recovery_insig_unspec <- data.frame(table(unlist(str_split(recovery_dat$riskfact
 recovery_comb <- bind_rows(
   "Significant_Adjusted" = recovery_sig_adj,
   "Insignificant_Adjusted" = recovery_insig_adj,
-  "Unspecified_Adjusted" = recovery_unspec_adj,
   "Significant_Unadjusted" = recovery_sig_unadj,
   "Insignificant_Unadjusted" = recovery_insig_unadj,
-  "Unspecified_Unadjusted" = recovery_unspec_unadj,
+  "Significant_Unspecified" = recovery_sig_unspec,
+  "Insignificant_Unspecified" = recovery_insig_unspec,
   .id = "Type"
 )
 
