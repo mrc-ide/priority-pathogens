@@ -48,7 +48,8 @@ orderly_artefact(
     "Meta_plots/incubation_period.png",
     "Meta_plots/serial_interval.png",
     "Meta_plots/onset_to_death.png",
-    "Meta_plots/meta_delays_variance.png"
+    "Meta_plots/meta_delays_variance_unfiltered.png",
+    "Meta_plots/meta_delays_variance_QAfiltered.png"
   )
 )
 
@@ -707,15 +708,20 @@ meta_var <- meta_dat %>%
     parameter_uncertainty_type %in% c("IQR", "Range"))
 
 # Variance data (incubation period, serial interval, symptom onset to death)
-sotd_var <- meta_var %>% filter(delay_short %in% "Symptom onset to death") # 17 --> 20
-incub_var <- meta_var %>% filter(delay_short %in% "Incubation period") # 8
-serial_var <- meta_var %>% filter(delay_short %in% "Serial interval") # 8
+sotd_var <- meta_var %>% filter(delay_short %in% "Symptom onset to death") # 18 without filter
+incub_var <- meta_var %>% filter(delay_short %in% "Incubation period") # 8 (all qa scores >50)
+serial_var <- meta_var %>% filter(delay_short %in% "Serial interval") # 8 without filter
+
+sotd_var_qa <- meta_var %>% filter(delay_short %in% "Symptom onset to death") %>%
+  filter(article_qa_score >= 50) # 13 with qa filter
+serial_var_qa <- meta_var %>% filter(delay_short %in% "Serial interval") %>%
+  filter(article_qa_score >= 50) # 5 with qa filter
 
 # Not included as too few data points:
 # sotr_var <- meta_var %>% filter(delay_short %in% "Symptom onset to recovery/non-infectiousness") # 2
 # inf_var <- meta_var %>% filter(delay_short %in% "Infectious period") # 1
 
-# Symptom onset to death meta-analysis
+# Symptom onset to death meta-analysis WITHOUT FILTER
 set.seed(6)
 sotd_var_ma <- metamean(
   data = sotd_var,
@@ -745,6 +751,39 @@ forest.meta(sotd_var_ma,
   at = seq(0, 15, by = 3),
   xlim = c(0, 15),
   xlab = "Symptom onset to death (days)", fontsize = 10
+)
+dev.off()
+
+# Symptom onset to death meta-analysis WITH QA FILTER
+set.seed(6)
+sotd_var_ma_qa <- metamean(
+  data = sotd_var_qa,
+  n = population_sample_size,
+  mean = xbar,
+  sd = sd,
+  studlab = article_label,
+  median = median,
+  q1 = q1,
+  q3 = q3,
+  min = min,
+  max = max,
+  # Method for Unknown Non-Normal Distributions (MLN) approach (Cai et al. (2021)):
+  method.mean = "Cai",
+  method.sd = "Cai",
+  # no transformation of data before meta-analysis:
+  sm = "MRAW",
+  method.tau = "ML"
+)
+
+png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 6000, res = 1000)
+forest.meta(sotd_var_ma_qa,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(0, 15, by = 3),
+            xlim = c(0, 15),
+            xlab = "Symptom onset to death (days)", fontsize = 10
 )
 dev.off()
 
@@ -782,7 +821,7 @@ forest.meta(incub_var_ma,
 dev.off()
 
 
-# Serial interval meta-analysis
+# Serial interval meta-analysis NO FILTER
 set.seed(6)
 serial_var_ma <- metamean(
   data = serial_var,
@@ -813,15 +852,54 @@ forest.meta(serial_var_ma,
 )
 dev.off()
 
+# Serial interval meta-analysis WITH QA FILTER
+set.seed(6)
+serial_var_ma_qa <- metamean(
+  data = serial_var_qa,
+  n = population_sample_size,
+  mean = xbar,
+  sd = sd,
+  studlab = article_label,
+  median = median,
+  q1 = q1,
+  q3 = q3,
+  min = min,
+  max = max,
+  method.mean = "Cai",
+  method.sd = "Cai",
+  sm = "MRAW",
+  method.tau = "ML"
+)
+
+png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3800, res = 1000)
+forest.meta(serial_var_ma_qa,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(9, 22, by = 3),
+            xlim = c(9, 22),
+            xlab = "Serial interval (days)", fontsize = 10
+)
+dev.off()
+
 # combine variance plots
 p1_var <- png::readPNG("Meta_plots/incubation_period.png", native = TRUE)
 p2_var <- png::readPNG("Meta_plots/serial_interval.png", native = TRUE)
 p3_var <- png::readPNG("Meta_plots/onset_to_death.png", native = TRUE)
 
+p1_qa <- png::readPNG("Meta_plots/incubation_period.png", native = TRUE)  # no difference to above
+p2_qa <- png::readPNG("Meta_plots/serial_interval_qafilter.png", native = TRUE)
+p3_qa <- png::readPNG("Meta_plots/onset_to_death_qafilter.png", native = TRUE)
+
 # Create plots for each image
 plot1_var <- rasterGrob(p1_var, width = 0.9)
 plot2_var <- rasterGrob(p2_var, width = 0.9)
 plot3_var <- rasterGrob(p3_var, width = 0.9)
+
+plot1_qa <- rasterGrob(p1_qa, width = 0.9)
+plot2_qa <- rasterGrob(p2_qa, width = 0.9)
+plot3_qa <- rasterGrob(p3_qa, width = 0.9)
 
 heights_var <- c(
   heightDetails(plot1_var),
@@ -829,10 +907,19 @@ heights_var <- c(
   heightDetails(plot3_var)
 )
 
+heights_qa <- c(
+  heightDetails(plot1_qa),
+  heightDetails(plot2_qa),
+  heightDetails(plot3_qa)
+)
+
 # Normalise the heights to make them proportional
 p_heights_var <- heights_var / sum(heights_var)
+p_heights_qa <- heights_qa / sum(heights_qa)
 
 # Arrange and display the plots in a grid
 md_var <- grid.arrange(plot1_var, plot2_var, plot3_var, ncol = 1, heights = p_heights_var)
+md_qa <- grid.arrange(plot1_qa, plot2_qa, plot3_qa, ncol = 1, heights = p_heights_qa)
 
-ggsave("Meta_plots/meta_delays_variance.png", plot = md_var, width = 7, height = 10)
+ggsave("Meta_plots/meta_delays_variance_unfiltered.png", plot = md_var, width = 7, height = 10)
+ggsave("Meta_plots/meta_delays_variance_QAfiltered.png", plot = md_qa, width = 7, height = 10)
