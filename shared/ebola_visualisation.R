@@ -84,7 +84,9 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
   }
 
   if (param == "Severity") {
-    plot <- plot + coord_cartesian(xlim = c(0, 100), expand = FALSE, clip = "off")
+    plot <- plot +
+      coord_cartesian(xlim = c(0, 100), expand = FALSE, clip = "off") +
+      xlab("CFR (%)")
   }
   
   if (param == "Seroprevalence") {
