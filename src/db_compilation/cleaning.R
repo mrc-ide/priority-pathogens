@@ -756,6 +756,8 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 7199 ~ 0.34,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 241 ~ 0.003,
+              parameter_class %in% "Mutations" &
+                covidence_id %in% 17790 ~ 0.69, # putting on same exponent scale
               TRUE ~ parameter_lower_bound
             ),
           
@@ -780,6 +782,8 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 7199 ~ 1.42,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 241 ~ 0.185,
+              parameter_class %in% "Mutations" &
+                covidence_id %in% 17790 ~ 3.6, # putting on same exponent scale
               TRUE ~ parameter_upper_bound
             ),
           
@@ -811,7 +815,9 @@ clean_dfs <- function(df, pathogen) {
             parameter_class %in% "Human delay" &
               covidence_id %in% 17715 ~ 11,
             parameter_class %in% "Mutations" &
-              covidence_id %in% 6340 ~ 1.22, # putting it on same exponent scale
+              covidence_id %in% 6340 ~ 0.932, # putting it on same exponent scale
+            parameter_class %in% "Mutations" &
+              covidence_id %in% 17790 ~ 1.22, # putting it on same exponent scale
             TRUE ~ parameter_uncertainty_lower_value
           ),
           
@@ -823,7 +829,9 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Human delay" &
                 covidence_id %in% 17715 ~ 71,
               parameter_class %in% "Mutations" &
-                covidence_id %in% 6340 ~ 0.932, # putting it on same exponent scale
+                covidence_id %in% 6340 ~ 1.22, # putting it on same exponent scale
+              parameter_class %in% "Mutations" &
+                covidence_id %in% 17790 ~ 5.99, # putting it on same exponent scale
               TRUE ~ parameter_uncertainty_upper_value
             ),
 

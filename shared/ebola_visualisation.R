@@ -138,7 +138,8 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
                          group = "outbreak", qa_filter = TRUE, rounding = "none") {
   
   df <- df %>%
-    filter(parameter_class == param)
+    filter(parameter_class == param) %>%
+    mutate(article_qa_score = round(article_qa_score, digits = 1))
 
   if (rounding == "integer") {
     df <- df %>%
@@ -193,6 +194,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     select(c(
       parameter_type,
       Article = article_label,
+      `QA score (%)` = article_qa_score,
       `Outbreak` = outbreak,
       Country = population_country,
       `Location` = population_location,
@@ -212,13 +214,15 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       `Population Group` = population_group,
       `Population Sample` = population_sample_type,
       `Sample size` = population_sample_size,
+      `Species` = ebola_species,
       `Survey date` = survey_date,
       `Survey start day` = population_study_start_day,
       `Survey start month` = population_study_start_month,
       `Survey start year` = population_study_start_year,
       `Timing of survey` = method_moment_value,
       `Inverse` = inverse_param,
-      `Attack rate type` = attack_rate_type
+      `Attack rate type` = attack_rate_type,
+      `Genome site` = genome_site
     ))
   
   if (param != "Seroprevalence") {
@@ -300,23 +304,39 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     }
     
     if (param == "Seroprevalence") {
+      sero_labels <- data.frame(
+        key = c(
+          "Country", "Location", "Survey date", "Central estimate", "Central range",
+          "Central type", "Uncertainty", "Population Sample", "Sample size",
+          "Disaggregated by", "Article", "QA score (%)"
+        ),
+        label = c(
+          "Country", "Location", "Survey date", "Central estimate", "Central range",
+          "Central type", "Uncertainty (95% CI)", "Population Sample", "Sample size",
+          "Disaggregated by", "Article", "QA score (%)"
+        )
+      )
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Country", "Location", "Article", "Timing", "Survey date",
-          "Central estimate", "Central range", "Central type", "Uncertainty",
-          "Uncertainty type", "Population Sample", "Sample size", "Disaggregated by"
+          "Country", "Location", "Survey date", "Central estimate", "Central range",
+          "Central type", "Uncertainty", "Population Sample", "Sample size",
+          "Disaggregated by", "Article", "QA score (%)"
         ),
         hide_grouplabel = TRUE
-      )
+      ) %>%
+        set_header_df(
+          mapping = sero_labels,
+          key = "key"
+        )
     }
     
     if (param == "Mutations") {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Country", "Article", "Survey date",
-          "Central estimate", "Central range", "Unit",
-          "Central type", "Uncertainty", "Uncertainty type", "Population Sample",
-          "Sample size", "Disaggregated by"
+          "Country", "Survey date",
+          "Central estimate", "Central range", "Central type", "Uncertainty",
+          "Uncertainty type", "Genome site", "Population Sample",
+          "Sample size", "Disaggregated by", "Species", "Article", "QA score (%)"
         ),
         hide_grouplabel = TRUE
       )
@@ -349,7 +369,6 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       fontsize(i = 1, size = 12, part = "header") %>%
     autofit() %>%
     theme_booktabs() %>%
-    vline(j = "Survey date", border = border_style) %>%
     hline(i = ~ index_of_change == 1) %>%
     bold(i = 1, bold = TRUE, part = "header") %>%
       hline(i = ~ is.na(`Survey date`)) %>%

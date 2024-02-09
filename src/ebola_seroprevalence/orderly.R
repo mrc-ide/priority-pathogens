@@ -165,6 +165,12 @@ ggsave("Seroprevalence_plots/plot_filtered.png", plot_qa,
 # do not necessarily correspond to a specific outbreak, and this would complicate
 # assigning outbreaks based on survey date.
 
+sero_dat <- sero_dat %>%
+  mutate(parameter_value_type =
+           case_when(parameter_value_type %in% "Unspecified" ~ NA,
+                     TRUE ~ parameter_value_type)
+         )
+
 sero_table_qa <- create_table(
   sero_dat,
   param = parameter,

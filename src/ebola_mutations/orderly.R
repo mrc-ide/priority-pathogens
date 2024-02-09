@@ -226,12 +226,34 @@ ggsave("Mutation_results/qa_unfiltered/plot.png", mut_plot,
 
 # TABLES
 
+tab_dat <- ordered_dat %>%
+  mutate(parameter_value = as.character(round(parameter_value, digits = 2)),
+         parameter_value =
+           case_when(parameter_type %in% "Mutation rate" &
+                       parameter_unit %in% "SNPs/nucleotide sequenced (10^-4)" ~
+                       paste0(parameter_value, "*"),
+                     parameter_type %in% "Mutation rate" &
+                       parameter_unit %in% "Indels/base sequenced (10^-4)" ~
+                       paste0(parameter_value, "**"),
+                     TRUE ~ parameter_value),
+         parameter_type =
+           case_when(parameter_type %in% c("Evolutionary rate", "Substitution rate") ~
+                       paste0(parameter_type, " (", parameter_unit, ")"),
+                     parameter_type %in% "Mutation rate" ~
+                       paste0(parameter_type,
+                              " (Substitutions/site/year (10^-4), *SNPs/nucleotide sequenced (10^-4), **Indels/base sequenced (10^-4))"),
+                     TRUE ~ parameter_type),
+         ebola_species =
+           case_when(ebola_species %in% "Bundibugyo, Sudan, Taï Forest & Zaire" ~
+                       "All species", TRUE ~ ebola_species) # list all human pathogenic species in legend
+         )
+
 # QA unfiltered
 mut_tab <- create_table(
-  ordered_dat,
+  tab_dat,
   param = parameter,
   group = "parameter_type",
-  rounding = "2d",
+  #rounding = "2d",
   qa_filter = FALSE
 )
 
