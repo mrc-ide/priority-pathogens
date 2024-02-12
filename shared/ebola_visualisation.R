@@ -272,9 +272,10 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     if (param %in% c("Reproduction number", "Overdispersion")) {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Outbreak", "Article", "Country", "Survey date",
+          "Outbreak", "Country", "Survey date",
           "Central estimate", "Central range", "Central type",
-          "Uncertainty", "Uncertainty type", "Method", "Disaggregated by"
+          "Uncertainty", "Uncertainty type", "Method", "Disaggregated by",
+          "Article", "QA score (%)"
         ),
         hide_grouplabel = TRUE
       )
@@ -283,10 +284,11 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     if (param == "Severity") {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Outbreak", "Article", "Country", "Survey date",
+          "Outbreak", "Country", "Survey date",
           "Central estimate", "Numerator", "Denominator",
           "Central range", "Uncertainty", "Uncertainty type", "Adjustment",
-          "Population Sample", "Disaggregated by"
+          "Population Sample", "Disaggregated by",
+          "Article", "QA score (%)"
         ),
         hide_grouplabel = TRUE
       )
@@ -295,9 +297,10 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     if (param == "Human delay") {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Outbreak", "Article", "Country", "Survey date", "Central estimate",
+          "Outbreak", "Country", "Survey date", "Central estimate",
           "Central range", "Central type", "Uncertainty", "Uncertainty type",
-          "Population Sample", "Sample size", "Disaggregated by"
+          "Population Sample", "Sample size", "Disaggregated by",
+          "Article", "QA score (%)"
         ),
         hide_grouplabel = TRUE
       )
@@ -345,9 +348,9 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     if (param %in% c("Growth rate", "Doubling time")) {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Outbreak", "Article", "Country", "Survey date",
+          "Outbreak", "Country", "Survey date",
           "Central estimate", "Unit", "Central range", "Central type",
-          "Uncertainty", "Uncertainty type", "Disaggregated by"
+          "Uncertainty", "Uncertainty type", "Disaggregated by", "Article", "QA score (%)"
         ),
         hide_grouplabel = TRUE
       )
