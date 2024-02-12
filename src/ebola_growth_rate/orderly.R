@@ -73,7 +73,12 @@ gr_dat <- left_join(
       ),
     parameter_value_type =
       case_when(parameter_value_type %in% c("Unspecified", "Other")
-                ~ "Other/Unspecified", TRUE ~ parameter_value_type)
+                ~ "Other/Unspecified", TRUE ~ parameter_value_type),
+    # Unit not specifically stated for 2506 (Liu) and 676 (Weitz) but making an
+    # assumption based on revisiting the papers:
+    parameter_unit =
+      case_when(covidence_id %in% c(676, 2506) ~ "Per day",
+                TRUE ~ parameter_unit)
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE)
