@@ -18,8 +18,10 @@ orderly_strict_mode()
 orderly_artefact(
   "Table for attack rate",
   c(
-    "Attack_rate_results/table_filtered.png",
-    "Attack_rate_results/table_unfiltered.png"
+    "Attack_rate_results/primary_table_filtered.png",
+    "Attack_rate_results/primary_table_unfiltered.png",
+    "Attack_rate_results/secondary_table_filtered.png",
+    "Attack_rate_results/secondary_table_unfiltered.png"
   )
 )
 
@@ -85,7 +87,35 @@ ar_dat <- left_join(
       case_when(
         covidence_id %in% 2240 ~ "~1000",
         TRUE ~ population_sample_size
-      )
+      ),
+    # Add to legend that we're making an assumption to translate the 3 Fang
+    # estimates with "No units" into percentages:
+    parameter_value =
+       case_when(parameter_unit %in% "No units" ~ parameter_value * 100,
+                 TRUE ~ parameter_value),
+    parameter_upper_bound =
+      case_when(parameter_unit %in% "No units" ~ parameter_upper_bound * 100,
+                TRUE ~ parameter_upper_bound),
+    parameter_lower_bound =
+      case_when(parameter_unit %in% "No units" ~ parameter_lower_bound * 100,
+                TRUE ~ parameter_lower_bound),
+    parameter_uncertainty_upper_value =
+      case_when(parameter_unit %in% "No units" ~ parameter_uncertainty_upper_value * 100,
+                TRUE ~ parameter_uncertainty_upper_value),
+    parameter_uncertainty_lower_value =
+      case_when(parameter_unit %in% "No units" ~ parameter_uncertainty_lower_value * 100,
+                TRUE ~ parameter_uncertainty_lower_value),
+    comb_uncertainty =
+      case_when(parameter_unit %in% "No units" ~
+                  paste(parameter_uncertainty_lower_value, "-", parameter_uncertainty_upper_value),
+                TRUE ~ comb_uncertainty),
+    parameter_bounds =
+      case_when(parameter_unit %in% "No units" & !is.na(parameter_lower_bound) ~
+                  paste(parameter_lower_bound, "-", parameter_upper_bound),
+                TRUE ~ parameter_bounds),
+    parameter_unit =
+      case_when(parameter_unit %in% "No units" ~ "Percentage (%)",
+                TRUE ~ parameter_unit)
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE)
@@ -129,18 +159,35 @@ ordered_dat <- ar_dat %>%
   )
 
 # Create table
-ar_tab_qa <- create_table(
-  ordered_dat,
+primary_dat <- ordered_dat %>% filter(attack_rate_type %in% "Primary")
+secondary_dat <- ordered_dat %>% filter(attack_rate_type %in% "Secondary")
+
+primary_tab_qa <- create_table(
+  primary_dat,
   param = parameter,
   qa_filter = TRUE
 )
 
-ar_tab <- create_table(
-  ordered_dat,
+primary_tab <- create_table(
+  primary_dat,
+  param = parameter,
+  qa_filter = FALSE
+)
+
+secondary_tab_qa <- create_table(
+  secondary_dat,
+  param = parameter,
+  qa_filter = TRUE
+)
+
+secondary_tab <- create_table(
+  secondary_dat,
   param = parameter,
   qa_filter = FALSE
 )
 
 # Save
-save_as_image(ar_tab_qa, path = "Attack_rate_results/table_filtered.png")
-save_as_image(ar_tab, path = "Attack_rate_results/table_unfiltered.png")
+save_as_image(primary_tab_qa, path = "Attack_rate_results/primary_table_filtered.png")
+save_as_image(primary_tab, path = "Attack_rate_results/primary_table_unfiltered.png")
+save_as_image(secondary_tab_qa, path = "Attack_rate_results/secondary_table_filtered.png")
+save_as_image(secondary_tab, path = "Attack_rate_results/secondary_table_unfiltered.png")
