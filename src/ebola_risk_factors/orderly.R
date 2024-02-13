@@ -23,7 +23,7 @@ orderly_artefact(
     "Risk_tables/risk_factors_for_death.png",
     "Risk_tables/risk_factors_for_infection.png",
     "Risk_tables/risk_factors_for_serology.png",
-    "Risk_tables/risk_factors_for_recovery.png",
+    "Risk_tables/protective_factors_for_recovery.png",
     "Risk_tables/risk_factors_for_severe_disease.png",
     "Risk_tables/risk_factors_for_symptoms.png",
     "Risk_tables/other_risk_factor_outcomes.png"
