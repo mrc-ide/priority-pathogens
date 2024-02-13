@@ -1,11 +1,13 @@
 ## Risk Factors
 
 library(dplyr)
+library(tidyr)
 library(orderly2)
 library(readr)
 library(ggplot2)
 library(ggforce)
 library(flextable)
+library(ftExtra)
 library(officer)
 library(purrr)
 library(scales)
@@ -63,20 +65,38 @@ df <- left_join(
 ) %>%
   arrange(article_label, -year_publication)
 
-species_levels <- factor(df$ebola_species, levels = c(sort(
-  setdiff(unique(df$ebola_species), "Unspecified"),
-  decreasing = TRUE
-), "Unspecified"))
-
 rf_dat <- df %>%
   mutate(
-    population_country = as.factor(population_country)
+    population_country = as.factor(population_country),
+    riskfactor_adjusted =
+        case_when(
+          is.na(riskfactor_adjusted) ~ "Unspecified",
+          TRUE ~ riskfactor_adjusted
+        ),
+    riskfactor_significant =
+      case_when(
+        riskfactor_significant %in% "Not Significant" ~ "Not significant",
+        is.na(riskfactor_significant) |
+          riskfactor_significant %in% "Unspecified" ~ "Unspecified significance",
+        TRUE ~ riskfactor_significant
+      ),
+    riskfactor_significant = factor(
+      riskfactor_significant,
+      levels = c("Significant", "Not significant", "Unspecified significance")
+    ),
+    riskfactor_adjusted = factor(
+      riskfactor_adjusted,
+      levels = c("Adjusted", "Not adjusted", "Unspecified")
+    ),
+    riskfactor_name = gsub("Cormobidity", "Comorbidity", riskfactor_name)
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE)
 
 unique(rf_dat$riskfactor_outcome)
 table(rf_dat$riskfactor_outcome, useNA = "ifany")
+table(rf_dat$riskfactor_adjusted, useNA = "ifany")
+table(rf_dat$riskfactor_significant, useNA = "ifany")
 
 # Create directory for results
 dir.create("Risk_tables")
@@ -87,243 +107,141 @@ dir.create("Risk_tables")
 
 death_dat <- rf_dat %>%
   filter(riskfactor_outcome %in% "Death") %>%
-  mutate(
-    riskfactor_adjusted =
-      case_when(
-        is.na(riskfactor_adjusted) ~ "Unspecified",
-        TRUE ~ riskfactor_adjusted
-      )
-  )
+  mutate(`Risk Factor for Death` = riskfactor_name)
 
 table(death_dat$riskfactor_name, useNA = "ifany")
 
-# Total count of risk factors across significant/insignificant/unspecified
-death_total_rf <- table(unlist(str_split(death_dat$riskfactor_name, ";")))
-
-# Separate based on significance and adjustment
-death_sig_adj <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Significant" & death_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-death_insig_adj <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Not significant" & death_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-death_unspec_adj <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Unspecified" & death_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-death_sig_unadj <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Significant" & death_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-death_insig_unadj <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Not significant" & death_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-death_unspec_unadj <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Unspecified" & death_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-death_sig_unspec <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Significant" & death_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-death_insig_unspec <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Not significant" & death_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-death_unspec_unspec <- data.frame(table(unlist(str_split(death_dat$riskfactor_name[death_dat$riskfactor_significant %in% "Unspecified" & death_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-
-deaths_comb <- bind_rows(
-  "Significant_Adjusted" = death_sig_adj,
-  "Insignificant_Adjusted" = death_insig_adj,
-  "Unspecified_Adjusted" = death_unspec_adj,
-  "Significant_Unadjusted" = death_sig_unadj,
-  "Insignificant_Unadjusted" = death_insig_unadj,
-  "Unspecified_Unadjusted" = death_unspec_unadj,
-  "Significant_Unspecified" = death_sig_unspec,
-  "Insignificant_Unspecified" = death_insig_unspec,
-  "Unspecified_Unspecified" = death_unspec_unspec,
-  .id = "Type"
-)
-
-deaths_comb <- separate(deaths_comb, col = "Type", sep = "_", into = c("Significance", "Adjustment"))
-
-# Removing "Other" risk factors here (n = 110)
-death_rf_ft <- deaths_comb %>%
-  mutate(
-    `Risk factor for death` = Var1,
-    `Number of papers` = Freq,
-    `Risk factor for death` = as.factor(`Risk factor for death`)
-  ) %>%
-  select(
-    `Risk factor for death`, Significance, Adjustment, `Number of papers`,
-    -Freq, -Var1
-  ) %>%
-  filter(!`Risk factor for death` %in% "Other") %>%
-  arrange(`Risk factor for death`) %>%
+death_table <- death_dat %>%
+  separate_rows(`Risk Factor for Death`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Death`) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
+              values_from = count, values_fill = 0) %>%
+  mutate(Total = rowSums(across(-1))) %>%
+  arrange(ifelse(`Risk Factor for Death` %in% "Other", Inf, desc(Total))) %>%
   flextable() %>%
-  fontsize(i = 1, size = 12, part = "header") %>%
+  split_header() %>%
+  span_header() %>%
+  fontsize(i = 1:2, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
-  bold(i = 1, bold = TRUE, part = "header") %>%
+  bold(i = 1:2, bold = TRUE, part = "header") %>%
   add_footer_lines("") %>%
+  vline(j = c(1, 4, 7, 10)) %>%
+  border_inner_h(part = "header") %>%
+  border_outer() %>%
   align(align = "left", part = "all") %>%
-  align_nottext_col(align = "right")
+  align_nottext_col(align = "center") %>%
+  line_spacing(i = 1:2, space = 1.5, part = "header")
 
-save_as_image(death_rf_ft, path = "Risk_tables/risk_factors_for_death.png")
+save_as_image(death_table, path = "Risk_tables/risk_factors_for_death.png")
 
 #######################################
-# Risk factors for infection (n = 61) #
+# Risk factors for infection (n = 59) #
 #######################################
+
+# Checked and removed NA risk factor in cleaning.R (ID 2890)
 
 infection_dat <- rf_dat %>%
-  filter(riskfactor_outcome %in% "Infection")
+  filter(riskfactor_outcome %in% "Infection") %>%
+  mutate(`Risk Factor for Infection` = riskfactor_name)
 
 table(infection_dat$riskfactor_name, useNA = "ifany")
-# TO DO: Check the NA
 
-# Total count of risk factors across significant/insignificant/unspecified
-infection_total_rf <- table(unlist(str_split(infection_dat$riskfactor_name, ";")))
-
-# Separate based on significance and adjustment
-infection_sig_adj <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Significant" & infection_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-infection_insig_adj <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Not significant" & infection_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-infection_unspec_adj <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Unspecified" & infection_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-infection_sig_unadj <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Significant" & infection_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-infection_insig_unadj <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Not significant" & infection_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-infection_unspec_unadj <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Unspecified" & infection_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-infection_sig_unspec <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Significant" & infection_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-infection_insig_unspec <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Not significant" & infection_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-infection_unspec_unspec <- data.frame(table(unlist(str_split(infection_dat$riskfactor_name[infection_dat$riskfactor_significant %in% "Unspecified" & infection_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-
-infections_comb <- bind_rows(
-  "Significant_Adjusted" = infection_sig_adj,
-  "Insignificant_Adjusted" = infection_insig_adj,
-  "Unspecified_Adjusted" = infection_unspec_adj,
-  "Significant_Unadjusted" = infection_sig_unadj,
-  "Insignificant_Unadjusted" = infection_insig_unadj,
-  "Unspecified_Unadjusted" = infection_unspec_unadj,
-  "Significant_Unspecified" = infection_sig_unspec,
-  "Insignificant_Unspecified" = infection_insig_unspec,
-  "Unspecified_Unspecified" = infection_unspec_unspec,
-  .id = "Type"
-)
-
-infections_comb <- separate(infections_comb, col = "Type", sep = "_", into = c("Significance", "Adjustment"))
-
-# Removing "Other" risk factors here (n = 36)
-infection_rf_ft <- infections_comb %>%
-  mutate(
-    `Risk factor for infection` = Var1,
-    `Number of papers` = Freq,
-    `Risk factor for infection` = as.factor(`Risk factor for infection`)
-  ) %>%
-  select(
-    `Risk factor for infection`, Significance, Adjustment, `Number of papers`,
-    -Freq, -Var1
-  ) %>%
-  filter(!`Risk factor for infection` %in% "Other") %>%
-  arrange(`Risk factor for infection`) %>%
+inf_table <- infection_dat %>%
+  separate_rows(`Risk Factor for Infection`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Infection`) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
+              values_from = count, values_fill = 0) %>%
+  mutate(Total = rowSums(across(-1))) %>%
+  arrange(ifelse(`Risk Factor for Infection` %in% "Other", Inf, desc(Total))) %>%
   flextable() %>%
-  fontsize(i = 1, size = 12, part = "header") %>%
+  split_header() %>%
+  span_header() %>%
+  fontsize(i = 1:2, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
-  bold(i = 1, bold = TRUE, part = "header") %>%
+  bold(i = 1:2, bold = TRUE, part = "header") %>%
   add_footer_lines("") %>%
+  vline(j = c(1, 4, 7, 10)) %>%
+  border_inner_h(part = "header") %>%
+  border_outer() %>%
   align(align = "left", part = "all") %>%
-  align_nottext_col(align = "right")
+  align_nottext_col(align = "center") %>%
+  line_spacing(i = 1:2, space = 1.5, part = "header")
 
-save_as_image(infection_rf_ft, path = "Risk_tables/risk_factors_for_infection.png")
+save_as_image(inf_table, path = "Risk_tables/risk_factors_for_infection.png")
 
 ######################################
 # Risk factors for Serology (n = 44) #
 ######################################
 
 serology_dat <- rf_dat %>%
-  filter(riskfactor_outcome %in% "Serology")
+  filter(riskfactor_outcome %in% "Serology") %>%
+  mutate(`Risk Factor for Serology` = riskfactor_name)
 
 table(serology_dat$riskfactor_name, useNA = "ifany")
 
-# Total count of risk factors across significant/insignificant/unspecified
-serology_total_rf <- table(unlist(str_split(serology_dat$riskfactor_name, ";")))
-
-# Separate based on significance and adjustment
-serology_sig_adj <- data.frame(table(unlist(str_split(serology_dat$riskfactor_name[serology_dat$riskfactor_significant %in% "Significant" & serology_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-serology_insig_adj <- data.frame(table(unlist(str_split(serology_dat$riskfactor_name[serology_dat$riskfactor_significant %in% "Not significant" & serology_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-serology_sig_unadj <- data.frame(table(unlist(str_split(serology_dat$riskfactor_name[serology_dat$riskfactor_significant %in% "Significant" & serology_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-serology_insig_unadj <- data.frame(table(unlist(str_split(serology_dat$riskfactor_name[serology_dat$riskfactor_significant %in% "Not significant" & serology_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-serology_sig_unspec <- data.frame(table(unlist(str_split(serology_dat$riskfactor_name[serology_dat$riskfactor_significant %in% "Significant" & serology_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-serology_insig_unspec <- data.frame(table(unlist(str_split(serology_dat$riskfactor_name[serology_dat$riskfactor_significant %in% "Not significant" & serology_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-
-serology_comb <- bind_rows(
-  "Significant_Adjusted" = serology_sig_adj,
-  "Insignificant_Adjusted" = serology_insig_adj,
-  "Significant_Unadjusted" = serology_sig_unadj,
-  "Insignificant_Unadjusted" = serology_insig_unadj,
-  "Significant_Unspecified" = serology_sig_unspec,
-  "Insignificant_Unspecified" = serology_insig_unspec,
-  .id = "Type"
-)
-
-serology_comb <- separate(serology_comb, col = "Type", sep = "_", into = c("Significance", "Adjustment"))
-
-# Could remove "Other" risk factors here (n = 27)
-serology_rf_ft <- serology_comb %>%
-  mutate(
-    `Risk factor for serology` = Var1,
-    `Number of papers` = Freq,
-    `Risk factor for serology` = as.factor(`Risk factor for serology`)
-  ) %>%
-  select(
-    `Risk factor for serology`, Significance, Adjustment, `Number of papers`,
-    -Freq, -Var1
-  ) %>%
-  # filter(!`Risk factor for serology` %in% "Other") %>%
-  arrange(`Risk factor for serology`) %>%
+sero_table <- serology_dat %>%
+  separate_rows(`Risk Factor for Serology`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Serology`) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
+              values_from = count, values_fill = 0) %>%
+  mutate(Total = rowSums(across(-1))) %>%
+  arrange(ifelse(`Risk Factor for Serology` %in% "Other", Inf, desc(Total))) %>%
   flextable() %>%
-  fontsize(i = 1, size = 12, part = "header") %>%
+  split_header() %>%
+  span_header() %>%
+  fontsize(i = 1:2, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
-  bold(i = 1, bold = TRUE, part = "header") %>%
+  bold(i = 1:2, bold = TRUE, part = "header") %>%
   add_footer_lines("") %>%
+  vline(j = c(1, 4, 7)) %>%
+  border_inner_h(part = "header") %>%
+  border_outer() %>%
   align(align = "left", part = "all") %>%
-  align_nottext_col(align = "right")
+  align_nottext_col(align = "center") %>%
+  line_spacing(i = 1:2, space = 1.5, part = "header")
 
-save_as_image(serology_rf_ft, path = "Risk_tables/risk_factors_for_serology.png")
+save_as_image(sero_table, path = "Risk_tables/risk_factors_for_serology.png")
 
 ############################################
 # Factors associated with Recovery (n = 7) #
 ############################################
 
 recovery_dat <- rf_dat %>%
-  filter(riskfactor_outcome %in% "Recovery")
+  filter(riskfactor_outcome %in% "Recovery") %>%
+  mutate(`Protective Factor for Recovery` = riskfactor_name)
 
 table(recovery_dat$riskfactor_name, useNA = "ifany")
 
-# Total count of risk factors across significant/insignificant/unspecified
-recovery_total_rf <- table(unlist(str_split(recovery_dat$riskfactor_name, ";")))
-
-# Separate based on significance and adjustment
-recovery_sig_adj <- data.frame(table(unlist(str_split(recovery_dat$riskfactor_name[recovery_dat$riskfactor_significant %in% "Significant" & recovery_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-recovery_insig_adj <- data.frame(table(unlist(str_split(recovery_dat$riskfactor_name[recovery_dat$riskfactor_significant %in% "Not significant" & recovery_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-recovery_sig_unadj <- data.frame(table(unlist(str_split(recovery_dat$riskfactor_name[recovery_dat$riskfactor_significant %in% "Significant" & recovery_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-recovery_insig_unadj <- data.frame(table(unlist(str_split(recovery_dat$riskfactor_name[recovery_dat$riskfactor_significant %in% "Not significant" & recovery_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-recovery_sig_unspec <- data.frame(table(unlist(str_split(recovery_dat$riskfactor_name[recovery_dat$riskfactor_significant %in% "Significant" & recovery_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-recovery_insig_unspec <- data.frame(table(unlist(str_split(recovery_dat$riskfactor_name[recovery_dat$riskfactor_significant %in% "Not significant" & recovery_dat$riskfactor_adjusted %in% "Unspecified"], ";"))))
-
-recovery_comb <- bind_rows(
-  "Significant_Adjusted" = recovery_sig_adj,
-  "Insignificant_Adjusted" = recovery_insig_adj,
-  "Significant_Unadjusted" = recovery_sig_unadj,
-  "Insignificant_Unadjusted" = recovery_insig_unadj,
-  "Significant_Unspecified" = recovery_sig_unspec,
-  "Insignificant_Unspecified" = recovery_insig_unspec,
-  .id = "Type"
-)
-
-recovery_comb <- separate(recovery_comb, col = "Type", sep = "_", into = c("Significance", "Adjustment"))
-
-# Removed "Other" risk factors here (n = 5)
-recovery_rf_ft <- recovery_comb %>%
-  mutate(
-    `Protective factor for recovery` = Var1,
-    `Number of papers` = Freq,
-    `Protective factor for recovery` = as.factor(`Protective factor for recovery`)
-  ) %>%
-  select(
-    `Protective factor for recovery`, Significance, Adjustment, `Number of papers`,
-    -Freq, -Var1
-  ) %>%
-  filter(!`Protective factor for recovery` %in% "Other") %>%
-  arrange(`Protective factor for recovery`) %>%
+recovery_table <- recovery_dat %>%
+  separate_rows(`Protective Factor for Recovery`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Protective Factor for Recovery`) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
+              values_from = count, values_fill = 0) %>%
+  mutate(Total = rowSums(across(-1))) %>%
+  arrange(ifelse(`Protective Factor for Recovery` %in% "Other", Inf, desc(Total))) %>%
   flextable() %>%
-  fontsize(i = 1, size = 12, part = "header") %>%
+  split_header() %>%
+  span_header() %>%
+  fontsize(i = 1:2, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
-  bold(i = 1, bold = TRUE, part = "header") %>%
+  bold(i = 1:2, bold = TRUE, part = "header") %>%
   add_footer_lines("") %>%
+  vline(j = c(1, 4, 7)) %>%
+  border_inner_h(part = "header") %>%
+  border_outer() %>%
   align(align = "left", part = "all") %>%
-  align_nottext_col(align = "right")
+  align_nottext_col(align = "center") %>%
+  line_spacing(i = 1:2, space = 1.5, part = "header")
 
-save_as_image(recovery_rf_ft, path = "Risk_tables/risk_factors_for_recovery.png")
+save_as_image(recovery_table, path = "Risk_tables/protective_factors_for_recovery.png")
 
 ###########################################
 # Risk factors for Severe disease (n = 3) #
@@ -331,51 +249,34 @@ save_as_image(recovery_rf_ft, path = "Risk_tables/risk_factors_for_recovery.png"
 
 severe_dat <- rf_dat %>%
   filter(riskfactor_outcome %in% "Severe disease") %>%
-  mutate(
-    riskfactor_adjusted =
-      case_when(
-        is.na(riskfactor_adjusted) ~ "Unspecified",
-        TRUE ~ riskfactor_adjusted
-      )
-  )
+  mutate(`Risk Factor for Severe Disease` = riskfactor_name)
 
 table(severe_dat$riskfactor_name, useNA = "ifany")
 
-# Separate based on significance and adjustment
-severe_sig_adj <- data.frame(table(unlist(str_split(severe_dat$riskfactor_name[severe_dat$riskfactor_significant %in% "Significant" & severe_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-severe_insig_adj <- data.frame(table(unlist(str_split(severe_dat$riskfactor_name[severe_dat$riskfactor_significant %in% "Not significant" & severe_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-
-severe_comb <- bind_rows(
-  "Significant_Adjusted" = severe_sig_adj,
-  "Insignificant_Adjusted" = severe_insig_adj,
-  .id = "Type"
-)
-
-severe_comb <- separate(severe_comb, col = "Type", sep = "_", into = c("Significance", "Adjustment"))
-
-# "Other" risk factors here (n = 2)
-severe_rf_ft <- severe_comb %>%
-  mutate(
-    `Risk factor for severe disease` = Var1,
-    `Number of papers` = Freq,
-    `Risk factor for severe` = as.factor(`Risk factor for severe disease`)
-  ) %>%
-  select(
-    `Risk factor for severe disease`, Significance, Adjustment, `Number of papers`,
-    -Freq, -Var1
-  ) %>%
-  #filter(!`Risk factor for severe disease` %in% "Other") %>%
-  arrange(`Risk factor for severe disease`) %>%
+severe_table <- severe_dat %>%
+  separate_rows(`Risk Factor for Severe Disease`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Severe Disease`) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
+              values_from = count, values_fill = 0) %>%
+  mutate(Total = rowSums(across(-1))) %>%
+  arrange(ifelse(`Risk Factor for Severe Disease` %in% "Other", Inf, desc(Total))) %>%
   flextable() %>%
-  fontsize(i = 1, size = 12, part = "header") %>%
+  split_header() %>%
+  span_header() %>%
+  fontsize(i = 1:2, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
-  bold(i = 1, bold = TRUE, part = "header") %>%
+  bold(i = 1:2, bold = TRUE, part = "header") %>%
   add_footer_lines("") %>%
+  vline(j = c(1, 2, 3)) %>%
+  border_inner_h(part = "header") %>%
+  border_outer() %>%
   align(align = "left", part = "all") %>%
-  align_nottext_col(align = "right")
+  align_nottext_col(align = "center") %>%
+  line_spacing(i = 1:2, space = 1.5, part = "header")
 
-save_as_image(severe_rf_ft, path = "Risk_tables/risk_factors_for_severe_disease.png")
+save_as_image(severe_table, path = "Risk_tables/risk_factors_for_severe_disease.png")
 
 #####################################
 # Risk factors for Symptoms (n = 2) #
@@ -383,51 +284,34 @@ save_as_image(severe_rf_ft, path = "Risk_tables/risk_factors_for_severe_disease.
 
 symptom_dat <- rf_dat %>%
   filter(riskfactor_outcome %in% "Symptoms") %>%
-  mutate(
-    riskfactor_adjusted =
-      case_when(
-        is.na(riskfactor_adjusted) ~ "Unspecified",
-        TRUE ~ riskfactor_adjusted
-      )
-  )
+  mutate(`Risk Factor for Symptoms` = riskfactor_name)
 
 table(symptom_dat$riskfactor_name, useNA = "ifany")
 
-# Separate based on significance and adjustment
-symptom_unspec_adj <- data.frame(table(unlist(str_split(symptom_dat$riskfactor_name[symptom_dat$riskfactor_significant %in% "Unspecified" & symptom_dat$riskfactor_adjusted %in% "Adjusted"], ";"))))
-symptom_unspec_unadj <- data.frame(table(unlist(str_split(symptom_dat$riskfactor_name[symptom_dat$riskfactor_significant %in% "Unspecified" & symptom_dat$riskfactor_adjusted %in% "Not adjusted"], ";"))))
-
-symptom_comb <- bind_rows(
-  "Unspecified_Adjusted" = symptom_unspec_adj,
-  "Unspecified_Unadjusted" = symptom_unspec_unadj,
-  .id = "Type"
-)
-
-symptom_comb <- separate(symptom_comb, col = "Type", sep = "_", into = c("Significance", "Adjustment"))
-
-# Removing "Other" risk factors here (n = 110)
-symptom_rf_ft <- symptom_comb %>%
-  mutate(
-    `Risk factor for symptoms` = Var1,
-    `Number of papers` = Freq,
-    `Risk factor for symptom` = as.factor(`Risk factor for symptoms`)
-  ) %>%
-  select(
-    `Risk factor for symptoms`, Significance, Adjustment, `Number of papers`,
-    -Freq, -Var1
-  ) %>%
-  filter(!`Risk factor for symptoms` %in% "Other") %>%
-  arrange(`Risk factor for symptoms`) %>%
+symptom_table <- symptom_dat %>%
+  separate_rows(`Risk Factor for Symptoms`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Symptoms`) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
+              values_from = count, values_fill = 0) %>%
+  mutate(Total = rowSums(across(-1))) %>%
+  arrange(ifelse(`Risk Factor for Symptoms` %in% "Other", Inf, desc(Total))) %>%
   flextable() %>%
-  fontsize(i = 1, size = 12, part = "header") %>%
+  split_header() %>%
+  span_header() %>%
+  fontsize(i = 1:2, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
-  bold(i = 1, bold = TRUE, part = "header") %>%
+  bold(i = 1:2, bold = TRUE, part = "header") %>%
   add_footer_lines("") %>%
+  vline(j = c(1, 2, 3)) %>%
+  border_inner_h(part = "header") %>%
+  border_outer() %>%
   align(align = "left", part = "all") %>%
-  align_nottext_col(align = "right")
+  align_nottext_col(align = "center") %>%
+  line_spacing(i = 1:2, space = 1.5, part = "header")
 
-save_as_image(symptom_rf_ft, path = "Risk_tables/risk_factors_for_symptoms.png")
+save_as_image(symptom_table, path = "Risk_tables/risk_factors_for_symptoms.png")
 
 #######################
 # 58 "Other" outcomes #

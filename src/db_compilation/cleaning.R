@@ -378,8 +378,9 @@ clean_dfs <- function(df, pathogen) {
         filter(!(covidence_id %in% c(1510, 2857, 2858, 4301, 5765, 5870, 17096))) %>%
         # Remove duplicate entry from single extracted paper not identified as distinct
         filter(!(covidence_id %in% 3532 & access_param_id %in% 37)) %>%
-        # Remove risk factor for covidence ID 17054
-        filter(!(covidence_id %in% 17054 & parameter_type %in% "Risk factors")) %>%
+        # Remove risk factor for covidence ID 17054 and remove NA risk factor -
+        # ID 2890 checked paper and potentially based on simulated data
+        filter(!(covidence_id %in% c(2890, 17054) & parameter_type %in% "Risk factors")) %>%
         # Remove one risk factor from covidence ID 4764
         filter(!(riskfactor_name %in% "Other" &
           covidence_id %in% 4764 & access_param_id %in% 74)) %>%
@@ -497,6 +498,7 @@ clean_dfs <- function(df, pathogen) {
             other_delay_start %in% "Funeral Start" ~ "Funeral start",
             other_delay_start %in% "Positive Test" ~ "Positive test",
             other_delay_start %in% "Sampling date" ~ "Sample collection",
+            other_delay_start %in% c("Who notification", "Notification") ~ "Reporting",
             other_delay_start %in% c(
               "Other: Enter Timepoint in Text Box",
               "Other: Not specified 'duration of illness of those who died'",
