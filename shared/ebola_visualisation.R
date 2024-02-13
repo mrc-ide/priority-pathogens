@@ -345,7 +345,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       )
     }
     
-    if (param %in% c("Growth rate", "Doubling time")) {
+    if (param %in% "Growth rate") {
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
           "Outbreak", "Country", "Survey date",
@@ -355,6 +355,30 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
         hide_grouplabel = TRUE
       )
     }
+    
+    if (param %in% "Doubling time") {
+      dt_labels <- data.frame(
+        key = c(
+          "Outbreak", "Country", "Survey date", "Central estimate",
+          "Central range", "Uncertainty", "Disaggregated by", "Article", "QA score (%)"
+        ),
+        label = c(
+          "Outbreak", "Country", "Survey date", "Central estimate (Days)",
+          "Central range", "Uncertainty (95% CI)", "Disaggregated by", "Article", "QA score (%)"
+        ))
+      r_tbl <- r_tbl %>% as_flextable(
+        col_keys = c(
+          "Outbreak", "Country", "Survey date", "Central estimate",
+          "Central range", "Uncertainty", "Disaggregated by", "Article", "QA score (%)"
+        ),
+        hide_grouplabel = TRUE
+      ) %>%
+        set_header_df(
+          mapping = dt_labels,
+          key = "key"
+        )
+    }
+    
     
     if (param %in% "Attack rate") {
       ar_labels <- data.frame(
