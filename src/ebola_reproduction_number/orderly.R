@@ -32,7 +32,9 @@ orderly_artefact(
     "R_tables/qa_filtered/range_species.png",
     "R_tables/qa_filtered/eff_range_outbreak.png",
     "R_tables/qa_filtered/eff_range_country.png",
-    "R_tables/qa_filtered/eff_range_species.png"
+    "R_tables/qa_filtered/eff_range_species.png",
+    "R_tables/unfiltered/paginate_basic_r_tab_all.docx",
+    "R_tables/unfiltered/paginate_effective_r_tab_all.docx"
   )
 )
 
@@ -213,11 +215,11 @@ ggsave("R_plots/basic_r_country_filtered.png", basic_r_country_qa,
 )
 
 ggsave("R_plots/eff_r_outbreak_filtered.png", eff_r_outbreak_qa,
-  width = 9, height = 5, units = "in", bg = "white"
+  width = 9, height = 6, units = "in", bg = "white"
 )
 
 ggsave("R_plots/eff_r_country_filtered.png", eff_r_country_qa,
-  width = 9, height = 5, units = "in", bg = "white"
+  width = 9, height = 6, units = "in", bg = "white"
 )
 
 # SUMMARY TABLES
@@ -258,6 +260,25 @@ save_as_image(eff_r_tab_qa, path = "R_tables/qa_filtered/eff_r_tab_filtered.png"
 save_as_image(basic_r_tab, path = "R_tables/unfiltered/basic_r_tab_all.png")
 save_as_image(eff_r_tab, path = "R_tables/unfiltered/eff_r_tab_all.png")
 
+# Save paginated version of basic R unfiltered table:
+p_tab_basic <- paginate(basic_r_tab)
+p_tab_eff <- paginate(eff_r_tab)
+
+save_as_docx(p_tab_basic, path = "R_tables/unfiltered/paginate_basic_r_tab_all.docx",
+             pr_section = prop_section(
+               page_size = page_size(
+                 orient = "landscape", width = 18.3, height = 21.7
+                 ),
+               type = "continuous", page_margins = page_mar()
+               ))
+
+save_as_docx(p_tab_eff, path = "R_tables/unfiltered/paginate_effective_r_tab_all.docx",
+             pr_section = prop_section(
+               page_size = page_size(
+                 orient = "landscape", width = 18.3, height = 21.7
+               ),
+               type = "continuous", page_margins = page_mar()
+             ))
 
 # For the basic reproduction number, summary table giving the range of central
 # values for each mean, median, and other/unspecified parameter types:
