@@ -1,3 +1,5 @@
+## Manuscript tables and figures
+
 orderly_strict_mode()
 
 library(png)
@@ -27,7 +29,7 @@ orderly_dependency("ebola_severity",
 orderly_dependency("ebola_delays",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Delay_tables/qa_filtered/select_ranges_table.png",
-                             "Meta_plots/meta_delays_variance.png"))
+                             "Meta_plots/meta_delays_variance_QAfiltered.png"))
 
 dir.create("Manuscript_figures")
 
@@ -46,7 +48,7 @@ writePNG(f3, "Manuscript_figures/cfr_plot.png")
 
 ## Figure 4: Delays meta-analysis
 
-f4 <- png::readPNG("Meta_plots/meta_delays_variance.png")
+f4 <- png::readPNG("Meta_plots/meta_delays_variance_QAfiltered.png")
 writePNG(f4, "Manuscript_figures/delays_meta_analysis.png")
 
 ## Figure 5: Combine range tables
@@ -54,7 +56,6 @@ writePNG(f4, "Manuscript_figures/delays_meta_analysis.png")
 t1 <- png::readPNG("R_tables/qa_filtered/range_outbreak.png")
 t2 <- png::readPNG("Severity_tables/qa_filtered/range_outbreak_country.png")
 t3 <- png::readPNG("Delay_tables/qa_filtered/select_ranges_table.png")
-#t2 <- png::readPNG("Severity_tables/qa_filtered/range_outbreak.png")
 
 # Create plots for each image
 plot1 <- rasterGrob(t1, width = 0.8)

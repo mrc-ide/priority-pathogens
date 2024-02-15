@@ -16,6 +16,7 @@ library(gridExtra)
 library(metafor)
 library(meta)
 library(estmeansd)
+library(cowplot)
 
 orderly_strict_mode()
 
@@ -25,10 +26,15 @@ orderly_parameters(pathogen = "EBOLA")
 orderly_artefact(
   "Plots, tables and meta_analysis for delay parameters",
   c(
-    "Delay_plots/symp_plot_filtered.png",
-    "Delay_plots/adm_plot_filtered.png",
-    "Delay_plots/infp_plot_filtered.png",
-    "Delay_plots/dtb_plot_filtered.png",
+    "Delay_plots/qa_filtered/symp_plot_filtered.png",
+    "Delay_plots/qa_filtered/adm_plot_filtered.png",
+    "Delay_plots/qa_filtered/infp_plot_filtered.png",
+    "Delay_plots/qa_filtered/dtb_plot_filtered.png",
+    "Delay_plots/unfiltered/symp_plot_unfiltered_SPLIT.png",
+    "Delay_plots/unfiltered/symp_plot_unfiltered.png",
+    "Delay_plots/unfiltered/adm_plot_unfiltered.png",
+    "Delay_plots/unfiltered/infp_plot_unfiltered.png",
+    "Delay_plots/unfiltered/dtb_plot_unfiltered.png",
     "Delay_tables/qa_filtered/symptom_onset_table.png",
     "Delay_tables/qa_filtered/admission_table.png",
     "Delay_tables/qa_filtered/inf_process_table.png",
@@ -106,6 +112,8 @@ delay_dat <- df %>%
     delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
     delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
     delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
+    delay_short = str_replace(delay_short, "IgM antibody detection", "antibody detection (IgM/IgG)"),
+    delay_short = str_replace(delay_short, "IgG antibody detection", "antibody detection (IgM/IgG)"),
     population_study_start_month =
       factor(population_study_start_month,
         levels = c(
@@ -298,6 +306,8 @@ ordered_dat <- delay_dat %>%
 
 # Create directory for results
 dir.create("Delay_plots")
+dir.create("Delay_plots/qa_filtered")
+dir.create("Delay_plots/unfiltered")
 dir.create("Delay_tables")
 dir.create("Delay_tables/qa_filtered")
 dir.create("Delay_tables/unfiltered")
@@ -325,16 +335,15 @@ symp_dat <- ordered_dat %>%
         levels = c(
           "Symptom onset to test",
           "Symptom onset to test result",
-          "Symptom onset to negative test",
-          "Symptom onset to IgM antibody detection",
-          "Symptom onset to IgG antibody detection",
+          "Symptom onset to antibody detection (IgM/IgG)",
           "Symptom onset to reporting",
           "Symptom onset to WHO notification",
           "Symptom onset to seeking care",
           "Symptom onset to quarantine",
-          "Symptom onset to diagnosis",
           "Symptom onset to admission to care",
+          "Symptom onset to diagnosis",
           "Symptom onset to recovery/non-infectiousness",
+          "Symptom onset to negative test",
           "Symptom onset to first undetectable viremia",
           "Symptom onset to discharge from care",
           "Symptom onset to death"
@@ -346,6 +355,14 @@ symp_plot_qa <- create_plot(
   symp_dat,
   param = parameter,
   qa_filter = TRUE,
+  facet_by = "delay_short",
+  symbol_col_by = "outbreak"
+)
+
+symp_plot_unf <- create_plot(
+  symp_dat,
+  param = parameter,
+  qa_filter = FALSE,
   facet_by = "delay_short",
   symbol_col_by = "outbreak"
 )
@@ -375,6 +392,14 @@ adm_plot_qa <- create_plot(
   symbol_col_by = "outbreak"
 )
 
+adm_plot_unf <- create_plot(
+  adm_dat,
+  param = parameter,
+  qa_filter = FALSE,
+  facet_by = "delay_short",
+  symbol_col_by = "outbreak"
+)
+
 # Infection process with qa_filter of >=50
 infp_dat <- ordered_dat %>%
   filter(delay_start %in% "Infection process") %>%
@@ -397,6 +422,14 @@ infp_plot_qa <- create_plot(
   symbol_col_by = "outbreak"
 )
 
+infp_plot_unf <- create_plot(
+  infp_dat,
+  param = parameter,
+  qa_filter = FALSE,
+  facet_by = "delay_short",
+  symbol_col_by = "outbreak"
+)
+
 # Death to burial with qa_filter >=50
 dtb_dat <- ordered_dat %>%
   filter(delay_start %in% "Death to burial")
@@ -409,20 +442,90 @@ dtb_plot_qa <- create_plot(
   symbol_col_by = "outbreak"
 )
 
-ggsave("Delay_plots/symp_plot_filtered.png", symp_plot_qa,
+dtb_plot_unf <- create_plot(
+  dtb_dat,
+  param = parameter,
+  qa_filter = FALSE,
+  facet_by = "delay_short",
+  symbol_col_by = "outbreak"
+)
+
+ggsave("Delay_plots/qa_filtered/symp_plot_filtered.png", symp_plot_qa,
   width = 9, height = 16, units = "in", bg = "white"
 )
 
-ggsave("Delay_plots/adm_plot_filtered.png", adm_plot_qa,
+ggsave("Delay_plots/qa_filtered/adm_plot_filtered.png", adm_plot_qa,
   width = 9, height = 9, units = "in", bg = "white"
 )
 
-ggsave("Delay_plots/infp_plot_filtered.png", infp_plot_qa,
+ggsave("Delay_plots/qa_filtered/infp_plot_filtered.png", infp_plot_qa,
   width = 9, height = 9, units = "in", bg = "white"
 )
 
-ggsave("Delay_plots/dtb_plot_filtered.png", dtb_plot_qa,
+ggsave("Delay_plots/qa_filtered/dtb_plot_filtered.png", dtb_plot_qa,
   width = 9, height = 2, units = "in", bg = "white"
+)
+
+ggsave("Delay_plots/unfiltered/symp_plot_unfiltered.png", symp_plot_unf,
+       width = 10, height = 22, units = "in", bg = "white"
+)
+
+ggsave("Delay_plots/unfiltered/adm_plot_unfiltered.png", adm_plot_unf,
+       width = 9, height = 12, units = "in", bg = "white"
+)
+
+ggsave("Delay_plots/unfiltered/infp_plot_unfiltered.png", infp_plot_unf,
+       width = 10, height = 14, units = "in", bg = "white"
+)
+
+ggsave("Delay_plots/unfiltered/dtb_plot_unfiltered.png", dtb_plot_unf,
+       width = 9, height = 2, units = "in", bg = "white"
+)
+
+# Split symptom onset to X plot
+left_dat <- symp_dat %>%
+  filter(!delay_short %in% c("Symptom onset to diagnosis",
+                             "Symptom onset to recovery/non-infectiousness",
+                             "Symptom onset to negative test",
+                             "Symptom onset to first undetectable viremia",
+                             "Symptom onset to discharge from care",
+                             "Symptom onset to death"))
+right_dat <- symp_dat %>%
+  filter(delay_short %in% c("Symptom onset to diagnosis",
+                            "Symptom onset to recovery/non-infectiousness",
+                            "Symptom onset to negative test",
+                            "Symptom onset to first undetectable viremia",
+                            "Symptom onset to discharge from care",
+                            "Symptom onset to death"))
+
+left <- create_plot(
+  left_dat,
+  param = parameter,
+  qa_filter = FALSE,
+  facet_by = "delay_short",
+  symbol_col_by = "outbreak"
+)
+
+right <- create_plot(
+  right_dat,
+  param = parameter,
+  qa_filter = FALSE,
+  facet_by = "delay_short",
+  symbol_col_by = "outbreak"
+)
+
+# Get the original legend from outbreak qa plot
+orig_legend <- get_legend(symp_plot_unf + theme(legend.position = "right"))
+
+panels <- plot_grid(left + theme(legend.position = "none"),
+                    right + theme(legend.position = "none"),
+                    nrow = 1, align = "hv")
+
+plot_split_symp <- plot_grid(panels, orig_legend,
+                             ncol = 2, align = "hv", rel_widths = c(1, 0.3))
+
+ggsave("Delay_plots/unfiltered/symp_plot_unfiltered_SPLIT.png", plot_split_symp,
+       width = 14, height = 13.5, units = "in", bg = "white"
 )
 
 ###################

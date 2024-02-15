@@ -519,7 +519,7 @@ clean_dfs <- function(df, pathogen) {
             other_delay_end %in% "Symptom Resolution" ~ "Recovery/non-Infectiousness",
             other_delay_end %in% c(
               "Detection", "Notification", "Reporting of symptoms",
-              "Other: Case report completion",
+              "Other: Case report completion", "Who notification",
               "Report (for confirmed cases with known outcomes)",
               "Other: official report"
             ) ~ "Reporting",
