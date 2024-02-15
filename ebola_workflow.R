@@ -28,13 +28,11 @@ orderly_run("ebola_severity", parameters = list(pathogen = "EBOLA"))
 # Human Delays
 orderly_run("ebola_delays", parameters = list(pathogen = "EBOLA"))
 
-# Seroprevalence (Note: not finished - this is rough and more cleaning needed)
+# Seroprevalence
 orderly_run("ebola_seroprevalence", parameters = list(pathogen = "EBOLA"))
 
 # Risk factors
 orderly_run("ebola_risk_factors", parameters = list(pathogen = "EBOLA"))
-# TO DO FOR RISK FACTORS:
-# combine some tables into multi-panel for supplements
 
 # Mutations
 orderly_run("ebola_mutations", parameters = list(pathogen = "EBOLA"))
@@ -51,10 +49,14 @@ orderly_run("ebola_growth_rate", parameters = list(pathogen = "EBOLA"))
 # Doubling time
 orderly_run("ebola_doubling_time", parameters = list(pathogen = "EBOLA"))
 
-# Figures for main manuscript
+###################################################
+## FIGURES & TABLES FOR MANUSCRIPT & SUPPLEMENTS ##
+###################################################
+
+# Figures and tables for main manuscript
 orderly_run("ebola_figures", parameters = list(pathogen = "EBOLA"))
 
-# Figures for supplementary material
-
+# Figures and tables for supplementary material
+orderly_run("ebola_supplementary_figures", parameters = list(pathogen = "EBOLA"))
 
 
