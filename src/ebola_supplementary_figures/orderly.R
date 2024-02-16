@@ -24,7 +24,8 @@ orderly_artefact(
     "Supplementary_figures/growth_rate_table.png",
     "Supplementary_figures/overdispersion_table.png",
     "Supplementary_figures/doubling_time_table.png",
-    "Supplementary_figures/risk_factors_transmission.png",
+    "Supplementary_figures/risk_factors_infection.png",
+    "Supplementary_figures/risk_factors_serology.png",
     "Supplementary_figures/risk_factors_severity.png",
     "Supplementary_figures/risk_factors_severity_text.png", # can remove this later
     "Supplementary_figures/delays_symptom_onset_to_X.png",
@@ -112,13 +113,9 @@ file.copy(from = "Attack_rate_results/secondary_table_unfiltered.png",
 file.copy(from = "Overdispersion_results/table.png",
           to = "Supplementary_figures/overdispersion_table.png")
 
-# Risk factors associated with transmission: infection and serology
-rf_infection <- png::readPNG("Risk_tables/risk_factors_for_infection.png")
-rf_serology <- png::readPNG("Risk_tables/risk_factors_for_serology.png")
-tab1 <- rasterGrob(rf_infection, width = 0.8)
-tab2 <- rasterGrob(rf_serology, width = 0.6) # width shorter otherwise serology font too large
-rf_transmission <- grid.arrange(tab1, tab2, ncol = 1)
-ggsave("Supplementary_figures/risk_factors_transmission.png", rf_transmission, width = 8, height = 4)
+# Risk factors for infection
+file.copy(from = "Risk_tables/risk_factors_for_infection.png",
+          to = "Supplementary_figures/risk_factors_infection.png")
 
 # Other risk factor outcomes considered in papers
 file.copy(from = "Risk_tables/other_risk_factor_outcomes.png",
@@ -152,6 +149,10 @@ file.copy(from = "Meta_plots/meta_delays_variance_unfiltered.png",
 # Unfiltered table
 file.copy(from = "Seroprevalence_tables/tab_unfiltered.png",
           to = "Supplementary_figures/seroprevalence_table.png")
+
+# Risk factors for serology
+file.copy(from = "Risk_tables/risk_factors_for_serology.png",
+          to = "Supplementary_figures/risk_factors_serology.png")
 
 ##############
 ## SEVERITY ##
