@@ -1280,8 +1280,8 @@ clean_dfs <- function(df, pathogen) {
             parameter_uncertainty_lower_value,
             parameter_uncertainty_upper_value
           ),
-          ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate"), round(., digits = 2),
-                   ifelse(parameter_class %in% "Attack rate", round(., digits = 3), .))
+          ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 2),
+                   ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .))
         ),
 
         # Parameter value
