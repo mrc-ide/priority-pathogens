@@ -469,6 +469,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% c(17835, 18236, 18536) ~ "Guinea",
               covidence_id %in% c(1170, 18371) ~ "Sierra Leone",
               covidence_id %in% 16201 ~ "Guinea",
+              covidence_id %in% 5939 & is.na(population_country) ~ "Guinea, Liberia, Sierra Leone",
               # Correction
               parameter_class %in% "Attack rate" & covidence_id %in% 6472 ~ "DRC",
               is.na(population_country) ~ "Unspecified",
