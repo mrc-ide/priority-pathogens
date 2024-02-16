@@ -383,13 +383,13 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     if (param %in% "Attack rate") {
       ar_labels <- data.frame(
         key = c(
-          "Outbreak", "Country", "Survey date", "Attack rate type",
+          "Outbreak", "Country", "Survey date",
           "Central estimate", "Central range", "Uncertainty",
           "Population Sample", "Sample size",
           "Population Group", "Disaggregated by", "Article", "QA score (%)"
         ),
         label = c(
-          "Outbreak", "Country", "Survey date", "Attack rate type",
+          "Outbreak", "Country", "Survey date",
           "Central estimate (%)", "Central range", "Uncertainty (95% CI)",
           "Population Sample", "Sample size",
           "Population Group", "Disaggregated by", "Article", "QA score (%)"
@@ -397,7 +397,7 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
       )
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
-          "Outbreak", "Country", "Survey date", "Attack rate type",
+          "Outbreak", "Country", "Survey date",
           "Central estimate", "Central range", "Uncertainty",
           "Population Sample", "Sample size",
           "Population Group", "Disaggregated by", "Article", "QA score (%)"
