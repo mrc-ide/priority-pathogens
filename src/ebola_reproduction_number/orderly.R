@@ -264,20 +264,29 @@ save_as_image(eff_r_tab, path = "R_tables/unfiltered/eff_r_tab_all.png")
 p_tab_basic <- paginate(basic_r_tab)
 p_tab_eff <- paginate(eff_r_tab)
 
+# Make sure to remove white space by adjusting width and height
 save_as_docx(p_tab_basic, path = "R_tables/unfiltered/paginate_basic_r_tab_all.docx",
              pr_section = prop_section(
                page_size = page_size(
-                 orient = "landscape", width = 18.3, height = 21.7
+                 orient = "landscape", width = 19, height = 14.5
                  ),
-               type = "continuous", page_margins = page_mar()
+               type = "continuous", page_margins = page_mar(bottom = 0,
+                                                            top = 0,
+                                                            right = 0,
+                                                            left = 0,
+                                                            gutter = 0)
                ))
 
 save_as_docx(p_tab_eff, path = "R_tables/unfiltered/paginate_effective_r_tab_all.docx",
              pr_section = prop_section(
                page_size = page_size(
-                 orient = "landscape", width = 18.3, height = 21.7
+                 orient = "landscape", width = 19, height = 12
                ),
-               type = "continuous", page_margins = page_mar()
+               type = "continuous", page_margins = page_mar(bottom = 0,
+                                                            top = 0,
+                                                            right = 0,
+                                                            left = 0,
+                                                            gutter = 0)
              ))
 
 # For the basic reproduction number, summary table giving the range of central
