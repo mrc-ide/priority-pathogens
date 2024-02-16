@@ -30,7 +30,8 @@ orderly_artefact(
     "Severity_tables/qa_filtered/range_outbreak_country.png",
     "Severity_tables/qa_filtered/range_country_outbreak.png",
     "Severity_tables/qa_filtered/range_species_outbreak.png",
-    "Severity_tables/unfiltered/tab_unfiltered.png"
+    "Severity_tables/unfiltered/tab_unfiltered.png",
+    "Severity_tables/unfiltered/paginate_severity_all.docx"
   )
 )
 
@@ -316,6 +317,23 @@ save_as_image(severity_table_qa,
 save_as_image(severity_table_all,
   path = "Severity_tables/unfiltered/tab_unfiltered.png"
 )
+
+
+# Paginate the severity table
+p_severity <- autofit(severity_table_all) |> paginate()
+
+# Make sure to remove white space by adjusting width and height
+save_as_docx(p_severity, path = "Severity_tables/unfiltered/paginate_severity_all.docx",
+             pr_section = prop_section(
+               page_size = page_size(
+                 orient = "landscape", width = 22, height = 17.5
+               ),
+               type = "continuous", page_margins = page_mar(bottom = 0,
+                                                            top = 0,
+                                                            right = 0,
+                                                            left = 0,
+                                                            gutter = 0)
+             ))
 
 
 # Create summary tables giving the range of central values by specified groups

@@ -46,7 +46,7 @@ orderly_dependency("ebola_seroprevalence",
                    files = c("Seroprevalence_tables/tab_unfiltered.png"))
 orderly_dependency("ebola_severity",
                    "latest(parameter:pathogen == this:pathogen)",
-                   files = c("Severity_tables/unfiltered/tab_unfiltered.png"))
+                   files = c("Severity_tables/unfiltered/paginate_severity_all.docx"))
 orderly_dependency("ebola_mutations",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Mutation_results/qa_unfiltered/table.png"))
@@ -158,9 +158,13 @@ file.copy(from = "Risk_tables/risk_factors_for_serology.png",
 ## SEVERITY ##
 ##############
 
-# Unfiltered table for CFR?
-file.copy(from = "Severity_tables/unfiltered/tab_unfiltered.png",
-          to = "Supplementary_figures/severity_table.png")
+# Unfiltered table for CFR
+
+# This doesn't work for me so will have to manually convert to pdf:
+#docx2pdf("Severity_tables/unfiltered/paginate_severity_all.docx")
+
+file.copy(from = "Severity_tables/unfiltered/paginate_severity_all.docx",
+          to = "Supplementary_figures/severity_table.docx")
 
 # Risk factors associated with severity: death, symptoms, severe disease, recovery
 rf_symptoms <- png::readPNG("Risk_tables/risk_factors_for_symptoms.png")
@@ -171,14 +175,14 @@ rf_recovery <- png::readPNG("Risk_tables/protective_factors_for_recovery.png")
 # Risk factors to refer to in text (saving them to remember to do this!)
 tab1 <- rasterGrob(rf_symptoms)
 tab2 <- rasterGrob(rf_severe_disease)
-rf_severity_text <- grid.arrange(tab1, tab2, ncol = 1)
-ggsave("Supplementary_figures/risk_factors_severity_text.png", rf_severity_text, width = 3, height = 2)
+ggsave("Supplementary_figures/risk_factors_severity_text.png",
+       grid.arrange(tab1, tab2, ncol = 1), width = 3, height = 2)
 
 # Risk factors for death and protective factors for recovery
 tab3 <- rasterGrob(rf_death, width = 1)
 tab4 <- rasterGrob(rf_recovery, width = 0.8)
-rf_severity <- grid.arrange(tab3, tab4, ncol = 1)
-ggsave("Supplementary_figures/risk_factors_severity.png", rf_severity, width = 8, height = 5)
+ggsave("Supplementary_figures/risk_factors_severity.png",
+       grid.arrange(tab3, tab4, ncol = 1), width = 8, height = 5)
 
 ###############
 ## MUTATIONS ##
