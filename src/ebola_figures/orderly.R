@@ -3,6 +3,7 @@
 orderly_strict_mode()
 
 library(png)
+library(cowplot)
 
 orderly_parameters(pathogen = "EBOLA")
 
@@ -58,9 +59,9 @@ t2 <- png::readPNG("Severity_tables/qa_filtered/range_outbreak_country.png")
 t3 <- png::readPNG("Delay_tables/qa_filtered/select_ranges_table.png")
 
 # Create plots for each image
-plot1 <- rasterGrob(t1, width = 0.8)
-plot2 <- rasterGrob(t2, width = 0.8)
-plot3 <- rasterGrob(t3, width = 0.8)
+plot1 <- rasterGrob(t1, width = 0.85)
+plot2 <- rasterGrob(t2, width = 0.85)
+plot3 <- rasterGrob(t3, width = 0.85)
 
 heights <- c(
   heightDetails(plot1),
@@ -71,8 +72,18 @@ heights <- c(
 # Normalise the heights to make them proportional
 p_heights <- heights / sum(heights)
 
-# Arrange and display the plots in a grid
-rf <- grid.arrange(plot1, plot2, plot3, ncol = 1, heights = p_heights)
+# Arrange and display the plots in a grid with panel labels
+range_tables <- plot_grid(
+  plot1, plot2, plot3,
+  labels = c("A", "B", "C"),
+  label_size = 12,
+  label_x = 0, label_y = c(0.9, 0.94, 0.9),
+  hjust = -0.5, vjust = -0.5,
+  ncol = 1,
+  rel_heights = p_heights) +
+  theme(plot.background = element_rect(color = "white", fill = "white"),
+        plot.margin  = margin(0, 0, 0, 0)
+  )
 
-ggsave("Manuscript_figures/combined_range_tables.png", rf, width = 8, height = 14)
+ggsave("Manuscript_figures/combined_range_tables.png", range_tables, width = 8, height = 14.5)
 
