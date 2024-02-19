@@ -7,6 +7,7 @@ library(flextable)
 library(grid)
 library(gridExtra)
 library(ggplot2)
+library(cowplot)
 
 orderly_strict_mode()
 
@@ -17,7 +18,8 @@ orderly_artefact(
   c(
     "Supplementary_figures/basic_r_table.docx",
     "Supplementary_figures/effective_r_table.docx",
-    "Supplementary_figures/seroprevalence_table.png",
+    "Supplementary_figures/seroprevalence_history.png",
+    "Supplementary_figures/seroprevalence_no_history.png",
     "Supplementary_figures/mutations_table.png",
     "Supplementary_figures/primary_attack_rate_table.png",
     "Supplementary_figures/secondary_attack_rate_table.png",
@@ -44,7 +46,8 @@ orderly_dependency("ebola_reproduction_number",
                              "R_tables/unfiltered/paginate_effective_r_tab_all.docx"))
 orderly_dependency("ebola_seroprevalence",
                    "latest(parameter:pathogen == this:pathogen)",
-                   files = c("Seroprevalence_tables/tab_unfiltered.png"))
+                   files = c("Seroprevalence_tables/seroprevalence_history.png",
+                             "Seroprevalence_tables/seroprevalence_no_history.png"))
 orderly_dependency("ebola_severity",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Severity_tables/unfiltered/paginate_severity_all.docx"))
@@ -150,9 +153,14 @@ file.copy(from = "Meta_plots/meta_delays_variance_unfiltered.png",
 ## SEROPREVALENCE ##
 ####################
 
-# Unfiltered table
-file.copy(from = "Seroprevalence_tables/tab_unfiltered.png",
-          to = "Supplementary_figures/seroprevalence_table.png")
+# Unfiltered table for countries with history of officially reported EVD cases
+file.copy(from = "Seroprevalence_tables/seroprevalence_history.png",
+          to = "Supplementary_figures/seroprevalence_history.png")
+
+# Unfiltered table for countries with NO history of officially reported EVD cases
+# OR multi-country analyses (including countries with and without history)
+file.copy(from = "Seroprevalence_tables/seroprevalence_no_history.png",
+          to = "Supplementary_figures/seroprevalence_no_history.png")
 
 # Risk factors for serology
 file.copy(from = "Risk_tables/risk_factors_for_serology.png",
@@ -185,8 +193,21 @@ ggsave("Supplementary_figures/risk_factors_severity_text.png",
 # Risk factors for death and protective factors for recovery
 tab3 <- rasterGrob(rf_death, width = 1)
 tab4 <- rasterGrob(rf_recovery, width = 0.8)
-ggsave("Supplementary_figures/risk_factors_severity.png",
-       grid.arrange(tab3, tab4, ncol = 1), width = 8, height = 5)
+
+labeled_sev <- plot_grid(
+  tab3, tab4,
+  labels = c("A", "B"),
+  label_size = 12,
+  label_x = 0, label_y = c(1.1, 0.75),
+  hjust = -0.5, vjust = -0.5,
+  ncol = 1) +
+  theme(
+    plot.background = element_rect(color = "white", fill = "white"),
+    plot.margin = margin(30, 0, 0, 0)
+    )
+
+ggsave("Supplementary_figures/risk_factors_severity.png", labeled_sev, width = 8, height = 4.5)
+
 
 ###############
 ## MUTATIONS ##
