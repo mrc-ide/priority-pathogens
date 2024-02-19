@@ -174,24 +174,24 @@ inf_table <- infection_dat %>%
 
 save_as_image(inf_table, path = "Risk_tables/risk_factors_for_infection.png")
 
-######################################
-# Risk factors for Serology (n = 44) #
-######################################
+############################################
+# Risk factors for Seropositivity (n = 44) #
+############################################
 
 serology_dat <- rf_dat %>%
   filter(riskfactor_outcome %in% "Serology") %>%
-  mutate(`Risk Factor for Serology` = riskfactor_name)
+  mutate(`Risk Factor for Seropositivity` = riskfactor_name)
 
 table(serology_dat$riskfactor_name, useNA = "ifany")
 
 sero_table <- serology_dat %>%
-  separate_rows(`Risk Factor for Serology`, sep = ";") %>%
-  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Serology`) %>%
+  separate_rows(`Risk Factor for Seropositivity`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Seropositivity`) %>%
   summarise(count = n()) %>%
   pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
               values_from = count, values_fill = 0) %>%
   mutate(Total = rowSums(across(-1))) %>%
-  arrange(ifelse(`Risk Factor for Serology` %in% "Other", Inf, desc(Total))) %>%
+  arrange(ifelse(`Risk Factor for Seropositivity` %in% "Other", Inf, desc(Total))) %>%
   flextable() %>%
   split_header() %>%
   span_header() %>%
