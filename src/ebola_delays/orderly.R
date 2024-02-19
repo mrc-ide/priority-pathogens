@@ -21,7 +21,6 @@ library(cowplot)
 orderly_strict_mode()
 
 orderly_parameters(pathogen = "EBOLA")
-# orderly_parameters(pathogen = NULL)
 
 orderly_artefact(
   "Plots, tables and meta_analysis for delay parameters",
@@ -878,7 +877,7 @@ sotd_var_ma_qa <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 6000, res = 1000)
+png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
 forest.meta(sotd_var_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -974,7 +973,7 @@ serial_var_ma_qa <- metamean(
   method.tau = "ML"
 )
 
-png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3800, res = 1000)
+png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3600, res = 1000)
 forest.meta(serial_var_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -1024,5 +1023,28 @@ p_heights_qa <- heights_qa / sum(heights_qa)
 md_var <- grid.arrange(plot1_var, plot2_var, plot3_var, ncol = 1, heights = p_heights_var)
 md_qa <- grid.arrange(plot1_qa, plot2_qa, plot3_qa, ncol = 1, heights = p_heights_qa)
 
+
+md_var <- plot_grid(
+  plot1_var, plot2_var, plot3_var,
+  labels = c("A", "B", "C"),
+  label_size = 12,
+  label_x = 0, label_y = c(0.9, 0.9, 0.88),
+  hjust = -0.5, vjust = -0.5,
+  ncol = 1,
+  rel_heights = p_heights_var) +
+  theme(plot.background = element_rect(color = "white", fill = "white")
+  )
+
+md_qa <- plot_grid(
+  plot1_qa, plot2_qa, plot3_qa,
+  labels = c("A", "B", "C"),
+  label_size = 12,
+  label_x = 0, label_y = c(0.9, 0.8, 0.85),
+  hjust = -0.5, vjust = -0.5,
+  ncol = 1,
+  rel_heights = p_heights_qa) +
+  theme(plot.background = element_rect(color = "white", fill = "white")
+  )
+
 ggsave("Meta_plots/meta_delays_variance_unfiltered.png", plot = md_var, width = 7, height = 10)
-ggsave("Meta_plots/meta_delays_variance_QAfiltered.png", plot = md_qa, width = 7, height = 10)
+ggsave("Meta_plots/meta_delays_variance_QAfiltered.png", plot = md_qa, width = 7, height = 8.5)
