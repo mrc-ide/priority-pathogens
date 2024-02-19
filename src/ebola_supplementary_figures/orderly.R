@@ -28,6 +28,7 @@ orderly_artefact(
     "Supplementary_figures/risk_factors_serology.png",
     "Supplementary_figures/risk_factors_severity.png",
     "Supplementary_figures/risk_factors_severity_text.png", # can remove this later
+    "Supplementary_figures/risk_factors_onward_transmission.png",
     "Supplementary_figures/delays_symptom_onset_to_X.png",
     "Supplementary_figures/delays_admission_to_X.png",
     "Supplementary_figures/delays_infection_process.png",
@@ -71,7 +72,8 @@ orderly_dependency("ebola_risk_factors",
                              "Risk_tables/protective_factors_for_recovery.png",
                              "Risk_tables/risk_factors_for_severe_disease.png",
                              "Risk_tables/risk_factors_for_symptoms.png",
-                             "Risk_tables/other_risk_factor_outcomes.png"))
+                             "Risk_tables/other_risk_factor_outcomes.png",
+                             "Risk_tables/risk_factors_for_onward_transmission.png"))
 orderly_dependency("ebola_delays",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Delay_plots/unfiltered/symp_plot_unfiltered_SPLIT.png",
@@ -116,6 +118,8 @@ file.copy(from = "Overdispersion_results/table.png",
 # Risk factors for infection
 file.copy(from = "Risk_tables/risk_factors_for_infection.png",
           to = "Supplementary_figures/risk_factors_infection.png")
+file.copy(from = "Risk_tables/risk_factors_for_onward_transmission.png",
+          to = "Supplementary_figures/risk_factors_onward_transmission.png")
 
 # Other risk factor outcomes considered in papers
 file.copy(from = "Risk_tables/other_risk_factor_outcomes.png",

@@ -26,7 +26,8 @@ orderly_artefact(
     "Risk_tables/protective_factors_for_recovery.png",
     "Risk_tables/risk_factors_for_severe_disease.png",
     "Risk_tables/risk_factors_for_symptoms.png",
-    "Risk_tables/other_risk_factor_outcomes.png"
+    "Risk_tables/other_risk_factor_outcomes.png",
+    "Risk_tables/risk_factors_for_onward_transmission.png"
   )
 )
 
@@ -326,6 +327,7 @@ test_other <- other_dat %>% select(
   riskfactor_significant, riskfactor_adjusted, doi, notes
 )
 
+
 outcome_summary <- other_dat %>%
   group_by(other_rf_outcome) %>%
   summarise(
@@ -355,3 +357,58 @@ other_rf_outcomes_ft <- outcome_summary %>%
   align_nottext_col(align = "right")
 
 save_as_image(other_rf_outcomes_ft, path = "Risk_tables/other_risk_factor_outcomes.png")
+
+## Risk factors associated with onward transmission:
+
+onward_transmission_dat <- other_dat %>%
+  filter(other_rf_outcome %in% "Onward transmission") %>%
+  mutate(
+    riskfactor_name =
+      case_when(
+        riskfactor_name %in% "Other" &
+          riskfactor_significant %in% "Not significant" ~ "Location (rural/urban)",
+        # "There was no significant association between urban or rural
+        # location and number of subsequent cases."
+        riskfactor_name %in% "Age;Funeral;Hospitalisation;Other" ~
+          "Age;Funeral;Hospitalisation;Sex;Survival;First generation of transmission chain",
+        # We found significant associations with the number of secondary cases
+        # generated of the following characteristics: sex, outcome (survival/burial/ETU),
+        # age category, and being the first generation of a chain
+        # Age: "We found that children and young adults had lower onward
+        # transmission, whereas infections in older adults were more likely
+        # to result in large numbers of secondary cases.
+        # Burial and hospitalisation: Attending an ETU was associated with a
+        # large decrease in the number of transmission events, and unsafe burial
+        # was associated with an almost 2-fold increase in number of transmissions.
+        # First gen: We found that the first generation of each chain was associated
+        # with a higher number of secondary cases than those identified later in the chain.
+        riskfactor_name %in% "Other" &
+          riskfactor_significant %in% "Significant" ~ "Socioeconomic status",
+        # "Overcrowding and lack of education on how the disease is transmitted
+        # could explain the observed differences in number of secondary cases."
+        TRUE ~ riskfactor_name),
+        `Risk Factor for Onward Transmission` = riskfactor_name
+    )
+
+onw_transm_table <- onward_transmission_dat %>%
+  separate_rows(`Risk Factor for Onward Transmission`, sep = ";") %>%
+  group_by(riskfactor_significant, riskfactor_adjusted, `Risk Factor for Onward Transmission`) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = c(riskfactor_significant, riskfactor_adjusted),
+              values_from = count, values_fill = 0) %>%
+  flextable() %>%
+  split_header() %>%
+  span_header() %>%
+  fontsize(i = 1:2, size = 12, part = "header") %>%
+  autofit() %>%
+  theme_booktabs() %>%
+  bold(i = 1:2, bold = TRUE, part = "header") %>%
+  add_footer_lines("") %>%
+  vline(j = c(1, 2, 3)) %>%
+  border_inner_h(part = "header") %>%
+  border_outer() %>%
+  align(align = "left", part = "all") %>%
+  align_nottext_col(align = "center") %>%
+  line_spacing(i = 1:2, space = 1.5, part = "header")
+
+save_as_image(onw_transm_table, path = "Risk_tables/risk_factors_for_onward_transmission.png")
