@@ -19,7 +19,9 @@ orderly_artefact(
   c(
     "Seroprevalence_plots/plot_filtered.png",
     "Seroprevalence_tables/tab_filtered.png",
-    "Seroprevalence_tables/tab_unfiltered.png"
+    "Seroprevalence_tables/tab_unfiltered.png",
+    "Seroprevalence_tables/seroprevalence_history.png",
+    "Seroprevalence_tables/seroprevalence_no_history.png"
   )
 )
 
@@ -74,7 +76,20 @@ sero_dat <- df %>%
                "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
                "Sep", "Oct", "Nov", "Dec"
              )
-      )
+      ),
+    # split by history of officially reported EVD cases
+    outbreak_history =
+      case_when(
+        population_country %in% c("Gabon", "Sudan", "South Sudan", "DRC",
+                                  "Republic of the Congo", "Guinea",
+                                  "Sierra Leone", "Liberia", "Uganda",
+                                  "Guinea, Liberia, Sierra Leone") ~ "Yes",
+        population_country %in% c("Mali", "Cameroon", "United Kingdom",
+                                  "Kenya", "Central African Republic",
+                                  "Madagascar", "Tanzania", "Djibouti") ~ "No",
+        population_country %in% c("Multi-country: Africa (n = 6)",
+                                  "Multi-country: Africa (n = 5)") ~ "Both",
+        TRUE ~ NA)
   ) %>%
   # modify standard deviation and standard error to visualise uncertainty in plots
 mutate(
@@ -185,6 +200,26 @@ sero_table_all <- create_table(
   qa_filter = FALSE
 )
 
+sero_dat_history <- sero_dat %>%
+  filter(outbreak_history %in% "Yes")
+
+sero_table_history <- create_table(
+  sero_dat_history,
+  param = parameter,
+  group = "parameter_type",
+  qa_filter = FALSE
+)
+
+sero_dat_no_history <- sero_dat %>%
+  filter(outbreak_history %in% c("No", "Both"))
+
+sero_table_no_history <- create_table(
+  sero_dat_no_history,
+  param = parameter,
+  group = "parameter_type",
+  qa_filter = FALSE
+)
+
 # Save
 save_as_image(sero_table_qa,
               path = "Seroprevalence_tables/tab_filtered.png"
@@ -192,4 +227,12 @@ save_as_image(sero_table_qa,
 
 save_as_image(sero_table_all,
               path = "Seroprevalence_tables/tab_unfiltered.png"
+)
+
+save_as_image(sero_table_history,
+              path = "Seroprevalence_tables/seroprevalence_history.png"
+)
+
+save_as_image(sero_table_no_history,
+              path = "Seroprevalence_tables/seroprevalence_no_history.png"
 )
