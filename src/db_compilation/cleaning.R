@@ -40,12 +40,21 @@ clean_dfs <- function(df, pathogen) {
     ######################################
 
     if (pathogen == "EBOLA") {
-      # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
-      # discussion with co-authors)
       df <- df %>%
+        filter(!covidence_id %in% 12389) %>% # model only paper (growth model)
         mutate(
+          # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
+          # discussion with co-authors)
           qa_m1 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_m1),
           qa_a3 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_a3),
+          # add missing qa score for 17054
+          qa_m1 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m1),
+          qa_m2 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m2),
+          qa_a3 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a3),
+          qa_a4 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a4),
+          qa_d5 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d5),
+          qa_d6 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d6),
+          qa_d7 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d7),
           # clean up author names (remove initials and fully capitalised names)
           first_author_surname = str_replace(first_author_surname, "\\b[A-Z]\\.", ""),
           first_author_surname = case_when(
@@ -53,6 +62,8 @@ clean_dfs <- function(df, pathogen) {
             first_author_surname %in% "R Glynn" ~ "Glynn",
             first_author_surname %in% "JUGA" ~ "Juga",
             first_author_surname %in% "KI" ~ "Ki",
+            first_author_surname %in% "Area\r\nArea" ~ "Area",
+            first_author_surname %in% "DAUTEL" ~ "Dautel",
             TRUE ~ first_author_surname
           ),
           # Fix issues with dois
