@@ -49,6 +49,9 @@ orderly_run("ebola_growth_rate", parameters = list(pathogen = "EBOLA"))
 # Doubling time
 orderly_run("ebola_doubling_time", parameters = list(pathogen = "EBOLA"))
 
+# Models
+orderly_run("ebola_models", parameters = list(pathogen = "EBOLA"))
+
 ###################################################
 ## FIGURES & TABLES FOR MANUSCRIPT & SUPPLEMENTS ##
 ###################################################
@@ -58,5 +61,4 @@ orderly_run("ebola_figures", parameters = list(pathogen = "EBOLA"))
 
 # Figures and tables for supplementary material
 orderly_run("ebola_supplementary_figures", parameters = list(pathogen = "EBOLA"))
-
 

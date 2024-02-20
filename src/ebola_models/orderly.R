@@ -14,6 +14,7 @@ library(janitor)
 library(stringr)
 library(scales)
 library(epitrix)
+library(doconv)
 
 orderly_strict_mode()
 
@@ -21,7 +22,10 @@ orderly_strict_mode()
 orderly_artefact(
   "Tables for ebola models",
   c(
-    "EDIT THIS.png"
+    "Model_results/overview_table.docx",
+    "Model_results/overview_table.pdf",
+    "Model_results/model_type_table.png",
+    "Model_results/assumptions_table.png"
   )
 )
 
@@ -86,9 +90,6 @@ model_dat <- df %>%
     assumptions = gsub("Heterogenity", "Heterogeneity", assumptions),
     assumptions = gsub("period is same", "period the same", assumptions),
     assumptions = gsub("- ", "", assumptions),
-    assumptions = 
-      case_when(is.na(assumptions) ~ "Unspecified",
-                TRUE ~ assumptions),
     stoch_deter =
       case_when(
         is.na(stoch_deter) & model_type %in% "Branching process" ~ "Stochastic",
@@ -124,7 +125,14 @@ set_flextable_defaults(background.color = "white", na.string = "")
 
 model_tbl <- model_dat %>%
   mutate(
-    assumptions = gsub(";", ", ", assumptions)
+    assumptions = gsub(";", ", ", assumptions),
+    assumptions = gsub("Heterogeneity in transmission rates between groups, Heterogeneity in transmission rates over time",
+                       "Heterogeneity in transmission rates between groups and over time", assumptions),
+    assumptions =
+      case_when(assumptions %in%
+                  "Heterogeneity in transmission rates between groups, Latent period the same as incubation period, Heterogeneity in transmission rates over time" ~
+                  "Heterogeneity in transmission rates between groups and over time, Latent period the same as incubation period",
+                TRUE ~ assumptions)
   ) %>%
   select(c(
     Article = article_label,
@@ -165,7 +173,21 @@ model_tbl <- model_dat %>%
   align(align = "left", part = "all") %>%
   line_spacing(i = 1, space = 1.5, part = "header")
 
-save_as_image(model_tbl, path = "Model_results/overview_table.png")
+# Paginate the model table
+p_model_tbl <- autofit(model_tbl) |> paginate()
+
+# Make sure to remove white space by adjusting width and height
+# Can only save paginated version to docx or rtf
+save_as_docx(p_model_tbl, path = "Model_results/overview_table.docx",
+             pr_section = prop_section(
+               page_size = page_size(orient = "landscape", width = 22, height = 16),
+               type = "continuous",
+               page_margins = page_mar(bottom = 0, top = 0, right = 0, left = 0, gutter = 0)
+             ))
+
+# Then convert to pdf
+docx2pdf("Model_results/overview_table.docx",
+         output = "Model_results/overview_table.pdf")
 
 # Model type summary
 set_flextable_defaults(background.color = "white", na.string = "")
