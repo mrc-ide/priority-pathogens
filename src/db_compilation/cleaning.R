@@ -211,13 +211,19 @@ clean_dfs <- function(df, pathogen) {
       # edit ebola_variant names
       df <- df %>%
         mutate(
+          model_type = case_when(
+            covidence_id %in% 5005 & model_type %in% "Unspecified" ~
+              "Agent / Individual based", TRUE ~ model_type
+          ),
           ebola_variant = case_when(
             covidence_id %in% 15947 ~ "Bundibugyo virus (BDBV)",
             covidence_id %in% 5675 ~
               "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
             TRUE ~ ebola_variant
           )
-        )
+        ) %>%
+        # group decision to remove compartmental type because it's inconsistent
+        select(-compartmental_type)
     }
 
     if (pathogen == "LASSA") {
@@ -399,6 +405,13 @@ clean_dfs <- function(df, pathogen) {
         filter(!(covidence_id %in% 3681 & parameter_class %in% "Attack rate")) %>%
         # Remove seroprevalence parameters that cannot be found in the paper
         filter(!(covidence_id %in% c(2470, 2532) & parameter_class %in% "Seroprevalence")) %>%
+        # Remove delay parameter where table and text don't match
+        filter(!(covidence_id %in% 15544 & parameter_class %in% "Human delay")) %>%
+        # Remove reproduction number entry without values
+        filter(!(covidence_id %in% 4966 & parameter_class %in% "Reproduction number")) %>%
+        # Remove severity estimates - 23507 = incorrect entry, 5654 = dupe of
+        # separate Cherif 2018 but less info, 2124 = dupe of separate Sadek 1999 but less info
+        filter(!(covidence_id %in% c(23507, 5654, 2124) & parameter_class %in% "Severity")) %>%
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(

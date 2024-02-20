@@ -72,9 +72,6 @@ sev_dat <- df %>%
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE) %>%
-  filter(!covidence_id == 23507) %>% # incorrect entry
-  filter(!covidence_id == 5654) %>% # dupe of separate Cherif 2018, but less info
-  filter(!covidence_id == 2124) %>% # dupe of separate Sadek 1999, but less info
   group_by(parameter_type) %>%
   mutate(
     article_label_unique = make.unique(article_label),

@@ -84,7 +84,6 @@ df_plot <- df %>%
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE) %>%
-  filter(!covidence_id %in% 4966) %>% # entry without values
   group_by(parameter_type) %>%
   mutate(
     parameter_type_short =

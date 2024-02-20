@@ -96,10 +96,6 @@ delay_dat <- df %>%
   ) %>%
   filter(parameter_class %in% parameter) %>%
   filter(!parameter_from_figure %in% TRUE) %>%
-  # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
-  filter(!(covidence_id %in% 17715)) %>%
-  # Remove Baller 2022 - table and text don't match
-  filter(!(covidence_id %in% 15544)) %>%
   mutate(
     article_label_unique = make.unique(article_label),
     article_label =
@@ -401,7 +397,9 @@ adm_plot_unf <- create_plot(
 
 # Infection process with qa_filter of >=50
 infp_dat <- ordered_dat %>%
-  filter(delay_start %in% "Infection process") %>%
+  filter(delay_start %in% "Infection process" &
+         # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
+         !covidence_id %in% 17715) %>%
   mutate(
     delay_short =
       factor(delay_short,
@@ -754,6 +752,8 @@ save_as_image(selection_ranges_outbreak,
 
 meta_dat <- delay_dat %>%
   filter(
+    # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
+    !covidence_id %in% 17715,
     !is.na(parameter_value),
     !is.na(population_sample_size),
     !is.na(parameter_uncertainty_singe_type) | !is.na(parameter_uncertainty_type),

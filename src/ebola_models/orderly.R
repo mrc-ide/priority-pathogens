@@ -60,10 +60,6 @@ df <- left_join(
   arrange(article_label, -year_publication)
 
 model_dat <- df %>%
-  # remove unspecified model
-  filter(!model_type %in% "Unspecified") %>%
-  # remove compartmental type because it's inconsistent (move this to cleaning.R?)
-  select(-compartmental_type) %>%
   mutate(
   # group other and combinations of models together
     model_type = gsub(";", " & ", model_type),
