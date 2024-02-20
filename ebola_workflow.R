@@ -52,6 +52,9 @@ orderly_run("ebola_doubling_time", parameters = list(pathogen = "EBOLA"))
 # Models
 orderly_run("ebola_models", parameters = list(pathogen = "EBOLA"))
 
+# Summary: list of parameters and QA scores
+orderly_run("ebola_summary", parameters = list(pathogen = "EBOLA"))
+
 ###################################################
 ## FIGURES & TABLES FOR MANUSCRIPT & SUPPLEMENTS ##
 ###################################################

@@ -50,7 +50,11 @@ orderly_artefact(
     # Models
     "Supplementary_figures/models_table.pdf",
     "Supplementary_figures/models_assumptions.png",
-    "Supplementary_figures/models_types.png"
+    "Supplementary_figures/models_types.png",
+    # Summary
+    "Supplementary_figures/parameter_type_table.png",
+    "Supplementary_figures/parameter_group_table.png",
+    "Supplementary_figures/parameter_qa_scores.png"
   )
 )
 
@@ -104,6 +108,11 @@ orderly_dependency("ebola_models",
                    files = c("Model_results/overview_table.pdf",
                              "Model_results/assumptions_table.png",
                              "Model_results/model_type_table.png"))
+orderly_dependency("ebola_summary",
+                   "latest(parameter:pathogen == this:pathogen)",
+                   files = c("Summary_results/parameter_type_table.png",
+                             "Summary_results/parameter_group_table.png",
+                             "Summary_results/parameter_qa_scores.png"))
 
 dir.create("Supplementary_figures") # copy this folder across to overleaf
 
@@ -249,4 +258,21 @@ file.copy(from = "Model_results/assumptions_table.png",
 # table of model types
 file.copy(from = "Model_results/model_type_table.png",
           to = "Supplementary_figures/models_types.png")
+
+
+#############
+## SUMMARY ##
+#############
+
+# parameter type table
+file.copy(from = "Summary_results/parameter_type_table.png",
+          to = "Supplementary_figures/parameter_type_table.png")
+
+# parameter group table
+file.copy(from = "Summary_results/parameter_group_table.png",
+          to = "Supplementary_figures/parameter_group_table.png")
+
+# qa scores
+file.copy(from = "Summary_results/parameter_qa_scores.png",
+          to = "Supplementary_figures/parameter_qa_scores.png")
 
