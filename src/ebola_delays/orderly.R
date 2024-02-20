@@ -102,13 +102,6 @@ delay_dat <- df %>%
       case_when(article_label == "WHO/International Study Team 1978" ~
         "WHO/Int. Study Team 1978", TRUE ~ article_label),
     outbreak = order_ebola_outbreaks(outbreak),
-    delay_short = str_replace(delay_short, "\\bigg\\b", "IgG"),
-    delay_short = str_replace(delay_short, "\\bigm\\b", "IgM"),
-    delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
-    delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
-    delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
-    delay_short = str_replace(delay_short, "IgM antibody detection", "antibody detection (IgM/IgG)"),
-    delay_short = str_replace(delay_short, "IgG antibody detection", "antibody detection (IgM/IgG)"),
     population_study_start_month =
       factor(population_study_start_month,
         levels = c(
