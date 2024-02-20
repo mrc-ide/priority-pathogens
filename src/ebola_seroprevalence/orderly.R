@@ -220,6 +220,19 @@ sero_table_no_history <- create_table(
   qa_filter = FALSE
 )
 
+sero_range_history <- create_range_table(sero_dat_history, 
+                                         main_group = "population_country", 
+                                         main_group_label = "Country",
+                                         sub_group = "population_sample_type", 
+                                         sub_group_label = "Sample Type", 
+                                         qa_filter = FALSE, rounding = "none")
+
+sero_range_no_history <- create_range_table(sero_dat_no_history, 
+                                            main_group = "population_country", 
+                                            main_group_label = "Country",
+                                            sub_group = "population_sample_type", 
+                                            sub_group_label = "Sample Type", 
+                                            qa_filter = FALSE, rounding = "none")
 # Save
 save_as_image(sero_table_qa,
               path = "Seroprevalence_tables/tab_filtered.png"
@@ -235,4 +248,12 @@ save_as_image(sero_table_history,
 
 save_as_image(sero_table_no_history,
               path = "Seroprevalence_tables/seroprevalence_no_history.png"
+)
+
+save_as_image(sero_range_history,
+              path = "Seroprevalence_tables/range_history.png"
+)
+
+save_as_image(sero_range_no_history,
+              path = "Seroprevalence_tables/range_no_history.png"
 )
