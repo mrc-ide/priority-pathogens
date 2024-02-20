@@ -587,6 +587,11 @@ clean_dfs <- function(df, pathogen) {
                 "Admission to care to death/discharge",
               TRUE ~ delay_short
             ),
+          delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
+          delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
+          delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
+          delay_short = str_replace(delay_short, "igg antibody detection", "antibody detection (IgM/IgG)"),
+          delay_short = str_replace(delay_short, "igm antibody detection", "antibody detection (IgM/IgG)"),
           delay_start =
             case_when(
               startsWith(delay_short, "Admission to care") ~ "Admission to care",
