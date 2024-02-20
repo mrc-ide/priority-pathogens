@@ -5,6 +5,7 @@ library(orderly2)
 library(orderly.sharedfile)
 library(purrr)
 library(readr)
+library(stringr)
 
 ## pathogen should be set to one of our priority-pathogens
 ## use capital case; see code below where this pathogen
