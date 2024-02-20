@@ -282,6 +282,22 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
     }
     
     if (param == "Severity") {
+      sev_labels <- data.frame(
+        key = c(
+          "Outbreak", "Country", "Survey date",
+          "Central estimate", "Numerator", "Denominator",
+          "Central range", "Uncertainty", "Uncertainty type", "Adjustment",
+          "Population Sample", "Disaggregated by",
+          "Article", "QA score (%)"
+        ),
+        label = c(
+          "Outbreak", "Country", "Survey date",
+          "Central estimate", "Deaths", "Cases",
+          "Central range", "Uncertainty", "Uncertainty type", "Adjustment",
+          "Population Sample", "Disaggregated by",
+          "Article", "QA score (%)"
+        )
+      )
       r_tbl <- r_tbl %>% as_flextable(
         col_keys = c(
           "Outbreak", "Country", "Survey date",
@@ -291,7 +307,11 @@ create_table <- function(df, param = NA, r_type = NA, delay_type = NA,
           "Article", "QA score (%)"
         ),
         hide_grouplabel = TRUE
-      )
+      ) %>%
+        set_header_df(
+          mapping = sev_labels,
+          key = "key"
+        )
     }
     
     if (param == "Human delay") {
