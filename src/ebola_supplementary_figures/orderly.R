@@ -16,41 +16,56 @@ orderly_parameters(pathogen = "EBOLA")
 orderly_artefact(
   "Figures and tables for the supplementary material",
   c(
-    "Supplementary_figures/basic_r_table.docx",
-    "Supplementary_figures/effective_r_table.docx",
+    # R
+    "Supplementary_figures/basic_r_table.pdf",
+    "Supplementary_figures/effective_r_table.pdf",
+    # CFR
+    "Supplementary_figures/severity_table.pdf",
+    # Seroprevalence
     "Supplementary_figures/seroprevalence_history.png",
     "Supplementary_figures/seroprevalence_no_history.png",
+    # Mutations
     "Supplementary_figures/mutations_table.png",
+    # Attack rate
     "Supplementary_figures/primary_attack_rate_table.png",
     "Supplementary_figures/secondary_attack_rate_table.png",
+    # Growth rate
     "Supplementary_figures/growth_rate_table.png",
+    # Overdispersion
     "Supplementary_figures/overdispersion_table.png",
+    # Doubling time
     "Supplementary_figures/doubling_time_table.png",
+    # Risk factors
     "Supplementary_figures/risk_factors_infection.png",
     "Supplementary_figures/risk_factors_serology.png",
     "Supplementary_figures/risk_factors_severity.png",
     "Supplementary_figures/risk_factors_severity_text.png", # can remove this later
     "Supplementary_figures/risk_factors_onward_transmission.png",
+    # Delays
     "Supplementary_figures/delays_symptom_onset_to_X.png",
     "Supplementary_figures/delays_admission_to_X.png",
     "Supplementary_figures/delays_infection_process.png",
     "Supplementary_figures/delays_death_to_burial.png",
-    "Supplementary_figures/delays_meta_analysis.png"
+    "Supplementary_figures/delays_meta_analysis.png",
+    # Models
+    "Supplementary_figures/models_table.pdf",
+    "Supplementary_figures/models_assumptions.png",
+    "Supplementary_figures/models_types.png"
   )
 )
 
 # Get figures/tables from tasks
 orderly_dependency("ebola_reproduction_number",
                    "latest(parameter:pathogen == this:pathogen)",
-                   files = c("R_tables/unfiltered/paginate_basic_r_tab_all.docx",
-                             "R_tables/unfiltered/paginate_effective_r_tab_all.docx"))
+                   files = c("R_tables/unfiltered/paginate_basic_r_tab_all.pdf",
+                             "R_tables/unfiltered/paginate_effective_r_tab_all.pdf"))
 orderly_dependency("ebola_seroprevalence",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Seroprevalence_tables/seroprevalence_history.png",
                              "Seroprevalence_tables/seroprevalence_no_history.png"))
 orderly_dependency("ebola_severity",
                    "latest(parameter:pathogen == this:pathogen)",
-                   files = c("Severity_tables/unfiltered/paginate_severity_all.docx"))
+                   files = c("Severity_tables/unfiltered/paginate_severity_all.pdf"))
 orderly_dependency("ebola_mutations",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Mutation_results/qa_unfiltered/table.png"))
@@ -84,6 +99,11 @@ orderly_dependency("ebola_delays",
                              "Delay_plots/unfiltered/infp_plot_unfiltered.png",
                              "Delay_plots/unfiltered/dtb_plot_unfiltered.png",
                              "Meta_plots/meta_delays_variance_unfiltered.png"))
+orderly_dependency("ebola_models",
+                   "latest(parameter:pathogen == this:pathogen)",
+                   files = c("Model_results/overview_table.pdf",
+                             "Model_results/assumptions_table.png",
+                             "Model_results/model_type_table.png"))
 
 dir.create("Supplementary_figures") # copy this folder across to overleaf
 
@@ -92,12 +112,12 @@ dir.create("Supplementary_figures") # copy this folder across to overleaf
 ##################
 
 # Basic reproduction number unfiltered table
-file.copy(from = "R_tables/unfiltered/paginate_basic_r_tab_all.docx",
-          to = "Supplementary_figures/basic_r_table.docx")
+file.copy(from = "R_tables/unfiltered/paginate_basic_r_tab_all.pdf",
+          to = "Supplementary_figures/basic_r_table.pdf")
 
 # Effective reproduction number unfiltered table
-file.copy(from = "R_tables/unfiltered/paginate_effective_r_tab_all.docx",
-          to = "Supplementary_figures/effective_r_table.docx")
+file.copy(from = "R_tables/unfiltered/paginate_effective_r_tab_all.pdf",
+          to = "Supplementary_figures/effective_r_table.pdf")
 
 # Growth rate unfiltered table
 file.copy(from = "Growth_rate_results/table.png",
@@ -171,12 +191,8 @@ file.copy(from = "Risk_tables/risk_factors_for_serology.png",
 ##############
 
 # Unfiltered table for CFR
-
-# This doesn't work for me so will have to manually convert to pdf:
-#docx2pdf("Severity_tables/unfiltered/paginate_severity_all.docx")
-
-file.copy(from = "Severity_tables/unfiltered/paginate_severity_all.docx",
-          to = "Supplementary_figures/severity_table.docx")
+file.copy(from = "Severity_tables/unfiltered/paginate_severity_all.pdf",
+          to = "Supplementary_figures/severity_table.pdf")
 
 # Risk factors associated with severity: death, symptoms, severe disease, recovery
 rf_symptoms <- png::readPNG("Risk_tables/risk_factors_for_symptoms.png")
@@ -216,4 +232,21 @@ ggsave("Supplementary_figures/risk_factors_severity.png", labeled_sev, width = 8
 # unfiltered table
 file.copy(from = "Mutation_results/qa_unfiltered/table.png",
           to = "Supplementary_figures/mutations_table.png")
+
+
+############
+## MODELS ##
+############
+
+# unfiltered table
+file.copy(from = "Model_results/overview_table.pdf",
+          to = "Supplementary_figures/models_table.pdf")
+
+# table of model assumptions
+file.copy(from = "Model_results/assumptions_table.png",
+          to = "Supplementary_figures/models_assumptions.png")
+
+# table of model types
+file.copy(from = "Model_results/model_type_table.png",
+          to = "Supplementary_figures/models_types.png")
 
