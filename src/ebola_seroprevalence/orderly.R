@@ -122,7 +122,7 @@ mutate(
 # Mulangu id 1911 - found survey dates
 # Mathiot id 2354 - unspecified survey date, added sample type, looked at zaire and sudan species separately
 # Halfmann id 16757 - sample type "Other" as it was survivors and close contacts (either relatives of HCWs)
-
+# Rodhain id 2635 - not duplicate, one Zaire antigens, one Sudan antigens
 
 # Order data for plots
 ordered_dat <- sero_dat %>%
@@ -183,7 +183,11 @@ ggsave("Seroprevalence_plots/plot_filtered.png", plot_qa,
 sero_dat <- sero_dat %>%
   mutate(parameter_value_type =
            case_when(parameter_value_type %in% "Unspecified" ~ NA,
-                     TRUE ~ parameter_value_type)
+                     TRUE ~ parameter_value_type),
+         # Add asterisk for Rodhain to explain that they're not duplicate entries
+         article_label =
+           case_when(covidence_id %in% 2635 ~ paste0(article_label, "*"),
+                     TRUE ~ article_label)
          )
 
 sero_table_qa <- create_table(
@@ -220,19 +224,24 @@ sero_table_no_history <- create_table(
   qa_filter = FALSE
 )
 
-sero_range_history <- create_range_table(sero_dat_history, 
-                                         main_group = "population_country", 
-                                         main_group_label = "Country",
-                                         sub_group = "population_sample_type", 
-                                         sub_group_label = "Sample Type", 
-                                         qa_filter = FALSE, rounding = "none")
+sero_range_history <- create_range_table(
+  sero_dat_history,
+  main_group = "population_country",
+  main_group_label = "Country",
+  sub_group = "population_sample_type", 
+  sub_group_label = "Sample Type", 
+  qa_filter = FALSE,
+  rounding = "none")
 
-sero_range_no_history <- create_range_table(sero_dat_no_history, 
-                                            main_group = "population_country", 
-                                            main_group_label = "Country",
-                                            sub_group = "population_sample_type", 
-                                            sub_group_label = "Sample Type", 
-                                            qa_filter = FALSE, rounding = "none")
+sero_range_no_history <- create_range_table(
+  sero_dat_no_history,
+  main_group = "population_country",
+  main_group_label = "Country",
+  sub_group = "population_sample_type",
+  sub_group_label = "Sample Type",
+  qa_filter = FALSE,
+  rounding = "none")
+
 # Save
 save_as_image(sero_table_qa,
               path = "Seroprevalence_tables/tab_filtered.png"
