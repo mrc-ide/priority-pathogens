@@ -11,6 +11,7 @@ library(purrr)
 library(scales)
 library(epitrix)
 library(stringr)
+library(splitstackshape)
 
 orderly_strict_mode()
 
@@ -68,9 +69,9 @@ summary_dat <- df %>%
     parameter_type =
       case_when(
         parameter_type %in% "Reproduction number (Basic R0)" ~
-          "Basic reproduction number",
+          "Basic reproduction number (R0)",
         parameter_type %in% "Reproduction number (Effective, Re)" ~
-          "Effective reproduction number",
+          "Effective reproduction number (Re)",
         parameter_type %in% "Severity - case fatality rate (CFR)" ~
           "Case Fatality Rate (CFR)",
         parameter_class %in% "Human delay" ~ delay_short,
@@ -111,12 +112,34 @@ set_flextable_defaults(background.color = "white", na.string = "")
 param_tab <- summary_dat %>%
   group_by(parameter_class, parameter_type) %>%
   summarise(count = n()) %>%
+  expandRows(., "count", drop = FALSE) %>%
+  mutate(
+    # Remove parameter class names from parameter type names for consistency
+    parameter_type = gsub("Seroprevalence - ", "", parameter_type),
+    parameter_type = gsub("Mutations - ", "", parameter_type),
+    parameter_type = gsub("Mutations – ", "", parameter_type),
+    parameter_type = gsub("^([a-z])", "\\U\\1", parameter_type, perl = TRUE),
+    parameter_type =
+      case_when(
+        parameter_class %in% "Mutations" ~ gsub("^([a-z])", "\\U\\1", parameter_type, perl = TRUE),
+        parameter_class %in% "Delay" & count == 1 ~ "Other delay*",
+      TRUE ~ parameter_type),
+    # order by total in parameter class
+    parameter_class = factor(parameter_class,
+      levels = c("Delay", "Risk factors", "Reproduction number", "Severity",
+                 "Seroprevalence", "Mutations", "Attack rate", "Overdispersion",
+                 "Growth rate", "Doubling time")
+      )
+    ) %>%
+  select(-count) %>%
+  group_by(parameter_class, parameter_type) %>%
+  summarise(count = n()) %>%
   select(
     `Parameter Group` = parameter_class,
     `Parameter Type` = parameter_type,
     `Total Parameters` = count,
   ) %>%
-  arrange(desc(`Total Parameters`), `Parameter Group`) %>%
+  arrange(`Parameter Group`, desc(`Total Parameters`),) %>%
   flextable() %>%
   fontsize(i = 1, size = 12, part = "header") %>%
   autofit() %>%
