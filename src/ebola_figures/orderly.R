@@ -4,6 +4,7 @@ orderly_strict_mode()
 
 library(png)
 library(cowplot)
+library(grid)
 
 orderly_parameters(pathogen = "EBOLA")
 
