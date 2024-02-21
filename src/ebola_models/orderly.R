@@ -86,6 +86,7 @@ model_dat <- df %>%
     assumptions = gsub("Heterogenity", "Heterogeneity", assumptions),
     assumptions = gsub("period is same", "period the same", assumptions),
     assumptions = gsub("- ", "", assumptions),
+    assumptions = case_when(is.na(assumptions) ~ "Unspecified", TRUE ~ assumptions),
     stoch_deter =
       case_when(
         is.na(stoch_deter) & model_type %in% "Branching process" ~ "Stochastic",
@@ -125,10 +126,11 @@ model_tbl <- model_dat %>%
     assumptions = gsub("Heterogeneity in transmission rates between groups, Heterogeneity in transmission rates over time",
                        "Heterogeneity in transmission rates between groups and over time", assumptions),
     assumptions =
-      case_when(assumptions %in%
-                  "Heterogeneity in transmission rates between groups, Latent period the same as incubation period, Heterogeneity in transmission rates over time" ~
-                  "Heterogeneity in transmission rates between groups and over time, Latent period the same as incubation period",
-                TRUE ~ assumptions)
+      case_when(
+        assumptions %in%
+          "Heterogeneity in transmission rates between groups, Latent period the same as incubation period, Heterogeneity in transmission rates over time" ~
+          "Heterogeneity in transmission rates between groups and over time, Latent period the same as incubation period",
+        TRUE ~ assumptions)
   ) %>%
   select(c(
     Article = article_label,
