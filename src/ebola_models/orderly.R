@@ -210,27 +210,41 @@ save_as_image(type_tab, path = "Model_results/model_type_table.png")
 # Assumption summary
 set_flextable_defaults(background.color = "white", na.string = "")
 assump_tab <- model_dat %>%
+  mutate(
+    model_type = factor(
+      model_type, levels = c("Compartmental", "Other or combination",
+                             "Branching process", "Agent/Individual based")
+    )
+  ) %>%
   separate_rows(assumptions, sep = ";") %>%
   # remove "unspecified" assumptions
   filter(!assumptions %in% "Unspecified") %>%
   group_by(model_type, assumptions) %>%
   summarise(count = n()) %>%
   arrange(model_type, desc(count)) %>%
-  as_grouped_data(groups = "model_type") %>%
   select(
     `Model type` = model_type,
     `Assumptions` = assumptions,
     `Total` = count
   ) %>%
-  flextable() %>%
+  group_by(`Model type`) %>%
+  mutate(
+    index_of_change = row_number(),
+    index_of_change = ifelse(
+      index_of_change == max(index_of_change), 1, 0
+    )
+  ) %>%
+  as_grouped_data(groups = "Model type") %>%
+  as_flextable(col_keys = c("Assumptions", "Total"), hide_grouplabel = TRUE
+  ) %>%
   fontsize(i = 1, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
   bold(i = 1, bold = TRUE, part = "header") %>%
   hline(i = ~ !is.na(`Model type`)) %>%
+  hline(i = ~ index_of_change == 1) %>%
   bold(j = 1, i = ~ !is.na(`Model type`), bold = TRUE, part = "body" ) %>%
   border_inner_h(part = "header") %>%
-  border_outer() %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "center") %>%
   add_footer_lines("") %>%
