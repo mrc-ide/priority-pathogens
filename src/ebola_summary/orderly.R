@@ -103,13 +103,19 @@ group_tab <- summary_dat %>%
   align_nottext_col(align = "center") %>%
   add_footer_lines("") %>%
   line_spacing(i = 1, space = 1.5, part = "header")
-group_tab
 
 save_as_image(group_tab, path = "Summary_results/parameter_group_table.png")
 
 # Parameter type table
 set_flextable_defaults(background.color = "white", na.string = "")
 param_tab <- summary_dat %>%
+  mutate(
+    parameter_type =
+      case_when(
+        parameter_class %in% "Attack rate" & attack_rate_type %in% "Secondary" ~
+          "Secondary attack rate",
+        TRUE ~ parameter_type)
+      ) %>%
   group_by(parameter_class, parameter_type) %>%
   summarise(count = n()) %>%
   expandRows(., "count", drop = FALSE) %>%
@@ -139,19 +145,30 @@ param_tab <- summary_dat %>%
     `Parameter Type` = parameter_type,
     `Total Parameters` = count,
   ) %>%
-  arrange(`Parameter Group`, desc(`Total Parameters`),) %>%
-  flextable() %>%
+  ungroup() %>%
+  group_by(`Parameter Group`) %>%
+  arrange(`Parameter Group`, desc(`Total Parameters`)) %>%
+  mutate(
+    index_of_change = row_number(),
+    index_of_change = ifelse(
+      index_of_change == max(index_of_change), 1, 0
+    )
+  ) %>%
+  as_grouped_data(groups = "Parameter Group") %>%
+  as_flextable(col_keys = c("Parameter Type", "Total Parameters"), hide_grouplabel = TRUE
+  ) %>%
   fontsize(i = 1, size = 12, part = "header") %>%
   autofit() %>%
   theme_booktabs() %>%
   bold(i = 1, bold = TRUE, part = "header") %>%
+  hline(i = ~ !is.na(`Parameter Group`)) %>%
+  hline(i = ~ index_of_change == 1) %>%
+  bold(j = 1, i = ~ !is.na(`Parameter Group`), bold = TRUE, part = "body" ) %>%
   border_inner_h(part = "header") %>%
-  border_outer() %>%
   align(align = "left", part = "all") %>%
   align_nottext_col(align = "center") %>%
   add_footer_lines("") %>%
   line_spacing(i = 1, space = 1.5, part = "header")
-param_tab
 
 save_as_image(param_tab, path = "Summary_results/parameter_type_table.png")
 
