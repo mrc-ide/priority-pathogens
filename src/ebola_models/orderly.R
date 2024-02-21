@@ -193,7 +193,7 @@ type_tab <- model_dat %>%
   group_by(model_type) %>%
   summarise(count = n()) %>%
   arrange(ifelse(model_type %in% "Other", Inf, desc(count))) %>%
-  select(`Model type` = model_type, `Count` = count) %>%
+  select(`Model type` = model_type, `Total` = count) %>%
   flextable() %>%
   fontsize(i = 1, size = 12, part = "header") %>%
   autofit() %>%
@@ -220,7 +220,7 @@ assump_tab <- model_dat %>%
   select(
     `Model type` = model_type,
     `Assumptions` = assumptions,
-    `Count` = count
+    `Total` = count
   ) %>%
   flextable() %>%
   fontsize(i = 1, size = 12, part = "header") %>%
