@@ -41,7 +41,8 @@ clean_dfs <- function(df, pathogen) {
 
     if (pathogen == "EBOLA") {
       df <- df %>%
-        filter(!covidence_id %in% 12389) %>% # model only paper (growth model)
+        # 12389: model only paper (growth model), 2921: Not extracted from
+        filter(!covidence_id %in% c(2921, 12389)) %>%
         mutate(
           # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
           # discussion with co-authors)
@@ -210,6 +211,8 @@ clean_dfs <- function(df, pathogen) {
     if (pathogen == "EBOLA") {
       # edit ebola_variant names
       df <- df %>%
+        # growth model (model only paper)
+        filter(!covidence_id %in% 12389) %>%
         mutate(
           model_type = case_when(
             covidence_id %in% 5005 & model_type %in% "Unspecified" ~
@@ -403,8 +406,6 @@ clean_dfs <- function(df, pathogen) {
           covidence_id %in% 4764 & access_param_id %in% 74)) %>%
         # Remove 3 attack rates that are actually death rates
         filter(!(covidence_id %in% 3681 & parameter_class %in% "Attack rate")) %>%
-        # Remove seroprevalence parameters that cannot be found in the paper
-        filter(!(covidence_id %in% c(2470, 2532) & parameter_class %in% "Seroprevalence")) %>%
         # Remove delay parameter where table and text don't match
         filter(!(covidence_id %in% 15544 & parameter_class %in% "Human delay")) %>%
         # Remove reproduction number entry without values
