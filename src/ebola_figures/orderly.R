@@ -56,8 +56,8 @@ writePNG(f4, "Manuscript_figures/delays_meta_analysis.png")
 ## Figure 5: Combine range tables
 
 t1 <- png::readPNG("R_tables/qa_filtered/range_outbreak.png")
-t2 <- png::readPNG("Severity_tables/qa_filtered/range_outbreak_country.png")
-t3 <- png::readPNG("Delay_tables/qa_filtered/select_ranges_table.png")
+t2 <- png::readPNG("Delay_tables/qa_filtered/select_ranges_table.png")
+t3 <- png::readPNG("Severity_tables/qa_filtered/range_outbreak_country.png")
 
 # Create plots for each image
 plot1 <- rasterGrob(t1, width = 0.85)
@@ -78,7 +78,7 @@ range_tables <- plot_grid(
   plot1, plot2, plot3,
   labels = c("A", "B", "C"),
   label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.94, 0.9),
+  label_x = 0, label_y = c(0.9, 0.9, 0.94),
   hjust = -0.5, vjust = -0.5,
   ncol = 1,
   rel_heights = p_heights) +
