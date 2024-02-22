@@ -33,6 +33,7 @@ orderly_dependency(
   "latest(parameter:pathogen == this:pathogen)",
   c(
     "articles.csv",
+    "models.csv",
     "parameters.csv"
   )
 )
@@ -45,6 +46,7 @@ source("ebola_visualisation.R")
 
 # Load data
 articles <- read_csv("articles.csv")
+models <- read_csv("models.csv")
 params <- read_csv("parameters.csv")
 
 df <- left_join(
@@ -56,13 +58,46 @@ df <- left_join(
   by = "covidence_id"
 )
 
+df_models <- left_join(
+  models,
+  articles[, c(
+    "covidence_id", "first_author_surname", "year_publication",
+    "article_label", "doi", "notes"
+  )],
+  by = "covidence_id"
+)
+
 dir.create("Summary_results")
+
+# Check all numbers add up and then pull out numbers for text
+nrow(df) # number of parameters (1224)
+nrow(df_models) # number of models (294)
+table(df$outbreak) # number reporting on each outbreak (WA = 833)
+table(df$ebola_species) # number assigned to each species (Zaire = 1078 + 3 + 5 = 1086)
+param_ids <- unique(df$covidence_id)
+model_ids <- unique(df_models$covidence_id)
+all_ids <- c(unique(df$covidence_id), unique(df_models$covidence_id))
+length(unique(all_ids)) # total papers (516)
+
+articles <- articles %>% mutate(
+  parameter_reported = case_when(covidence_id %in% param_ids ~ 1, TRUE ~ NA),
+  model_reported = case_when(covidence_id %in% model_ids ~ 1, TRUE ~ NA),
+  both_reported = case_when(parameter_reported %in% 1 & model_reported %in% 1 ~ 1, TRUE ~ NA),
+  parameter_only = case_when(parameter_reported %in% 1 & is.na(model_reported) ~ 1, TRUE ~ NA),
+  model_only = case_when(model_reported %in% 1 & is.na(parameter_reported) ~ 1, TRUE ~ NA)
+)
+
+articles %>% filter(parameter_reported %in% 1) %>% nrow() # 348 articles
+articles %>% filter(model_reported %in% 1) %>% nrow() # 279 articles
+
+# Should all sum to 516
+articles %>% filter(both_reported %in% 1) %>% nrow() # 111 articles
+articles %>% filter(parameter_only %in% 1) %>% nrow() # 237 articles
+articles %>% filter(model_only %in% 1) %>% nrow() # 168 articles
 
 ###################################
 # Summary table of all parameters #
 ###################################
-
-nrow(df)
 
 summary_dat <- df %>%
   mutate(
