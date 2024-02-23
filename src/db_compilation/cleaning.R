@@ -997,7 +997,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 11688 ~ "Jan",
               covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ "Apr",
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Mar",
-              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ "Mar",
+              covidence_id %in% c(2497, 16201) & parameter_class %in% "Seroprevalence" ~ "Mar",
               TRUE ~ population_study_start_month
             ),
           population_study_end_month =
@@ -1016,6 +1016,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Apr",
               covidence_id %in% 11688 ~ "Oct",
               covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ "Jul",
+              covidence_id %in% 2497 & parameter_class %in% "Seroprevalence" ~ "Dec",
               TRUE ~ population_study_end_month
             ),
           population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
@@ -1032,7 +1033,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2013,
               covidence_id %in% c(1170, 1686, 1407, 1012, 1653, 4209, 11688) ~ 2014,
               covidence_id %in% c(17956, 23669) & parameter_class %in% "Human delay" ~ 2014,
-              covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 2015,
+              covidence_id %in% c(2497, 16201) & parameter_class %in% "Seroprevalence" ~ 2015,
               covidence_id %in% c(16951, 18372) & parameter_class %in% "Human delay" ~ 2018,
               TRUE ~ population_study_start_year
             ),
@@ -1048,6 +1049,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 2015,
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 2015,
               covidence_id %in% 23507 ~ 2016,
+              covidence_id %in% 2497 & parameter_class %in% "Seroprevalence" ~ 2015,
               covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 2016,
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 2016,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
@@ -1066,6 +1068,8 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Attack rate" &
                 population_sample_type %in% "Household based" &
                 covidence_id %in% 7199 ~ 17,
+              parameter_class %in% "Seroprevalence" &
+                covidence_id %in% 2497 ~ 694,
               TRUE ~ population_sample_size
             ),
           
@@ -1088,7 +1092,7 @@ clean_dfs <- function(df, pathogen) {
                 parameter_value %in% 12 &
                 covidence_id %in% 7199 ~ "Household based",
               parameter_class %in% "Seroprevalence" &
-                covidence_id %in% 16201 ~ "Hospital based",
+                covidence_id %in% c(2497, 16201) ~ "Hospital based",
               parameter_class %in% "Seroprevalence" &
                 covidence_id %in% 2354 ~ "Population based",
               parameter_class %in% "Seroprevalence" &
