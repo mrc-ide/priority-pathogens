@@ -106,7 +106,7 @@ assign_ebola_outbreak <- function(df) {
         population_study_start_year %in% 2021 & population_country %in%
           "Guinea" ~ "Guinea, 2021",
         population_study_start_year %in% 2022 & population_country %in%
-          "Uganda" ~ "Uganda, 2022",
+          "Uganda" ~ "Uganda, 2022-2023",
         TRUE ~ "Unspecified"
       )
     )
@@ -140,7 +140,7 @@ order_ebola_outbreaks <- function(outbreak_var) {
         "DRC, 2018-2020",
         "DRC, 2020",
         "Guinea, 2021",
-        "Uganda, 2022",
+        "Uganda, 2022-2023",
         "Multiple outbreaks",
         "Unspecified"
       )
@@ -178,7 +178,7 @@ assign_ebola_species <- function(df) {
             "DRC, 2014",
             "DRC, 2018-2020",
             "Guinea, 2021",
-            "Uganda, 2022"
+            "Uganda, 2022-2023"
           ) ~ "Zaire",
         ebola_variant %in% "Unspecified" &
           outbreak %in% c(
