@@ -553,7 +553,7 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
         {{ main_group }},
         `Central Estimate Range` = est_range,
         `Uncertainty Range` = est_unc,
-        `Number of Papers` = n_estimates
+        `Total` = n_estimates
       )) %>%
       group_by(!!sym(main_group)) %>%
       mutate(
@@ -569,7 +569,7 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
       flextable(
         col_keys = c(
           {{ main_group }},
-          "Central Estimate Range", "Uncertainty Range", "Number of Papers"
+          "Central Estimate Range", "Uncertainty Range", "Total"
         )
       )
     
@@ -581,7 +581,7 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
         {{ sub_group }},
         `Central Estimate Range` = est_range,
         `Uncertainty Range` = est_unc,
-        `Number of Papers` = n_estimates
+        `Total` = n_estimates
       )) %>%
       group_by(!!sym(main_group)) %>%
       mutate(
@@ -597,7 +597,7 @@ create_range_table <- function(df, main_group = NA, main_group_label = NA,
       flextable(
         col_keys = c(
           {{ main_group }}, {{ sub_group }},
-          "Central Estimate Range", "Uncertainty Range", "Number of Papers"
+          "Central Estimate Range", "Uncertainty Range", "Total"
         )
       )
   }
