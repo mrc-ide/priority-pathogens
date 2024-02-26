@@ -41,7 +41,6 @@ orderly_artefact(
 )
 
 orderly_parameters(pathogen = "EBOLA")
-#orderly_parameters(pathogen = NULL)
 
 # Get data from db_compilation
 orderly_dependency(
@@ -175,6 +174,10 @@ n_param_re <- plot_dat %>% filter(parameter_type_short %in% "Effective (Re)" & a
 n_param_re %>% nrow() # 32 parameters
 length(unique(n_param_re$covidence_id)) # 23 articles
 n_param_re %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 23 WA
+# Not QA filtered
+n_param_re <- plot_dat %>% filter(parameter_type_short %in% "Effective (Re)")
+n_param_re %>% nrow() # 55 parameters
+length(unique(n_param_re$covidence_id)) # 40 articles
 table(n_param_re$method_r)
 
 # Plots with qa_filter of >=50
