@@ -157,13 +157,25 @@ dir.create("R_tables/unfiltered")
 # PLOTS
 
 plot_dat <- ordered_dat %>%
-  filter(!parameter_value_type %in% "Standard Deviation") %>% #,
-         #!outbreak %in% "Unspecified") %>%
+  filter(!parameter_value_type %in% "Standard Deviation") %>%
   mutate(
     parameter_value_type =
       case_when(parameter_value_type %in% c("Unspecified", "Other", NA) ~ "Other/Unspecified",
                 TRUE ~ parameter_value_type)
    )
+
+# Pull numbers on QA filtered basic R for text
+n_param <- plot_dat %>% filter(parameter_type_short %in% "Basic (R0)" & article_qa_score >= 50)
+n_param %>% nrow() # 70 parameters
+length(unique(n_param$covidence_id)) # 51 articles
+n_param %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 58 WA
+
+# Pull numbers on QA filtered effective R for text
+n_param_re <- plot_dat %>% filter(parameter_type_short %in% "Effective (Re)" & article_qa_score >= 50)
+n_param_re %>% nrow() # 32 parameters
+length(unique(n_param_re$covidence_id)) # 23 articles
+n_param_re %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 23 WA
+table(n_param_re$method_r)
 
 # Plots with qa_filter of >=50
 basic_r_outbreak_qa <- create_plot(

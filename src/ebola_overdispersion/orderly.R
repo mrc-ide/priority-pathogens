@@ -24,7 +24,6 @@ orderly_artefact(
 )
 
 orderly_parameters(pathogen = "EBOLA")
-# orderly_parameters(pathogen = NULL)
 
 # Get data from db_compilation
 orderly_dependency(
@@ -97,6 +96,13 @@ over_dat$population_country
 over_dat$survey_date
 over_dat$outbreak
 over_dat$distribution_type
+
+# Pull numbers for text
+n_param <- over_dat %>% filter(distribution_models %in% "Offspring distribution")
+n_param %>% nrow() # 15 parameters
+length(unique(n_param$covidence_id)) # 12 articles
+n_param %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 13 WA
+table(n_param$ebola_species)
 
 # Create directory for results (all QA scores > 50)
 dir.create("Overdispersion_results")
