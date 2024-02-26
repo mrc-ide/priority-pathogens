@@ -114,6 +114,9 @@ model_dat <- df %>%
 unique(model_dat$model_type)
 unique(model_dat$assumptions)
 
+# How many have code associated?
+model_dat %>% filter(code_available %in% "Yes") %>% nrow() # n=37, 13%
+
 dir.create("Model_results")
 
 # Create overview table for models
