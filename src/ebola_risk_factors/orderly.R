@@ -32,7 +32,6 @@ orderly_artefact(
 )
 
 orderly_parameters(pathogen = "EBOLA")
-# orderly_parameters(pathogen = NULL)
 
 # Get data from db_compilation
 orderly_dependency(
@@ -98,6 +97,15 @@ unique(rf_dat$riskfactor_outcome)
 table(rf_dat$riskfactor_outcome, useNA = "ifany")
 table(rf_dat$riskfactor_adjusted, useNA = "ifany")
 table(rf_dat$riskfactor_significant, useNA = "ifany")
+
+# Pull numbers for text
+n_death <- rf_dat %>% filter(riskfactor_outcome %in% "Death") 
+n_death %>% nrow() # 136 death
+n_inf <- rf_dat %>% filter(riskfactor_outcome %in% "Infection")
+n_inf %>% nrow() # 59 infection
+length(unique(n_inf$covidence_id)) # 30 articles
+n_sero <- rf_dat %>% filter(riskfactor_outcome %in% "Serology")
+n_sero %>% nrow() # 44 seropositivity
 
 # Create directory for results
 dir.create("Risk_tables")
