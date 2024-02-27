@@ -411,8 +411,9 @@ clean_dfs <- function(df, pathogen) {
         # Remove reproduction number entry without values
         filter(!(covidence_id %in% 4966 & parameter_class %in% "Reproduction number")) %>%
         # Remove severity estimates - 23507 = incorrect entry, 5654 = dupe of
-        # separate Cherif 2018 but less info, 2124 = dupe of separate Sadek 1999 but less info
-        filter(!(covidence_id %in% c(23507, 5654, 2124) & parameter_class %in% "Severity")) %>%
+        # separate Cherif 2018 but less info, 2124 = dupe of separate Sadek 1999 but less info,
+        # 2947 = CFRs sourced from other studies
+        filter(!(covidence_id %in% c(23507, 5654, 2124, 2947) & parameter_class %in% "Severity")) %>%
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(
