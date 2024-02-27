@@ -607,7 +607,7 @@ clean_dfs <- function(df, pathogen) {
                 ) ~ "Infection process",
               TRUE ~ "Other"
             ),
-          # Parameter_value_cleaning
+          # Parameter_value cleaning
           parameter_value = 
             case_when(
               parameter_class %in% "Human delay" &
@@ -625,6 +625,8 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Seroprevalence" &
                 covidence_id %in% c(3822, 4168, 16643) ~
                 cfr_ifr_numerator/cfr_ifr_denominator * 100,
+              parameter_class %in% "Severity" &
+                covidence_id %in% 45 ~ 54.7,
               TRUE ~ parameter_value
             ),
           # Exponent
@@ -792,6 +794,8 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 241 ~ 0.003,
               parameter_class %in% "Mutations" &
                 covidence_id %in% 17790 ~ 0.69, # putting on same exponent scale
+              parameter_class %in% "Severity" &
+                covidence_id %in% 45 ~ 8.6,
               TRUE ~ parameter_lower_bound
             ),
           
@@ -818,7 +822,17 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 241 ~ 0.185,
               parameter_class %in% "Mutations" &
                 covidence_id %in% 17790 ~ 3.6, # putting on same exponent scale
+              parameter_class %in% "Severity" &
+                covidence_id %in% 45 ~ 93.3,
               TRUE ~ parameter_upper_bound
+            ),
+          
+          # Disaggregated
+          method_disaggregated =
+            case_when(
+              parameter_class %in% "Severity" &
+                covidence_id %in% 45 ~ TRUE,
+              TRUE ~ method_disaggregated
             ),
           
           # Disaggregated by
@@ -838,6 +852,9 @@ clean_dfs <- function(df, pathogen) {
               parameter_class %in% "Attack rate" &
                 !is.na(parameter_lower_bound) &
                 covidence_id %in% c(4253, 4991) ~ "Other",
+              # "Other" for 45: Viral load
+              parameter_class %in% "Severity" &
+                covidence_id %in% 45 ~ "Age, Other, Sex, Symptoms",
               TRUE ~ method_disaggregated_by
             ),
           
@@ -1119,6 +1136,20 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 7199 ~ "Secondary",
               TRUE ~ NA
             ),
+          
+          # cfr
+          cfr_ifr_method = case_when(
+            parameter_class %in% "Severity" & covidence_id %in% 45 ~ "Naive",
+            TRUE ~ cfr_ifr_method
+          ),
+          cfr_ifr_numerator = case_when(
+            parameter_class %in% "Severity" & covidence_id %in% 45 ~ 76,
+            TRUE ~ cfr_ifr_numerator
+          ),
+          cfr_ifr_denominator = case_when(
+            parameter_class %in% "Severity" & covidence_id %in% 45 ~ 139,
+            TRUE ~ cfr_ifr_denominator
+          ),
 
           # Clean genome_site for mutation rates
           genome_site = str_replace_all(genome_site, ";", ","),
