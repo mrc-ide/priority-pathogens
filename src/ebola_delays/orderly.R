@@ -109,7 +109,7 @@ delay_dat <- df %>%
           "Sep", "Oct", "Nov", "Dec"
         )
       ),
-    # Account for distributions
+    # Account for distributions - REMEMBER TO DO THIS FOR NEW PARAM ADDED FOR ID 5868
     parameter_value_type =
       case_when(
         is.na(parameter_value) & distribution_type %in% "Gamma" &
@@ -269,6 +269,36 @@ delay_dat <- df %>%
       )
   ) %>%
   group_by(delay_short)
+
+
+# Pull numbers for text
+  # SI
+n_si <- delay_dat %>% filter(delay_short %in% "Serial interval") # total:18
+length(unique(n_si$covidence_id)) # total:14 articles
+table(n_si$ebola_species) # 2x sudan, 16x zaire
+  # Incubation
+n_incub <- delay_dat %>% filter(delay_short %in% "Incubation period") # 41
+length(unique(n_incub$covidence_id)) # 35 articles
+table(n_incub$ebola_species) # 3x bundibugyo, 3x sudan, 34x zaire, 1x zaire & sudan
+n_incub_filt <- delay_dat %>% filter(delay_short %in% "Incubation period" &
+                                       article_qa_score >= 50) # 32
+table(n_incub_filt$ebola_species) # filtered: 3x bundibugyo, 3x sudan, 26x zaire
+  # Latent
+n_latent <- delay_dat %>% filter(delay_short %in% "Latent period") # 11
+length(unique(n_latent$covidence_id)) # 10 articles
+table(n_latent$ebola_species) # 11x zaire
+delay_dat %>% filter(delay_short %in% "Latent period" &
+                       article_qa_score >= 50) %>% nrow() # 7
+  # Infectious period
+n_infec <- delay_dat %>% filter(delay_short %in% "Infectious period") # 25
+length(unique(n_infec$covidence_id)) # 22 articles
+table(n_infec$ebola_species) # 3x bundibugyo, 22x zaire
+n_infec_filt <- delay_dat %>% filter(delay_short %in% "Infectious period" &
+                                       article_qa_score >= 50)
+table(n_infec_filt$ebola_species) # 12x zaire
+  # Generation time
+n_gen <- delay_dat %>% filter(delay_short %in% "Generation time") # 1
+n_gen$ebola_species # zaire
 
 # Order data for plots
 ordered_dat <- delay_dat %>%
