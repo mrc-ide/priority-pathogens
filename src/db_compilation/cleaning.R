@@ -414,6 +414,8 @@ clean_dfs <- function(df, pathogen) {
         # separate Cherif 2018 but less info, 2124 = dupe of separate Sadek 1999 but less info,
         # 2947 = CFRs sourced from other studies
         filter(!(covidence_id %in% c(23507, 5654, 2124, 2947) & parameter_class %in% "Severity")) %>%
+        # Remove mutation rate (null estimate)
+        filter(!(covidence_id %in% 19237 & exponent %in% -5)) %>%
         # Correct missing context for cov ID 18236
         group_by(covidence_id) %>%
         mutate(
@@ -495,6 +497,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% c(17835, 18236, 18536) ~ "Guinea",
               covidence_id %in% c(1170, 18371) ~ "Sierra Leone",
               covidence_id %in% 16201 ~ "Guinea",
+              is.na(population_country) & covidence_id %in% 5005 ~ "Liberia",
               covidence_id %in% 5939 & is.na(population_country) ~ "Guinea, Liberia, Sierra Leone",
               # Correction
               parameter_class %in% "Attack rate" & covidence_id %in% 6472 ~ "DRC",
@@ -986,6 +989,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 3,
               covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ 30,
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 14,
+              covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 28,
               TRUE ~ population_study_start_day
             ),
           population_study_end_day =
@@ -996,6 +1000,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 28,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2,
               covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 27,
+              covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 1,
               covidence_id %in% 11688 ~ 12,
               TRUE ~ population_study_end_day
             ),
@@ -1016,6 +1021,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ "Apr",
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Mar",
               covidence_id %in% c(2497, 16201) & parameter_class %in% "Seroprevalence" ~ "Mar",
+              covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ "Feb",
               TRUE ~ population_study_start_month
             ),
           population_study_end_month =
@@ -1035,6 +1041,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 11688 ~ "Oct",
               covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ "Jul",
               covidence_id %in% 2497 & parameter_class %in% "Seroprevalence" ~ "Dec",
+              covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ "Dec",
               TRUE ~ population_study_end_month
             ),
           population_study_end_month = gsub("[^a-zA-Z]", "", population_study_end_month),
@@ -1053,6 +1060,8 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% c(17956, 23669) & parameter_class %in% "Human delay" ~ 2014,
               covidence_id %in% c(2497, 16201) & parameter_class %in% "Seroprevalence" ~ 2015,
               covidence_id %in% c(16951, 18372) & parameter_class %in% "Human delay" ~ 2018,
+              covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 2014,
+              covidence_id %in% 6471 ~ 1976,
               TRUE ~ population_study_start_year
             ),
           population_study_end_year =
@@ -1071,6 +1080,8 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 2016,
               covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 2016,
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
+              covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 2014,
+              covidence_id %in% 6471 ~ 1976,
               TRUE ~ population_study_end_year
             ),
           
