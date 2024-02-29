@@ -1130,6 +1130,7 @@ clean_dfs <- function(df, pathogen) {
             ),
           
           # Create attack_rate_type variable 
+          # NOTE: covidence ids 17111 and 19193 are from figure only
           attack_rate_type =
             case_when(
               # Primary attack rate (population based)
@@ -1141,7 +1142,7 @@ clean_dfs <- function(df, pathogen) {
                 # Secondary attack rate (contact based)
               parameter_class %in% "Attack rate" &
                 covidence_id %in% c(1053, 1749, 2240, 4253, 4829, 4991, 6472,
-                                    11467) ~ "Secondary",
+                                    11467, 4796, 5601, 6263, 6470, 6471) ~ "Secondary",
               parameter_class %in% "Attack rate" &
                 population_sample_type %in% "Household based" &
               covidence_id %in% 7199 ~ "Secondary",
