@@ -6,7 +6,7 @@ assign_ebola_outbreak <- function(df) {
       outbreak = case_when(
         population_study_start_year %in% 1976 & population_study_end_year %in% c(1995, 2008, 2012, 2014) ~
           "Multiple outbreaks",
-        population_study_start_year %in% 2000 & population_study_end_year %in% c(2014, 2015) ~
+        population_study_start_year %in% c(1979, 2000) & population_study_end_year %in% c(2014, 2015) ~
           "Multiple outbreaks",
         population_study_start_year %in% 1976 & population_country %in%
           "DRC" ~ "DRC, 1976",
@@ -14,6 +14,8 @@ assign_ebola_outbreak <- function(df) {
           "Sudan" ~ "South Sudan, 1976",
         population_study_start_year %in% 1976 & population_country %in%
           "DRC, Sudan" ~ "DRC & South Sudan, 1976",
+        population_study_start_year %in% 1977 & population_country %in%
+          "DRC" ~ "DRC, 1977",
         population_study_start_year %in% 1979 & population_country %in%
           "South Sudan" ~ "South Sudan, 1979",
         # Need to mention DRC 1981-1985 not official outbreak in figure legend (*)
@@ -63,7 +65,7 @@ assign_ebola_outbreak <- function(df) {
               "DRC, Guinea, Liberia, Sierra Leone"
             ) ~ "West Africa 2013-2016",
         # No specific dates/start dates provided for these, but checked the papers
-        covidence_id %in% c(590, 11565, 4568, 11620, 5997, 17835) ~
+        covidence_id %in% c(505, 590, 11565, 4568, 4764, 11620, 5997, 17835) ~
           "West Africa 2013-2016",
         # Seroprevalence survey post WA outbreak also used to calculate CFR
         covidence_id %in% 1044 ~ "West Africa 2013-2016",
@@ -120,6 +122,7 @@ order_ebola_outbreaks <- function(outbreak_var) {
     factor(outbreak_var,
       levels = c(
         "DRC, 1976",
+        "DRC, 1977",
         "South Sudan, 1976",
         "DRC & South Sudan, 1976",
         "South Sudan, 1979",
@@ -168,7 +171,7 @@ assign_ebola_species <- function(df) {
           "Zaire & Bundibugyo",
         ebola_variant %in% "Bundibugyo virus (BDBV);Sudan virus (SUDV)" ~
           "Bundibugyo & Sudan",
-        outbreak %in% c("DRC, 1976", "DRC, 1995") ~ "Zaire",
+        outbreak %in% c("DRC, 1976", "DRC, 1977", "DRC, 1995") ~ "Zaire",
         outbreak %in% "DRC, 2018-2020" ~ "Zaire",
         ebola_variant %in% "Unspecified" &
           outbreak %in% c(
