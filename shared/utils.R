@@ -37,7 +37,9 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens EBOLA - SANGEETA.accdb",
         "DIDE Priority Pathogens EBOLA - SEQUOIA.accdb",
         "DIDE Priority Pathogens EBOLA - THOM.accdb",
-        "DIDE Priority Pathogens EBOLA - TRISTAN.accdb"
+        "DIDE Priority Pathogens EBOLA - TRISTAN.accdb",
+        "DIDE Priority Pathogens EBOLA - EXTRA CHRISTIAN.accdb",
+        "DIDE Priority Pathogens EBOLA - EXTRA SANGEETA.accdb"
       ),
       eboladoubledb = c(
         "DIDE Priority Pathogens EBOLA - ANNE.accdb", "DIDE Priority Pathogens EBOLA - CHRISTIAN.accdb",
