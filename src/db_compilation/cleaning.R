@@ -373,7 +373,7 @@ if('parameter_type' %in% colnames(df)) {
         population_study_end_month = substring(population_study_end_month, 1, 3))
   } else if (pathogen == "LASSA") {
     #removed parameters
-    rmrows <- paste(c(61,152), c(3,1), sep='_')
+    rmrows <- paste(c(61,152,854), c(3,1,5), sep='_')
     df <- df %>%
           mutate(temp_col = paste(covidence_id, access_param_id, sep='_')) %>%
           filter(!temp_col %in% rmrows) %>%

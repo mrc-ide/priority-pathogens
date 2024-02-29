@@ -340,7 +340,7 @@ if (pathogen == "EBOLA") {
   params <- params %>% filter(!is.na(as.numeric(params$Article_ID)))
   
   #removed parameters
-  rmrows <- paste(c(1433,670,1413,1413,873), c(28,3,15,16,19), sep='_')
+  rmrows <- paste(c(1433,670,1413,1413,873,1447,1447), c(28,3,15,16,19,11,14), sep='_')
   params <- params %>%
             mutate(temp_col = paste(Covidence_ID, access_param_id, sep='_')) %>%
             filter(!temp_col %in% rmrows) %>%
