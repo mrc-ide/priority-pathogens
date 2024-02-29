@@ -273,16 +273,16 @@ delay_dat <- df %>%
 
 # Pull numbers for text
   # SI
-n_si <- delay_dat %>% filter(delay_short %in% "Serial interval") # total:18
-length(unique(n_si$covidence_id)) # total:14 articles
-table(n_si$ebola_species) # 2x sudan, 16x zaire
+n_si <- delay_dat %>% filter(delay_short %in% "Serial interval") # total:18 --> 21
+length(unique(n_si$covidence_id)) # total:14 articles --> 17
+table(n_si$ebola_species) # 2x sudan, 16x zaire --> 2x sudan, 19x zaire
   # Incubation
-n_incub <- delay_dat %>% filter(delay_short %in% "Incubation period") # 41
-length(unique(n_incub$covidence_id)) # 35 articles
-table(n_incub$ebola_species) # 3x bundibugyo, 3x sudan, 34x zaire, 1x zaire & sudan
+n_incub <- delay_dat %>% filter(delay_short %in% "Incubation period") # 41 --> 53
+length(unique(n_incub$covidence_id)) # 35 articles --> 44
+table(n_incub$ebola_species) # 3x bundibugyo, 3x sudan, 34x zaire, 1x zaire & sudan --> 6x sudan, 43x zaire
 n_incub_filt <- delay_dat %>% filter(delay_short %in% "Incubation period" &
-                                       article_qa_score >= 50) # 32
-table(n_incub_filt$ebola_species) # filtered: 3x bundibugyo, 3x sudan, 26x zaire
+                                       article_qa_score >= 50) # 32 --> 36
+table(n_incub_filt$ebola_species) # filtered: 3x bundibugyo, 3x sudan, 26x zaire --> 30x zaire
   # Latent
 n_latent <- delay_dat %>% filter(delay_short %in% "Latent period") # 11
 length(unique(n_latent$covidence_id)) # 10 articles
@@ -290,9 +290,9 @@ table(n_latent$ebola_species) # 11x zaire
 delay_dat %>% filter(delay_short %in% "Latent period" &
                        article_qa_score >= 50) %>% nrow() # 7
   # Infectious period
-n_infec <- delay_dat %>% filter(delay_short %in% "Infectious period") # 25
-length(unique(n_infec$covidence_id)) # 22 articles
-table(n_infec$ebola_species) # 3x bundibugyo, 22x zaire
+n_infec <- delay_dat %>% filter(delay_short %in% "Infectious period") # 25 --> 27
+length(unique(n_infec$covidence_id)) # 22 articles --> 23
+table(n_infec$ebola_species) # 3x bundibugyo, 22x zaire --> 1x sudan, 23x zaire
 n_infec_filt <- delay_dat %>% filter(delay_short %in% "Infectious period" &
                                        article_qa_score >= 50)
 table(n_infec_filt$ebola_species) # 12x zaire
