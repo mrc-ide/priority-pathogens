@@ -41,8 +41,10 @@ clean_dfs <- function(df, pathogen) {
 
     if (pathogen == "EBOLA") {
       df <- df %>%
-        # 12389: model only paper (growth model), 2921: Not extracted from
-        filter(!covidence_id %in% c(2921, 12389)) %>%
+        # 12389: model only paper (growth model), 2921: Not extracted from,
+        # 6471: sneaky duplicate, 5898: mutation frequencies (not mutation rates
+        # as no time component) paper only had mutations so removing whole paper
+        filter(!covidence_id %in% c(2921, 12389, 5898, 6471)) %>%
         mutate(
           # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
           # discussion with co-authors)
@@ -65,6 +67,8 @@ clean_dfs <- function(df, pathogen) {
             first_author_surname %in% "KI" ~ "Ki",
             first_author_surname %in% "Area\r\nArea" ~ "Area",
             first_author_surname %in% "DAUTEL" ~ "Dautel",
+            covidence_id %in% 12045 & first_author_surname %in% "Gilda" ~ "Grard",
+            covidence_id %in% 4132 ~ "Hunt",
             TRUE ~ first_author_surname
           ),
           # Fix issues with dois
@@ -79,7 +83,12 @@ clean_dfs <- function(df, pathogen) {
         mutate(
           article_label = as.character(
             paste0(first_author_surname, " ", year_publication)
-          )
+          ),
+          # for different articles by the same author in the same year
+          article_label = make.unique(article_label, sep = " ."),
+          article_label = gsub("\\.1", " (b)", article_label),
+          article_label = gsub("\\.2", " (c)", article_label),
+          article_label = gsub("\\.3", " (d)", article_label)
         )
     }
 
@@ -394,8 +403,10 @@ clean_dfs <- function(df, pathogen) {
     if (pathogen == "EBOLA") {
       df <- df %>%
         # Remove parameters from theoretical model papers/synthetic data papers
-        # (e.g. 2857, 2858)/correspondence/wrong entries
-        filter(!(covidence_id %in% c(1510, 2857, 2858, 4301, 5765, 5870, 17096))) %>%
+        # (e.g. 2857, 2858)/correspondence/wrong entries, 6471: sneaky duplicate,
+        # 5898: mutation frequencies (not mutation rates as no time component)
+        # this paper only had mutations so removing whole paper
+        filter(!(covidence_id %in% c(1510, 2857, 2858, 4301, 5765, 5870, 5898, 6471, 17096))) %>%
         # Remove duplicate entry from single extracted paper not identified as distinct
         filter(!(covidence_id %in% 3532 & access_param_id %in% 37)) %>%
         # Remove risk factor for covidence ID 17054 and remove NA risk factor -
