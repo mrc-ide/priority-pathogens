@@ -112,8 +112,6 @@ mutate(
 )
 
 # Checked:
-# Lopez id 2470 - cannot find in paper, removed in cleaning.R
-# Lindblade id 2532 - cannot find in paper, removed in cleaning.R
 # Johnson id 11425 - unspecified survey date, timing, central type
 # Johnson id 11421 - unspecified survey date, timing, central type
 # Diallo id 16201 - found survey dates, sample type, country
@@ -123,6 +121,7 @@ mutate(
 # Mathiot id 2354 - unspecified survey date, added sample type, looked at zaire and sudan species separately
 # Halfmann id 16757 - sample type "Other" as it was survivors and close contacts (either relatives of HCWs)
 # Rodhain id 2635 - not duplicate, one Zaire antigens, one Sudan antigens
+# WHO/International Study Team id 6471 - extractor noted "Other" is hospital staff contact
 
 # Order data for plots
 ordered_dat <- sero_dat %>%
@@ -266,3 +265,4 @@ save_as_image(sero_range_history,
 save_as_image(sero_range_no_history,
               path = "Seroprevalence_tables/range_no_history.png"
 )
+
