@@ -415,8 +415,9 @@ clean_dfs <- function(df, pathogen) {
         # Remove one risk factor from covidence ID 4764
         filter(!(riskfactor_name %in% "Other" &
           covidence_id %in% 4764 & access_param_id %in% 74)) %>%
-        # Remove 3 attack rates that are actually death rates
-        filter(!(covidence_id %in% 3681 & parameter_class %in% "Attack rate")) %>%
+        # 3681 - Remove 3 attack rates that are actually death rates
+        # 6263 - not reported as rate or percentage, excluded due to no maths rule
+        filter(!(covidence_id %in% c(3681, 6263) & parameter_class %in% "Attack rate")) %>%
         # Remove delay parameter where table and text don't match
         filter(!(covidence_id %in% 15544 & parameter_class %in% "Human delay")) %>%
         # Remove reproduction number entry without values
@@ -1153,7 +1154,7 @@ clean_dfs <- function(df, pathogen) {
                 # Secondary attack rate (contact based)
               parameter_class %in% "Attack rate" &
                 covidence_id %in% c(1053, 1749, 2240, 4253, 4829, 4991, 6472,
-                                    11467, 4796, 5601, 6263, 6470, 6471) ~ "Secondary",
+                                    11467, 4796, 5601, 6470, 6471) ~ "Secondary",
               parameter_class %in% "Attack rate" &
                 population_sample_type %in% "Household based" &
               covidence_id %in% 7199 ~ "Secondary",

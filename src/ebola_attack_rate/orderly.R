@@ -26,7 +26,6 @@ orderly_artefact(
 )
 
 orderly_parameters(pathogen = "EBOLA")
-# orderly_parameters(pathogen = NULL)
 
 # Get data from db_compilation
 orderly_dependency(
