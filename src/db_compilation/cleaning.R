@@ -86,9 +86,9 @@ clean_dfs <- function(df, pathogen) {
           ),
           # for different articles by the same author in the same year
           article_label = make.unique(article_label, sep = " ."),
-          article_label = gsub("\\.1", " (b)", article_label),
-          article_label = gsub("\\.2", " (c)", article_label),
-          article_label = gsub("\\.3", " (d)", article_label)
+          article_label = gsub("\\.1", "(b)", article_label),
+          article_label = gsub("\\.2", "(c)", article_label),
+          article_label = gsub("\\.3", "(d)", article_label)
         )
     }
 
