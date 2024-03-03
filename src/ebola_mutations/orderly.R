@@ -26,7 +26,6 @@ orderly_artefact(
 )
 
 orderly_parameters(pathogen = "EBOLA")
-# orderly_parameters(pathogen = NULL)
 
 # Get data from db_compilation
 orderly_dependency(
@@ -64,6 +63,7 @@ mut_dat <- left_join(
     parameter_type = str_replace(parameter_type, "Mutations – ", ""),
     parameter_type = str_to_sentence(parameter_type),
     population_country = as.factor(population_country),
+    # unique for each entry of article so they plot on separate lines
     article_label_unique = make.unique(article_label),
     outbreak = order_ebola_outbreaks(outbreak),
     ebola_species = factor(ebola_species, levels = c(
@@ -136,11 +136,12 @@ mut_dat <- left_join(
 
 # Check NA and unspecified and add fixes to cleaning.R in db_compilation:
 mut_dat$parameter_value_type # Check 3 NA (x)
-mut_dat$population_country # Check 6 unspecified - 5898 x2 (Alfson) truly unspecified (x)
-mut_dat$survey_date # Check 7 unspecified - 5898 x2 (Alfson) and 17835 (Membrebe) truly unspecified, 19237 x2 (Vrancken) unclear (x)
-mut_dat$outbreak # Check 12 unspecified - 5898 x2 (Alfson) truly unspecified, 19237 x2 (Vrancken) unclear (x)
+mut_dat$population_country # Check 6 unspecified
+mut_dat$survey_date # Check 7 unspecified - 17835 (Membrebe) truly unspecified, 19237 x2 (Vrancken) unclear (x)
+mut_dat$outbreak # Check 12 unspecified - 19237 x2 (Vrancken) unclear (x)
 mut_dat$parameter_unit # Checked 4 Unspecified and NA (x)
 mut_dat$genome_site # Combined variations of whole genome, glycoprotein, etc (x)
+# 1st March: Alfson 5898 removed (mutation frequencies) and 1 from Vrancken (null estimate)
 
 # Create directory for results
 dir.create("Mutation_results")
@@ -170,13 +171,8 @@ ordered_dat <- mut_dat %>%
 
 # PLOTS
 
-same_unit_dat <- ordered_dat %>% filter(parameter_unit %in% "Substitutions/site/year (10^-4)")
-diff_unit_dat <- ordered_dat %>% filter(!parameter_unit %in% "Substitutions/site/year (10^-4)")
-snp_dat <- diff_unit_dat %>% filter(parameter_unit %in% "SNPs/nucleotide sequenced (10^-4)")
-indel_dat <- diff_unit_dat %>% filter(parameter_unit %in% "Indels/base sequenced (10^-4)")
-
 mut_plot_qa <- create_plot(
-  same_unit_dat,
+  ordered_dat,
   param = parameter,
   qa_filter = TRUE,
   facet_by = "parameter_type",
@@ -185,28 +181,8 @@ mut_plot_qa <- create_plot(
   axis_label = "Substitutions/site/year (10^-4)"
 )
 
-snp_plot_qa <- create_plot(
-  snp_dat,
-  param = parameter,
-  qa_filter = TRUE, # doesn't make a difference
-  facet_by = "parameter_type",
-  symbol_shape_by = "parameter_value_type",
-  symbol_col_by = "population_country",
-  axis_label = "SNPs/nucleotide sequenced (10^-4)"
-)
-
-indel_plot_qa <- create_plot(
-  indel_dat,
-  param = parameter,
-  qa_filter = TRUE, # doesn't make a difference
-  facet_by = "parameter_type",
-  symbol_shape_by = "parameter_value_type",
-  symbol_col_by = "population_country",
-  axis_label = "Indels/base sequenced (10^-4)"
-)
-
 mut_plot <- create_plot(
-  same_unit_dat,
+  ordered_dat,
   param = parameter,
   qa_filter = FALSE,
   facet_by = "parameter_type",
@@ -217,35 +193,22 @@ mut_plot <- create_plot(
 
 # Save all for substitutions/site/year
 ggsave("Mutation_results/qa_filtered/plot.png", mut_plot_qa,
-       width = 9, height = 5, units = "in", bg = "white"
+       width = 10, height = 5, units = "in", bg = "white"
 )
 
 ggsave("Mutation_results/qa_unfiltered/plot.png", mut_plot,
-       width = 9, height = 5, units = "in", bg = "white"
+       width = 10, height = 5, units = "in", bg = "white"
 )
 
 # TABLES
 
 tab_dat <- ordered_dat %>%
   mutate(parameter_value = as.character(round(parameter_value, digits = 2)),
-         parameter_value =
-           case_when(parameter_type %in% "Mutation rate" &
-                       parameter_unit %in% "SNPs/nucleotide sequenced (10^-4)" ~
-                       paste0(parameter_value, "*"),
-                     parameter_type %in% "Mutation rate" &
-                       parameter_unit %in% "Indels/base sequenced (10^-4)" ~
-                       paste0(parameter_value, "**"),
-                     TRUE ~ parameter_value),
-         parameter_type =
-           case_when(parameter_type %in% c("Evolutionary rate", "Substitution rate") ~
-                       paste0(parameter_type, " (", parameter_unit, ")"),
-                     parameter_type %in% "Mutation rate" ~
-                       paste0(parameter_type,
-                              " (Substitutions/site/year (10^-4), *SNPs/nucleotide sequenced (10^-4), **Indels/base sequenced (10^-4))"),
-                     TRUE ~ parameter_type),
          ebola_species =
            case_when(ebola_species %in% "Bundibugyo, Sudan, Taï Forest & Zaire" ~
-                       "All species", TRUE ~ ebola_species) # list all human pathogenic species in legend
+                       "All species", TRUE ~ ebola_species), # list all human pathogenic species in legend
+         population_sample_type =
+           case_when(population_sample_type %in% "Unspecified" ~ "", TRUE ~ population_sample_type)
          )
 
 # QA unfiltered
@@ -256,6 +219,13 @@ mut_tab <- create_table(
   #rounding = "2d",
   qa_filter = FALSE
 )
+
+# add superscript to subheadings
+mut_tab <- mk_par(
+  mut_tab, i = c(1, 14, 17), j = 1, part = "body", value = as_paragraph(
+    paste0(parameter_type), " (Substitutions/site/year (10", as_sup("-4"), "))")
+  )
+
 
 # QA filtered
 mut_tab_qa <- create_table(
@@ -269,3 +239,4 @@ mut_tab_qa <- create_table(
 # Save
 save_as_image(mut_tab, path = "Mutation_results/qa_unfiltered/table.png")
 save_as_image(mut_tab_qa, path = "Mutation_results/qa_filtered/table.png")
+
