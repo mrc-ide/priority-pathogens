@@ -1076,6 +1076,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% c(16951, 18372) & parameter_class %in% "Human delay" ~ 2018,
               covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 2014,
               covidence_id %in% 6471 ~ 1976,
+              covidence_id %in% 24646 ~ 1995,
               TRUE ~ population_study_start_year
             ),
           population_study_end_year =
@@ -1096,6 +1097,7 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2020,
               covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 2014,
               covidence_id %in% 6471 ~ 1976,
+              covidence_id %in% 24646 ~ 1995,
               TRUE ~ population_study_end_year
             ),
           

@@ -12,6 +12,7 @@ library(janitor)
 library(stringr)
 library(scales)
 library(epitrix)
+library(doconv)
 
 orderly_strict_mode()
 
@@ -223,11 +224,11 @@ eff_r_country_qa <- create_plot(
 
 # Save
 ggsave("R_plots/basic_r_outbreak_filtered.png", basic_r_outbreak_qa,
-  width = 9, height = 11, units = "in", bg = "white"
+  width = 9, height = 12, units = "in", bg = "white"
 )
 
 ggsave("R_plots/basic_r_country_filtered.png", basic_r_country_qa,
-  width = 9, height = 11, units = "in", bg = "white"
+  width = 9, height = 12.5, units = "in", bg = "white"
 )
 
 ggsave("R_plots/eff_r_outbreak_filtered.png", eff_r_outbreak_qa,
@@ -284,7 +285,7 @@ p_tab_eff <- paginate(eff_r_tab)
 # Make sure to remove white space by adjusting width and height
 save_as_docx(p_tab_basic, path = "R_tables/unfiltered/paginate_basic_r_tab_all.docx",
              pr_section = prop_section(
-               page_size = page_size(orient = "landscape", width = 19, height = 14.5),
+               page_size = page_size(orient = "landscape", width = 19, height = 15),
                type = "continuous",
                page_margins = page_mar(bottom = 0, top = 0, right = 0, left = 0, gutter = 0)
                ))
