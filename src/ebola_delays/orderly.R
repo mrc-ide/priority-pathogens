@@ -51,10 +51,19 @@ orderly_artefact(
     "Delay_tables/qa_filtered/exposure_table.png",
     "Delay_tables/qa_filtered/other_table.png",
     "Meta_plots/incubation_period.png",
+    "Meta_plots/incubation_period_species.png",
+    "Meta_plots/infectious_period.png",
     "Meta_plots/serial_interval.png",
+    "Meta_plots/serial_interval_qafilter.png",
     "Meta_plots/onset_to_death.png",
-    "Meta_plots/meta_delays_variance_unfiltered.png",
-    "Meta_plots/meta_delays_variance_QAfiltered.png"
+    "Meta_plots/onset_to_death_species.png",
+    "Meta_plots/onset_to_death_qafilter.png",
+    "Meta_plots/onset_to_recovery.png",
+    "Meta_plots/onset_to_recovery_species.png",
+    "Meta_plots/onset_to_recovery_qafilter.png",
+    "Meta_plots/meta_delays_main_text.png",
+    "Meta_plots/meta_delays_species_subgroups.png",
+    "Meta_plots/meta_delays_unfiltered.png"
   )
 )
 
@@ -99,8 +108,10 @@ delay_dat <- df %>%
   mutate(
     article_label_unique = make.unique(article_label),
     article_label =
-      case_when(article_label == "WHO/International Study Team 1978" ~
-        "WHO/Int. Study Team 1978", TRUE ~ article_label),
+      case_when(
+        article_label == "WHO/International Study Team 1978" ~
+          "WHO/Int. Study Team 1978",
+        TRUE ~ article_label),
     outbreak = order_ebola_outbreaks(outbreak),
     population_study_start_month =
       factor(population_study_start_month,
@@ -109,7 +120,7 @@ delay_dat <- df %>%
           "Sep", "Oct", "Nov", "Dec"
         )
       ),
-    # Account for distributions - REMEMBER TO DO THIS FOR NEW PARAM ADDED FOR ID 5868
+    # Account for distributions
     parameter_value_type =
       case_when(
         is.na(parameter_value) & distribution_type %in% "Gamma" &
@@ -270,48 +281,18 @@ delay_dat <- df %>%
   ) %>%
   group_by(delay_short)
 
-
-# Pull numbers for text
-  # SI
-n_si <- delay_dat %>% filter(delay_short %in% "Serial interval") # total:18 --> 21
-length(unique(n_si$covidence_id)) # total:14 articles --> 17
-table(n_si$ebola_species) # 2x sudan, 16x zaire --> 2x sudan, 19x zaire
-  # Incubation
-n_incub <- delay_dat %>% filter(delay_short %in% "Incubation period") # 41 --> 53
-length(unique(n_incub$covidence_id)) # 35 articles --> 44
-table(n_incub$ebola_species) # 3x bundibugyo, 3x sudan, 34x zaire, 1x zaire & sudan --> 6x sudan, 43x zaire
-n_incub_filt <- delay_dat %>% filter(delay_short %in% "Incubation period" &
-                                       article_qa_score >= 50) # 32 --> 36
-table(n_incub_filt$ebola_species) # filtered: 3x bundibugyo, 3x sudan, 26x zaire --> 30x zaire
-  # Latent
-n_latent <- delay_dat %>% filter(delay_short %in% "Latent period") # 11
-length(unique(n_latent$covidence_id)) # 10 articles
-table(n_latent$ebola_species) # 11x zaire
-delay_dat %>% filter(delay_short %in% "Latent period" &
-                       article_qa_score >= 50) %>% nrow() # 7
-  # Infectious period
-n_infec <- delay_dat %>% filter(delay_short %in% "Infectious period") # 25 --> 27
-length(unique(n_infec$covidence_id)) # 22 articles --> 23
-table(n_infec$ebola_species) # 3x bundibugyo, 22x zaire --> 1x sudan, 23x zaire
-n_infec_filt <- delay_dat %>% filter(delay_short %in% "Infectious period" &
-                                       article_qa_score >= 50)
-table(n_infec_filt$ebola_species) # 12x zaire
-  # Generation time
-n_gen <- delay_dat %>% filter(delay_short %in% "Generation time") # 1
-n_gen$ebola_species # zaire
-
 # Order data for plots
 ordered_dat <- delay_dat %>%
   group_by(outbreak) %>%
   mutate(
     range_midpoint =
       ifelse(is.na(parameter_value) & !is.na(parameter_upper_bound),
-        (parameter_upper_bound - parameter_lower_bound) /
-          2 + parameter_lower_bound, NA
+             (parameter_upper_bound - parameter_lower_bound) /
+               2 + parameter_lower_bound, NA
       ),
     temp_order_by = ifelse(!is.na(parameter_value),
-      parameter_value,
-      range_midpoint
+                           parameter_value,
+                           range_midpoint
     )
   ) %>%
   arrange(temp_order_by) %>%
@@ -321,6 +302,46 @@ ordered_dat <- delay_dat %>%
       levels = unique(article_label_unique)
     )
   )
+
+# Pull numbers for text
+
+  # SI
+n_si <- delay_dat %>% filter(delay_short %in% "Serial interval")
+n_si %>% nrow() # total: 21 parameters
+length(unique(n_si$covidence_id)) # total: 17 articles
+table(n_si$ebola_species) # 2 sudan, 19 zaire
+
+  # Incubation
+n_incub <- delay_dat %>% filter(delay_short %in% "Incubation period")
+n_incub %>% nrow() # 52 parameters
+length(unique(n_incub$covidence_id)) # 43 articles
+table(n_incub$ebola_species) # 3 bundibugyo, 5 sudan, 43 zaire, 1 zaire & sudan
+n_incub_filt <- delay_dat %>%
+  filter(delay_short %in% "Incubation period" & article_qa_score >= 50)
+n_incub_filt %>% nrow() # 36 parameters with high QA score
+table(n_incub_filt$ebola_species) # filtered: 3 bundibugyo, 3 sudan, 30 zaire
+
+  # Latent
+n_latent <- delay_dat %>% filter(delay_short %in% "Latent period")
+n_latent %>% nrow() # 11 parameters
+length(unique(n_latent$covidence_id)) # 10 articles
+table(n_latent$ebola_species) # 11 zaire
+delay_dat %>%
+  filter(delay_short %in% "Latent period" & article_qa_score >= 50) %>% nrow() # 7
+
+  # Infectious period
+n_infec <- delay_dat %>% filter(delay_short %in% "Infectious period")
+n_infec %>% nrow() # 27 parameters
+length(unique(n_infec$covidence_id)) # 23 articles
+table(n_infec$ebola_species) # 3 bundibugyo, 1 sudan, 23 zaire
+n_infec_filt <- delay_dat %>%
+  filter(delay_short %in% "Infectious period" & article_qa_score >= 50)
+n_infec_filt %>% nrow() # 12
+table(n_infec_filt$ebola_species) # 12 zaire
+
+  # Generation time
+n_gen <- delay_dat %>% filter(delay_short %in% "Generation time") # 1
+n_gen$ebola_species # zaire
 
 # Create directory for results
 dir.create("Delay_plots")
@@ -364,7 +385,8 @@ symp_dat <- ordered_dat %>%
           "Symptom onset to negative test",
           "Symptom onset to first undetectable viremia",
           "Symptom onset to discharge from care",
-          "Symptom onset to death"
+          "Symptom onset to death",
+          "Symptom onset to death or discharge"
         )
       )
   )
@@ -390,13 +412,20 @@ adm_dat <- ordered_dat %>%
   filter(delay_start == "Admission to care") %>%
   mutate(
     delay_short =
-      factor(delay_short,
+      case_when(
+        delay_short %in% c("Admission to care to death/discharge",
+                           "Admission to care to death/recovery") ~
+          "Admission to care to outcome (death/recovery/discharge)",
+        TRUE ~ delay_short)
+      ) %>%
+  mutate(
+      delay_short = factor(
+        delay_short,
         levels = c(
+          "Admission to care to death",
           "Admission to care to recovery/non-infectiousness",
           "Admission to care to discharge from care",
-          "Admission to care to death",
-          "Admission to care to death/discharge",
-          "Admission to care to death/recovery",
+          "Admission to care to outcome (death/recovery/discharge)",
           "Admission to care to negative test"
         )
       )
@@ -422,7 +451,8 @@ adm_plot_unf <- create_plot(
 infp_dat <- ordered_dat %>%
   filter(delay_start %in% "Infection process" &
          # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
-         !covidence_id %in% 17715) %>%
+         # Remove White 2007 - SD without a paired central value
+         !covidence_id %in% c(17715, 24646)) %>%
   mutate(
     delay_short =
       factor(delay_short,
@@ -470,24 +500,26 @@ dtb_plot_unf <- create_plot(
   symbol_col_by = "outbreak"
 )
 
+# this definitely needs to be split!
 ggsave("Delay_plots/qa_filtered/symp_plot_filtered.png", symp_plot_qa,
-  width = 9, height = 16, units = "in", bg = "white"
+  width = 9, height = 20, units = "in", bg = "white"
 )
 
 ggsave("Delay_plots/qa_filtered/adm_plot_filtered.png", adm_plot_qa,
-  width = 9, height = 9, units = "in", bg = "white"
+  width = 9, height = 10, units = "in", bg = "white"
 )
 
 ggsave("Delay_plots/qa_filtered/infp_plot_filtered.png", infp_plot_qa,
-  width = 9, height = 9, units = "in", bg = "white"
+  width = 9, height = 10.5, units = "in", bg = "white"
 )
 
 ggsave("Delay_plots/qa_filtered/dtb_plot_filtered.png", dtb_plot_qa,
   width = 9, height = 2, units = "in", bg = "white"
 )
 
+# this definitely needs to be split!
 ggsave("Delay_plots/unfiltered/symp_plot_unfiltered.png", symp_plot_unf,
-       width = 10, height = 22, units = "in", bg = "white"
+       width = 10, height = 24, units = "in", bg = "white"
 )
 
 ggsave("Delay_plots/unfiltered/adm_plot_unfiltered.png", adm_plot_unf,
@@ -509,14 +541,16 @@ left_dat <- symp_dat %>%
                              "Symptom onset to negative test",
                              "Symptom onset to first undetectable viremia",
                              "Symptom onset to discharge from care",
-                             "Symptom onset to death"))
+                             "Symptom onset to death",
+                             "Symptom onset to death or discharge"))
 right_dat <- symp_dat %>%
   filter(delay_short %in% c("Symptom onset to diagnosis",
                             "Symptom onset to recovery/non-infectiousness",
                             "Symptom onset to negative test",
                             "Symptom onset to first undetectable viremia",
                             "Symptom onset to discharge from care",
-                            "Symptom onset to death"))
+                            "Symptom onset to death",
+                            "Symptom onset to death or discharge"))
 
 left <- create_plot(
   left_dat,
@@ -777,6 +811,8 @@ meta_dat <- delay_dat %>%
   filter(
     # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
     !covidence_id %in% 17715,
+    # remove entry where upper quantile is equal to median as it results in an error
+    !article_label_unique %in% "Francesconi 2003.1",
     !is.na(parameter_value),
     !is.na(population_sample_size),
     !is.na(parameter_uncertainty_singe_type) | !is.na(parameter_uncertainty_type),
@@ -832,172 +868,96 @@ meta_var <- meta_dat %>%
   ) |
     parameter_uncertainty_type %in% c("IQR", "Range"))
 
-# Variance data (incubation period, serial interval, symptom onset to death)
-sotd_var <- meta_var %>% filter(delay_short %in% "Symptom onset to death") # 18 without filter
-incub_var <- meta_var %>% filter(delay_short %in% "Incubation period") # 8 (all qa scores >50)
-serial_var <- meta_var %>% filter(delay_short %in% "Serial interval") # 8 without filter
+# Variance data (incubation, serial interval, symptom onset to death/recovery, infectious period)
+sotd <- meta_var %>% filter(delay_short %in% "Symptom onset to death") # 21
+incub <- meta_var %>% filter(delay_short %in% "Incubation period") # 11
+serial <- meta_var %>% filter(delay_short %in% "Serial interval") # 9
+sotr <- meta_var %>% filter(delay_short %in% "Symptom onset to recovery/non-infectiousness") # 4
+infp <- meta_var %>% filter(delay_short %in% "Infectious period") # 3
+  
+# species subgroup analysis?
+table(sotd$ebola_species) # Bundibugyo x3, Sudan x1, Zaire x17
+table(incub$ebola_species) # Bundibugyo x1, Sudan x2, Zaire x8
+table(serial$ebola_species) # All Zaire
+table(sotr$ebola_species) # Bundibugyo x2, Zaire x2
+table(infp$ebola_species) # Sudan x1, Zaire x2
 
-sotd_var_qa <- meta_var %>% filter(delay_short %in% "Symptom onset to death") %>%
-  filter(article_qa_score >= 50) # 13 with qa filter
-serial_var_qa <- meta_var %>% filter(delay_short %in% "Serial interval") %>%
-  filter(article_qa_score >= 50) # 5 with qa filter
+sotd_qa <- sotd %>% filter(article_qa_score >= 50) # 16
+incub_qa <- incub %>% filter(article_qa_score >= 50) # 9
+serial_qa <- serial %>% filter(article_qa_score >= 50) # 6
+sotr_qa <- sotr %>% filter(article_qa_score >= 50) # 4 (all data qa > 50)
+infp_qa <- infp %>% filter(article_qa_score >= 50) # 1 - not included
 
-# Not included as too few data points:
-# sotr_var <- meta_var %>% filter(delay_short %in% "Symptom onset to recovery/non-infectiousness") # 2
-# inf_var <- meta_var %>% filter(delay_short %in% "Infectious period") # 1
+# species subgroup analysis probably not worth it for QA filtered
+table(sotd_qa$ebola_species) # Bundibugyo x3, Sudan x1, Zaire x12
+table(incub_qa$ebola_species) # Bundibugyo x1, Sudan x1, Zaire x7
+table(serial_qa$ebola_species) # All Zaire
+table(sotr_qa$ebola_species) # Bundibugyo x2, Zaire x2
 
-# Symptom onset to death meta-analysis WITHOUT FILTER
+
+#####################
+# ALL DATA INCLUDED #
+#####################
+
+# Symptom onset to death
 set.seed(6)
-sotd_var_ma <- metamean(
-  data = sotd_var,
-  n = population_sample_size,
-  mean = xbar,
-  sd = sd,
+sotd_ma <- metamean(
+  data = sotd,
+  n = population_sample_size, mean = xbar, sd = sd,
   studlab = article_label,
-  median = median,
-  q1 = q1,
-  q3 = q3,
-  min = min,
-  max = max,
-  # Method for Unknown Non-Normal Distributions (MLN) approach (Cai et al. (2021)):
-  method.mean = "Cai",
-  method.sd = "Cai",
-  # no transformation of data before meta-analysis:
-  sm = "MRAW",
-  method.tau = "ML"
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/onset_to_death.png", width = 9500, height = 6000, res = 1000)
-forest.meta(sotd_var_ma,
-  digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
-  weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
-  col.study = "black", col.inside = "black", col.diamond.lines = "black",
-  col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
-  at = seq(0, 15, by = 3),
-  xlim = c(0, 15),
-  xlab = "Symptom onset to death (days)", fontsize = 10
-)
-dev.off()
-
-# Symptom onset to death meta-analysis WITH QA FILTER
-set.seed(6)
-sotd_var_ma_qa <- metamean(
-  data = sotd_var_qa,
-  n = population_sample_size,
-  mean = xbar,
-  sd = sd,
-  studlab = article_label,
-  median = median,
-  q1 = q1,
-  q3 = q3,
-  min = min,
-  max = max,
-  # Method for Unknown Non-Normal Distributions (MLN) approach (Cai et al. (2021)):
-  method.mean = "Cai",
-  method.sd = "Cai",
-  # no transformation of data before meta-analysis:
-  sm = "MRAW",
-  method.tau = "ML"
-)
-
-png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
-forest.meta(sotd_var_ma_qa,
-            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
-            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
-            col.study = "black", col.inside = "black", col.diamond.lines = "black",
-            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
-            at = seq(0, 15, by = 3),
-            xlim = c(0, 15),
-            xlab = "Symptom onset to death (days)", fontsize = 10
-)
-dev.off()
-
-# Incubation period meta-analysis
-# remove entry where upper quantile is equal to median as it results in an error
-incub_var <- incub_var %>% filter(article_label_unique != "Francesconi 2003.1")
-set.seed(6)
-incub_var_ma <- metamean(
-  data = incub_var,
-  n = population_sample_size,
-  mean = xbar,
-  sd = sd,
-  studlab = article_label,
-  median = median,
-  q1 = q1,
-  q3 = q3,
-  min = min,
-  max = max,
-  method.mean = "Cai",
-  method.sd = "Cai",
-  sm = "MRAW",
-  method.tau = "ML"
-)
-
-png(file = "Meta_plots/incubation_period.png", width = 9500, height = 3500, res = 1000)
-forest.meta(incub_var_ma,
+png(file = "Meta_plots/onset_to_death.png", width = 9500, height = 6500, res = 1000)
+forest.meta(sotd_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
   col.study = "black", col.inside = "black", col.diamond.lines = "black",
   col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
   at = seq(5, 15, by = 3),
   xlim = c(5, 15),
-  xlab = "Incubation period (days)", fontsize = 10
+  xlab = "Symptom onset to death (days)", fontsize = 10
 )
 dev.off()
 
-
-# Serial interval meta-analysis NO FILTER
+# Incubation periods
 set.seed(6)
-serial_var_ma <- metamean(
-  data = serial_var,
-  n = population_sample_size,
-  mean = xbar,
-  sd = sd,
+incub_ma <- metamean(
+  data = incub,
+  n = population_sample_size, mean = xbar, sd = sd,
   studlab = article_label,
-  median = median,
-  q1 = q1,
-  q3 = q3,
-  min = min,
-  max = max,
-  method.mean = "Cai",
-  method.sd = "Cai",
-  sm = "MRAW",
-  method.tau = "ML"
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/serial_interval.png", width = 9500, height = 3800, res = 1000)
-forest.meta(serial_var_ma,
-  digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
-  weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
-  col.study = "black", col.inside = "black", col.diamond.lines = "black",
-  col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
-  at = seq(9, 22, by = 3),
-  xlim = c(9, 22),
-  xlab = "Serial interval (days)", fontsize = 10
+png(file = "Meta_plots/incubation_period.png", width = 9500, height = 4300, res = 1000)
+forest.meta(incub_ma,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(3, 15, by = 3),
+            xlim = c(3, 15),
+            xlab = "Incubation period (days)", fontsize = 10
 )
 dev.off()
 
-# Serial interval meta-analysis WITH QA FILTER
+# Serial intervals
 set.seed(6)
-serial_var_ma_qa <- metamean(
-  data = serial_var_qa,
-  n = population_sample_size,
-  mean = xbar,
-  sd = sd,
+serial_ma <- metamean(
+  data = serial,
+  n = population_sample_size, mean = xbar, sd = sd,
   studlab = article_label,
-  median = median,
-  q1 = q1,
-  q3 = q3,
-  min = min,
-  max = max,
-  method.mean = "Cai",
-  method.sd = "Cai",
-  sm = "MRAW",
-  method.tau = "ML"
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3600, res = 1000)
-forest.meta(serial_var_ma_qa,
+png(file = "Meta_plots/serial_interval.png", width = 9500, height = 4000, res = 1000)
+forest.meta(serial_ma,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1008,66 +968,324 @@ forest.meta(serial_var_ma_qa,
 )
 dev.off()
 
-# combine variance plots
-p1_var <- png::readPNG("Meta_plots/incubation_period.png", native = TRUE)
-p2_var <- png::readPNG("Meta_plots/serial_interval.png", native = TRUE)
-p3_var <- png::readPNG("Meta_plots/onset_to_death.png", native = TRUE)
+# Symptom onset to recovery
+set.seed(6)
+sotr_ma <- metamean(
+  data = sotr,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
+)
 
-p1_qa <- png::readPNG("Meta_plots/incubation_period.png", native = TRUE)  # no difference to above
+png(file = "Meta_plots/onset_to_recovery.png", width = 9500, height = 3000, res = 1000)
+forest.meta(sotr_ma,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(7, 20, by = 3),
+            xlim = c(7, 20),
+            xlab = "Symptom onset to recovery (days)", fontsize = 10
+)
+dev.off()
+
+# Infectious period
+set.seed(6)
+infp_ma <- metamean(
+  data = infp,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
+)
+
+png(file = "Meta_plots/infectious_period.png", width = 9500, height = 3000, res = 1000)
+forest.meta(infp_ma,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(3, 7, by = 1),
+            xlim = c(3, 7),
+            xlab = "Infectious period (days)", fontsize = 10
+)
+dev.off()
+
+###############
+# QA FILTERED #
+###############
+
+# Symptom onset to death
+set.seed(6)
+sotd_ma_qa <- metamean(
+  data = sotd_qa,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
+)
+
+png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
+forest.meta(sotd_ma_qa,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(5, 15, by = 3),
+            xlim = c(5, 15),
+            xlab = "Symptom onset to death (days)", fontsize = 10
+)
+dev.off()
+
+# Serial intervals
+set.seed(6)
+serial_ma_qa <- metamean(
+  data = serial_qa,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
+)
+
+png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3400, res = 1000)
+forest.meta(serial_ma_qa,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(9, 22, by = 3),
+            xlim = c(9, 22),
+            xlab = "Serial interval (days)", fontsize = 10
+)
+dev.off()
+
+# Incubation periods
+set.seed(6)
+incub_ma_qa <- metamean(
+  data = incub_qa,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
+)
+
+png(file = "Meta_plots/incubation_period_qafilter.png", width = 9500, height = 4000, res = 1000)
+forest.meta(incub_ma_qa,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(5, 14, by = 3),
+            xlim = c(5, 14),
+            xlab = "Incubation period (days)", fontsize = 10
+)
+dev.off()
+
+# Symptom onset to recovery
+set.seed(6)
+sotr_ma_qa <- metamean(
+  data = sotr_qa,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML"
+)
+
+png(file = "Meta_plots/onset_to_recovery_qafilter.png", width = 9500, height = 3000, res = 1000)
+forest.meta(sotr_ma_qa,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(7, 20, by = 3),
+            xlim = c(7, 20),
+            xlab = "Symptom onset to recovery (days)", fontsize = 10
+)
+dev.off()
+
+#####################
+# SPECIES SUBGROUPS #
+#####################
+
+# Incubation period with species sub-groups
+set.seed(6)
+incub_species <- metamean(
+  data = incub,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML",
+  subgroup = ebola_species, subgroup.name = "Ebola virus species"
+)
+
+png(file = "Meta_plots/incubation_period_species.png", width = 9500, height = 7000, res = 1000)
+forest.meta(incub_species,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(1, 15, by = 3),
+            xlim = c(1, 15),
+            xlab = "Incubation period (days)", fontsize = 10
+)
+dev.off()
+
+
+# Symptom onset to death with species subgroup
+set.seed(6)
+sotd_species <- metamean(
+  data = sotd,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML",
+  subgroup = ebola_species, subgroup.name = "Ebola virus species"
+)
+
+png(file = "Meta_plots/onset_to_death_species.png", width = 9500, height = 9000, res = 1000)
+forest.meta(sotd_species,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(5, 15, by = 3),
+            xlim = c(5, 15),
+            xlab = "Symptom onset to death (days)", fontsize = 10
+)
+dev.off()
+
+# Symptom onset to recovery with species subgroup
+set.seed(6)
+sotr_species <- metamean(
+  data = sotr,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML",
+  subgroup = ebola_species, subgroup.name = "Ebola virus species"
+)
+
+png(file = "Meta_plots/onset_to_recovery_species.png", width = 9500, height = 4500, res = 1000)
+forest.meta(sotr_species,
+            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+            col.study = "black", col.inside = "black", col.diamond.lines = "black",
+            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+            at = seq(7, 20, by = 3),
+            xlim = c(7, 20),
+            xlab = "Symptom onset to recovery (days)", fontsize = 10
+)
+dev.off()
+
+# Infectious period with species subgroup
+set.seed(6)
+infp_species <- metamean(
+  data = infp,
+  n = population_sample_size, mean = xbar, sd = sd,
+  studlab = article_label,
+  median = median, q1 = q1, q3 = q3, min = min, max = max,
+  method.mean = "Cai", method.sd = "Cai",
+  sm = "MRAW", method.tau = "ML", random = gs("common"),
+  subgroup = ebola_species, subgroup.name = "Ebola virus species"
+)
+
+# Warning message:
+# Fisher scoring algorithm may have gotten stuck at a local maximum. Setting tau^2 = 0.
+
+#################
+# COMBINE PLOTS #
+#################
+
+# Main text panels
+p1_qa <- png::readPNG("Meta_plots/incubation_period_qafilter.png", native = TRUE)
 p2_qa <- png::readPNG("Meta_plots/serial_interval_qafilter.png", native = TRUE)
 p3_qa <- png::readPNG("Meta_plots/onset_to_death_qafilter.png", native = TRUE)
+p4_qa <- png::readPNG("Meta_plots/onset_to_recovery_qafilter.png", native = TRUE)
+
+# SM species sub-groups
+p1 <- png::readPNG("Meta_plots/incubation_period_species.png", native = TRUE)
+p2 <- png::readPNG("Meta_plots/onset_to_death_species.png", native = TRUE)
+p3 <- png::readPNG("Meta_plots/onset_to_recovery_species.png", native = TRUE)
+
+# SM no sub-groups
+p1_op2 <- png::readPNG("Meta_plots/infectious_period.png", native = TRUE)
+p2_op2 <- png::readPNG("Meta_plots/serial_interval.png", native = TRUE)
+#p1_op2 <- png::readPNG("Meta_plots/incubation_period.png", native = TRUE)
+#p4_op2 <- png::readPNG("Meta_plots/onset_to_death.png", native = TRUE)
+#p5_op2 <- png::readPNG("Meta_plots/onset_to_recovery.png", native = TRUE)
 
 # Create plots for each image
-plot1_var <- rasterGrob(p1_var, width = 0.9)
-plot2_var <- rasterGrob(p2_var, width = 0.9)
-plot3_var <- rasterGrob(p3_var, width = 0.9)
+plots_qa <- list()
+plots_species <- list()
+plots_unfilt <- list()
 
-plot1_qa <- rasterGrob(p1_qa, width = 0.9)
-plot2_qa <- rasterGrob(p2_qa, width = 0.9)
-plot3_qa <- rasterGrob(p3_qa, width = 0.9)
+for (i in 1:4) {
+  plots_qa[[i]] <- rasterGrob(get(paste0("p", i, "_qa")), width = 0.9)
+}
 
-heights_var <- c(
-  heightDetails(plot1_var),
-  heightDetails(plot2_var),
-  heightDetails(plot3_var)
-)
+for (i in 1:3) {
+  plots_species[[i]] <- rasterGrob(get(paste0("p", i)), width = 0.9)
+}
 
-heights_qa <- c(
-  heightDetails(plot1_qa),
-  heightDetails(plot2_qa),
-  heightDetails(plot3_qa)
-)
+for (i in 1:2) {
+  plots_unfilt[[i]] <- rasterGrob(get(paste0("p", i, "_op2")), width = 0.9)
+}
 
-# Normalise the heights to make them proportional
-p_heights_var <- heights_var / sum(heights_var)
+heights_qa <- sapply(plots_qa, heightDetails)
+heights_species <- sapply(plots_species, heightDetails)
+heights_unfilt <- sapply(plots_unfilt, heightDetails)
+
+# make them proportional
 p_heights_qa <- heights_qa / sum(heights_qa)
+p_heights_species <- heights_species / sum(heights_species)
+p_heights_unfilt <- heights_unfilt / sum(heights_unfilt)
 
-# Arrange and display the plots in a grid
-md_var <- grid.arrange(plot1_var, plot2_var, plot3_var, ncol = 1, heights = p_heights_var)
-md_qa <- grid.arrange(plot1_qa, plot2_qa, plot3_qa, ncol = 1, heights = p_heights_qa)
-
-
-md_var <- plot_grid(
-  plot1_var, plot2_var, plot3_var,
-  labels = c("A", "B", "C"),
-  label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.9, 0.88),
-  hjust = -0.5, vjust = -0.5,
-  ncol = 1,
-  rel_heights = p_heights_var) +
-  theme(plot.background = element_rect(color = "white", fill = "white")
-  )
-
+# create combined plots
 md_qa <- plot_grid(
-  plot1_qa, plot2_qa, plot3_qa,
-  labels = c("A", "B", "C"),
+  plots_qa[[1]], plots_qa[[2]], plots_qa[[3]], plots_qa[[4]],
+  labels = c("A", "B", "C", "D"),
   label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.8, 0.85),
+  label_x = 0, label_y = c(0.8, 0.9, 0.85, 0.8),
   hjust = -0.5, vjust = -0.5,
   ncol = 1,
   rel_heights = p_heights_qa) +
   theme(plot.background = element_rect(color = "white", fill = "white")
   )
 
-ggsave("Meta_plots/meta_delays_variance_unfiltered.png", plot = md_var, width = 7, height = 10)
-ggsave("Meta_plots/meta_delays_variance_QAfiltered.png", plot = md_qa, width = 7, height = 8.5)
+ggsave("Meta_plots/meta_delays_main_text.png", plot = md_qa, width = 7, height = 11)
+
+md_species <- plot_grid(
+  plots_species[[1]], plots_species[[2]], plots_species[[3]],
+  labels = c("A", "B", "C"),
+  label_size = 12,
+  label_x = 0, label_y = c(0.9, 0.9, 0.88),
+  hjust = -0.5, vjust = -0.5,
+  ncol = 1,
+  rel_heights = p_heights_species) +
+  theme(plot.background = element_rect(color = "white", fill = "white")
+  )
+
+ggsave("Meta_plots/meta_delays_species_subgroups.png", plot = md_species, width = 7, height = 14)
+
+md_unfilt <- plot_grid(
+  plots_unfilt[[1]], plots_unfilt[[2]],
+  labels = c("A", "B"),
+  label_size = 12,
+  label_x = 0, label_y = c(0.9, 0.9),
+  hjust = -0.5, vjust = -0.5,
+  ncol = 1,
+  rel_heights = p_heights_unfilt) +
+  theme(plot.background = element_rect(color = "white", fill = "white")
+  )
+
+ggsave("Meta_plots/meta_delays_unfiltered.png", plot = md_unfilt, width = 7, height = 5)
