@@ -100,10 +100,10 @@ table(rf_dat$riskfactor_significant, useNA = "ifany")
 
 # Pull numbers for text
 n_death <- rf_dat %>% filter(riskfactor_outcome %in% "Death") 
-n_death %>% nrow() # 136 death
+n_death %>% nrow() # 142 death
 n_inf <- rf_dat %>% filter(riskfactor_outcome %in% "Infection")
-n_inf %>% nrow() # 59 infection
-length(unique(n_inf$covidence_id)) # 30 articles
+n_inf %>% nrow() # 60 infection
+length(unique(n_inf$covidence_id)) # 31 articles
 n_sero <- rf_dat %>% filter(riskfactor_outcome %in% "Serology")
 n_sero %>% nrow() # 44 seropositivity
 
@@ -111,7 +111,7 @@ n_sero %>% nrow() # 44 seropositivity
 dir.create("Risk_tables")
 
 ####################################
-# Risk factors for death (n = 136) #
+# Risk factors for death (n = 142) #
 ####################################
 
 death_dat <- rf_dat %>%
@@ -146,7 +146,7 @@ death_table <- death_dat %>%
 save_as_image(death_table, path = "Risk_tables/risk_factors_for_death.png")
 
 #######################################
-# Risk factors for infection (n = 59) #
+# Risk factors for infection (n = 60) #
 #######################################
 
 # Checked and removed NA risk factor in cleaning.R (ID 2890)
