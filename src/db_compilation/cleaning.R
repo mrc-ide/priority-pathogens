@@ -69,6 +69,8 @@ clean_dfs <- function(df, pathogen) {
             first_author_surname %in% "DAUTEL" ~ "Dautel",
             covidence_id %in% 12045 & first_author_surname %in% "Gilda" ~ "Grard",
             covidence_id %in% 4132 ~ "Hunt",
+            first_author_surname %in% "Report of an International Commission" ~
+              "International Commission",
             TRUE ~ first_author_surname
           ),
           # Fix issues with dois
