@@ -208,8 +208,6 @@ param_tab <- summary_dat %>%
 save_as_image(param_tab, path = "Summary_results/parameter_type_table.png")
 
 # Summary of QA scores
-hist(df$article_qa_score)
-
 hist_dat <- summary_dat %>%
   mutate(parameter_class =
            factor(parameter_class,
