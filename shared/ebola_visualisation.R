@@ -60,7 +60,7 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
     labs(x = param, y = "", linetype = "", colour = "") +
     theme(
       legend.text = element_text(size = 10),
-      strip.text = element_text(size = 10),
+      strip.text = element_text(size = 10, face = "bold"),
       legend.title = element_blank(),
       axis.title.x = element_text(vjust = -1),
       legend.spacing.x = unit(6, 'mm')
