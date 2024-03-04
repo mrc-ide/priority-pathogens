@@ -31,7 +31,7 @@ orderly_dependency("ebola_severity",
 orderly_dependency("ebola_delays",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Delay_tables/qa_filtered/select_ranges_table.png",
-                             "Meta_plots/meta_delays_variance_QAfiltered.png"))
+                             "Meta_plots/meta_delays_main_text.png"))
 
 dir.create("Manuscript_figures")
 
@@ -50,7 +50,7 @@ writePNG(f3, "Manuscript_figures/cfr_plot.png")
 
 ## Figure 4: Delays meta-analysis
 
-f4 <- png::readPNG("Meta_plots/meta_delays_variance_QAfiltered.png")
+f4 <- png::readPNG("Meta_plots/meta_delays_main_text.png")
 writePNG(f4, "Manuscript_figures/delays_meta_analysis.png")
 
 ## Figure 5: Combine range tables
