@@ -70,14 +70,14 @@ df_models <- left_join(
 dir.create("Summary_results")
 
 # Check all numbers add up and then pull out numbers for text
-nrow(df) # number of parameters (1224)
-nrow(df_models) # number of models (294)
-table(df$outbreak) # number reporting on each outbreak (WA = 835)
-table(df$ebola_species) # number assigned to each species (Zaire = 1080 + 3 + 5 = 1088)
+nrow(df) # number of parameters 1279
+nrow(df_models) # number of models 295
+table(df$outbreak) # number reporting on each outbreak (WA = 858)
+table(df$ebola_species) # number assigned to each species (Zaire = 1124 + 3 + 5 = 1132)
 param_ids <- unique(df$covidence_id)
 model_ids <- unique(df_models$covidence_id)
 all_ids <- c(unique(df$covidence_id), unique(df_models$covidence_id))
-length(unique(all_ids)) # total papers (516)
+length(unique(all_ids)) # total papers 522
 
 articles <- articles %>% mutate(
   parameter_reported = case_when(covidence_id %in% param_ids ~ 1, TRUE ~ NA),
@@ -87,12 +87,12 @@ articles <- articles %>% mutate(
   model_only = case_when(model_reported %in% 1 & is.na(parameter_reported) ~ 1, TRUE ~ NA)
 )
 
-articles %>% filter(parameter_reported %in% 1) %>% nrow() # 348 articles
-articles %>% filter(model_reported %in% 1) %>% nrow() # 279 articles
+articles %>% filter(parameter_reported %in% 1) %>% nrow() # 354 articles
+articles %>% filter(model_reported %in% 1) %>% nrow() # 280 articles
 
-# Should all sum to 516
-articles %>% filter(both_reported %in% 1) %>% nrow() # 111 articles
-articles %>% filter(parameter_only %in% 1) %>% nrow() # 237 articles
+# Should all sum to 522
+articles %>% filter(both_reported %in% 1) %>% nrow() # 112 articles
+articles %>% filter(parameter_only %in% 1) %>% nrow() # 242 articles
 articles %>% filter(model_only %in% 1) %>% nrow() # 168 articles
 
 ###################################
@@ -108,7 +108,7 @@ summary_dat <- df %>%
         parameter_type %in% "Reproduction number (Effective, Re)" ~
           "Effective reproduction number (Re)",
         parameter_type %in% "Severity - case fatality rate (CFR)" ~
-          "Case Fatality Rate (CFR)",
+          "Case Fatality Ratio (CFR)",
         parameter_class %in% "Human delay" ~ delay_short,
         TRUE ~ parameter_type
       ),
@@ -231,3 +231,4 @@ qa_hist <- ggplot(hist_dat, aes(x = article_qa_score)) +
 ggsave("Summary_results/parameter_qa_scores.png", qa_hist,
        width = 7, height = 9, units = "in", bg = "white"
 )
+
