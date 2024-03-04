@@ -46,7 +46,8 @@ orderly_artefact(
     "Supplementary_figures/delays_admission_to_X.png",
     "Supplementary_figures/delays_infection_process.png",
     "Supplementary_figures/delays_death_to_burial.png",
-    "Supplementary_figures/delays_meta_analysis.png",
+    "Supplementary_figures/delays_meta_analysis_species.png",
+    "Supplementary_figures/delays_meta_analysis_unfiltered.png",
     # Models
     "Supplementary_figures/models_table.pdf",
     "Supplementary_figures/models_assumptions.png",
@@ -102,7 +103,8 @@ orderly_dependency("ebola_delays",
                              "Delay_plots/unfiltered/adm_plot_unfiltered.png",
                              "Delay_plots/unfiltered/infp_plot_unfiltered.png",
                              "Delay_plots/unfiltered/dtb_plot_unfiltered.png",
-                             "Meta_plots/meta_delays_variance_unfiltered.png"))
+                             "Meta_plots/meta_delays_species_subgroups.png",
+                             "Meta_plots/meta_delays_unfiltered.png"))
 orderly_dependency("ebola_models",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Model_results/overview_table.pdf",
@@ -175,8 +177,11 @@ file.copy(from = "Delay_plots/unfiltered/dtb_plot_unfiltered.png",
           to = "Supplementary_figures/delays_death_to_burial.png")
 
 # Unfiltered delays meta-analysis (to compare to main text)
-file.copy(from = "Meta_plots/meta_delays_variance_unfiltered.png",
-          to = "Supplementary_figures/delays_meta_analysis.png")
+file.copy(from = "Meta_plots/meta_delays_species_subgroups.png",
+          to = "Supplementary_figures/delays_meta_analysis_species.png")
+
+file.copy(from = "Meta_plots/meta_delays_unfiltered.png",
+          to = "Supplementary_figures/delays_meta_analysis_unfiltered.png")
 
 ####################
 ## SEROPREVALENCE ##
