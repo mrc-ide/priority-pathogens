@@ -15,8 +15,7 @@ library(doconv)
 
 orderly_strict_mode()
 
-# orderly_parameters(pathogen = "EBOLA")
-orderly_parameters(pathogen = NULL)
+orderly_parameters(pathogen = "EBOLA")
 
 orderly_artefact(
   "Plots and tables for severity parameters",
@@ -272,23 +271,23 @@ plot_country_all <- create_plot(
 
 # Save
 ggsave("Severity_plots/plot_outbreak_filtered.png", plot_outbreak_qa,
-  width = 9, height = 16, units = "in", bg = "white"
+  width = 9, height = 18, units = "in", bg = "white"
 )
 
 ggsave("Severity_plots/plot_split_outbreak_filtered.png", plot_split_outbreak,
-       width = 16, height = 9, units = "in", bg = "white"
+       width = 16, height = 11, units = "in", bg = "white"
 )
 
 ggsave("Severity_plots/plot_country_filtered.png", plot_country_qa,
-  width = 9, height = 16, units = "in", bg = "white"
+  width = 9, height = 17, units = "in", bg = "white"
 )
 
 ggsave("Severity_plots/plot_outbreak_unfiltered.png", plot_outbreak_all,
-  width = 9, height = 21, units = "in", bg = "white"
+  width = 9, height = 23, units = "in", bg = "white"
 )
 
 ggsave("Severity_plots/plot_country_unfiltered.png", plot_country_all,
-  width = 9, height = 21, units = "in", bg = "white"
+  width = 9, height = 22, units = "in", bg = "white"
 )
 
 
