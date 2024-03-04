@@ -178,7 +178,7 @@ mut_plot_qa <- create_plot(
   facet_by = "parameter_type",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country",
-  axis_label = "Substitutions/site/year (10^-4)"
+  axis_label = Substitutions/site/year~(10^-4)
 )
 
 mut_plot <- create_plot(
@@ -188,7 +188,7 @@ mut_plot <- create_plot(
   facet_by = "parameter_type",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country",
-  axis_label = "Substitutions/site/year (10^-4)"
+  axis_label = Substitutions/site/year~(10^-4)
 )
 
 # Save all for substitutions/site/year
