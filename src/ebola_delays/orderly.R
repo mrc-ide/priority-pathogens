@@ -1255,7 +1255,7 @@ md_qa <- plot_grid(
   plots_qa[[1]], plots_qa[[2]], plots_qa[[3]], plots_qa[[4]],
   labels = c("A", "B", "C", "D"),
   label_size = 12,
-  label_x = 0, label_y = c(0.8, 0.9, 0.85, 0.8),
+  label_x = 0, label_y = c(0.8, 0.88, 0.85, 0.8),
   hjust = -0.5, vjust = -0.5,
   ncol = 1,
   rel_heights = p_heights_qa) +
