@@ -86,5 +86,5 @@ range_tables <- plot_grid(
         plot.margin  = margin(0, 0, 0, 0)
   )
 
-ggsave("Manuscript_figures/combined_range_tables.png", range_tables, width = 7, height = 14.5)
+ggsave("Manuscript_figures/combined_range_tables.png", range_tables, width = 7, height = 15)
 
