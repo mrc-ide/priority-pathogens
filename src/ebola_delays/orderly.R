@@ -343,6 +343,16 @@ table(n_infec_filt$ebola_species) # 12 zaire
 n_gen <- delay_dat %>% filter(delay_short %in% "Generation time") # 1
 n_gen$ebola_species # zaire
 
+  # symptom onset to death
+n_sotd <- delay_dat %>% filter(delay_short %in% "Symptom onset to death")
+n_sotd %>% nrow() # 48
+length(unique(n_sotd$covidence_id)) # 39
+
+# symptom onset to recovery
+n_sotr <- delay_dat %>% filter(delay_short %in% "Symptom onset to recovery/non-infectiousness")
+n_sotr %>% nrow() # 14
+length(unique(n_sotr$covidence_id)) # 12
+
 # Create directory for results
 dir.create("Delay_plots")
 dir.create("Delay_plots/qa_filtered")
