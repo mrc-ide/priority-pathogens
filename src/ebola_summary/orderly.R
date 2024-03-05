@@ -70,7 +70,7 @@ df_models <- left_join(
 dir.create("Summary_results")
 
 # Check all numbers add up and then pull out numbers for text
-nrow(df) # number of parameters 1279
+nrow(df) # number of parameters 1280
 nrow(df_models) # number of models 295
 table(df$outbreak) # number reporting on each outbreak (WA = 858)
 table(df$ebola_species) # number assigned to each species (Zaire = 1124 + 3 + 5 = 1132)
@@ -115,7 +115,8 @@ summary_dat <- df %>%
     parameter_class =
       case_when(parameter_class %in% "Human delay" ~ "Delay",
                 TRUE ~ parameter_class)
-  )
+  ) %>%
+  filter(!parameter_from_figure %in% TRUE)
 
 # Parameter group table
 set_flextable_defaults(background.color = "white", na.string = "")
