@@ -4,7 +4,7 @@ assign_ebola_outbreak <- function(df) {
   df <- df %>%
     mutate(
       outbreak = case_when(
-        population_study_start_year %in% 1976 & population_study_end_year %in% c(1995, 2008, 2012, 2014) ~
+        population_study_start_year %in% 1976 & population_study_end_year %in% c(1995, 2008, 2012, 2014, 2018) ~
           "Multiple outbreaks",
         population_study_start_year %in% c(1979, 2000) & population_study_end_year %in% c(2014, 2015) ~
           "Multiple outbreaks",
