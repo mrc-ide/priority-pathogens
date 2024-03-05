@@ -31,18 +31,18 @@ articles <- select(
 )
 ## Add Journal and Year of publication to the article label
 ## so that people can find it even if there is no DOI
-articles$article_label <- paste0(
-  articles$article_label, 
+articles$article_title <- paste0(
+  articles$article_title, 
   " (", articles$journal, ", ", articles$year_publication, ")"
 )
 ## And make case consistent - sentence case
-articles$article_label <- str_to_title(articles$article_label)
+articles$article_title <- str_to_title(articles$article_title)
 ## Format the doi as a URL
 ## Some have the word "doi" in them, some don't
 articles$doi <- gsub("doi:", "", articles$doi, ignore.case = TRUE)
 ## Remove leading and trailing whitespace
 articles$doi <- trimws(articles$doi)
-articles$doi[!is.na(articles$doi)] <- paste0("https://doi.org/", articles$doi)
+articles$doi[!is.na(articles$doi)] <- paste0("https://doi.org/", articles$doi[!is.na(articles$doi)])
 ## If the doi is NA, leave it blank
 articles$doi[is.na(articles$doi)] <- ""
 ## From params, we want: id, parameter_type, ebola_species, 
@@ -62,7 +62,7 @@ out <- map_dfr(
       model_extrctd <- ifelse(nrow(m) > 0, "YES", "NO")
       a <- articles[articles$id %in% id, ]
       data.frame(
-        `Article Label` = a$article_label,
+        `Article` = a$article_label,
         `Title` = a$article_title,
         ##journal = a$journal,
         ##year_publication = a$year_publication,
@@ -75,6 +75,6 @@ out <- map_dfr(
     }
   )
 ## Alphabetically sort the articles
-out <- arrange(out, article_label)
+out <- arrange(out, `Article`)
 
 write_csv(out, "all_studies.csv")
