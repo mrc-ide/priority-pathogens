@@ -454,7 +454,8 @@ clean_dfs <- function(df, pathogen) {
                 "Guinea, Italy, Liberia, Mali, Nigeria, Senegal, Sierra Leone, Spain, United Kingdom, United States",
                 "DRC, Republic of the Congo, Côte d'Ivoire, Gabon, South Africa, South Sudan, Uganda",
                 "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon",
-                "Cameroon, DRC, Republic of the Congo, Ghana, Uganda"
+                "Cameroon, DRC, Republic of the Congo, Ghana, Uganda",
+                "DRC, Republic of the Congo, Gabon, Guinea, Sierra Leone"
               ) ~ population_country,
               is.na(population_location) & covidence_id %in% 11688 ~
                 "Guinea, Liberia, Nigeria, Sierra Leone, Spain, United States",
@@ -486,9 +487,10 @@ clean_dfs <- function(df, pathogen) {
               population_country %in%
                 "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon" ~
                 "Multi-country: Africa (n = 6)",
-              population_country %in%
-                "Cameroon, DRC, Republic of the Congo, Ghana, Uganda" ~
-                "Multi-country: Africa (n = 5)",
+              population_country %in% c(
+                "DRC, Republic of the Congo, Gabon, Guinea, Sierra Leone",
+                "Cameroon, DRC, Republic of the Congo, Ghana, Uganda"
+              ) ~ "Multi-country: Africa (n = 5)",
               # 11688 = Guinea, Liberia, Nigeria, Sierra Leone, Spain, USA
               covidence_id %in% 11688 ~
                 "Multi-country: Africa, Europe, USA (n = 6)",
@@ -809,8 +811,6 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 7199 ~ 0.34,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 241 ~ 0.003,
-              parameter_class %in% "Mutations" &
-                covidence_id %in% 17790 ~ 0.69, # putting on same exponent scale
               parameter_class %in% "Severity" &
                 covidence_id %in% 45 ~ 8.6,
               TRUE ~ parameter_lower_bound
@@ -837,8 +837,6 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 7199 ~ 1.42,
               parameter_class %in% "Attack rate" &
                 covidence_id %in% 241 ~ 0.185,
-              parameter_class %in% "Mutations" &
-                covidence_id %in% 17790 ~ 3.6, # putting on same exponent scale
               parameter_class %in% "Severity" &
                 covidence_id %in% 45 ~ 93.3,
               TRUE ~ parameter_upper_bound
@@ -884,8 +882,6 @@ clean_dfs <- function(df, pathogen) {
               covidence_id %in% 17715 ~ 11,
             parameter_class %in% "Mutations" &
               covidence_id %in% 6340 ~ 0.932, # putting it on same exponent scale
-            parameter_class %in% "Mutations" &
-              covidence_id %in% 17790 ~ 1.22, # putting it on same exponent scale
             TRUE ~ parameter_uncertainty_lower_value
           ),
           
@@ -898,8 +894,6 @@ clean_dfs <- function(df, pathogen) {
                 covidence_id %in% 17715 ~ 71,
               parameter_class %in% "Mutations" &
                 covidence_id %in% 6340 ~ 1.22, # putting it on same exponent scale
-              parameter_class %in% "Mutations" &
-                covidence_id %in% 17790 ~ 5.99, # putting it on same exponent scale
               TRUE ~ parameter_uncertainty_upper_value
             ),
 
