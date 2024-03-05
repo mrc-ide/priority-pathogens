@@ -142,6 +142,10 @@ mut_dat$outbreak # Check 12 unspecified - 19237 x2 (Vrancken) unclear (x)
 mut_dat$parameter_unit # Checked 4 Unspecified and NA (x)
 mut_dat$genome_site # Combined variations of whole genome, glycoprotein, etc (x)
 # 1st March: Alfson 5898 removed (mutation frequencies) and 1 from Vrancken (null estimate)
+# 5th March: Added missed substitution rate for 17790 (Mbala-Kingebeni)
+
+mut_dat %>% nrow() # 24 parameters
+length(unique(mut_dat$covidence_id))
 
 # Create directory for results
 dir.create("Mutation_results")
