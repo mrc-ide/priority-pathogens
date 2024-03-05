@@ -166,8 +166,8 @@ plot_dat <- ordered_dat %>%
 
 # Pull numbers on QA filtered basic R for text
 n_param <- plot_dat %>% filter(parameter_type_short %in% "Basic (R0)" & article_qa_score >= 50)
-n_param %>% nrow() # 70 parameters
-length(unique(n_param$covidence_id)) # 51 articles
+n_param %>% nrow() # 71 parameters
+length(unique(n_param$covidence_id)) # 52 articles
 n_param %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 58 WA
 
 # Pull numbers on QA filtered effective R for text
