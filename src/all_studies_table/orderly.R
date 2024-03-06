@@ -20,6 +20,7 @@ models <- read_csv("models.csv")
 ## "article_title", "journal", "year_publication", "doi", "article_label"
 articles <- select(
     articles,
+    covidence_id,
     id,
     first_author_first_name,
     first_author_surname,
@@ -46,7 +47,7 @@ articles$doi[!is.na(articles$doi)] <- paste0("https://doi.org/", articles$doi[!i
 ## If the doi is NA, leave it blank
 articles$doi[is.na(articles$doi)] <- ""
 ## From params, we want: id, parameter_type, ebola_species, 
-cols <- c("id", "parameter_type", "ebola_species")
+cols <- c("id", "covidence_id", "parameter_type", "ebola_species")
 cols <- intersect(cols, colnames(params)) ## for other pathogens
 params <- select(params, all_of(cols))
 
@@ -55,12 +56,12 @@ params <- select(params, all_of(cols))
 ## of the number of articles.
 
 out <- map_dfr(
-    articles$id, function(id) {
-      p <- params[params$id %in% id, cols]
+    articles$covidence_id, function(id) {
+      p <- params[params$covidence_id %in% id, cols]
       params_extrctd <- paste(unique(p$parameter_type), collapse = "\n")
-      m <- models[models$id %in% id, ]
+      m <- models[models$covidence_id %in% id, ]
       model_extrctd <- ifelse(nrow(m) > 0, "YES", "NO")
-      a <- articles[articles$id %in% id, ]
+      a <- articles[articles$covidence_id %in% id, ]
       data.frame(
         `Article` = a$article_label,
         `Title` = a$article_title,
