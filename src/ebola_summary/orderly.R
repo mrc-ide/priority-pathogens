@@ -53,7 +53,7 @@ df <- left_join(
   params,
   articles[, c(
     "covidence_id", "first_author_surname", "year_publication",
-    "article_label", "doi", "notes"
+    "article_label", "doi", "article_title", "notes"
   )],
   by = "covidence_id"
 )
@@ -62,7 +62,7 @@ df_models <- left_join(
   models,
   articles[, c(
     "covidence_id", "first_author_surname", "year_publication",
-    "article_label", "doi", "notes"
+    "article_label", "article_title", "model_reported", "parameter_reported", "doi", "notes"
   )],
   by = "covidence_id"
 )
@@ -73,7 +73,7 @@ dir.create("Summary_results")
 nrow(df) # number of parameters 1280
 nrow(df_models) # number of models 295
 table(df$outbreak) # number reporting on each outbreak (WA = 858)
-table(df$ebola_species) # number assigned to each species (Zaire = 1124 + 3 + 5 = 1132)
+table(df$ebola_species) # number assigned to each species (Zaire = 1125 + 3 + 5 = 1132)
 param_ids <- unique(df$covidence_id)
 model_ids <- unique(df_models$covidence_id)
 all_ids <- c(unique(df$covidence_id), unique(df_models$covidence_id))
@@ -230,4 +230,3 @@ qa_hist <- ggplot(hist_dat, aes(x = article_qa_score)) +
 ggsave("Summary_results/parameter_qa_scores.png", qa_hist,
        width = 7, height = 9, units = "in", bg = "white"
 )
-
