@@ -223,13 +223,15 @@ sero_table_no_history <- create_table(
   qa_filter = FALSE
 )
 
+# Range tables
+
 sero_range_history <- create_range_table(
   sero_dat_history,
   main_group = "population_country",
   main_group_label = "Country",
   sub_group = "population_sample_type", 
   sub_group_label = "Sample Type", 
-  qa_filter = FALSE,
+  qa_filter = TRUE,
   rounding = "none")
 
 sero_range_no_history <- create_range_table(
@@ -238,7 +240,7 @@ sero_range_no_history <- create_range_table(
   main_group_label = "Country",
   sub_group = "population_sample_type",
   sub_group_label = "Sample Type",
-  qa_filter = FALSE,
+  qa_filter = TRUE,
   rounding = "none")
 
 # Save
