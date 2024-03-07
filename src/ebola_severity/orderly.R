@@ -189,6 +189,10 @@ ordered_dat <- sev_dat %>%
     )
   )
 
+# Pull numbers
+ordered_dat %>% nrow() # 166
+length(unique(ordered_dat$covidence_id)) # 130
+
 # Create directory for results
 dir.create("Severity_plots")
 dir.create("Severity_tables")
