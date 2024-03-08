@@ -22,7 +22,7 @@ orderly_artefact(
     "Summary_results/parameter_type_table.png",
     "Summary_results/parameter_group_table.png",
     "Summary_results/parameter_qa_scores.png",
-    "Summary_results/all_studies.csv"
+    "Summary_results/all_articles.csv"
   )
 )
 
@@ -300,4 +300,4 @@ out <- map_dfr(
 ## Alphabetically sort the articles
 out <- arrange(out, `Article`)
 
-write_csv(out, "Summary_results/all_studies.csv")
+write_csv(out, "Summary_results/all_articles.csv")

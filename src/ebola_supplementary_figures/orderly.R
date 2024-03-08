@@ -116,7 +116,8 @@ orderly_dependency("ebola_summary",
                    "latest(parameter:pathogen == this:pathogen)",
                    files = c("Summary_results/parameter_type_table.png",
                              "Summary_results/parameter_group_table.png",
-                             "Summary_results/parameter_qa_scores.png"))
+                             "Summary_results/parameter_qa_scores.png",
+                             "Summary_results/all_articles.csv"))
 
 dir.create("Supplementary_figures") # copy this folder across to overleaf
 
