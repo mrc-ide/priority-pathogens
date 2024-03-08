@@ -62,7 +62,7 @@ df_models <- left_join(
   models,
   articles[, c(
     "covidence_id", "first_author_surname", "year_publication",
-    "article_label", "article_title", "model_reported", "parameter_reported", "doi", "notes"
+    "article_label", "article_title", "doi", "notes"
   )],
   by = "covidence_id"
 )
@@ -230,3 +230,55 @@ qa_hist <- ggplot(hist_dat, aes(x = article_qa_score)) +
 ggsave("Summary_results/parameter_qa_scores.png", qa_hist,
        width = 7, height = 9, units = "in", bg = "white"
 )
+
+# All articles table
+
+## Add Journal and Year of publication to the article label
+## so that people can find it even if there is no DOI
+articles$article_title <- paste0(
+  articles$article_title, 
+  " (", articles$journal, ", ", articles$year_publication, ")"
+)
+## And make case consistent - sentence case
+articles$article_title <- str_to_title(articles$article_title)
+## Format the doi as a URL
+## Some have the word "doi" in them, some don't
+articles$doi <- gsub("doi:", "", articles$doi, ignore.case = TRUE)
+## Remove leading and trailing whitespace
+articles$doi <- trimws(articles$doi)
+articles$doi[!is.na(articles$doi)] <- paste0("https://doi.org/", articles$doi[!is.na(articles$doi)])
+## If the doi is NA, leave it blank
+articles$doi[is.na(articles$doi)] <- ""
+## From params, we want: id, parameter_type, ebola_species, 
+cols <- c("id", "covidence_id", "parameter_type", "ebola_species")
+cols <- intersect(cols, colnames(params)) ## for other pathogens
+params <- select(params, all_of(cols))
+
+## We will now go the other way, and find out what has been
+## extracted from each article. That will make it easier to keep track
+## of the number of articles.
+
+out <- map_dfr(
+  articles$covidence_id, function(id) {
+    p <- params[params$covidence_id %in% id, cols]
+    params_extrctd <- paste(unique(p$parameter_type), collapse = "\n")
+    m <- models[models$covidence_id %in% id, ]
+    model_extrctd <- ifelse(nrow(m) > 0, "YES", "NO")
+    a <- articles[articles$covidence_id %in% id, ]
+    data.frame(
+      `Article` = a$article_label,
+      `Title` = a$article_title,
+      ##journal = a$journal,
+      ##year_publication = a$year_publication,
+      ##first_author_first_name = a$first_author_first_name,
+      ##first_author_surname = a$first_author_surname,
+      Doi = a$doi,
+      `Parameters Extracted` = params_extrctd,
+      `Model Extarcted (YES/NO)` = model_extrctd
+    )
+  }
+)
+## Alphabetically sort the articles
+out <- arrange(out, `Article`)
+
+write_csv(out, "all_studies.csv")
