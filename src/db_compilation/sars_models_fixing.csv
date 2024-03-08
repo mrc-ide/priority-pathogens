@@ -1,0 +1,15 @@
+fixed,Covidence_ID,Name_data_entry,Article_ID,Model_type,Compartmental_type,Stoch_Deter,Theoretical_model,Interventions_type,Code_available,Transmission_route,Assumptions,access_model_id,Pathogen,num_rows,matching
+TRUE,19,Christian,1,Other,Other compartmental,Deterministic,FALSE,NA,FALSE,Unspecified,Unspecified,1,SARS-CoV,1,0
+TRUE,435,Paula,3,Agent / Individual based,Not compartmental,Stochastic,FALSE,NA,FALSE,Airborne or close contact,Heterogenity in transmission rates - over time,1,SARS-CoV,1,0
+TRUE,646,Bethan Cracknell Daniels,7,Other,SEIR,Deterministic,TRUE,NA,FALSE,Unspecified,Heterogenity in transmission rates - over time,1,SARS-CoV,1,0
+TRUE,655,Bethan Cracknell Daniels,8,Compartmental,SEIR,Deterministic,FALSE,Other,FALSE,Unspecified,Heterogenity in transmission rates - over time;Latent period is same as incubation period,2,SARS-CoV,1,0
+TRUE,696,Dominic Dee,2,Other,SIS,Stochastic,TRUE,Other,FALSE,Unspecified,Heterogenity in transmission rates - between groups,1,SARS-CoV,1,0
+TRUE,706,Dominic Dee,3,Branching process,Not compartmental,Stochastic,TRUE,Unspecified,FALSE,Unspecified,Unspecified,2,SARS-CoV,1,0
+TRUE,965,Rob Johnson,4,Compartmental,Other compartmental,NA,TRUE,Hospitals;Quarantine,FALSE,Airborne or close contact;Human to human (direct contact),Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,2,SARS-CoV,1,0
+TRUE,1023,Kieran Drake,7,Other,Not compartmental,Deterministic,FALSE,NA,FALSE,Unspecified,Unspecified,1,SARS-CoV,1,0
+TRUE,1023,Kieran Drake,7,Compartmental,SIR,Deterministic,FALSE,NA,FALSE,Unspecified,Unspecified,2,SARS-CoV,1,0
+TRUE,1036,Richard Sheppard,5,Compartmental,Other compartmental,Deterministic,FALSE,Behaviour changes;Quarantine,FALSE,Unspecified,Heterogenity in transmission rates - over time,1,SARS-CoV,1,0
+TRUE,1672,Sangeeta,6,Compartmental,SEIR,Deterministic,TRUE,NA,FALSE,Human to human (direct contact),Homogeneous mixing,1,SARS-CoV,1,0
+TRUE,1906,Sequoia,1,Other,Other compartmental,Deterministic,TRUE,Quarantine;Other,FALSE,Unspecified,Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,1,SARS-CoV,1,0
+TRUE,1929,Christian,10,Compartmental,Other compartmental,Stochastic,FALSE,Behaviour changes;Hospitals;Other,FALSE,Airborne or close contact,Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,2,SARS-CoV,1,0
+TRUE,4837,Anna V,10,Agent / Individual based,Not compartmental,Deterministic,FALSE,Contact tracing;Quarantine,FALSE,Unspecified,Homogeneous mixing,2,SARS-CoV,1,0

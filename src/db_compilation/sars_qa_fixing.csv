@@ -1,0 +1,57 @@
+fixed,Covidence_ID,Name_data_entry,QA_M1,QA_M2,QA_A3,QA_A4,QA_D5,QA_D6,QA_D7,num_rows,matching
+TRUE,19,Christian,Yes,No,Yes,Yes,Yes,No,No,1,0
+TRUE,60,Paula,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,0
+TRUE,180,Christian,No,No,NA,NA,Yes,No,No,1,0
+TRUE,392,Kanchan,Yes,No,NA,NA,Yes,Yes,Yes,1,0
+TRUE,405,Kanchan,Yes,No,NA,NA,Yes,Yes,No,1,0
+TRUE,430,Paula,No,Yes,NA,NA,Yes,No,No,1,0
+TRUE,435,Thom,No,No,No,No,No,Yes,No,1,0
+TRUE,461,Paula,Yes,Yes,NA,NA,Yes,No,No,1,0
+TRUE,487,Bethan Cracknell Daniels,Yes,Yes,Yes,Yes,Yes,Yes,No,1,0
+TRUE,513,Kanchan,Yes,Yes,NA,Yes,Yes,Yes,No,1,0
+TRUE,522,Kanchan,Yes,Yes,Yes,Yes,No,Yes,No,1,0
+TRUE,523,Kelly M,Yes,Yes,NA,NA,Yes,No,No,1,0
+TRUE,526,Kanchan,No,Yes,Yes,Yes,Yes,No,No,1,0
+TRUE,558,Kelly M,No,No,No,No,No,No,No,1,0
+TRUE,572,Bethan Cracknell Daniels,Yes,Yes,No,No,No,No,No,1,0
+TRUE,613,Kelly M,No,No,No,No,Yes,No,No,1,0
+TRUE,641,Bethan Cracknell Daniels,Yes,Yes,NA,NA,Yes,No,No,1,0
+TRUE,646,Patrick,No,No,No,No,NA,NA,NA,1,0
+TRUE,655,Bethan Cracknell Daniels,No,No,No,No,Yes,No,No,1,0
+TRUE,672,Dominic Dee,Yes,Yes,NA,NA,No,No,No,1,0
+TRUE,696,Dominic Dee,No,No,No,No,NA,NA,NA,1,0
+TRUE,706,Dominic Dee,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,0
+TRUE,718,Dominic Dee,Yes,No,No,No,Yes,Yes,No,1,0
+TRUE,727,Dominic Dee,Yes,No,NA,NA,No,Yes,No,1,0
+TRUE,745,Dominic Dee,Yes,Yes,Yes,No,Yes,Yes,Yes,1,0
+TRUE,793,Rob Johnson,Yes,No,Yes,No,No,Yes,No,1,0
+TRUE,804,Rob Johnson,Yes,Yes,No,No,Yes,Yes,No,1,0
+TRUE,882,Rob Johnson,No,Yes,No,Yes,Yes,Yes,No,1,0
+TRUE,893,Rob Johnson,No,No,Yes,No,Yes,Yes,No,1,0
+TRUE,948,Rob Johnson,Yes,No,Yes,Yes,Yes,No,No,1,0
+TRUE,999,Rob Johnson,No,No,No,No,Yes,No,No,1,0
+TRUE,1036,Kieran Drake,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,0
+TRUE,1046,Kieran Drake,Yes,No,No,No,No,Yes,No,1,0
+TRUE,1090,Kieran Drake,No,No,No,No,Yes,No,No,1,0
+TRUE,1102,Kieran Drake,Yes,Yes,Yes,Yes,Yes,Yes,No,1,0
+TRUE,1153,Anna V,Yes,No,Yes,No,Yes,No,No,1,0
+TRUE,1183,Anna V,Yes,No,Yes,Yes,Yes,No,No,1,0
+TRUE,1217,Rebecca,Yes,Yes,Yes,Yes,No,Yes,No,1,0
+TRUE,1236,Rebecca,Yes,Yes,Yes,No,Yes,Yes,No,1,0
+TRUE,1365,Joseph,Yes,No,Yes,Yes,No,No,No,1,0
+TRUE,1396,Joseph,Yes,Yes,Yes,Yes,Yes,Yes,Yes,1,0
+TRUE,1401,Joseph,Yes,Yes,NA,NA,Yes,Yes,Yes,1,0
+TRUE,1408,Joseph,Yes,No,NA,NA,Yes,Yes,No,1,0
+TRUE,1510,Ettie Unwin,Yes,Yes,NA,NA,No,No,No,1,0
+TRUE,1530,Tristan Naidoo,Yes,Yes,Yes,No,No,Yes,No,1,0
+TRUE,1582,Dominic Dee,No,Yes,Yes,Yes,Yes,No,No,1,0
+TRUE,1641,Sangeeta,Yes,Yes,Yes,Yes,Yes,Yes,No,1,0
+TRUE,1672,Sangeeta,Yes,Yes,Yes,No,NA,NA,NA,1,0
+TRUE,1778,Anne,Yes,No,Yes,No,No,No,No,1,0
+TRUE,1954,Anne,Yes,No,Yes,Yes,Yes,Yes,No,1,0
+TRUE,2006,Sangeeta,Yes,Yes,Yes,Yes,Yes,Yes,No,1,0
+TRUE,2083,Anne,Yes,Yes,NA,NA,Yes,Yes,Yes,1,0
+TRUE,2089,Christian,Yes,No,NA,NA,Yes,No,No,1,0
+TRUE,2099,Ettie Unwin,Yes,Yes,Yes,Yes,Yes,Yes,No,1,0
+TRUE,2142,Christian,Yes,Yes,NA,NA,Yes,Yes,No,1,0
+TRUE,4837,Ettie Unwin,Yes,Yes,Yes,Yes,No,No,No,1,0
