@@ -79,6 +79,31 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens LASSA - Thom.accdb",
         "DIDE Priority Pathogens LASSA - Tristan.accdb"
       )
+    ),
+    SARS = list(
+      sarssingledb = c(
+        "DIDE Priority Pathogens SARS - Anna Vicco.accdb",
+        "DIDE Priority Pathogens SARS - Anna Vicco double.accdb",
+        "DIDE Priority Pathogens SARS - Anne.accdb",
+        "DIDE Priority Pathogens SARS - Bethan.accdb",
+        "DIDE Priority Pathogens SARS - Christian.accdb",
+        "DIDE Priority Pathogens SARS - Dominic.accdb",
+        "DIDE Priority Pathogens SARS - Ettie.accdb",
+        "DIDE Priority Pathogens SARS - Joseph.accdb",
+        "DIDE Priority Pathogens SARS - Kanchan.accdb",
+        "DIDE Priority Pathogens SARS - Kelly.accdb",
+        "DIDE Priority Pathogens SARS - Kieran.accdb",
+        "DIDE Priority Pathogens SARS - Patrick.accdb",
+        "DIDE Priority Pathogens SARS - Paula_double.accdb",
+        "DIDE Priority Pathogens SARS - Paula_single.accdb",
+        "DIDE Priority Pathogens SARS - Richard.accdb",
+        "DIDE Priority Pathogens SARS - Rob.accdb",
+        "DIDE Priority Pathogens SARS - Ruth.accdb",
+        "DIDE Priority Pathogens SARS - Sangeeta.accdb",
+        "DIDE Priority Pathogens SARS - Sequoia.accdb",
+        "DIDE Priority Pathogens SARS - Thom.accdb",
+        "DIDE Priority Pathogens SARS - Tristan.accdb"
+      )
     )
     ## Nipah Database files
   )
