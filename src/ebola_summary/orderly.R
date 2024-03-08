@@ -21,7 +21,8 @@ orderly_artefact(
   c(
     "Summary_results/parameter_type_table.png",
     "Summary_results/parameter_group_table.png",
-    "Summary_results/parameter_qa_scores.png"
+    "Summary_results/parameter_qa_scores.png",
+    "Summary_results/all_studies.csv"
   )
 )
 
@@ -231,7 +232,9 @@ ggsave("Summary_results/parameter_qa_scores.png", qa_hist,
        width = 7, height = 9, units = "in", bg = "white"
 )
 
-# All articles table
+###############################
+# Summary csv of all articles #
+###############################
 
 # Add Journal and Year of publication to the article label
 # so that people can find it even if there is no DOI
@@ -252,10 +255,26 @@ articles$doi <- trimws(articles$doi)
 articles$doi[!is.na(articles$doi)] <- paste0("https://doi.org/", articles$doi[!is.na(articles$doi)])
 ## If the doi is NA, leave it blank
 articles$doi[is.na(articles$doi)] <- ""
-## From params, we want: id, parameter_type, ebola_species, 
-cols <- c("id", "covidence_id", "parameter_type", "ebola_species")
+## From params, we want: id, parameter_type, ebola_species, delay_short, parameter_class
+cols <- c("id", "covidence_id", "parameter_type", "delay_short", "ebola_species", "parameter_class")
 cols <- intersect(cols, colnames(params)) ## for other pathogens
 params <- select(params, all_of(cols))
+
+# Clean up some parameter names
+params <- params %>%
+  mutate(
+    parameter_type =
+      str_to_sentence(str_replace(parameter_type, "Mutations - |Mutations – ", "")),
+    parameter_type =
+      str_replace_all(parameter_type, c("igg" = "IgG", "igm" = "IgM", "ifa" = "IFA")),
+    parameter_type =
+      case_when(parameter_class %in% "Human delay" ~ paste0("Delay - ", delay_short),
+                parameter_class %in% "Severity" ~ "Case Fatality Ratio",
+                parameter_type %in% "Reproduction number (effective, re)" ~ "Effective reproduction number",
+                parameter_type %in% "Reproduction number (basic r0)" ~ "Basic reproduction number",
+                parameter_type %in% "Growth rate (r)" ~ "Growth rate",
+    TRUE ~ parameter_type)
+  )
 
 ## We will now go the other way, and find out what has been
 ## extracted from each article. That will make it easier to keep track
@@ -273,7 +292,7 @@ out <- map_dfr(
       `Title` = a$article_title,
       DOI = a$doi,
       `Parameters Extracted` = params_extrctd,
-      `Model Extracted (Yes/No)` = model_extrctd
+      `Model Extracted` = model_extrctd
     )
   }
 )
@@ -281,4 +300,4 @@ out <- map_dfr(
 ## Alphabetically sort the articles
 out <- arrange(out, `Article`)
 
-write_csv(out, "all_studies.csv")
+write_csv(out, "Summary_results/all_studies.csv")
