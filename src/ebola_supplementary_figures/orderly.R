@@ -55,7 +55,9 @@ orderly_artefact(
     # Summary
     "Supplementary_figures/parameter_type_table.png",
     "Supplementary_figures/parameter_group_table.png",
-    "Supplementary_figures/parameter_qa_scores.png"
+    "Supplementary_figures/parameter_qa_scores.png",
+    # Summary of all articles
+    "all_articles.csv"
   )
 )
 
@@ -280,4 +282,8 @@ file.copy(from = "Summary_results/parameter_group_table.png",
 # qa scores
 file.copy(from = "Summary_results/parameter_qa_scores.png",
           to = "Supplementary_figures/parameter_qa_scores.png")
+
+# all articles csv
+file.copy(from = "Summary_results/all_articles.csv",
+          to = "all_articles.csv")
 
