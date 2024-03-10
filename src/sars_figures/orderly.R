@@ -111,8 +111,8 @@ answers$Assessment <- factor(answers$Assessment,levels=c("NA","No","Yes"))
 
 p1 <- ggplot(data=articles, aes(x = year_publication)) +
   geom_histogram(binwidth = 1, fill = "steelblue4", color = "black", alpha = 0.7) +
-  scale_x_continuous(limits = c(1965,2025), breaks = seq(1970, 2020, by = 10), expand = c(0, 0)) + 
-  scale_y_continuous(limits = c(0,25), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(2000,2025), breaks = seq(2000, 2023, by = 5), expand = c(0, 0)) + 
+  scale_y_continuous(limits = c(0,75), expand = c(0, 0)) +
   theme_minimal() + 
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA)) + 
   labs(x = "Year of Publication", y = "Article Count")
@@ -120,7 +120,7 @@ p1 <- ggplot(data=articles, aes(x = year_publication)) +
 p2 <- ggplot() +
   geom_histogram(data=quality, aes(x = score), binwidth = 20, boundary = 0, fill = "steelblue4", color = "black", alpha = 0.7) +
   scale_x_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20)) + 
-  scale_y_continuous(limits = c(0,50), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0,100), expand = c(0, 0)) +
   theme_minimal() + 
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA)) + 
   labs(x = "Quality Assessment Score (%)", y = "Article Count")
@@ -129,7 +129,7 @@ p3 <- ggplot() +
   geom_point(data = quality, aes(x=year_publication,y=score,color=category)) +
   geom_smooth(data = subset(quality, category == "Non-Modelling Studies"), aes(x=year_publication,y=score), span = 2, color = "springgreen3", fill = "springgreen3") +
   geom_smooth(data = subset(quality, category == "Modelling Studies"), aes(x=year_publication,y=score), span = 2, color = "red", fill = "red") +
-  scale_x_continuous(limits = c(1965,2025), breaks = seq(1970, 2020, by=10), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(2000,2025), breaks = seq(2000, 2023, by=5), expand = c(0, 0)) +
   scale_y_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20)) +
   xlab("Year of Publication") + ylab("Quality Assessment Score (%)") +  
   scale_color_manual(values = c("Non-Modelling Studies" = "springgreen3","Modelling Studies" = "red"), name = NULL) +
@@ -141,7 +141,7 @@ p4 <- answers %>%
   group_by(Question,Assessment) %>% summarize(count=n()) %>% ungroup() %>%
   ggplot(aes(fill=Assessment, y=count, x=Question)) + 
   geom_bar(position="stack", stat="identity") + theme_bw() +
-  scale_y_continuous(limits = c(0,160), breaks = seq(0,160,by=40), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0,300), breaks = seq(0,300,by=40), expand = c(0, 0)) +
   scale_fill_manual(values = c("darkolivegreen2","coral1","grey70"),aesthetics = "fill",name="",breaks=c('Yes', 'No','NA')) +
   xlab("") + ylab("Article Count") + 
   coord_flip() +
@@ -152,7 +152,7 @@ p4 <- answers %>%
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_S1.png", plot = patchwork, width = 12, height = 12)
-patchwork
+
 ############
 ## MODELS ##
 ############
