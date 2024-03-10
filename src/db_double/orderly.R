@@ -89,22 +89,25 @@ model_discordant <- filter_extracted(models,
   id_name4 = "Article_ID"
 )
 
-# Outbreaks
-outbreak_match <- filter_extracted(outbreaks,
-  matching = TRUE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Outbreak_data_ID",
-  id_name4 = "Article_ID"
-)
-
-outbreak_discordant <- filter_extracted(outbreaks,
-  matching = FALSE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Outbreak_data_ID",
-  id_name4 = "Article_ID"
-)
+# Outbreaks -- only run if applicable for pathogen
+if(!(pathogen %in% c("EBOLA","SARS"))) 
+{
+  outbreak_match <- filter_extracted(outbreaks,
+                                     matching = TRUE,
+                                     id_name1 = "Name_data_entry",
+                                     id_name2 = "ID",
+                                     id_name3 = "Outbreak_data_ID",
+                                     id_name4 = "Article_ID"
+  )
+  
+  outbreak_discordant <- filter_extracted(outbreaks,
+                                          matching = FALSE,
+                                          id_name1 = "Name_data_entry",
+                                          id_name2 = "ID",
+                                          id_name3 = "Outbreak_data_ID",
+                                          id_name4 = "Article_ID"
+  )
+}
 
 # The fixing files don't need the new IDs for now as they change each time
 # db_extraction is run and they complicate merging the fixing files
@@ -123,7 +126,7 @@ write_csv(model_match, "models_matching.csv")
 write_csv(model_discordant, "models_fixing.csv")
 
 # Empty outbreaks for Ebola - amend this for other pathogens
-if (pathogen == "EBOLA") {
+if (pathogen %in% c("EBOLA","SARS")) {
   file.create("outbreaks_matching.csv")
   file.create("outbreaks_fixing.csv")
 } else {
