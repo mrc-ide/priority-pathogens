@@ -181,13 +181,19 @@ n_param_re %>% nrow() # 55 parameters
 length(unique(n_param_re$covidence_id)) # 40 articles
 table(n_param_re$method_r)
 
+comb_facet_dat <- plot_dat %>%
+  mutate(
+    outbreak_species = paste0(outbreak, " (", ebola_species, ")"),
+    outbreak_species = as.factor(outbreak_species)
+  )
+
 # Plots with qa_filter of >=50
 basic_r_outbreak_qa <- create_plot(
-  plot_dat,
+  comb_facet_dat,
   param = parameter,
   r_type = "Basic (R0)",
   qa_filter = TRUE,
-  facet_by = "outbreak",
+  facet_by = "outbreak_species",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
 )
@@ -203,11 +209,11 @@ basic_r_country_qa <- create_plot(
 )
 
 eff_r_outbreak_qa <- create_plot(
-  plot_dat,
+  comb_facet_dat,
   param = parameter,
   r_type = "Effective (Re)",
   qa_filter = TRUE,
-  facet_by = "outbreak",
+  facet_by = "outbreak_species",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
 )
