@@ -221,16 +221,31 @@ plot_country_qa <- create_plot(
   symbol_col_by = "outbreak"
 )
 
-# Split outbreak plot with WA on left and all other outbreaks on the right
-wa_dat <- ordered_dat %>% filter(outbreak == "West Africa 2013-2016")
-other_dat <- ordered_dat %>% filter(outbreak != "West Africa 2013-2016")
+## Split outbreak plot with WA on left and all other outbreaks on the right
+
+# Add species to facet label
+comb_facet_dat <- ordered_dat %>%
+  mutate(
+    outbreak_species = paste0(outbreak, " (", ebola_species, ")")
+  )
+
+# Match order of outbreak_species to outbreak
+comb_facet_dat$outbreak_species <- factor(
+  comb_facet_dat$outbreak_species,
+  levels = unique(
+    comb_facet_dat$outbreak_species[order(comb_facet_dat$outbreak)]
+    )
+  )
+
+wa_dat <- comb_facet_dat %>% filter(outbreak == "West Africa 2013-2016")
+other_dat <- comb_facet_dat %>% filter(outbreak != "West Africa 2013-2016")
 
 wa_outbreak_qa <- create_plot(
   wa_dat,
   param = parameter,
   qa_filter = TRUE,
   symbol_shape_by = "cfr_ifr_method",
-  facet_by = "outbreak",
+  facet_by = "outbreak_species",
   symbol_col_by = "population_country"
 )
 
@@ -239,7 +254,7 @@ other_outbreak_qa <- create_plot(
   param = parameter,
   qa_filter = TRUE,
   symbol_shape_by = "cfr_ifr_method",
-  facet_by = "outbreak",
+  facet_by = "outbreak_species",
   symbol_col_by = "population_country"
 )
 
