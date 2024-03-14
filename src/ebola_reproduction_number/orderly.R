@@ -183,9 +183,16 @@ table(n_param_re$method_r)
 
 comb_facet_dat <- plot_dat %>%
   mutate(
-    outbreak_species = paste0(outbreak, " (", ebola_species, ")"),
-    outbreak_species = as.factor(outbreak_species)
+    outbreak_species = paste0(outbreak, " (", ebola_species, ")")
   )
+
+# Match order of outbreak_species to outbreak
+comb_facet_dat$outbreak_species <- factor(
+  comb_facet_dat$outbreak_species,
+  levels = unique(
+    comb_facet_dat$outbreak_species[order(comb_facet_dat$outbreak)]
+  )
+)
 
 # Plots with qa_filter of >=50
 basic_r_outbreak_qa <- create_plot(
