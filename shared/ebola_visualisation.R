@@ -7,6 +7,19 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
   mypalette <- hue_pal()(length(levels(df[[symbol_col_by]])))
   names(mypalette) <- sort(levels(df[[symbol_col_by]]))
 
+  # Helping to distinguish between similar countries
+  if (symbol_col_by == "population_country") {
+    mypalette["Guinea, Sierra Leone"] <- "#006F19" # done
+      mypalette["Guinea, Liberia, Sierra Leone"] <- "#2571b2"
+        mypalette["Guinea, Liberia, Nigeria, Sierra Leone"] <- "#a25505"
+          mypalette["Nigeria"] <- "#8b56b2"
+            mypalette["Liberia, Sierra Leone"] <- "#6f0056"
+              mypalette["Liberia"] <- "#00C091"
+                mypalette["Sudan"] <- "#f818ca"
+                  mypalette["Uganda"] <- "#e06666"
+                    mypalette["Gabon"] <- "#d5d800"
+  }
+  
   if (param == "Reproduction number") {
     df <- df %>%
       filter(parameter_type_short == r_type)
