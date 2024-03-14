@@ -74,7 +74,7 @@ dir.create("Summary_results")
 nrow(df) # number of parameters 1280
 nrow(df_models) # number of models 295
 table(df$outbreak) # number reporting on each outbreak (WA = 858)
-table(df$ebola_species) # number assigned to each species (Zaire = 1125 + 3 + 5 = 1132)
+table(df$ebola_species) # number assigned to each species (Zaire = 1123 + 3 + 5 + 5 = 1136)
 param_ids <- unique(df$covidence_id)
 model_ids <- unique(df_models$covidence_id)
 all_ids <- c(unique(df$covidence_id), unique(df_models$covidence_id))
@@ -231,6 +231,30 @@ qa_hist <- ggplot(hist_dat, aes(x = article_qa_score)) +
 ggsave("Summary_results/parameter_qa_scores.png", qa_hist,
        width = 7, height = 9, units = "in", bg = "white"
 )
+
+# Article summary
+summary_table <- tibble(
+  "Year < 1991" = articles %>% filter(year_publication < 1991) %>% nrow(),
+  "Year 1991-2013" = articles %>% filter(year_publication >= 1991 & year_publication <= 2013) %>% nrow(),
+  "Year >= 2014" = articles %>% filter(year_publication >= 2014) %>% nrow(),
+  "QA Score < 50" = articles %>% filter(article_qa_score < 50) %>% nrow(),
+  "QA Score >= 50" = articles %>% filter(article_qa_score >= 50) %>% nrow()
+)
+
+ggplot(articles, aes(x = year_publication, y = article_qa_score)) +
+  geom_point() +
+  geom_hline(yintercept = 50) +
+  geom_vline(xintercept = 1991) +
+  geom_vline(xintercept = 2014)
+
+post2014 <- articles %>% filter(year_publication >=2014)
+
+ggplot(post2014, aes(x = article_qa_score)) +
+  geom_histogram(binwidth = 10)
+
+post2014 %>% filter(article_qa_score <50) %>% nrow() # 123
+post2014 %>% filter(article_qa_score >=50) %>% nrow() # 345
+
 
 ###############################
 # Summary csv of all articles #
