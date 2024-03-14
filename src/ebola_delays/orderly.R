@@ -401,6 +401,14 @@ symp_dat <- ordered_dat %>%
       )
   )
 
+# How many between 4-6 days?
+sotatc <- symp_dat %>%
+  filter(delay_short %in% "Symptom onset to admission to care" & article_qa_score > 50)
+length(sotatc$parameter_value) # 47
+sotatc %>% filter(parameter_value >= 3 & parameter_value <= 6) %>% nrow() # 39
+sotatc %>% filter(is.na(parameter_value)) %>% select(parameter_bounds) # 5
+min(sotatc$parameter_value, na.rm = TRUE)
+
 symp_plot_qa <- create_plot(
   symp_dat,
   param = parameter,
@@ -884,7 +892,8 @@ incub <- meta_var %>% filter(delay_short %in% "Incubation period") # 11
 serial <- meta_var %>% filter(delay_short %in% "Serial interval") # 9
 sotr <- meta_var %>% filter(delay_short %in% "Symptom onset to recovery/non-infectiousness") # 4
 infp <- meta_var %>% filter(delay_short %in% "Infectious period") # 3
-  
+latp <- meta_var %>% filter(delay_short %in% "Latent period") # 1 - not included
+
 # species subgroup analysis?
 table(sotd$ebola_species) # Bundibugyo x3, Sudan x1, Zaire x17
 table(incub$ebola_species) # Bundibugyo x1, Sudan x2, Zaire x8
@@ -897,6 +906,7 @@ incub_qa <- incub %>% filter(article_qa_score >= 50) # 9
 serial_qa <- serial %>% filter(article_qa_score >= 50) # 6
 sotr_qa <- sotr %>% filter(article_qa_score >= 50) # 4 (all data qa > 50)
 infp_qa <- infp %>% filter(article_qa_score >= 50) # 1 - not included
+latp_qa <- latp %>% filter(article_qa_score >= 50) # 1 - not included
 
 # species subgroup analysis probably not worth it for QA filtered
 table(sotd_qa$ebola_species) # Bundibugyo x3, Sudan x1, Zaire x12
@@ -1217,8 +1227,8 @@ infp_species <- metamean(
 #################
 
 # Main text panels
-p1_qa <- png::readPNG("Meta_plots/incubation_period_qafilter.png", native = TRUE)
-p2_qa <- png::readPNG("Meta_plots/serial_interval_qafilter.png", native = TRUE)
+p1_qa <- png::readPNG("Meta_plots/serial_interval_qafilter.png", native = TRUE)
+p2_qa <- png::readPNG("Meta_plots/incubation_period_qafilter.png", native = TRUE)
 p3_qa <- png::readPNG("Meta_plots/onset_to_death_qafilter.png", native = TRUE)
 p4_qa <- png::readPNG("Meta_plots/onset_to_recovery_qafilter.png", native = TRUE)
 
