@@ -157,6 +157,8 @@ assign_ebola_species <- function(df) {
   df <- df %>%
     mutate(
       ebola_variant = str_trim(ebola_variant, side = "right"),
+      # handle non-breaking space
+      ebola_variant = str_squish(ebola_variant),
       ebola_variant = case_when(is.na(ebola_variant) ~
         "Unspecified", TRUE ~ ebola_variant),
       ebola_species = case_when(
@@ -167,8 +169,9 @@ assign_ebola_species <- function(df) {
           "Bundibugyo, Sudan, Taï Forest & Zaire",
         ebola_variant %in% "Sudan virus (SUDV);Zaire Ebola virus (EBOV)" ~ "Zaire & Sudan",
         ebola_variant %in% "Sudan virus (SUDV)" ~ "Sudan",
-        ebola_variant %in% "Bundibugyo virus (BDBV);Zaire Ebola virus (EBOV)" ~
-          "Zaire & Bundibugyo",
+        ebola_variant %in% c(
+          "Bundibugyo virus (BDBV);Zaire Ebola virus (EBOV)",
+          "Bundibugyo virus (BDBV) ;Zaire Ebola virus (EBOV)") ~ "Zaire & Bundibugyo",
         ebola_variant %in% "Bundibugyo virus (BDBV);Sudan virus (SUDV)" ~
           "Bundibugyo & Sudan",
         outbreak %in% c("DRC, 1976", "DRC, 1977", "DRC, 1995") ~ "Zaire",
