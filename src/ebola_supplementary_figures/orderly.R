@@ -57,7 +57,7 @@ orderly_artefact(
     "Supplementary_figures/parameter_group_table.png",
     "Supplementary_figures/parameter_qa_scores.png",
     # Summary of all articles
-    "all_articles.csv"
+    "all_articles.xlsx"
   )
 )
 
@@ -117,7 +117,7 @@ orderly_dependency("ebola_summary",
                    files = c("Summary_results/parameter_type_table.png",
                              "Summary_results/parameter_group_table.png",
                              "Summary_results/parameter_qa_scores.png",
-                             "Summary_results/all_articles.csv"))
+                             "Summary_results/all_articles.xlsx"))
 
 dir.create("Supplementary_figures") # copy this folder across to overleaf
 
@@ -285,6 +285,6 @@ file.copy(from = "Summary_results/parameter_qa_scores.png",
           to = "Supplementary_figures/parameter_qa_scores.png")
 
 # all articles csv
-file.copy(from = "Summary_results/all_articles.csv",
-          to = "all_articles.csv")
+file.copy(from = "Summary_results/all_articles.xlsx",
+          to = "all_articles.xlsx")
 

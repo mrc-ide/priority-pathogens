@@ -12,6 +12,7 @@ library(scales)
 library(epitrix)
 library(stringr)
 library(splitstackshape)
+library(writexl)
 
 orderly_strict_mode()
 
@@ -22,7 +23,7 @@ orderly_artefact(
     "Summary_results/parameter_type_table.png",
     "Summary_results/parameter_group_table.png",
     "Summary_results/parameter_qa_scores.png",
-    "Summary_results/all_articles.csv"
+    "Summary_results/all_articles.xlsx"
   )
 )
 
@@ -38,6 +39,9 @@ orderly_dependency(
     "parameters.csv"
   )
 )
+
+# Manually put the included articles exported from covidence in src/ebola_summary:
+orderly_resource("covidence.csv")
 
 # Script with functions for plots/tables
 orderly_shared_resource("ebola_functions.R" = "ebola_functions.R")
@@ -324,4 +328,8 @@ out <- map_dfr(
 ## Alphabetically sort the articles
 out <- arrange(out, `Article`)
 
-write_csv(out, "Summary_results/all_articles.csv")
+## Add a tab with the included articles exported from Covidence
+cov_dat <- read_csv("covidence.csv")
+cov_dat <- cov_dat %>% select(-c("Notes", "Tags"))
+
+write_xlsx(list(Sheet1 = out, Sheet2 = cov_dat), "Summary_results/all_articles.xlsx")
