@@ -330,6 +330,8 @@ out <- arrange(out, `Article`)
 
 ## Add a tab with the included articles exported from Covidence
 cov_dat <- read_csv("covidence.csv")
-cov_dat <- cov_dat %>% select(-c("Notes", "Tags"))
+# Removing study as this doesn't match the article labels we created
+# Removing Ref as this is blank
+cov_dat <- cov_dat %>% select(-c("Notes", "Tags", "Study", "Ref"))
 
 write_xlsx(list(Sheet1 = out, Sheet2 = cov_dat), "Summary_results/all_articles.xlsx")
