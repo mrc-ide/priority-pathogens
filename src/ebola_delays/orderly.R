@@ -931,7 +931,7 @@ sotd_ma <- metamean(
 )
 
 png(file = "Meta_plots/onset_to_death.png", width = 9500, height = 6500, res = 1000)
-forest.meta(sotd_ma,
+forest(sotd_ma,
   digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
   weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
   col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -954,7 +954,7 @@ incub_ma <- metamean(
 )
 
 png(file = "Meta_plots/incubation_period.png", width = 9500, height = 4300, res = 1000)
-forest.meta(incub_ma,
+forest(incub_ma,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -977,7 +977,7 @@ serial_ma <- metamean(
 )
 
 png(file = "Meta_plots/serial_interval.png", width = 9500, height = 4000, res = 1000)
-forest.meta(serial_ma,
+forest(serial_ma,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1000,7 +1000,7 @@ sotr_ma <- metamean(
 )
 
 png(file = "Meta_plots/onset_to_recovery.png", width = 9500, height = 3000, res = 1000)
-forest.meta(sotr_ma,
+forest(sotr_ma,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1023,7 +1023,7 @@ infp_ma <- metamean(
 )
 
 png(file = "Meta_plots/infectious_period.png", width = 9500, height = 3000, res = 1000)
-forest.meta(infp_ma,
+forest(infp_ma,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1050,7 +1050,7 @@ sotd_ma_qa <- metamean(
 )
 
 png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
-forest.meta(sotd_ma_qa,
+forest(sotd_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1073,7 +1073,7 @@ serial_ma_qa <- metamean(
 )
 
 png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3400, res = 1000)
-forest.meta(serial_ma_qa,
+forest(serial_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1096,7 +1096,7 @@ incub_ma_qa <- metamean(
 )
 
 png(file = "Meta_plots/incubation_period_qafilter.png", width = 9500, height = 4000, res = 1000)
-forest.meta(incub_ma_qa,
+forest(incub_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1119,7 +1119,7 @@ sotr_ma_qa <- metamean(
 )
 
 png(file = "Meta_plots/onset_to_recovery_qafilter.png", width = 9500, height = 3000, res = 1000)
-forest.meta(sotr_ma_qa,
+forest(sotr_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1147,7 +1147,7 @@ incub_species <- metamean(
 )
 
 png(file = "Meta_plots/incubation_period_species.png", width = 9500, height = 7000, res = 1000)
-forest.meta(incub_species,
+forest(incub_species,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1172,7 +1172,7 @@ sotd_species <- metamean(
 )
 
 png(file = "Meta_plots/onset_to_death_species.png", width = 9500, height = 9000, res = 1000)
-forest.meta(sotd_species,
+forest(sotd_species,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1196,7 +1196,7 @@ sotr_species <- metamean(
 )
 
 png(file = "Meta_plots/onset_to_recovery_species.png", width = 9500, height = 4500, res = 1000)
-forest.meta(sotr_species,
+forest(sotr_species,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
             col.study = "black", col.inside = "black", col.diamond.lines = "black",
@@ -1309,3 +1309,4 @@ md_unfilt <- plot_grid(
   )
 
 ggsave("Meta_plots/meta_delays_unfiltered.png", plot = md_unfilt, width = 7, height = 5)
+dev.off()
