@@ -88,3 +88,4 @@ range_tables <- plot_grid(
 
 ggsave("Manuscript_figures/combined_range_tables.png", range_tables, width = 7, height = 15)
 
+dev.off()

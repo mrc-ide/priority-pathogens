@@ -335,3 +335,5 @@ cov_dat <- read_csv("covidence.csv")
 cov_dat <- cov_dat %>% select(-c("Notes", "Tags", "Study", "Ref"))
 
 write_xlsx(list(Sheet1 = out, Sheet2 = cov_dat), "Summary_results/all_articles.xlsx")
+
+dev.off()
