@@ -1,3 +1,5 @@
+# Priority Pathogens
+
 The priority-pathogens repository is an [orderly](https://mrc-ide.github.io/orderly2/) project. The repository
 consists of a set of ``orderly tasks'' in the src folder that make up our analytical pipeline. The first three tasks in 
 the pipeline (`db_extraction`, `db_double`, and `db_compilation`) read in the Access databases, clean, and compile a 
@@ -12,8 +14,14 @@ happen. To run the script,
 git clone https://github.com/mrc-ide/priority-pathogens.git
 ```
 
-2. Navigate to the downloaded repositry and run the script `ebola_workflow.R` specifying the location where the 
-outputs from the first three tasks will be downloaded using the `-l` flag. On the command line, type the following:
+2. Make sure you have the following packages installed
+```
+install.packages()
+```
+
+3. To run the Ebola analysis and recreate the findings in [Nash et al.](), navigate to the downloaded repository 
+and run the script `ebola_workflow.R` specifying the location where the outputs from the first three tasks will be 
+downloaded using the `-l` flag. On the command line, type the following:
 
 ```
 Rscript ebola_workflow.R -l ~/Downloads
