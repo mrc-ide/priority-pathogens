@@ -16,8 +16,9 @@ git clone https://github.com/mrc-ide/priority-pathogens.git
 
 2. Make sure you have the following packages installed
 ```
-install.packages()
+install.packages(c("cowplot", "doconv", "dplyr", "epitrix", "estmeansd", "flextable", "ftExtra", "ggforce", "ggplot2", "grid", "gridExtra", "janitor", "meta", "metafor", "officer", "optparse", "orderly2", "png", "purrr", "readr", "scales", "splitstackshape", "stringr", "tidyr", "writexl", "zip"))
 ```
+Please note you need version 7.0.0 of ```meta``` due to changes in function names.
 
 3. To run the Ebola analysis and recreate the findings in [Nash et al.](), navigate to the downloaded repository 
 and run the script `ebola_workflow.R` specifying the location where the outputs from the first three tasks will be 
