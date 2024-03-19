@@ -9,7 +9,7 @@ library(flextable)
 library(officer)
 library(purrr)
 library(scales)
-
+library(stringr)
 orderly_strict_mode()
 
 orderly_parameters(pathogen = "EBOLA")

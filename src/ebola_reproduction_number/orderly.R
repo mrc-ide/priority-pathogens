@@ -35,9 +35,9 @@ orderly_artefact(
     "R_tables/qa_filtered/eff_range_country.png",
     "R_tables/qa_filtered/eff_range_species.png",
     "R_tables/unfiltered/paginate_basic_r_tab_all.docx",
-    "R_tables/unfiltered/paginate_basic_r_tab_all.pdf",
-    "R_tables/unfiltered/paginate_effective_r_tab_all.docx",
-    "R_tables/unfiltered/paginate_effective_r_tab_all.pdf"
+    ##"R_tables/unfiltered/paginate_basic_r_tab_all.pdf",
+    "R_tables/unfiltered/paginate_effective_r_tab_all.docx"
+    ##"R_tables/unfiltered/paginate_effective_r_tab_all.pdf"
   )
 )
 
@@ -311,10 +311,10 @@ save_as_docx(p_tab_eff, path = "R_tables/unfiltered/paginate_effective_r_tab_all
              ))
 
 # Then convert to pdf
-docx2pdf("R_tables/unfiltered/paginate_basic_r_tab_all.docx",
-         output = "R_tables/unfiltered/paginate_basic_r_tab_all.pdf")
-docx2pdf("R_tables/unfiltered/paginate_effective_r_tab_all.docx",
-         output = "R_tables/unfiltered/paginate_effective_r_tab_all.pdf")
+## docx2pdf("R_tables/unfiltered/paginate_basic_r_tab_all.docx",
+##         output = "R_tables/unfiltered/paginate_basic_r_tab_all.pdf")
+##docx2pdf("R_tables/unfiltered/paginate_effective_r_tab_all.docx",
+##         output = "R_tables/unfiltered/paginate_effective_r_tab_all.pdf")
 
 
 # For the basic reproduction number, summary table giving the range of central

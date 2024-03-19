@@ -1309,4 +1309,4 @@ md_unfilt <- plot_grid(
   )
 
 ggsave("Meta_plots/meta_delays_unfiltered.png", plot = md_unfilt, width = 7, height = 5)
-dev.off()
+##if (!is.null(dev.list()))  dev.off()
