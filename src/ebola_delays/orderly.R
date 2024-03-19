@@ -1,22 +1,24 @@
 ## Human Delays
-
+library(cowplot)
 library(dplyr)
-library(orderly2)
-library(readr)
-library(ggplot2)
-library(ggforce)
-library(flextable)
-library(officer)
-library(purrr)
-library(scales)
 library(epitrix)
-library(stringr)
+library(estmeansd)
+library(flextable)
+library(ggforce)
+library(ggplot2)
 library(grid)
 library(gridExtra)
 library(metafor)
 library(meta)
-library(estmeansd)
-library(cowplot)
+library(officer)
+library(orderly2)
+library(purrr)
+library(readr)
+library(scales)
+library(stringr)
+
+
+
 
 orderly_strict_mode()
 
@@ -1261,9 +1263,13 @@ for (i in 1:2) {
   plots_unfilt[[i]] <- rasterGrob(get(paste0("p", i, "_op2")), width = 0.9)
 }
 
-heights_qa <- sapply(plots_qa, heightDetails)
+## This opens a new device and needs dev.off() to close it
+heights_qa <- sapply(plots_qa, heightDetails) 
+dev.off()
 heights_species <- sapply(plots_species, heightDetails)
+dev.off()
 heights_unfilt <- sapply(plots_unfilt, heightDetails)
+dev.off()
 
 # make them proportional
 p_heights_qa <- heights_qa / sum(heights_qa)
@@ -1309,4 +1315,3 @@ md_unfilt <- plot_grid(
   )
 
 ggsave("Meta_plots/meta_delays_unfiltered.png", plot = md_unfilt, width = 7, height = 5)
-##if (!is.null(dev.list()))  dev.off()
