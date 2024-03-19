@@ -1,6 +1,7 @@
 ## EBOLA WORKFLOW
 library(optparse)
 library(orderly2)
+library(ids)
 library(zip)
 option_list <- list(
   make_option(c("-l", "--location"), type="character", default = NULL,
@@ -58,12 +59,15 @@ orderly_init()
 ## associated github release.
 ## The script will download these files, and add the downloaded folder 
 ## as an orderly location so that the outputs can be used by the tasks below.
-
+## Create a random name for location in case user already has ebola-outputs
+## This will also help ensure that the script can be run multiple times without
+## the need to remove location
+loc_name <- adjective_animal()
 orderly_location_add(
-    "ebola-outputs", type = "path", 
+    loc_name, type = "path", 
     args = list(path = file.path(location, "ebola-outputs-test-location"))
 )
-orderly_location_pull_metadata()
+orderly_location_pull_metadata(location = loc_name)
 orderly_location_pull_packet()
 ##############
 ## ANALYSIS ##
