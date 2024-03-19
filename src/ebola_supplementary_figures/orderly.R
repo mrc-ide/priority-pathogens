@@ -288,3 +288,4 @@ file.copy(from = "Summary_results/parameter_qa_scores.png",
 file.copy(from = "Summary_results/all_articles.xlsx",
           to = "all_articles.xlsx")
 
+dev.off()
