@@ -229,9 +229,9 @@ if('parameter_type' %in% colnames(df)) {
       grepl('Growth rate', parameter_type) ~ 'Growth rate',
       TRUE ~ 'Other transmission parameters'),
     # Population country
-    population_country = str_replace(population_country, 'Congo, Rep.',
+    population_country = str_replace(population_country, 'Congo; Rep.',
                                      'Republic of the Congo'),
-    population_country = str_replace(population_country, 'Congo, Dem. Rep.',
+    population_country = str_replace(population_country, 'Congo; Dem. Rep.',
                                      'Democratic Republic of the Congo'),
     population_country = str_replace(population_country, 'Yuogslavia',
                                      'Yugoslavia'),
