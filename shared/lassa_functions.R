@@ -1,25 +1,31 @@
 #function to tidy-up all dataframes
 
-curation <- function(articles, outbreaks, models, parameters) {
+curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   articles   <- articles %>%
                 mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
                 group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
                 mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
                 select(-counter,-refs) %>% rename(refs = new_refs)
+  outbreaks  <- outbreaks %>% 
+                mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
   models     <- models %>% 
                 mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
   parameters <- parameters %>% 
                 mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-                filter(!parameter_from_figure) %>%
-                mutate(parameter_value = ifelse(inverse_param, 1/parameter_value, parameter_value), #account for inverse and exponents
-                       parameter_lower_bound = ifelse(inverse_param, 1/parameter_lower_bound, parameter_lower_bound),
-                       parameter_upper_bound = ifelse(inverse_param, 1/parameter_upper_bound, parameter_upper_bound),
-                       parameter_uncertainty_lower_value = ifelse(inverse_param, 1/parameter_uncertainty_lower_value, parameter_uncertainty_lower_value),
-                       parameter_uncertainty_upper_value = ifelse(inverse_param, 1/parameter_uncertainty_upper_value, parameter_uncertainty_upper_value),
-                       across(c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value), ~. * 10^exponent)) %>%
-                mutate_at(vars(c("parameter_value","parameter_lower_bound","parameter_upper_bound","parameter_uncertainty_lower_value","parameter_uncertainty_upper_value")), #account for different units
-                          list(~ ifelse(parameter_unit == "Weeks", . * 7, .))) %>% mutate(parameter_unit = ifelse(parameter_unit == "Weeks", "Days", parameter_unit)) %>%
+                filter(!parameter_from_figure)
+  
+  param4plot <- parameters %>%
+                mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                               parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+                          list(~ ifelse(inverse_param, 1/.x, .x))) %>%
+                mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                               parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+                          list(~ .x * 10^exponent)) %>%
+                mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
+                               parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
+                          list(~ ifelse(parameter_unit == "Weeks", . * 7, .))) %>% 
+                mutate(parameter_unit = ifelse(parameter_unit == "Weeks", "Days", parameter_unit)) %>%
                 mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
                        parameter_uncertainty_lower_value = case_when(
                          parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_value,
@@ -35,8 +41,14 @@ curation <- function(articles, outbreaks, models, parameters) {
                          TRUE ~ parameter_uncertainty_upper_value)) %>%
                 select(-c(no_unc)) %>%
                 mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
-  parameters$population_country <- str_replace_all(parameters$population_country, c("Congo; Rep." = "Republic of Congo", "Congo; Dem. Rep." = "Democratic Republic of Congo"))
-
+  
+  if (plotting) {
+    parameters <- param4plot    
+  } else {
+    parameters <- parameters %>%
+                  left_join(param4plot %>% select(parameter_data_id, central), by = "parameter_data_id")
+  }
+  
   return(list(articles = articles, outbreaks = outbreaks, 
               models = models, parameters = parameters))
 }
@@ -45,7 +57,8 @@ curation <- function(articles, outbreaks, models, parameters) {
 
 forest_plot <- function(df, label, color_column, lims) {
   
-  stopifnot(length(unique(df$parameter_unit)) == 1)
+  stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
+  
   df   <- df %>% mutate(urefs = make.unique(refs)) %>%
                  mutate(urefs = factor(urefs, levels = rev(unique(urefs))))
   cats <- length(unique(df[[color_column]]))
@@ -84,6 +97,8 @@ forest_plot <- function(df, label, color_column, lims) {
 map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
                         long_lim, lat_lim, col_lim, color_opt, title) {
   
+  stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
+  
   country_list <- unique(l0$COUNTRY)
   
   df           <- df %>% separate_longer_delim(population_country, delim = ";") #dataframe with expanded list of countries
@@ -97,7 +112,6 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
   
   regional_NA  <- shp_regional %>% group_by(COUNTRY) %>% summarise(all_codes = str_c(REG_CODE, collapse = ";"))#plot all regions for non-location-specific values for countries with OTHER location-specific values
   
-  stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   df <- df %>% mutate(parameter_value = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator)) %>%
     mutate(parameter_value = if(range_mp) {
       coalesce(parameter_value, (parameter_lower_bound + parameter_upper_bound)/2)
@@ -175,6 +189,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                              plot_study, digits, lims, colour, label,
                              width, height, resolution){
   
+  stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
+  
   dataframe <- dataframe %>% filter(!is.na(population_sample_size)) %>% 
                              filter(!is.na(parameter_value)) %>%
                              filter((parameter_value_type == 'Mean' & parameter_uncertainty_singe_type == 'Standard deviation (Sd)') |
@@ -224,6 +240,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
 metaprop_wrap <- function(dataframe, subgroup, 
                              plot_pooled, sort_by_subg, plot_study, digits, colour, 
                              width, height, resolution){
+  
+  stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
   
   dataframe <- dataframe %>% filter(!is.na(cfr_ifr_denominator)) %>% 
                              filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) %>%

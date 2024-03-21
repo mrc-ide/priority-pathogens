@@ -43,7 +43,7 @@ outbreaks  <- read_csv("outbreaks.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-dfs <- curation(articles,outbreaks,models,parameters)
+dfs <- curation(articles,outbreaks,models,parameters, plotting = TRUE)
 
 articles   <- dfs$articles
 outbreaks  <- dfs$outbreaks
