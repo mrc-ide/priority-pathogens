@@ -18,9 +18,31 @@ orderly_run("db_double", parameters = list(pathogen = "LASSA"))
 # Bring single, matching double, and fixed double together
 orderly_run("db_compilation", parameters = list(pathogen = "LASSA"))
 
-###################################################
-## FIGURES & TABLES FOR MANUSCRIPT & SUPPLEMENTS ##
-###################################################
+##############
+## ANALYSIS ##
+##############
 
-# Figures for main manuscript and SI
-orderly_run("lassa_figures", parameters = list(pathogen = "LASSA"))
+# Seroprevalence figures
+orderly_run("lassa_serology", parameters = list(pathogen = "LASSA"))
+
+# Severity figures
+orderly_run("lassa_severity", parameters = list(pathogen = "LASSA"))
+
+# Delay figures
+orderly_run("lassa_delays", parameters = list(pathogen = "LASSA"))
+
+# Transmission figures
+orderly_run("lassa_transmission", parameters = list(pathogen = "LASSA"))
+
+# Summary figures
+orderly_run("lassa_summary", parameters = list(pathogen = "LASSA"))
+
+# Latex tables
+orderly_run("lassa_latex_tables", parameters = list(pathogen = "LASSA"))
+
+######################
+## FIGURES & TABLES ##
+######################
+
+# Collate figures and tables
+orderly_run("lassa_collate", parameters = list(pathogen = "LASSA"))
