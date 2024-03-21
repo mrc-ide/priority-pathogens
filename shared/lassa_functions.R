@@ -336,3 +336,24 @@ pdf_generic <- function(meta, model, dists, lims, label) {
   
   return(gg)
 }
+
+#function to create latex-readable csv files for tables
+
+insert_blank_rows <- function(dataframe, column) {
+  tlabels <- as.character(unique(dataframe[[column]]))
+  
+  df_split <- split(dataframe, dataframe[[column]])
+  
+  dataframe <- do.call(rbind, lapply(df_split, function(group) {
+    rbind(group, rep(NA, ncol(group)))
+  }))
+  
+  dataframe <- rbind(NA,dataframe)#add NAs for top row header
+  dataframe <- dataframe[-nrow(dataframe),]#remove NAs at bottom
+  dataframe[[column]] <- NULL#remove column
+  
+  inds                 <- which(!complete.cases(dataframe))
+  dataframe[inds,1]    <- tlabels
+  dataframe[[1]][inds] <- paste0("\\bfseries{", dataframe[[1]][inds], "}")
+  dataframe            <- dataframe %>% mutate_all(~ ifelse(is.na(.), "", .))
+}
