@@ -220,13 +220,13 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                    method.tau = "ML")
   
   png(file = "temp.png", width = width, height = height, res = resolution)
-  forest.meta(mtan, layout = "RevMan5",
-              overall = TRUE, pooled.events = TRUE,
-              study.results = plot_study,
-              digits = digits, digits.sd = digits, digits.weight = digits, 
-              col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-              weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-              at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+  forest(mtan, layout = "RevMan5",
+         overall = TRUE, pooled.events = TRUE,
+         study.results = plot_study,
+         digits = digits, digits.sd = digits, digits.weight = digits, 
+         col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+         weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+         at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
   dev.off()
   
   gg <- png::readPNG("temp.png", native = TRUE)
@@ -259,15 +259,15 @@ metaprop_wrap <- function(dataframe, subgroup,
                    method.tau = "ML")
   
   png(file = "temp.png", width = width, height = height, res = resolution)
-  forest.meta(mtan, layout = "RevMan5",
-              overall = plot_pooled, pooled.events = TRUE,
-              print.subgroup.name = FALSE, sort.subgroup = sort_by_subg, 
-              study.results = plot_study, 
-              digits = digits, 
-              col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-              col.subgroup = "black", col.inside = "black",
-              weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-              at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio", fontsize=11)
+  forest(mtan, layout = "RevMan5",
+         overall = plot_pooled, pooled.events = TRUE,
+         print.subgroup.name = FALSE, sort.subgroup = sort_by_subg, 
+         study.results = plot_study, 
+         digits = digits, 
+         col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+         col.subgroup = "black", col.inside = "black",
+         weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
+         at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio", fontsize=11)
   dev.off()
   
   pg <- png::readPNG("temp.png", native = TRUE)
