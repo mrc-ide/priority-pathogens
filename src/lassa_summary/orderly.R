@@ -25,7 +25,7 @@ orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_s1.png","figure_s2.png","figure_s3.png"))
+orderly_artefact("lassa-specific figures",c("figure_S1.png","figure_S2.png","figure_S3.png"))
 
 ##############
 ## ARTICLES ##
