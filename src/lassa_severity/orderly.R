@@ -28,9 +28,9 @@ orderly_shared_resource("Africa_Boundaries-shp" = "Africa_Boundaries-shp",
                         "rivers_africa_37333"   = "rivers_africa_37333")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_3.png","figure_s5.png","figure_s6.png",
-                                            "figure_s7.png","figure_s8.png","figure_s9.png",
-                                            "figure_s10.png","figure_s11.png"))
+orderly_artefact("lassa-specific figures",c("figure_3.png","figure_S5.png","figure_S6.png",
+                                            "figure_S7.png","figure_S8.png","figure_S9.png",
+                                            "figure_S10.png","figure_S11.png"))
 
 ###################
 ## DATA CURATION ##
