@@ -3,8 +3,8 @@
 #install.packages("orderly2", repos = c("https://mrc-ide.r-universe.dev", "https://cloud.r-project.org"))
 #remotes::install_github("mrc-ide/orderly.sharedfile")
 #orderly2::orderly_init(".")
-library(optparse)
 library(orderly2)
+library(optparse)
 library(ids)
 library(zip)
 
@@ -38,42 +38,12 @@ download.file(url, destfile = file.path(location, "lassa-outputs.zip"), mode = "
 ## The outputs are zipped in a folder called lassa-outputs
 ## Check that the folder does not already exist in the location
 if (dir.exists(file.path(location, "lassa-outputs"))) {
-  stop("The folder ebola-outputs-test-location already exists in the location. 
+  stop("The folder lassa-outputs-test-location already exists in the location. 
   Please delete the folder and run the script again.")
 }
 unzip(zipfile = file.path(location, "lassa-outputs.zip"), exdir = location)
 ## Initialize orderly
 orderly_init()
-
-###############
-## DATABASES ##
-###############
-
-# Extract databases from shared drive (ensure config file pathway matches your machine)
-## orderly_run("db_extraction", parameters = list(pathogen = "EBOLA"))
-
-# Sort into double extracted matching and fixing
-## orderly_run("db_double", parameters = list(pathogen = "EBOLA"))
-
-# Bring single, matching double, and fixed double together
-## orderly_run("db_compilation", parameters = list(pathogen = "EBOLA"))
-
-## The above tasks use the Access databases that have not been uploaded as part 
-## of the repository. 
-## Outputs of the above tasks are made available as a zipped file from the 
-## associated github release.
-## The script will download these files, and add the downloaded folder 
-## as an orderly location so that the outputs can be used by the tasks below.
-## Create a random name for location in case user already has ebola-outputs
-## This will also help ensure that the script can be run multiple times without
-## the need to remove location
-loc_name <- adjective_animal()
-orderly_location_add(
-  loc_name, type = "path", 
-  args = list(path = file.path(location, "lassa-outputs"))
-)
-orderly_location_pull_metadata(location = loc_name)
-orderly_location_pull_packet()
 
 ###############
 ## DATABASES ##
@@ -87,6 +57,23 @@ orderly_location_pull_packet()
 # 
 # # Bring single, matching double, and fixed double together
 # orderly_run("db_compilation", parameters = list(pathogen = "LASSA"))
+
+## The above tasks use the Access databases that have not been uploaded as part 
+## of the repository. 
+## Outputs of the above tasks are made available as a zipped file from the 
+## associated github release.
+## The script will download these files, and add the downloaded folder 
+## as an orderly location so that the outputs can be used by the tasks below.
+## Create a random name for location in case user already has pathogen-outputs
+## This will also help ensure that the script can be run multiple times without
+## the need to remove location
+loc_name <- adjective_animal()
+orderly_location_add(
+  loc_name, type = "path", 
+  args = list(path = file.path(location, "lassa-outputs"))
+)
+orderly_location_pull_metadata(location = loc_name)
+orderly_location_pull_packet()
 
 ##############
 ## ANALYSIS ##
