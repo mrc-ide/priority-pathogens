@@ -2,7 +2,7 @@ library(dplyr)
 library(ids)
 library(odbc)
 library(orderly2)
-library(orderly.sharedfile)
+library(orderly.sharedfile) #remotes::install_github("mrc-ide/orderly.sharedfile", upgrade = FALSE)
 library(purrr)
 library(readr)
 
