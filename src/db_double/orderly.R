@@ -36,7 +36,7 @@ library(readr)
 articles <- read_csv("double_extraction_articles.csv")
 parameters <- read_csv("double_extraction_params.csv")
 models <- read_csv("double_extraction_models.csv")
-if (pathogen == 'LASSA') {
+if (pathogen == 'LASSA' | pathogen == 'ZIKA') {
   outbreaks <- read_csv("double_extraction_outbreaks.csv")
 } else {
   outbreaks <- NULL
@@ -94,7 +94,7 @@ model_discordant <- filter_extracted(models,
   id_name4 = "Article_ID"
 )
 
-if (pathogen == 'LASSA') {
+if (pathogen == 'LASSA' | pathogen == 'ZIKA') {
   outbreak_match <- filter_extracted(outbreaks,
                                   matching = TRUE,
                                   id_name1 = "Name_data_entry",
@@ -114,7 +114,7 @@ if (pathogen == 'LASSA') {
 
 # The fixing files don't need the new IDs for now as they change each time
 # db_extraction is run and they complicate merging the fixing files
-if (pathogen != 'LASSA') {
+if (pathogen != 'LASSA' & pathogen != 'ZIKA') {
   qa_discordant <- qa_discordant %>% select(-ID)
   param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
   model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
@@ -136,7 +136,7 @@ if (pathogen %in% c('EBOLA','SARS')) {
   file.create("outbreaks_fixing.csv")
 }
 
-if (pathogen == 'LASSA') {
+if (pathogen == 'LASSA' | pathogen == 'ZIKA') {
   write_csv(outbreak_match, "outbreaks_matching.csv")
   write_csv(outbreak_discordant, "outbreaks_fixing.csv")
 }

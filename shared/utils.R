@@ -108,8 +108,47 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens SARS - Thom.accdb",
         "DIDE Priority Pathogens SARS - Tristan.accdb"
       )
-    )    
-    
+    ),    
+    ZIKA = list(
+      # zikasingledb = c(
+      #   "DIDE Priority Pathogens Zika - Anna.accdb",
+      #   "DIDE Priority Pathogens Zika - Anna-Maria.accdb",
+      #   "DIDE Priority Pathogens Zika - Christian.accdb",
+      #   "DIDE Priority Pathogens Zika - Dom.accdb",
+      #   "DIDE Priority Pathogens Zika - Ettie.accdb",
+      #   "DIDE Priority Pathogens Zika - Ilaria.accdb",
+      #   "DIDE Priority Pathogens Zika - Keith.accdb",
+      #   "DIDE Priority Pathogens Zika - Kelly.accdb",
+      #   "DIDE Priority Pathogens Zika - Patrick.accdb",
+      #   "DIDE Priority Pathogens Zika - Richard.accdb",
+      #   "DIDE Priority Pathogens Zika - Rob.accdb",
+      #   "DIDE Priority Pathogens Zika - Ruth.accdb",
+      #   "DIDE Priority Pathogens Zika - Sangeeta.accdb",
+      #   "DIDE Priority Pathogens Zika - Sequoia.accdb",
+      #   "DIDE Priority Pathogens Zika - Shazia.accdb",
+      #   "DIDE Priority Pathogens Zika - Thom.accdb",
+      #   "DIDE Priority Pathogens Zika - Tristan.accdb"
+      # ),
+      zikadoubledb = c(
+        # "DIDE Priority Pathogens Zika - Anna.accdb",
+        # "DIDE Priority Pathogens Zika - Anna-Maria.accdb",
+        "DIDE Priority Pathogens Zika - Christian.accdb",
+        "DIDE Priority Pathogens Zika - Dom.accdb",
+        "DIDE Priority Pathogens Zika - Ettie.accdb",
+        # "DIDE Priority Pathogens Zika - Ilaria.accdb",
+        "DIDE Priority Pathogens Zika - Keith.accdb",
+        "DIDE Priority Pathogens Zika - Kelly.accdb",
+        "DIDE Priority Pathogens Zika - Patrick.accdb",
+        "DIDE Priority Pathogens Zika - Richard.accdb",
+        "DIDE Priority Pathogens Zika - Rob.accdb",
+        "DIDE Priority Pathogens Zika - Ruth.accdb",
+        # "DIDE Priority Pathogens Zika - Sangeeta.accdb",
+        # "DIDE Priority Pathogens Zika - Sequoia.accdb",
+        "DIDE Priority Pathogens Zika - Shazia.accdb",
+        "DIDE Priority Pathogens Zika - Thom.accdb",
+        "DIDE Priority Pathogens Zika - Tristan.accdb"
+      )
+    )
     ## Nipah Database files
   )
 
