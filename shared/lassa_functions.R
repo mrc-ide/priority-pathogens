@@ -49,6 +49,10 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
                   left_join(param4plot %>% select(parameter_data_id, central), by = "parameter_data_id")
   }
   
+  outbreaks  <- outbreaks  %>% mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
+  parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
+                                      population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
+
   return(list(articles = articles, outbreaks = outbreaks, 
               models = models, parameters = parameters))
 }

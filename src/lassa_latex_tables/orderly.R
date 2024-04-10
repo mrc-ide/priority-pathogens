@@ -57,7 +57,8 @@ outbreaks <- outbreaks %>%
 
 outbreaks <- outbreaks %>% mutate_all(~ ifelse(is.na(.), "", .))
 outbreaks <- outbreaks %>% mutate(outbreak_location = gsub("Fct;","FCT;",outbreak_location),
-                                  outbreak_location = gsub("Kenema ;","Kenema;",outbreak_location))
+                                  outbreak_location = gsub("Kenema ;","Kenema;",outbreak_location),
+                                  outbreak_location = gsub("OuéMé","Ouémé",outbreak_location))
 
 outs <- outbreaks %>%
   select(outbreak_country, outbreak_location, dates, 
