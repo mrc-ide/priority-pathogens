@@ -21,7 +21,8 @@ orderly_dependency(
   c(
     "double_extraction_articles.csv",
     "double_extraction_params.csv",
-    "double_extraction_models.csv",    "double_extraction_outbreaks.csv"
+    "double_extraction_models.csv",
+    "double_extraction_outbreaks.csv"
   )
 )
 ## pathogen should be set to one of our priority-pathogens
@@ -35,7 +36,11 @@ library(readr)
 articles <- read_csv("double_extraction_articles.csv")
 parameters <- read_csv("double_extraction_params.csv")
 models <- read_csv("double_extraction_models.csv")
-outbreaks <- read_csv("double_extraction_outbreaks.csv")
+if (pathogen == 'LASSA') {
+  outbreaks <- read_csv("double_extraction_outbreaks.csv")
+} else {
+  outbreaks <- NULL
+}
 
 source("sorting.R")
 
@@ -89,28 +94,31 @@ model_discordant <- filter_extracted(models,
   id_name4 = "Article_ID"
 )
 
-# Outbreaks
-outbreak_match <- filter_extracted(outbreaks,
-  matching = TRUE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Outbreak_data_ID",
-  id_name4 = "Article_ID"
-)
-
-outbreak_discordant <- filter_extracted(outbreaks,
-  matching = FALSE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Outbreak_data_ID",
-  id_name4 = "Article_ID"
-)
+if (pathogen == 'LASSA') {
+  outbreak_match <- filter_extracted(outbreaks,
+                                  matching = TRUE,
+                                  id_name1 = "Name_data_entry",
+                                  id_name2 = "ID",
+                                  id_name3 = "Outbreak_ID",
+                                  id_name4 = "Article_ID"
+  )
+  
+  outbreak_discordant <- filter_extracted(outbreaks,
+                                       matching = FALSE,
+                                       id_name1 = "Name_data_entry",
+                                       id_name2 = "ID",
+                                       id_name3 = "Outbreak_ID",
+                                       id_name4 = "Article_ID"
+  )
+}
 
 # The fixing files don't need the new IDs for now as they change each time
 # db_extraction is run and they complicate merging the fixing files
-qa_discordant <- qa_discordant %>% select(-ID)
-param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
-model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
+if (pathogen != 'LASSA') {
+  qa_discordant <- qa_discordant %>% select(-ID)
+  param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
+  model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
+  }
 
 # Create files
 write_csv(qa_match, "qa_matching.csv")
@@ -123,10 +131,12 @@ write_csv(model_match, "models_matching.csv")
 write_csv(model_discordant, "models_fixing.csv")
 
 # Empty outbreaks for Ebola - amend this for other pathogens
-if (pathogen == "EBOLA") {
+if (pathogen == 'EBOLA') {
   file.create("outbreaks_matching.csv")
   file.create("outbreaks_fixing.csv")
-} else {
+}
+
+if (pathogen == 'LASSA') {
   write_csv(outbreak_match, "outbreaks_matching.csv")
   write_csv(outbreak_discordant, "outbreaks_fixing.csv")
 }

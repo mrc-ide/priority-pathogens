@@ -10,14 +10,14 @@ library(readr)
 ## use capital case; see code below where this pathogen
 ################### README ###################
 ## IMPORTANT WHEN RUNNING INTERACTIVELY, FIRST COMMENT OUT THIS LINE:
- orderly_parameters(pathogen = NULL)
+orderly_parameters(pathogen = NULL)
 ## orderly will scan orderly.R in the interactive mode, so that
 ## even if the above line is not run, you WILL get an error
 ## It is therefore important that the line is commented out *BEFORE*
 ## you start executing the script line by line.
 ## In the interactive mode, uncomment the line below and set the pathogen variable directly
 ## like this
- # pathogen <- "EBOLA"
+#pathogen <- "EBOLA"
 ## then run as normal.
 ## ONCE DONE, PLEASE COMMENT OUT THE DIRECT SETTING OF THE VARIABLE pathogen
 ## and uncomment the call to orderly_parameters.
@@ -37,10 +37,11 @@ orderly_artefact(
   )
 )
 
-orderly_resource("validation.R")
+orderly_resource(c("pathogen_cleaning.R", "validation.R"))
 orderly_shared_resource("utils.R" = "utils.R")
 
 source("utils.R")
+source("pathogen_cleaning.R")
 source("validation.R")
 ## First get the pathogen-specific nested list from the function
 ## database_files and then plonk them into the function
@@ -63,7 +64,9 @@ infiles <- unlist(infiles)
 all_conns <- map(
   infiles, function(infile) {
     message("Reading ", infile)
-    con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
+    con <- dbConnect(
+      drv = odbc(), .connection_string =
+        paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
 
     if (is.null(con)) {
       message("Error in reading ", infile)
@@ -82,17 +85,10 @@ all_articles <- map(
     if (narticles == 0) {
       return()
     }
-    ## pathogen-specific Covidence ID fixing before joining
-    ## Fixes for Ebola
-    if (pathogen == "EBOLA") {
-      articles$Covidence_ID[articles$DOI == "10.1016/j.rinp.2020.103593" &
-                              articles$Name_data_entry == "Christian"] <- 19880
-      articles$Covidence_ID[articles$DOI == "10.1142/s1793524517500577" &
-                              articles$Name_data_entry == "Thomas Rawson"] <- 11565
-      articles$Covidence_ID[articles$DOI == "10.1038/nature14594" &
-                              articles$Name_data_entry == "Ettie"] <- 5197
-    }
 
+    ## If Covidence IDs are missing/typos, they should be added in here before joining
+    articles <- fix_cov_ids(articles)
+    
     ## Convert Covidence_ID to numeric.
     ## Covidence_ID is entered as a text, so
     ## also save the original i.e., as entered in the DB
@@ -100,7 +96,6 @@ all_articles <- map(
     articles$Covidence_ID_text <- articles$Covidence_ID
     articles$Covidence_ID <- gsub(" ", "", articles$Covidence_ID)
     articles$Covidence_ID <- as.integer(articles$Covidence_ID)
-
 
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
@@ -150,7 +145,7 @@ orderly_artefact("All parameters", "all_params_raw.rds")
 
 # Check if we have extracted outbreaks for this pathogen
 all_tables <- dbListTables(all_conns[[1]])
-outbreaks_ex <-  ("Outbreak data - Table" %in% all_tables)
+outbreaks_ex <- ("Outbreak data - Table" %in% all_tables)
 if (!outbreaks_ex) {
   all_outbreaks <- data.frame()
 } else {
@@ -170,14 +165,16 @@ if (!outbreaks_ex) {
 }
 
 saveRDS(all_outbreaks, "all_outbreaks_raw.rds")
+orderly_artefact("All outbreaks", "all_outbreaks_raw.rds")
+
 # Close all connections
 walk(all_conns, function(con) dbDisconnect(con))
 
 # Get rid of NULL or 0-length results
 null_articles <- map_lgl(all_articles, function(x) is.null(x))
 all_articles <- all_articles[!null_articles]
-all_models <- all_models[! null_articles]
-all_params <- all_params[! null_articles]
+all_models <- all_models[!null_articles]
+all_params <- all_params[!null_articles]
 
 from <- pmap(
   list(
@@ -185,12 +182,11 @@ from <- pmap(
     models = all_models,
     params = all_params
   ), function(articles, models, params) {
-
-      models <- left_join(
-        models,
-        articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
-        by = "Article_ID"
-      )
+    models <- left_join(
+      models,
+      articles[, c("Article_ID", "ID", "Pathogen", "Covidence_ID", "Name_data_entry")],
+      by = "Article_ID"
+    )
 
 
     params <- left_join(
@@ -224,7 +220,6 @@ if (outbreaks_ex) {
 } else {
   outbreaks <- data.frame()
 }
-
 
 
 # Merge databases and then split again
@@ -349,6 +344,12 @@ if (pathogen == "EBOLA") {
   #missing parameter types
   params$Parameter_type[params$Covidence_ID==2684&params$access_param_id==37] <- 'Risk factors'
   
+# Pathogen-specific cleaning
+articles <- clean_articles(articles)
+models <- clean_models(models)
+params <- clean_params(params)
+if (outbreaks_ex) {
+outbreaks <- clean_outbreaks(outbreaks)
 }
 
 ## Check data after pathogen-specific cleaning
@@ -361,8 +362,6 @@ if (outbreaks_ex) {
 } else {
   o_err <- NULL
 }
-
-
 
 saveRDS(
   list(
@@ -393,9 +392,6 @@ if (outbreaks_ex) {
   single_o <- data.frame()
   double_o <- data.frame()
 }
-
-
-
 
 
 write_csv(

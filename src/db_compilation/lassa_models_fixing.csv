@@ -1,1 +1,1 @@
-Article_ID,ID,Pathogen,Covidence_ID,Name_data_entry,Model_data_ID,Model_type,Compartmental_type,Stoch_Deter,Theoretical_model,Interventions_type,Code_available,Transmission_route,Assumptions,access_model_id,fixed,num_rows,matching
+﻿Match,Article_ID,ID,Pathogen,Covidence_ID,Name_data_entry,Model_data_ID,Model_type,Compartmental_type,Stoch_Deter,Theoretical_model,Interventions_type,Code_available,Transmission_route,Assumptions
