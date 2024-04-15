@@ -96,6 +96,7 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens SARS - Patrick.accdb",
         "DIDE Priority Pathogens SARS - Paula_double.accdb",
         "DIDE Priority Pathogens SARS - Paula_single.accdb",
+        "DIDE Priority Pathogens SARS - Rebecca.accdb",
         "DIDE Priority Pathogens SARS - Richard.accdb",
         "DIDE Priority Pathogens SARS - Rob.accdb",
         "DIDE Priority Pathogens SARS - Ruth.accdb",
