@@ -1,6 +1,9 @@
 #function to tidy-up all dataframes
 
-curation <- function(articles, outbreaks, models, parameters) {
+
+# NEED something for SARS here as this is to Lassa specific!!
+
+curation <- function(articles, outbreaks, models, parameters, adjust_for_exponents = TRUE ) {
   
   articles   <- articles %>%
                 mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
@@ -12,14 +15,15 @@ curation <- function(articles, outbreaks, models, parameters) {
   parameters <- parameters %>% 
                 mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
                 filter(!parameter_from_figure) %>%
+                mutate(parameter_unit = replace_na(parameter_unit,'')) %>%
                 mutate(parameter_value = ifelse(inverse_param, 1/parameter_value, parameter_value), #account for inverse and exponents
                        parameter_lower_bound = ifelse(inverse_param, 1/parameter_lower_bound, parameter_lower_bound),
                        parameter_upper_bound = ifelse(inverse_param, 1/parameter_upper_bound, parameter_upper_bound),
                        parameter_uncertainty_lower_value = ifelse(inverse_param, 1/parameter_uncertainty_lower_value, parameter_uncertainty_lower_value),
                        parameter_uncertainty_upper_value = ifelse(inverse_param, 1/parameter_uncertainty_upper_value, parameter_uncertainty_upper_value),
-                       across(c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value), ~. * 10^exponent)) %>%
+                       across(c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value), ~. * if(adjust_for_exponents) 10^exponent else 1 )) %>%
                 mutate_at(vars(c("parameter_value","parameter_lower_bound","parameter_upper_bound","parameter_uncertainty_lower_value","parameter_uncertainty_upper_value")), #account for different units
-                          list(~ ifelse(parameter_unit == "Weeks", . * 7, .))) %>% mutate(parameter_unit = ifelse(parameter_unit == "Weeks", "Days", parameter_unit)) %>%
+                          list(~ ifelse(parameter_unit == "Weeks", . * 7, . ))) %>% mutate(parameter_unit = ifelse(parameter_unit == "Weeks", "Days", parameter_unit)) %>%
                 mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
                        parameter_uncertainty_lower_value = case_when(
                          parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_value,
