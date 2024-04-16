@@ -7,7 +7,7 @@ TRUE,696,Dominic Dee,2,Other,SIS,Stochastic,TRUE,Other,FALSE,Unspecified,Heterog
 TRUE,706,Dominic Dee,3,Branching process,Not compartmental,Stochastic,TRUE,Unspecified,FALSE,Unspecified,Unspecified,2,SARS-CoV,1,0
 TRUE,965,Rob Johnson,4,Compartmental,Other compartmental,NA,TRUE,Hospitals;Quarantine,FALSE,Airborne or close contact;Human to human (direct contact),Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,2,SARS-CoV,1,0
 TRUE,1023,Kieran Drake,7,Other,Not compartmental,Deterministic,FALSE,NA,FALSE,Unspecified,Unspecified,1,SARS-CoV,1,0
-TRUE,1023,Kieran Drake,7,Compartmental,SIR,Deterministic,FALSE,NA,FALSE,Unspecified,Unspecified,2,SARS-CoV,1,0
+TRUE,1023,Kieran Drake,7,Compartmental,SIR,Deterministic,FALSE,NA,FALSE,Unspecified,Unspecified,1,SARS-CoV,1,0
 TRUE,1036,Richard Sheppard,5,Compartmental,Other compartmental,Deterministic,FALSE,Behaviour changes;Quarantine,FALSE,Unspecified,Heterogenity in transmission rates - over time,1,SARS-CoV,1,0
 TRUE,1672,Sangeeta,6,Compartmental,SEIR,Deterministic,TRUE,NA,FALSE,Human to human (direct contact),Homogeneous mixing,1,SARS-CoV,1,0
 TRUE,1906,Sequoia,1,Other,Other compartmental,Deterministic,TRUE,Quarantine;Other,FALSE,Unspecified,Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,1,SARS-CoV,1,0
