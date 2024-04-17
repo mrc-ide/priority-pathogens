@@ -1,0 +1,11 @@
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [intro, articles, news]
+    right: [search, github]
+
+home:
+  sidebar:
+    structure: [links, license, community, authors, dev]
