@@ -1,9 +1,7 @@
 Package: priority-pathogens
 Title:
 Version: 1.1.0
-Authors@R: c(
-    person("Test", "Test", role = "aut", comment = c(ORCID = "")))
-Description:
+Authors: 
     person("Rebecca", "Nash", email = "r.nash@imperial.ac.uk", role = "aut",
            comment = c(ORCID = "0000-0002-5213-4364")),
     person("Christian", "Morgenstern", email = "c.morgenstern@imperial.ac.uk", role = "aut",
@@ -15,6 +13,7 @@ Description:
     person("Gina", "Cuomo-Dannenburg", role = "aut", comment = c(ORCID = "0000-0001-6821-0352")),
     person("Ruth", "McCabe", role = "aut", comment = c(ORCID = "0000-0002-6368-9103")),
     person("Kelly", "McCain", role = "aut", comment = c(ORCID = "0000-0003-2393-2217")))
+Description: 
 License: CC
 Imports:
     rmarkdown,
