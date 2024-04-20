@@ -1,5 +1,5 @@
 Package: priority-pathogens
-Title: A live view of the systematic literature reviews conducted by the Pathogen Epidemiology Review Group (PERG)
+Title:
 Version: 2.0.0
 Authors: 
     person("Rebecca", "Nash", email = "r.nash@imperial.ac.uk", role = "aut",
@@ -18,15 +18,27 @@ Authors:
 Description: A live view of a the systematic literature reviews conducted by the Pathogen Epidemiology Review Group (PERG). The data in these plots come from PERG's epireview package, which contains the latest available open access pathogen data from the group. 
 License: CC
 Imports:
-    rmarkdown,
-    remotes,
-    patchwork,
-    ggplot2,
+    estmeansd,
     flextable,
-    officer,
-    tm,
+    ggforce,
+    ggplot2,
+    ggsci,
+    ggspatial,
+    grid,
+    gridExtra,
     meta,
-    tidyverse
+    metafor,
+    mixdist,
+    officer,
+    patchwork,
+    png,
+    ragg,
+    remotes,
+    rmarkdown,
+    sf,
+    stringr,
+    tidyverse,
+    tm
 Encoding: UTF-8
 URL: https://github.com/mrc-ide/priority-pathogens
 BugReports: https://github.com/mrc-ide/priority-pathogens/issues
