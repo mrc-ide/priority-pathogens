@@ -1,48 +1,85 @@
 #function to tidy-up all dataframes
 
 
-# NEED something for SARS here as this is to Lassa specific!!
-
-curation <- function(articles, outbreaks, models, parameters, adjust_for_exponents = TRUE ) {
+data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   articles   <- articles %>%
-                mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
-                group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
-                mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
-                select(-counter,-refs) %>% rename(refs = new_refs)
+    mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
+    group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
+    mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
+    select(-counter,-refs) %>% rename(refs = new_refs)
+ 
+  if(dim(outbreaks)[1]>0)  
+  {
+    outbreaks  <- outbreaks %>% 
+      mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+  }
+  
   models     <- models %>% 
-                mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+  
   parameters <- parameters %>% 
-                mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-                filter(!parameter_from_figure) %>%
-                mutate(parameter_unit = replace_na(parameter_unit,'')) %>%
-                mutate(parameter_value = ifelse(inverse_param, 1/parameter_value, parameter_value), #account for inverse and exponents
-                       parameter_lower_bound = ifelse(inverse_param, 1/parameter_lower_bound, parameter_lower_bound),
-                       parameter_upper_bound = ifelse(inverse_param, 1/parameter_upper_bound, parameter_upper_bound),
-                       parameter_uncertainty_lower_value = ifelse(inverse_param, 1/parameter_uncertainty_lower_value, parameter_uncertainty_lower_value),
-                       parameter_uncertainty_upper_value = ifelse(inverse_param, 1/parameter_uncertainty_upper_value, parameter_uncertainty_upper_value),
-                       across(c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value), ~. * if(adjust_for_exponents) 10^exponent else 1 )) %>%
-                mutate_at(vars(c("parameter_value","parameter_lower_bound","parameter_upper_bound","parameter_uncertainty_lower_value","parameter_uncertainty_upper_value")), #account for different units
-                          list(~ ifelse(parameter_unit == "Weeks", . * 7, . ))) %>% mutate(parameter_unit = ifelse(parameter_unit == "Weeks", "Days", parameter_unit)) %>%
-                mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
-                       parameter_uncertainty_lower_value = case_when(
-                         parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_value,
-                         parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-                         parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-                         distribution_type == "Gamma" & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
-                         TRUE ~ parameter_uncertainty_lower_value),                                                 
-                       parameter_uncertainty_upper_value = case_when(
-                         parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_uncertainty_single_value,
-                         parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-                         parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-                         distribution_type == "Gamma" & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
-                         TRUE ~ parameter_uncertainty_upper_value)) %>%
-                select(-c(no_unc)) %>%
-                mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
-  parameters$population_country <- str_replace_all(parameters$population_country, c("Congo; Rep." = "Republic of Congo", "Congo; Dem. Rep." = "Democratic Republic of Congo"))
-
+    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
+    filter(!parameter_from_figure)
+  
+  param4plot <- parameters %>%
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+              list(~ ifelse(inverse_param, 1/.x, .x))) %>%
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+              list(~ .x * 10^exponent)) %>%
+    mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
+                   parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
+              list(~ ifelse(parameter_unit == "Weeks", . * 7, .))) %>% 
+    mutate(parameter_unit = ifelse(parameter_unit == "Weeks", "Days", parameter_unit)) %>%
+    mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
+           parameter_uncertainty_lower_value = case_when(
+             parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_value,
+             parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             distribution_type == "Gamma" & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
+             TRUE ~ parameter_uncertainty_lower_value),                                                 
+           parameter_uncertainty_upper_value = case_when(
+             parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_uncertainty_single_value,
+             parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             distribution_type == "Gamma" & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
+             TRUE ~ parameter_uncertainty_upper_value)) %>%
+    select(-c(no_unc)) %>%
+    mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
+  
+  if (plotting) {
+    parameters <- param4plot    
+  } else {
+    check_param_id <- (parameters$parameter_data_id == param4plot$parameter_data_id )    # check that parameter data ids didn't get scrambled 
+    if(sum(check_param_id)==dim(parameters)[1])
+    {
+      parameters$central <- param4plot$central
+    } else {
+      errorCondition('parameters not in right order to match')
+    }  
+  }
+  
+  if(dim(outbreaks)[1]>0)  
+  {
+    outbreaks  <- outbreaks  %>% mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
+  }
+  
+  parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
+                                      population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
+  
   return(list(articles = articles, outbreaks = outbreaks, 
               models = models, parameters = parameters))
+}
+
+# this was the old SARS specific function, keep wrapper to be backward compatible for now.
+curation <- function(articles, outbreaks, models, parameters, adjust_for_exponents = TRUE ) {
+  
+  dfs <- data_curation(articles,outbreaks,models,parameters, plotting = adjust_for_exponents )
+
+  return(list(articles = df$articles, outbreaks = df$outbreaks, 
+              models = df$models, parameters = df$parameters))
 }
 
 # function to produce forest plot for given dataframe
@@ -219,7 +256,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
   
   gg <- png::readPNG("temp.png", native = TRUE)
   file.remove("temp.png")
-  #gg <- wrap_elements(plot = rasterGrob(pg, interpolate = TRUE))
+  gg <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
   return(list(result = mtan, plot = gg))
 } 
 
