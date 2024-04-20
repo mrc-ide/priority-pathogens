@@ -34,12 +34,15 @@ articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-dfs <- curation(articles,tibble(),models,parameters, adjust_for_exponents = FALSE )
+#dfs <- curation(articles,tibble(),models,parameters, adjust_for_exponents = FALSE )
+dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
 
 articles   <- dfs$articles
 models     <- dfs$models
 parameters <- dfs$parameters
 
+
+# sample sd is the same as sd, so need to make this clear somehow / change param field to work for meta analysis
 
 d1 <- parameters %>% filter(parameter_type == 'Human delay - incubation period')
 d2 <- parameters %>% filter(parameter_type == 'Human delay - symptom onset>admission to care')
@@ -50,7 +53,10 @@ d4 <- parameters %>% filter(parameter_type == 'Human delay - symptom onset>disch
                               parameter_type == 'Human delay - symptom onset>death')
 d5 <- parameters %>% filter(parameter_type == 'Human delay - serial interval')
 
-p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,40))
+p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
+
+d1$article_label <- d1$refs
+p1_epireview <- epireview::forest_plot_incubation_period(d1,30,FALSE)
 
 p2 <- forest_plot(d5,'Serial Interval (days)',"parameter_type",c(0,20))
 
