@@ -3,6 +3,9 @@
 .RData
 .Ruserdata
 priority-pathogens.Rproj
+src/*.csv
+src/*/*.csv
+src/*/*.png
 
 # ---VVV--- added by orderly ---VVV----------------
 # Don't manually edit content between these markers
