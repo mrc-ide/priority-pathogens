@@ -17,6 +17,7 @@ library(png)
 library(grid)
 library(patchwork)
 library(gridExtra)
+library(ggbreak)
 
 #orderly preparation 
 orderly_strict_mode()
@@ -290,12 +291,10 @@ parameters <- parameters %>% mutate(parameter_class = case_when(
                          round((population_study_start_year + population_study_end_year) / 2),
                          population_study_start_year),
   study_midyear_cat = case_when(
-    study_midyear %in% 1960:1969 ~ "1960-1969",
-    study_midyear %in% 1970:1979 ~ "1970-1979",
-    study_midyear %in% 1980:1989 ~ "1980-1989",
-    study_midyear %in% 1990:1999 ~ "1990-1999",
-    study_midyear %in% 2000:2009 ~ "2000-2009",
-    study_midyear %in% 2010:2019 ~ "2010-2019",
+    study_midyear %in% 2000:2004 ~ "2000-2004",
+    study_midyear %in% 2005:2009 ~ "2005-2009",
+    study_midyear %in% 2010:2014 ~ "2010-2014",
+    study_midyear %in% 2015:2019 ~ "2015-2019",
     study_midyear %in% 2020:2029 ~ "2020-Present",
     TRUE ~ "Unspecified"),
   population_sample_type = case_when(
@@ -309,7 +308,8 @@ p1 <- ggplot() +
   geom_bar(data = parameters,
            aes(x = reorder(parameter_type, parameter_class), fill = parameter_class), color = "black") + 
   scale_x_discrete(limits = rev) + 
-  scale_y_continuous(limits = c(0,180), breaks = seq(0,180,by = 30), expand = c(0,0)) +
+  scale_y_break(c(125,240), scales = 0.1) +
+  scale_y_continuous(limits = c(0,270), breaks = seq(0,270,by = 30), expand = c(0,0)) +
   xlab("Parameter Type") + ylab("Parameter Count") +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal() +      
@@ -318,7 +318,8 @@ p1 <- ggplot() +
   coord_flip()
 
 p2 <- ggplot() + 
-  geom_bar(data = parameters %>% separate_rows(population_country, sep = ";"),           
+  geom_bar(data = parameters %>% separate_rows(population_country, sep = ";") %>%
+             mutate(population_country = str_trim(population_country)),           
            aes(x = population_country, fill = parameter_class), color = "black") + 
   scale_x_discrete(limits = rev) + 
   scale_y_continuous(limits = c(0,180), breaks = seq(0,180,by = 30), expand = c(0,0)) +
@@ -330,10 +331,8 @@ p2 <- ggplot() +
   coord_flip()
 
 p3 <- ggplot() + 
-  geom_bar(data = parameters, aes(x = factor(study_midyear_cat, levels = c("1960-1969","1970-1979",
-                                                                           "1980-1989","1990-1999",
-                                                                           "2000-2009","2010-2019",
-                                                                           "2020-Present","Unspecified")), fill = parameter_class), color = "black") + 
+  geom_bar(data = parameters, aes(x = factor(study_midyear_cat, levels = c("2000-2004", "2005-2009", "2010-2014",
+                                                                           "2015-2019", "2020-Present",'Unspecified')), fill = parameter_class), color = "black") + 
   scale_x_discrete(limits = rev) + 
   scale_y_continuous(limits = c(0,180), breaks = seq(0,180,by = 30), expand = c(0,0)) +
   xlab("Study Year") + ylab("Parameter Count") +
@@ -346,7 +345,7 @@ p3 <- ggplot() +
 p4 <- ggplot() + 
   geom_bar(data = parameters, aes(x = population_sample_type, fill = parameter_class), color = "black") + 
   scale_x_discrete(limits = rev) + 
-  scale_y_continuous(limits = c(0,180), breaks = seq(0,180,by = 30), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,200), breaks = seq(0,180,by = 30), expand = c(0,0)) +
   xlab("Study Setting") + ylab("Parameter Count") +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal() +      
