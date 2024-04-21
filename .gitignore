@@ -5,7 +5,11 @@
 priority-pathogens.Rproj
 src/*.csv
 src/*/*.csv
+src/*/*/*.csv
 src/*/*.png
+src/*/lassa_functions.R
+pathway
+src/db_extraction/utils.R
 
 # ---VVV--- added by orderly ---VVV----------------
 # Don't manually edit content between these markers
