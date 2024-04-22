@@ -1577,9 +1577,8 @@ if('parameter_type' %in% colnames(df)) {
     #unspecified sex
                  population_sex = case_when(
                  is.na(population_sex) ~ 'Unspecified',
-                 TRUE ~ population_sex))
-
-        # Rounding of parameter values and uncertainty
+                 TRUE ~ population_sex)),
+      # Rounding of parameter values and uncertainty
         across(
           c(
             parameter_value, parameter_lower_bound, parameter_upper_bound,
@@ -1662,7 +1661,7 @@ if('parameter_type' %in% colnames(df)) {
       relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
       arrange(covidence_id)
   }
-
+}
   df
 }
 
