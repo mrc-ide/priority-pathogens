@@ -1514,7 +1514,6 @@ if('parameter_type' %in% colnames(df)) {
 
     df <- df %>%
       mutate(
-<<<<<<< HEAD
         population_study_start_month = substring(population_study_start_month, 1, 3),
         population_study_end_month = substring(population_study_end_month, 1, 3))
   } else if (pathogen == "LASSA") {
@@ -1578,10 +1577,8 @@ if('parameter_type' %in% colnames(df)) {
     #unspecified sex
                  population_sex = case_when(
                  is.na(population_sex) ~ 'Unspecified',
-                 TRUE ~ population_sex))
-=======
-
-        # Rounding of parameter values and uncertainty
+                 TRUE ~ population_sex)),
+      # Rounding of parameter values and uncertainty
         across(
           c(
             parameter_value, parameter_lower_bound, parameter_upper_bound,
@@ -1659,14 +1656,12 @@ if('parameter_type' %in% colnames(df)) {
             parameter_type %in% "Mutations ‚Äì substitution rate" ~
               "Mutations – substitution rate",
             TRUE ~ parameter_type
-          )
-      ) %>%
+          ) %>%
       select(-c("article_id", "access_param_id", "name_data_entry")) %>%
       relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
       arrange(covidence_id)
->>>>>>> main
   }
-
+}
   df
 }
 
