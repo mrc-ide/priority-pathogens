@@ -17,6 +17,10 @@ library(png)
 library(grid)
 library(patchwork)
 library(gridExtra)
+library(epireview)
+if(packageVersion("epireview") < "1.1.1") {
+  stop("please download the latest version of epireview")
+}
 
 #orderly preparation 
 orderly_strict_mode()
