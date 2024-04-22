@@ -193,21 +193,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                              plot_study, digits, lims, colour, label,
                              width, height, resolution){
   
-  stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
-  
-  dataframe <- dataframe %>% filter(!is.na(population_sample_size)) %>% 
-                             filter(!is.na(parameter_value)) %>%
-                             filter((parameter_value_type == 'Mean' & parameter_uncertainty_singe_type == 'Standard deviation (Sd)') |
-                                    (parameter_value_type == 'Median' & parameter_uncertainty_type == 'Inter Quartile Range (IQR)') |  
-                                    (parameter_value_type == 'Median' & parameter_uncertainty_type == 'Range'))
-  
-  dataframe <- dataframe %>% mutate(xbar   = ifelse(parameter_value_type == "Mean", parameter_value, NA),
-                                    median = ifelse(parameter_value_type == "Median", parameter_value, NA),
-                                    q1     = ifelse(parameter_uncertainty_type == "Inter Quartile Range (IQR)", parameter_uncertainty_lower_value, NA),
-                                    q3     = ifelse(parameter_uncertainty_type == "Inter Quartile Range (IQR)", parameter_uncertainty_upper_value, NA),
-                                    min    = ifelse(parameter_uncertainty_type == "Range", parameter_uncertainty_lower_value, NA),
-                                    max    = ifelse(parameter_uncertainty_type == "Range", parameter_uncertainty_upper_value, NA))
-  
+  dataframe <- epireview::filter_df_for_metamean(dataframe)
+    
   mtan <- metamean(data = dataframe,
                    studlab = refs,
                    mean = xbar,

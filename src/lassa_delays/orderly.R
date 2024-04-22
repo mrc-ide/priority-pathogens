@@ -17,6 +17,13 @@ library(png)
 library(grid)
 library(patchwork)
 library(gridExtra)
+library(epireview)
+if(packageVersion("epireview") < "1.1.1") {
+  error_msg <- 
+    paste("Please download the latest development version of epireview using:",
+          "devtools::install_github('mrc-ide/epireview@develop')")
+  stop(error_msg)
+}
 
 #orderly preparation 
 orderly_strict_mode()
