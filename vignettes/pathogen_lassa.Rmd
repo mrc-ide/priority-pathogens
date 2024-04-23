@@ -34,7 +34,7 @@ knitr::opts_chunk$set(echo = FALSE)
 source(file.path("..", "shared", "lassa_functions.R"))
 
 remotes::install_github("mrc-ide/epireview")
-library(epireview)
+
 library(tidyverse)
 library(stringr)
 library(metafor)
