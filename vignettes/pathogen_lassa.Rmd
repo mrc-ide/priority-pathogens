@@ -28,7 +28,7 @@ All Figures from the paper are re-produced below on the **latest** available dat
 }
 ```
 
-```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
 source(file.path("..", "shared", "lassa_functions.R"))
