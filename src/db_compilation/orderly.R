@@ -346,7 +346,7 @@ if (pathogen == "LASSA") {
   outbreak_all  <- clean_dfs(outbreak_all, pathogen)
 }
 
-if (pathogen %in% c("EBOLA","SARA")) {
+if (pathogen %in% c("EBOLA","SARS")) {
 # Add article QA scores to article data
 article_all <- add_qa_scores(article_all, parameter_all)
 
