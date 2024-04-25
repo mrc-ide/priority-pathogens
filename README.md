@@ -1,4 +1,5 @@
 # Priority Pathogens
+# pkgdown <img src="man/figures/logo.png" align="right" />
 
 The priority-pathogens repository is an [orderly](https://mrc-ide.github.io/orderly2/) project. The repository
 consists of a set of ``orderly tasks'' in the src folder that make up our analytical pipeline. The first three tasks in 

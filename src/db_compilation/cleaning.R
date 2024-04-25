@@ -1709,10 +1709,91 @@ if('parameter_type' %in% colnames(df)) {
     #unspecified sex
                  population_sex = case_when(
                  is.na(population_sex) ~ 'Unspecified',
-                 TRUE ~ population_sex))
+                 TRUE ~ population_sex)),
+      # Rounding of parameter values and uncertainty
+        across(
+          c(
+            parameter_value, parameter_lower_bound, parameter_upper_bound,
+            parameter_uncertainty_single_value,
+            parameter_uncertainty_lower_value,
+            parameter_uncertainty_upper_value
+          ),
+          ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 2),
+                   ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .))
+        ),
 
+        # Parameter value
+        # Combine central upper and lower bounds
+        parameter_bounds =
+          ifelse(!is.na(parameter_lower_bound) & !is.na(parameter_upper_bound),
+            paste(parameter_lower_bound, "-", parameter_upper_bound),
+            NA
+          ),
+
+        # Uncertainty type
+        parameter_uncertainty_type = case_when(
+          parameter_uncertainty_type %in%
+            "CI95%" ~ "95% CI",
+          parameter_uncertainty_type %in%
+            "CRI95%" ~ "95% CrI",
+          parameter_uncertainty_type %in%
+            "CI90%" ~ "90% CI",
+          parameter_uncertainty_type %in%
+            "CRI90%" ~ "90% CrI",
+          parameter_uncertainty_type %in%
+            "Highest Posterior Density Interval 95%" ~ "HPDI 95%",
+          parameter_uncertainty_type %in%
+            "Inter Quartile Range (IQR)" ~ "IQR",
+          TRUE ~ parameter_uncertainty_type
+        ),
+        # Single uncertainty type
+        parameter_uncertainty_singe_type = case_when(
+          parameter_uncertainty_singe_type %in%
+            "Standard deviation (Sd)" ~ "Standard Deviation",
+          parameter_uncertainty_singe_type %in%
+            "Standard Error (SE)" ~ "Standard Error",
+          TRUE ~ parameter_uncertainty_singe_type
+        ),
+
+        # Combine uncertainty types and values
+        comb_uncertainty_type =
+          case_when(
+            !is.na(parameter_uncertainty_lower_value) ~
+              paste(parameter_uncertainty_type),
+            !is.na(parameter_uncertainty_single_value) ~
+              paste(parameter_uncertainty_singe_type),
+            TRUE ~ NA
+          ),
+        comb_uncertainty =
+          case_when(
+            !is.na(parameter_uncertainty_lower_value) & !is.na(parameter_uncertainty_upper_value) ~
+              paste(parameter_uncertainty_lower_value, "-", parameter_uncertainty_upper_value),
+            !is.na(parameter_uncertainty_single_value) ~
+              paste(parameter_uncertainty_single_value),
+            TRUE ~ NA
+          ),
+
+        # shorten a longer method_r name
+        method_r =
+          ifelse(method_r %in% "Renewal equations / Branching process",
+            "Branching process", method_r
+          ),
+
+        # parameter_type name consistency
+        parameter_type =
+          case_when(
+            parameter_type %in% "Growth rate ®" ~ "Growth rate (r)",
+            parameter_type %in% "Reproduction number (Effective; Re)" ~
+              "Reproduction number (Effective, Re)",
+            parameter_type %in% "Mutations ‚Äì substitution rate" ~
+              "Mutations – substitution rate",
+            TRUE ~ parameter_type
+          ) %>%
+      select(-c("article_id", "access_param_id", "name_data_entry")) %>%
+      relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
+      arrange(covidence_id)
   }
-
+}
   df
 }
 
