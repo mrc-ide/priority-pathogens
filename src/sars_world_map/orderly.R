@@ -1,0 +1,122 @@
+#task to create sars maps
+
+library(tidyverse)
+library(readxl)
+library(harrypotter)
+library(ggplot2)
+library(grid)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggspatial)
+library(ggrepel)
+library(patchwork)
+library(gt)
+library(png)
+
+#orderly preparation 
+orderly_strict_mode()
+orderly_parameters(pathogen = NULL)
+orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen)",
+                   c("articles.csv", "models.csv", "parameters.csv"))
+orderly_shared_resource("world_cases_table.xlsx" = "world_cases_table.xlsx")
+orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
+source("lassa_functions.R")
+
+orderly_artefact("sars-specific tables",c("world_map.png"))
+
+###################
+## DATA CURATION ##
+###################
+
+articles   <- read_csv("articles.csv")
+models     <- read_csv("models.csv")
+parameters <- read_csv("parameters.csv")
+
+dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE )
+
+articles   <- dfs$articles
+models     <- dfs$models
+parameters <- dfs$parameters
+
+
+create_inset_png <- function(data=non_imported_cnts_short,location='SGP')
+{
+  location_label_map <- list(SGP='Singapore',
+                             HKG='Hong Kong',
+                             CAN='Canada',
+                             CHN='China',
+                             TWN='Taiwan',
+                             VNM='Vietnam')
+  
+  loc_in <- location_label_map[[location]]
+  
+  LOC <- data %>% filter(ISO3==location) %>% 
+    dplyr::select(-ISO3) %>%
+    rename('Onset 1st case'=onset_first_probable_case,'Onset last case'=onset_last_probable_case,'Imported %'=pct_imported,'CFR %'=CFR) 
+  
+  LOC <- as_tibble(cbind(loc_name = names(LOC), t(LOC))) %>% 
+    rename(' '=V2,!!loc_in:=loc_name) %>%
+    gt() %>%
+    cols_label(!!loc_in:= md(paste0('_**',loc_in ,'**_'))) %>%
+    tab_style(
+      style = list(cell_borders(sides = "all", color = "white", style = "solid", weight = px(1))),
+      location = cells_body()             
+    ) %>%
+    tab_style(
+      style = list( cell_text(weight = "bold")),
+      locations = cells_body( columns = !!loc_in ) ) %>%
+    gtsave(paste0(tolower(location),'_info.png'))
+}
+
+world               <- ne_countries(scale = "medium", returnclass = "sf")
+sars_data           <- read_excel("world_cases_table.xlsx") %>% filter(!is.na(ISO3))
+non_imported_cnts   <- sars_data %>% filter(pct_imported < .5 & ISO3 != 'RUS')
+
+f <- data.frame(map_point = c("Beijing",
+                              "Guangzhou",
+                              "Singapore",
+                              "Toronto"),
+                latitude  = c(39.9042,23.1291,1.290270,43.6532),
+                longitude = c(116.4074,113.2644,103.851959,-79.3832),
+                type      = c("Outbreak Location","Outbreak Location","Outbreak Location","Outbreak Location"))
+
+world      <- world %>% left_join(sars_data,by=c('iso_a3'='ISO3'))
+world_local_transmission <- world %>% filter(iso_a3 %in% non_imported_cnts$ISO3)
+
+world_map <- ggplot() + 
+  geom_sf(data = world, lwd = 0.3, col = "grey70", aes(fill = Total)) +
+  geom_sf(data = world_local_transmission, lwd = 1, col = "darkred",  fill = NA) +
+  geom_point(data = f, aes(x = longitude, y = latitude, color = "Outbreak Location"), shape = 8, size = 1.5, stroke = 1.5) +
+  theme_light() +
+  scale_color_manual(values = c("Outbreak Location" = "green2")) + 
+  geom_label_repel(data = world_local_transmission,aes(x=label_x,y=label_y,label=name),size = 2, fontface = "bold") +
+  scale_fill_hp(option = "NewtScamander",na.value='grey90',trans = 'log') +
+  scale_alpha_continuous(trans='log1p', limits=c(1,6000)) +
+  theme(panel.grid.minor = element_line(color = gray(0.5), linetype = "dashed", 
+                                        size = 0.3), panel.background = element_rect(fill = "aliceblue"),
+        legend.position = 'none') +
+  ylab('Latitude') + xlab('Longitude')
+
+# use inset_elements for location specific data we want to show for 6 outbreak regions with local transmission
+non_imported_cnts_short <- non_imported_cnts %>% 
+  dplyr::select(ISO3,Total,Median_age,CFR,pct_imported,onset_first_probable_case,onset_last_probable_case) %>%
+  mutate(CFR=round(CFR*100,2),
+         pct_imported = round(pct_imported*100,2))
+
+for(iso3 in non_imported_cnts_short$ISO3)
+  create_inset_png(non_imported_cnts_short,iso3)
+
+# cut out Antarctica 
+
+inset_width <- 0.05
+inset_hight <- 0.125
+test <- world_map + patchwork::inset_element(grid::rasterGrob(png::readPNG("sgp_info.png")), 0.725,0.325,0.725+inset_width,.325+inset_hight) +
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("hkg_info.png")), 0.81,0.45,0.81+inset_width,.45+inset_hight) +
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("twn_info.png")), 0.85,0.575,0.85+inset_width,.575+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("chn_info.png")), 0.75,0.75,0.75+inset_width,0.75+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("can_info.png")), 0.1,0.7,0.1+inset_width,.7+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("vnm_info.png")), 0.65,0.575,0.65+inset_width,.575+inset_hight) 
+
+
+
+ggsave("world_map.png", plot = test, width = 18, height = 12)

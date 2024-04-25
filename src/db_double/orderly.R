@@ -131,7 +131,7 @@ write_csv(model_match, "models_matching.csv")
 write_csv(model_discordant, "models_fixing.csv")
 
 # Empty outbreaks for Ebola - amend this for other pathogens
-if (pathogen == 'EBOLA') {
+if (pathogen %in% c('EBOLA','SARS')) {
   file.create("outbreaks_matching.csv")
   file.create("outbreaks_fixing.csv")
 }
