@@ -232,13 +232,9 @@ metaprop_wrap <- function(dataframe, subgroup,
                              plot_pooled, sort_by_subg, plot_study, digits, colour, 
                              width, height, resolution){
   
-  stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
-  
-  dataframe <- dataframe %>% filter(!is.na(cfr_ifr_denominator)) %>% 
-                             filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) %>%
-                             mutate(cfr_ifr_numerator = case_when(
-                                    is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
-                                    TRUE ~ cfr_ifr_numerator))
+  dataframe <- epireview::filter_df_for_metaprop(dataframe, 
+                                            num_col = "cfr_ifr_numerator",
+                                            denom_col = "cfr_ifr_denominator")
   
   mtan <- metaprop(data = dataframe,
                    studlab = refs, 
