@@ -22,7 +22,7 @@ clean_dfs <- function(df, pathogen) {
   if ("article_title" %in% colnames(df)) {
     df <- df %>%
       select(-c("article_id", "name_data_entry")) %>%
-      rename(first_author_surname = first_author_surname) %>%
+      rename(first_author_surname = first_aauthor_surname) %>%
       relocate(c(
         id, covidence_id, pathogen,
         first_author_first_name, first_author_surname
@@ -38,9 +38,9 @@ clean_dfs <- function(df, pathogen) {
     ######################################
     # Pathogen-specific article cleaning #
     ######################################
-    if (pathogen == "EBOLA") ebola_cleaning(df)
-    if (pathogen == "LASSA") lassa_cleaning(df)
-    if (pathogen == "SARS") sars_cleaning(df)
+    if (pathogen == "EBOLA") df <- ebola_cleaning(df)
+    if (pathogen == "LASSA") df <- lassa_cleaning(df)
+    if (pathogen == "SARS") df <- sars_cleaning(df)
 
     ##################
     # Model cleaning #

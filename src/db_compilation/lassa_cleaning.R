@@ -94,15 +94,16 @@ lassa_cleaning <- function(df) {
       covidence_id %in% 1447 ~ "N.A.",
       TRUE ~ first_author_surname
     )) %>%
-    mutate(first_author_first_name = sub(".*\\.(.*)", "\\1", first_author_first_name)) %>%
-    mutate(first_author_first_name = sub("^\\s+", "", first_author_first_name)) %>%
     mutate(first_author_first_name = case_when(
       covidence_id %in% 2648 ~ "Nimo-Paintsil",
       covidence_id %in% 2585 ~ "Dalhat",
       covidence_id %in% 1033 ~ "Ehichioya",
       covidence_id %in% 661 ~ "Kerneis",
       TRUE ~ first_author_first_name
-    )) # revised qa after parameter removed: now outbreak only
+    )) %>%
+    mutate(first_author_first_name = sub(".*\\.(.*)", "\\1", first_author_first_name)) %>%
+    mutate(first_author_first_name = sub("^\\s+", "", first_author_first_name)) 
+     # revised qa after parameter removed: now outbreak only
   df[df$covidence_id %in% 152, c("qa_m1", "qa_m2", "qa_a3", "qa_a4", "qa_d6", "qa_d7")] <- NA
   df
 }
@@ -159,11 +160,11 @@ lassa_outbreaks_cleaning <- function(df) {
     mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
     mutate(outbreak_location = gsub("and", ";", outbreak_location)) %>%
     mutate(outbreak_location = sub("^\\s+", "", outbreak_location)) %>%
-    mutate(outbreak_location = str_to_title(outbreak_location)) %>%
-    mutate(outbreak_location = case_when(
+        mutate(outbreak_location = case_when(
       covidence_id %in% 560 & access_outbreak_id %in% 3 ~ "Kenema Government Hospital",
       TRUE ~ outbreak_location
     )) %>%
+    mutate(outbreak_location = str_to_title(outbreak_location)) %>%
     # unspecified case detection mode
     mutate(cases_mode_detection = case_when(
       is.na(cases_mode_detection) ~ "Unspecified",
