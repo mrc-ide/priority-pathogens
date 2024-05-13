@@ -142,10 +142,7 @@ clean_params <- function(df, pathogen) {
           parameter_type %in% "Mutations ‚Äì substitution rate" ~
             "Mutations – substitution rate",
           TRUE ~ parameter_type
-        ) %>%
-          select(-c("article_id", "access_param_id", "name_data_entry")) %>%
-          relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
-          arrange(covidence_id)
+        ) 
       # Parameter value
     )
 
@@ -269,22 +266,20 @@ clean_dfs <- function(df, pathogen) {
         )
     }
 
-    if (pathogen == "EBOLA") ebola_params_cleaning(df)
+    if (pathogen == "EBOLA") {
+      df <- ebola_params_cleaning(df)
+      df <- more_ebola_params_cleaning(df)
+    }
+    if (pathogen == "LASSA") {
+      df <- lassa_params_cleaning(df)
+      df <- more_lassa_cleaning_generic(df)
+    }
+    df <- select(df, -c("article_id", "access_param_id", "name_data_entry")) %>%
+          relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
+          arrange(covidence_id)
   }
 
-  #############################################
-  # Pathogen-specific parameter data cleaning #
-  #############################################
 
-
-  if ("parameter_type" %in% colnames(df)) {
-    df <- clean_params(df, pathogen)
-
-    ## Pathogen-specific parameter data cleaning
-    if (pathogen == "EBOLA") df <- more_ebola_params_cleaning(df)
-    if (pathogen == "LASSA") df <- lassa_params_cleaning(df)
-  }
-  if (pathogen == "LASSA") df <- more_lassa_cleaning_generic(df)
   df
 }
 

@@ -91,15 +91,6 @@ fixing_files <- list(
 
 source("cleaning.R")
 
-## The files do not have UTF-8 encoding,
-## before we read anything, we convert them to UTF-8 and then read them
-## save them back
-infiles <- c(infiles1$files$here, infiles2$files$here)
-lapply(infiles, function(infile) {
-  x <- read_csv(infile)
-  x <- mutate(x, across(everything(), ~ iconv(., to = "UTF-8")))
-  write_csv(x, infile, )
-})
 
 # Single extractions
 article_single <- read_csv("single_extraction_articles.csv")
