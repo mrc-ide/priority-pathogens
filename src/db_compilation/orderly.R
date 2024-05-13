@@ -24,7 +24,7 @@ orderly_artefact(
 )
 
 # Get results from db_extraction
-orderly_dependency(
+infiles1 <- orderly_dependency(
   "db_extraction",
   "latest(parameter:pathogen == this:pathogen)",
   c(
@@ -42,7 +42,7 @@ orderly_dependency(
 # Get results from db_double
 # db_double also produces the fixing files that need to be manually changed and
 # supplied as resources below
-orderly_dependency(
+infiles2 <- orderly_dependency(
   "db_double",
   "latest(parameter:pathogen == this:pathogen)",
   c(
@@ -64,10 +64,15 @@ orderly_resource(
     "lassa_models_fixing.csv",
     "lassa_outbreaks_fixing.csv",
     ## NIPAH FIXING FILES
-    "cleaning.R"
+    "cleaning.R",
+    "lassa_cleaning.R",
+    "sars_cleaning.R",
+    "ebola_cleaning.R"
   )
 )
-
+source("lassa_cleaning.R")
+source("sars_cleaning.R")
+source("ebola_cleaning.R")
 ## Here we map the fixing files to the
 ## pathogen.
 fixing_files <- list(
@@ -85,6 +90,16 @@ fixing_files <- list(
 )
 
 source("cleaning.R")
+
+## The files do not have UTF-8 encoding,
+## before we read anything, we convert them to UTF-8 and then read them
+## save them back
+infiles <- c(infiles1$files$here, infiles2$files$here)
+lapply(infiles, function(infile) {
+  x <- read_csv(infile)
+  x <- mutate(across(everything(), ~ iconv(., to = "UTF-8")))
+  write_csv(x, infile, )
+})
 
 # Single extractions
 article_single <- read_csv("single_extraction_articles.csv")
@@ -280,7 +295,8 @@ outbreak_all <- rbind(
 
 # Cleaning
 article_all   <- clean_dfs(article_all, pathogen)
-outbreak_all  <- clean_dfs(outbreak_all, pathogen)
+outbreak_all  <- lassa_outbreaks_cleaning(outbreak_all) %>% 
+  clean_dfs(pathogen)
 model_all     <- clean_dfs(model_all, pathogen)
 parameter_all <- clean_dfs(parameter_all, pathogen)
 
