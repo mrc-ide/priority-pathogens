@@ -97,7 +97,7 @@ source("cleaning.R")
 infiles <- c(infiles1$files$here, infiles2$files$here)
 lapply(infiles, function(infile) {
   x <- read_csv(infile)
-  x <- mutate(across(everything(), ~ iconv(., to = "UTF-8")))
+  x <- mutate(x, across(everything(), ~ iconv(., to = "UTF-8")))
   write_csv(x, infile, )
 })
 
