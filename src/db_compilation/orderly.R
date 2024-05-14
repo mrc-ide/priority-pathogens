@@ -70,6 +70,7 @@ orderly_resource(
     "ebola_cleaning.R"
   )
 )
+source("cleaning.R")
 source("lassa_cleaning.R")
 source("sars_cleaning.R")
 source("ebola_cleaning.R")
@@ -89,7 +90,7 @@ fixing_files <- list(
   )
 )
 
-source("cleaning.R")
+
 
 
 # Single extractions
@@ -286,8 +287,17 @@ outbreak_all <- rbind(
 
 # Cleaning
 article_all   <- clean_dfs(article_all, pathogen)
-outbreak_all  <- lassa_outbreaks_cleaning(outbreak_all) %>% 
-  clean_dfs(pathogen)
+## SB 14.05.2024
+## Temporary fix to deal with garbled characters 
+## To be removed once we have identified the source of the issue
+## and fixed it properly
+outbreak_all$outbreak_location <- iconv(
+  outbreak_all$outbreak_location, to = "UTF-8", sub = "byte"
+)
+if (pathogen == "LASSA") {
+  outbreak_all <- lassa_outbreaks_cleaning(outbreak_all)
+} 
+outbreak_all  <- clean_dfs(outbreak_all, pathogen)
 model_all     <- clean_dfs(model_all, pathogen)
 parameter_all <- clean_dfs(parameter_all, pathogen)
 

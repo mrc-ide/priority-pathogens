@@ -17,7 +17,15 @@ clean_params <- function(df, pathogen) {
       population_study_start_day = as.numeric(population_study_start_day),
       method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
       population_location = str_replace_all(population_location, ";", ","),
-
+  parameter_type = 
+    ifelse(df$parameter_type == "Growth rate ®", "Growth rate (r)",
+      ifelse(df$parameter_type == "Reproduction number (Effective; Re)", "Reproduction number (Effective, Re)",
+        ifelse(df$parameter_type %in% 
+          c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate"),
+          "Mutations – substitution rate", df$parameter_type
+        )
+      )
+    ), 
       # Group parameters
       parameter_class = case_when(
         grepl("Human delay", parameter_type) ~ "Human delay",
@@ -54,21 +62,12 @@ clean_params <- function(df, pathogen) {
       population_country = str_replace(
         population_country, "Gambia, The", "The Gambia"
       ),
-      population_country = str_replace_all(population_country, ",", ", ")
-    )
-
-  df <- df %>%
-    parameter_type() <-
-    ifelse(parameter_type == "Growth rate ®", "Growth rate (r)",
-      ifelse(parameter_type == "Reproduction number (Effective; Re)", "Reproduction number (Effective, Re)",
-        ifelse(parameter_type == "Mutations ‚Äì substitution rate",
-          "Mutations – substitution rate", parameter_type
-        )
-      )
-    ) %>%
-    select(-c("article_id", "name_data_entry")) %>%
+      population_country = str_replace_all(population_country, ",", ", "),
+    
+) %>%
     relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
+  
   df <- df %>%
     mutate(
       across(
@@ -130,20 +129,7 @@ clean_params <- function(df, pathogen) {
       method_r =
         ifelse(method_r %in% "Renewal equations / Branching process",
           "Branching process", method_r
-        ),
-
-
-      # parameter_type name consistency
-      parameter_type =
-        case_when(
-          parameter_type %in% "Growth rate ®" ~ "Growth rate (r)",
-          parameter_type %in% "Reproduction number (Effective; Re)" ~
-            "Reproduction number (Effective, Re)",
-          parameter_type %in% "Mutations ‚Äì substitution rate" ~
-            "Mutations – substitution rate",
-          TRUE ~ parameter_type
-        ) 
-      # Parameter value
+        )
     )
 
   df
