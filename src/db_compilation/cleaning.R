@@ -132,6 +132,11 @@ clean_params <- function(df, pathogen) {
         )
     )
 
+  if (pathogen == "EBOLA") {
+    df <- ebola_params_cleaning(df)
+    df <- more_ebola_params_cleaning(df)
+  }
+
   df
 }
 clean_outbreaks <- function(df, pathogen) {
@@ -164,6 +169,7 @@ clean_models <- function(df, pathogen) {
     select(-c("article_id", "name_data_entry")) %>%
     relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
+
 
   df
 }
