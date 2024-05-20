@@ -63,6 +63,10 @@ orderly_resource(
     "lassa_params_fixing.csv",
     "lassa_models_fixing.csv",
     "lassa_outbreaks_fixing.csv",
+    ## SARS FIXING FILES
+    "sars_qa_fixing.csv",
+    "sars_params_fixing.csv",
+    "sars_models_fixing.csv",
     ## NIPAH FIXING FILES
     "cleaning.R",
     "ebola_cleaning.R",
@@ -83,6 +87,11 @@ fixing_files <- list(
      models_fix = "lassa_models_fixing.csv",
      qa_fix = "lassa_qa_fixing.csv",
      outbreaks_fix = "lassa_outbreaks_fixing.csv"
+  ),
+  SARS = list(
+    params_fix = "sars_params_fixing.csv",
+    models_fix = "sars_models_fixing.csv",
+    qa_fix = "sars_qa_fixing.csv"
   )
 )
 
@@ -217,7 +226,7 @@ model_fixed <- model_fixed %>%
 
 
 
-if (pathogen == "EBOLA") {
+if (pathogen %in% ("EBOLA", "SARS")) {
 # join article data to qa files
 article_double_details <- article_double %>% select(-c(starts_with("qa")))
 
@@ -315,7 +324,7 @@ parameter_all <- clean_dfs(parameter_all, pathogen)
 #   )
 print(class(article_all))
 write_csv(article_all, "articles.csv")
-if (pathogen == "EBOLA") {
+if (pathogen %in% c("EBOLA", "SARS")) {
   file.create("outbreaks.csv")
 } else {
   write_csv(outbreak_all, "outbreaks.csv")
