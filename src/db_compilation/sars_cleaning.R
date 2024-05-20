@@ -45,12 +45,14 @@ sars_cleaning <- function(df) {
           covidence_id %in% c(793) ~ 32,
           covidence_id %in% c(1641) ~ 195,
           covidence_id %in% c(4614) ~ 925,
-          # covidence_id %in% c(1413, 2567, 2610, 2661, 3215, 3258, 3635) ~ NA,  TRUE ~ page_first)) %>%
+          # covidence_id %in% c(1413, 2567, 2610, 2661, 3215, 3258, 3635) ~ NA,  
+          TRUE ~ page_first)) %>%
         mutate(page_last = case_when(
           covidence_id == 1641 ~ 194,
           covidence_id == 4614 ~ 926,
           TRUE ~ page_last)) %>%
-        #title typosmutate(article_title = case_when(
+        #title typos
+        mutate(article_title = case_when(
           covidence_id == 392 ~ 'Epidemiologic clues to SARS origin in China',
           covidence_id == 513 ~ 'Prevalence of subclinical infection by the SARS coronavirus among general practitioners in Hong Kong',
           covidence_id == 613 ~ 'Characterization of severe acute respiratory syndrome coronavirus genomes in Taiwan: molecular epidemiology and genome evolution',
