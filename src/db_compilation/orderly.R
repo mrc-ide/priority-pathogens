@@ -69,6 +69,7 @@ orderly_resource(
     "sars_models_fixing.csv",
     ## NIPAH FIXING FILES
     "cleaning.R",
+    "sars_cleaning.R",
     "ebola_cleaning.R",
     "lassa_cleaning.R"
   )
@@ -98,6 +99,7 @@ fixing_files <- list(
 source("cleaning.R")
 source("ebola_cleaning.R")
 source("lassa_cleaning.R")
+source("sars_cleaning.R")
 
 # Single extractions
 article_single <- read_csv("single_extraction_articles.csv")
@@ -224,9 +226,7 @@ model_fixed <- model_fixed %>%
   filter(fixed == 1) %>%
   select(-c("fixed", "num_rows", "matching"))
 
-
-
-if (pathogen %in% ("EBOLA", "SARS")) {
+if (pathogen %in% c("EBOLA", "SARS")) {
 # join article data to qa files
 article_double_details <- article_double %>% select(-c(starts_with("qa")))
 
