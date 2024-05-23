@@ -147,6 +147,25 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens Zika - Shazia.accdb",
         "DIDE Priority Pathogens Zika - Thom.accdb",
         "DIDE Priority Pathogens Zika - Tristan.accdb"
+      ),
+      zikadoubledb2 = c(
+        "DIDE Priority Pathogens Zika 2 - Anna.accdb",
+        "DIDE Priority Pathogens Zika 2 - Anna-Maria.accdb",
+        "DIDE Priority Pathogens Zika 2 - Christian.accdb",
+        "DIDE Priority Pathogens Zika 2 - Dom.accdb",
+        "DIDE Priority Pathogens Zika 2 - Ettie.accdb",
+        "DIDE Priority Pathogens Zika 2 - Ilaria.accdb",
+        "DIDE Priority Pathogens Zika 2 - Keith.accdb",
+        "DIDE Priority Pathogens Zika 2 - Kelly.accdb",
+        "DIDE Priority Pathogens Zika 2 - Patrick.accdb",
+        "DIDE Priority Pathogens Zika 2 - Richard.accdb",
+        "DIDE Priority Pathogens Zika 2 - Rob.accdb",
+        "DIDE Priority Pathogens Zika 2 - Ruth.accdb",
+        "DIDE Priority Pathogens Zika 2 - Sangeeta.accdb",
+        "DIDE Priority Pathogens Zika 2 - Sequoia.accdb",
+        "DIDE Priority Pathogens Zika 2 - Shazia.accdb",
+        "DIDE Priority Pathogens Zika 2 - Thom.accdb",
+        "DIDE Priority Pathogens Zika 2 - Tristan.accdb"
       )
     )
     ## Nipah Database files
