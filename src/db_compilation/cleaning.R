@@ -242,6 +242,13 @@ clean_dfs <- function(df, pathogen) {
           theoretical_model = case_when(
             covidence_id %in% 4422 ~ TRUE,
             TRUE ~ theoretical_model
+          ),
+          # change to FALSE when data only "available on request", links broken, or incomplete code
+          code_available = case_when(
+            covidence_id %in% c(6334, 20368, 15958, 4301, 17203, 3342, 17333,
+                                22053, 2941, 8800, 8734, 7283) & code_available %in% TRUE ~ FALSE,
+            covidence_id %in% 4778 & stoch_deter %in% "Stochastic" ~ FALSE,
+            TRUE ~ code_available
           )
         ) %>%
         # group decision to remove compartmental type because it's inconsistent
