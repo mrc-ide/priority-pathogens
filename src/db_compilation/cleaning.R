@@ -234,6 +234,14 @@ clean_dfs <- function(df, pathogen) {
             covidence_id %in% 5675 ~
               "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
             TRUE ~ ebola_variant
+          ),
+          stoch_deter = case_when(
+            covidence_id %in% 5997 & theoretical_model %in% "Yes" ~ "Stochastic",
+            TRUE ~ stoch_deter
+          ),
+          theoretical_model = case_when(
+            covidence_id %in% 4422 ~ TRUE,
+            TRUE ~ theoretical_model
           )
         ) %>%
         # group decision to remove compartmental type because it's inconsistent
