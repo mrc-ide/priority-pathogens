@@ -254,7 +254,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
 
 metaprop_wrap <- function(dataframe, subgroup, 
                              plot_pooled, sort_by_subg, plot_study, digits, colour, 
-                             width, height, resolution){
+                             width, height, resolution,
+                             at = seq(0,1,by=0.2), xlim = c(0,1)){
   
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
   
@@ -264,26 +265,49 @@ metaprop_wrap <- function(dataframe, subgroup,
                                     is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
                                     TRUE ~ cfr_ifr_numerator))
   
-  mtan <- metaprop(data = dataframe,
-                   studlab = refs, 
-                   event = cfr_ifr_numerator, 
-                   n = cfr_ifr_denominator, 
-                   subgroup = dataframe[[subgroup]],
-                   sm = "PLOGIT", 
-                   method="GLMM", 
-                   method.tau = "ML")
+  if(!is.na(subgroup))
+  {
+    mtan <- metaprop(data = dataframe,
+                     studlab = refs, 
+                     event = cfr_ifr_numerator, 
+                     n = cfr_ifr_denominator, 
+                     subgroup = dataframe[[subgroup]],
+                     sm = "PLOGIT", 
+                     method="GLMM", 
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = plot_pooled, pooled.events = TRUE,
+           print.subgroup.name = FALSE, sort.subgroup = sort_by_subg, 
+           study.results = plot_study, 
+           digits = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           col.subgroup = "black", col.inside = "black",
+           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
+           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+    dev.off()  
+  } else {
+    mtan <- metaprop(data = dataframe,
+                     studlab = refs, 
+                     event = cfr_ifr_numerator, 
+                     n = cfr_ifr_denominator, 
+                     sm = "PLOGIT", 
+                     method="GLMM", 
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = plot_pooled, pooled.events = TRUE,
+           study.results = plot_study, 
+           digits = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           col.subgroup = "black", col.inside = "black",
+           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
+           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+    dev.off()
+  }
   
-  png(file = "temp.png", width = width, height = height, res = resolution)
-  forest(mtan, layout = "RevMan5",
-         overall = plot_pooled, pooled.events = TRUE,
-         print.subgroup.name = FALSE, sort.subgroup = sort_by_subg, 
-         study.results = plot_study, 
-         digits = digits, 
-         col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-         col.subgroup = "black", col.inside = "black",
-         weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-         at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio", fontsize=11)
-  dev.off()
   
   pg <- png::readPNG("temp.png", native = TRUE)
   file.remove("temp.png")
