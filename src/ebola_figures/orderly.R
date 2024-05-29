@@ -78,7 +78,7 @@ p_heights <- heights / sum(heights)
 # Arrange and display the plots in a grid with panel labels
 range_tables <- plot_grid(
   plot1, plot2, plot3,
-  labels = c("A Basic Reproduction Numbers ", "B Epidemiological Delays", "C Case Fatality Ratios"),
+  labels = c("A) Basic Reproduction Numbers ", "B) Epidemiological Delays", "C) Case Fatality Ratios"),
   label_size = 12,
   vjust = c(0, 0.5, 1),
   hjust = c(-0.1, -0.1, -0.1),
