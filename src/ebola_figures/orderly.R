@@ -5,6 +5,8 @@ orderly_strict_mode()
 library(png)
 library(cowplot)
 library(grid)
+library(orderly2)
+library(ggplot2)
 
 orderly_parameters(pathogen = "EBOLA")
 
@@ -76,14 +78,14 @@ p_heights <- heights / sum(heights)
 # Arrange and display the plots in a grid with panel labels
 range_tables <- plot_grid(
   plot1, plot2, plot3,
-  labels = c("A", "B", "C"),
+  labels = c("A Basic Reproduction Numbers ", "B Epidemiological Delays", "C Case Fatality Ratios"),
   label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.9, 0.94),
-  hjust = -0.5, vjust = -0.5,
+  vjust = c(0, 0.5, 1),
+  hjust = c(-0.1, -0.1, -0.1),
   ncol = 1,
   rel_heights = p_heights) +
   theme(plot.background = element_rect(color = "white", fill = "white"),
-        plot.margin  = margin(0, 0, 0, 0)
+        plot.margin  = unit(c(1,0.5,0,0.5), "cm")
   )
 
 ggsave("Manuscript_figures/combined_range_tables.png", range_tables, width = 7, height = 15)
