@@ -1279,10 +1279,11 @@ p_heights_unfilt <- heights_unfilt / sum(heights_unfilt)
 # create combined plots
 md_qa <- plot_grid(
   plots_qa[[1]], plots_qa[[2]], plots_qa[[3]], plots_qa[[4]],
-  labels = c("A", "B", "C", "D"),
+  labels = c("A) Serial interval", "B) Incubation period", "C) Time from symptom onset to death", "D) Time from symptom onset to recovery"),
   label_size = 12,
-  label_x = 0, label_y = c(0.8, 0.88, 0.85, 0.8),
-  hjust = -0.5, vjust = -0.5,
+  #label_y = c(0.8, 0.88, 0.85, 0.8),
+  hjust = c(-0.1, -0.1, -0.1, -0.1), 
+  #vjust = -0.5,
   ncol = 1,
   rel_heights = p_heights_qa) +
   theme(plot.background = element_rect(color = "white", fill = "white")
