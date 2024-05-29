@@ -1279,10 +1279,11 @@ p_heights_unfilt <- heights_unfilt / sum(heights_unfilt)
 # create combined plots
 md_qa <- plot_grid(
   plots_qa[[1]], plots_qa[[2]], plots_qa[[3]], plots_qa[[4]],
-  labels = c("A) Serial interval", "B) Incubation period", "C) Time from symptom onset to death", "D) Time from symptom onset to recovery"),
+  labels = c("A) Serial interval", "B) Incubation period", 
+             "C) Time from symptom onset to death", "D) Time from symptom onset to recovery"),
   label_size = 12,
   #label_y = c(0.8, 0.88, 0.85, 0.8),
-  hjust = c(-0.1, -0.1, -0.1, -0.1), 
+  hjust = c(-0.1, -0.08, -0.045, -0.035), 
   #vjust = -0.5,
   ncol = 1,
   rel_heights = p_heights_qa) +
@@ -1293,10 +1294,12 @@ ggsave("Meta_plots/meta_delays_main_text.png", plot = md_qa, width = 7, height =
 
 md_species <- plot_grid(
   plots_species[[1]], plots_species[[2]], plots_species[[3]],
-  labels = c("A", "B", "C"),
+  labels = c("A) Incubation period", "B) Time from symptom onset to death", 
+             "C) Time from symptom onset to recovery"),
   label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.9, 0.88),
-  hjust = -0.5, vjust = -0.5,
+  #label_x = 0, label_y = c(0.9, 0.9, 0.88),
+  hjust = c(-0.15, -0.1, -0.08), 
+  vjust = c(2.0, 0.3, -0.3),
   ncol = 1,
   rel_heights = p_heights_species) +
   theme(plot.background = element_rect(color = "white", fill = "white")
@@ -1306,10 +1309,10 @@ ggsave("Meta_plots/meta_delays_species_subgroups.png", plot = md_species, width 
 
 md_unfilt <- plot_grid(
   plots_unfilt[[1]], plots_unfilt[[2]],
-  labels = c("A", "B"),
+  labels = c("A) Infectious period", "B) Serial interval"),
   label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.9),
-  hjust = -0.5, vjust = -0.5,
+  #label_x = 0, label_y = c(0.9, 0.9),
+  hjust = c(-0.425, -0.5), vjust = c(2, -0.5),
   ncol = 1,
   rel_heights = p_heights_unfilt) +
   theme(plot.background = element_rect(color = "white", fill = "white")
