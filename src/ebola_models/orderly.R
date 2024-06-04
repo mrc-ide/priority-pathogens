@@ -45,9 +45,13 @@ orderly_dependency(
 orderly_shared_resource("ebola_functions.R" = "ebola_functions.R")
 orderly_shared_resource("ebola_visualisation.R" = "ebola_visualisation.R")
 
+orderly_resource("models_with_code.csv")
+
 # Load data
 articles <- read_csv("articles.csv")
 models <- read_csv("models.csv")
+code_models <- read_csv("models_with_code.csv")
+
 source("ebola_functions.R")
 source("ebola_visualisation.R")
 
@@ -254,3 +258,11 @@ assump_tab <- model_dat %>%
   line_spacing(i = 1, space = 1.5, part = "header")
 
 save_as_image(assump_tab, path = "Model_results/assumptions_table.png")
+
+## Models with code
+ids_to_remove = c("6334", "20368", "15958", "4301", "17203", "3342", "17333", 
+                  "22053", "2941", "8800", "8734", "7283", "865")
+# Remove incomplete ones and remove stochastic 4778 - stochastic
+code_models_complete = code_models %>% filter(! covidence_id %in% ids_to_remove) %>%
+  filter(!(covidence_id == "4778" & stoch_deter == "Stochastic"))
+
