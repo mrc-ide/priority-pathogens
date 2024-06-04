@@ -309,33 +309,34 @@ ordered_dat <- delay_dat %>%
 
   # SI
 n_si <- delay_dat %>% filter(delay_short %in% "Serial interval")
-n_si %>% nrow() # total: 21 parameters
-length(unique(n_si$covidence_id)) # total: 17 articles
-table(n_si$ebola_species) # 2 sudan, 19 zaire
+print(sprintf("m models SI: %d", n_si %>% nrow())) # total: 21 parameters
+print(sprintf("n studies SI: %d", length(unique(n_si$covidence_id)))) # total: 17 articles
+print(table(n_si$ebola_species)) # 2 sudan, 19 zaire
 
   # Incubation
 n_incub <- delay_dat %>% filter(delay_short %in% "Incubation period")
-n_incub %>% nrow() # 52 parameters
-length(unique(n_incub$covidence_id)) # 43 articles
-table(n_incub$ebola_species) # 3 bundibugyo, 5 sudan, 43 zaire, 1 zaire & sudan
+print(sprintf("m models incub: %d",n_incub %>% nrow())) # 52 parameters
+print(sprintf("n studies incub: %d", length(unique(n_incub$covidence_id)))) # 43 articles
+print(table(n_incub$ebola_species)) # 3 bundibugyo, 5 sudan, 43 zaire, 1 zaire & sudan
+
 n_incub_filt <- delay_dat %>%
   filter(delay_short %in% "Incubation period" & article_qa_score >= 50)
-n_incub_filt %>% nrow() # 36 parameters with high QA score
-table(n_incub_filt$ebola_species) # filtered: 3 bundibugyo, 3 sudan, 30 zaire
+print(sprintf("m models incub filter: %d", n_incub_filt %>% nrow())) # 36 parameters with high QA score
+print(table(n_incub_filt$ebola_species)) # filtered: 3 bundibugyo, 3 sudan, 30 zaire
 
   # Latent
 n_latent <- delay_dat %>% filter(delay_short %in% "Latent period")
-n_latent %>% nrow() # 11 parameters
-length(unique(n_latent$covidence_id)) # 10 articles
-table(n_latent$ebola_species) # 11 zaire
+print(sprintf("m models latent: %d", n_latent %>% nrow())) # 11 parameters
+print(sprintf("n studies latent: %d",length(unique(n_latent$covidence_id)))) # 10 articles
+print(table(n_latent$ebola_species)) # 11 zaire
 delay_dat %>%
   filter(delay_short %in% "Latent period" & article_qa_score >= 50) %>% nrow() # 7
 
   # Infectious period
 n_infec <- delay_dat %>% filter(delay_short %in% "Infectious period")
-n_infec %>% nrow() # 27 parameters
-length(unique(n_infec$covidence_id)) # 23 articles
-table(n_infec$ebola_species) # 3 bundibugyo, 1 sudan, 23 zaire
+print(sprintf("m models infec: %d",n_infec %>% nrow())) # 27 parameters
+print(sprintf("n studies infec: %d",length(unique(n_infec$covidence_id)))) # 23 articles
+print(table(n_infec$ebola_species)) # 3 bundibugyo, 1 sudan, 23 zaire
 n_infec_filt <- delay_dat %>%
   filter(delay_short %in% "Infectious period" & article_qa_score >= 50)
 n_infec_filt %>% nrow() # 12
