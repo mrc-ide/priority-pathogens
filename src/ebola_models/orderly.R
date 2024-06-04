@@ -63,6 +63,9 @@ df <- left_join(
 ) %>%
   arrange(article_label, -year_publication)
 
+print(sprintf("n model studies overall: %d", length(unique(df$article_label))))
+print(sprintf("m models: %d", length(df$article_label)))
+
 model_dat <- df %>%
   mutate(
   # group other and combinations of models together
@@ -263,6 +266,90 @@ save_as_image(assump_tab, path = "Model_results/assumptions_table.png")
 ids_to_remove = c("6334", "20368", "15958", "4301", "17203", "3342", "17333", 
                   "22053", "2941", "8800", "8734", "7283", "865")
 # Remove incomplete ones and remove stochastic 4778 - stochastic
-code_models_complete = code_models %>% filter(! covidence_id %in% ids_to_remove) %>%
-  filter(!(covidence_id == "4778" & stoch_deter == "Stochastic"))
+code_models_data = code_models %>% filter(! covidence_id %in% ids_to_remove) %>%
+  filter(!(covidence_id == "4778" & stoch_deter == "Stochastic")) %>%
+  select(c(Article = article_label,
+           `QA score (%)` = article_qa_score,
+            Purpose = "Purpose of model/application", 
+           `Model type` = "model_type",
+           `Heath states` = "Heath states considered (up to 10 states)",
+           `Uncertainty considered` = "Uncertainty considered", 
+           `Fitted?` = "Is the model fitted?", 
+           `Fitting Method` = "Fitting Method", 
+           `Data` = "Data used", 
+           `Outbreak period` = "Period of outbreak modelled", 
+           `Spatial model` = "Is the model spatial?", 
+           `Spillover included` = "Include spillover?", 
+           `Language` = "Language of model", 
+           `Link` = "DOI/link for code", 
+           `README?` = "Is there a README?"
+           )) 
+  code_models_complete = code_models_data %>%
+  arrange(`Model type`, desc(`Article`)
+           ) %>%
+  as_flextable() %>%
+  fontsize(i = 1, size = 10, part = "header") %>%
+  autofit() %>%
+  theme_booktabs() %>%
+  #hline(i = ~ index_of_change == 1) %>%
+  bold(i = 1, bold = TRUE, part = "header") %>%
+  #hline(i = ~ !is.na(`Model type`)) %>%
+  #bold(j = 1, i = ~ !is.na(`Model type`), bold = TRUE, part = "body" ) %>%
+  add_footer_lines("") %>%
+  align(align = "left", part = "all") %>%
+  line_spacing(i = 1, space = 1.5, part = "header")
 
+p_code_model_tbl <- autofit(code_models_complete) |> paginate()
+
+# Make sure to remove white space by adjusting width and height
+# Can only save paginated version to docx or rtf
+save_as_docx(p_code_model_tbl, path = "Model_results/code_table.docx",
+             pr_section = prop_section(
+               page_size = page_size(orient = "landscape", width = 23, height = 20),
+               type = "continuous",
+               page_margins = page_mar(bottom = 0, top = 0, right = 0, left = 0, gutter = 0)
+             ))
+
+# Then convert to pdf
+docx2pdf("Model_results/code_table.docx",
+         output = "Model_results/code_table.pdf")
+
+print(sprintf("n model studies: %d", length(unique(code_models_data$Article))))
+print(sprintf("m models: %d", length(code_models_data$Article)))
+
+print(sprintf("m model compartmental: %d", sum(code_models_data$`Model type` == "Compartmental")))
+print(sprintf("m model branching: %d", sum(code_models_data$`Model type` == "Branching process")))
+print(sprintf("m model agent: %d", sum(code_models_data$`Model type` == "Agent/Individual based")))
+
+print(sprintf("m language R: %d %f", sum(code_models_data$`Language` == "R"), 
+              sum(code_models_data$`Language` == "R")/length(code_models_data$`Language`)))
+print(sprintf("m language python: %d %f", sum(code_models_data$`Language` == "Python"), 
+              sum(code_models_data$`Language` == "Python")/length(code_models_data$`Language`)))
+print(sprintf("m language MATLAB: %d %f", sum(code_models_data$`Language` == "MATLAB"), 
+              sum(code_models_data$`Language` == "MATLAB")/length(code_models_data$`Language`)))
+
+print(sprintf("m Readme: %d %f", sum(code_models_data$`README?` == "Yes"), 
+              sum(code_models_data$`README?` == "Yes")/length(code_models_data$`Language`)))
+
+print(sprintf("m Spatial: %d %f", sum(code_models_data$`Spatial model` == "Yes"), 
+              sum(code_models_data$`Spatial model` == "Yes")/length(code_models_data$`Language`)))
+
+print(sprintf("m Spillover: %d %f", sum(code_models_data$`Spillover included` == "Yes"), 
+              sum(code_models_data$`Spillover included` == "Yes")/length(code_models_data$`Language`)))
+
+print(sprintf("m purpose Transmission: %d %f", sum(code_models_data$Purpose == "Transmission"), 
+              sum(code_models_data$`Purpose` == "Transmission")/length(code_models_data$`Language`)))
+print(sprintf("m purpose Forecast: %d %f", sum(code_models_data$`Purpose` == "Forecast"), 
+              sum(code_models_data$`Purpose` == "Forecast")/length(code_models_data$`Language`)))
+print(sprintf("m purpose method development: %d %f", sum(code_models_data$`Purpose` == "Methodological development"), 
+              sum(code_models_data$`Purpose` == "Methodological development")/length(code_models_data$`Language`)))
+
+
+
+print(sprintf("m Fitted: %d %f", sum(code_models_data$`Fitted?` == "Yes"), 
+              sum(code_models_data$`Fitted?` == "Yes")/length(code_models_data$`Language`)))
+
+print(sprintf("m Fitting method MCMC: %d %f", sum(code_models_data$`Fitting Method` == "MCMC", na.rm = T), 
+              sum(code_models_data$`Fitting Method` == "MCMC", na.rm = T)/length(code_models_data$`Language`)))
+print(sprintf("m Fitting method MLE: %d %f", sum(code_models_data$`Fitting Method` == "MLE", na.rm = T), 
+              sum(code_models_data$`Fitting Method` == "MLE", na.rm = T)/length(code_models_data$`Language`)))
