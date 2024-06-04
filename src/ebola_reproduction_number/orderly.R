@@ -147,7 +147,6 @@ ordered_dat <- df_plot %>%
     )
   )
 
-
 # Create directory for results
 dir.create("R_plots")
 dir.create("R_tables")
@@ -166,15 +165,15 @@ plot_dat <- ordered_dat %>%
 
 # Pull numbers on QA filtered basic R for text
 n_param <- plot_dat %>% filter(parameter_type_short %in% "Basic (R0)" & article_qa_score >= 50)
-n_param %>% nrow() # 71 parameters
-length(unique(n_param$covidence_id)) # 52 articles
-n_param %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 58 WA
+print(sprintf("R0 m: %d", n_param %>% nrow())) # 71 parameters
+print(sprintf("R0 n: %d", length(unique(n_param$covidence_id)))) # 52 articles
+print(sprintf("WA R0 m: %d", n_param %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow())) # 58 WA
 
 # Pull numbers on QA filtered effective R for text
 n_param_re <- plot_dat %>% filter(parameter_type_short %in% "Effective (Re)" & article_qa_score >= 50)
-n_param_re %>% nrow() # 32 parameters
-length(unique(n_param_re$covidence_id)) # 23 articles
-n_param_re %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 23 WA
+print(sprintf("Re m: %d", n_param_re %>% nrow())) # 32 parameters
+print(sprintf("Re n: %d", length(unique(n_param_re$covidence_id)) ))# 23 articles
+print(sprintf("WA Re m: %d",n_param_re %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow())) # 23 WA
 # Not QA filtered
 n_param_re <- plot_dat %>% filter(parameter_type_short %in% "Effective (Re)")
 n_param_re %>% nrow() # 55 parameters
