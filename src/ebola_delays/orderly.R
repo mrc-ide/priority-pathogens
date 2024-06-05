@@ -50,6 +50,7 @@ orderly_artefact(
     "Delay_tables/qa_filtered/adm_ranges_table.png",
     "Delay_tables/qa_filtered/infp_ranges_table.png",
     "Delay_tables/qa_filtered/select_ranges_table.png",
+    "Delay_tables/qa_filtered/select_ranges_table.docx",
     "Delay_tables/qa_filtered/exposure_table.png",
     "Delay_tables/qa_filtered/other_table.png",
     "Meta_plots/incubation_period.png",
@@ -815,6 +816,7 @@ save_as_image(selection_ranges_outbreak,
   path = "Delay_tables/qa_filtered/select_ranges_table.png"
 )
 
+save_as_docx(selection_ranges_outbreak, path = "Delay_tables/qa_filtered/select_ranges_table.docx")
 
 ##########################
 # VARIANCE META-ANALYSIS #

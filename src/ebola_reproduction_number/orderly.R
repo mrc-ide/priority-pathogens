@@ -29,6 +29,7 @@ orderly_artefact(
     "R_tables/unfiltered/basic_r_tab_all.png",
     "R_tables/unfiltered/eff_r_tab_all.png",
     "R_tables/qa_filtered/range_outbreak.png",
+    "R_tables/qa_filtered/range_outbreak.docx",
     "R_tables/qa_filtered/range_country.png",
     "R_tables/qa_filtered/range_species.png",
     "R_tables/qa_filtered/eff_range_outbreak.png",
@@ -356,6 +357,7 @@ save_as_image(range_outbreak, path = "R_tables/qa_filtered/range_outbreak.png")
 save_as_image(range_country, path = "R_tables/qa_filtered/range_country.png")
 save_as_image(range_species, path = "R_tables/qa_filtered/range_species.png")
 
+save_as_docx(range_outbreak, path = "R_tables/qa_filtered/range_outbreak.docx")
 
 # Same for effective R
 eff_range_dat <- ordered_dat %>%

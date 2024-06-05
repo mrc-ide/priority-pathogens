@@ -28,6 +28,7 @@ orderly_artefact(
     "Severity_tables/qa_filtered/tab_filtered.png",
     "Severity_tables/qa_filtered/range_outbreak.png",
     "Severity_tables/qa_filtered/range_outbreak_country.png",
+    "Severity_tables/qa_filtered/range_outbreak_country.docx",
     "Severity_tables/qa_filtered/range_country_outbreak.png",
     "Severity_tables/qa_filtered/range_species_outbreak.png",
     "Severity_tables/unfiltered/tab_unfiltered.png",
@@ -387,6 +388,9 @@ range_species_outbreak <- create_range_table(
 save_as_image(range_outbreak_country,
   path = "Severity_tables/qa_filtered/range_outbreak_country.png"
 )
+
+save_as_docx(range_outbreak_country, path = "Severity_tables/qa_filtered/range_outbreak_country.docx")
+
 save_as_image(range_outbreak,
               path = "Severity_tables/qa_filtered/range_outbreak.png"
 )
