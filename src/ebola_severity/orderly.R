@@ -21,7 +21,7 @@ orderly_artefact(
   "Plots and tables for severity parameters",
   c(
     "Severity_plots/plot_outbreak_filtered.png",
-    "Severity_plots/plot_split_outbreak_filtered.png",
+    "Severity_plots/plot_split_outbreak_filtered.pdf",
     "Severity_plots/plot_country_filtered.png",
     "Severity_plots/plot_outbreak_unfiltered.png",
     "Severity_plots/plot_country_unfiltered.png",
@@ -293,7 +293,7 @@ ggsave("Severity_plots/plot_outbreak_filtered.png", plot_outbreak_qa,
   width = 9, height = 18, units = "in", bg = "white"
 )
 
-ggsave("Severity_plots/plot_split_outbreak_filtered.png", plot_split_outbreak,
+ggsave("Severity_plots/plot_split_outbreak_filtered.pdf", plot_split_outbreak,
        width = 16, height = 11, units = "in", bg = "white"
 )
 

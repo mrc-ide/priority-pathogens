@@ -20,7 +20,7 @@ orderly_strict_mode()
 orderly_artefact(
   "Plots and tables for reproduction number parameters",
   c(
-    "R_plots/basic_r_outbreak_filtered.png",
+    "R_plots/basic_r_outbreak_filtered.pdf",
     "R_plots/basic_r_country_filtered.png",
     "R_plots/eff_r_outbreak_filtered.png",
     "R_plots/eff_r_country_filtered.png",
@@ -235,7 +235,7 @@ eff_r_country_qa <- create_plot(
 )
 
 # Save
-ggsave("R_plots/basic_r_outbreak_filtered.png", basic_r_outbreak_qa,
+ggsave("R_plots/basic_r_outbreak_filtered.pdf", basic_r_outbreak_qa,
   width = 9, height = 12, units = "in", bg = "white"
 )
 

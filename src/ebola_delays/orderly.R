@@ -63,7 +63,7 @@ orderly_artefact(
     "Meta_plots/onset_to_recovery.png",
     "Meta_plots/onset_to_recovery_species.png",
     "Meta_plots/onset_to_recovery_qafilter.png",
-    "Meta_plots/meta_delays_main_text.png",
+    "Meta_plots/meta_delays_main_text.pdf",
     "Meta_plots/meta_delays_species_subgroups.png",
     "Meta_plots/meta_delays_unfiltered.png"
   )
@@ -1291,7 +1291,7 @@ md_qa <- plot_grid(
   theme(plot.background = element_rect(color = "white", fill = "white")
   )
 
-ggsave("Meta_plots/meta_delays_main_text.png", plot = md_qa, width = 7, height = 11)
+ggsave("Meta_plots/meta_delays_main_text.pdf", plot = md_qa, width = 7, height = 11)
 
 md_species <- plot_grid(
   plots_species[[1]], plots_species[[2]], plots_species[[3]],
