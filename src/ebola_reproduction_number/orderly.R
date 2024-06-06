@@ -203,7 +203,7 @@ basic_r_outbreak_qa <- create_plot(
   facet_by = "outbreak_species",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
-)
+) 
 
 basic_r_country_qa <- create_plot(
   plot_dat,
@@ -213,7 +213,7 @@ basic_r_country_qa <- create_plot(
   facet_by = "population_country",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "outbreak"
-)
+) 
 
 eff_r_outbreak_qa <- create_plot(
   comb_facet_dat,
@@ -223,7 +223,7 @@ eff_r_outbreak_qa <- create_plot(
   facet_by = "outbreak_species",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
-)
+) 
 
 eff_r_country_qa <- create_plot(
   plot_dat,
@@ -233,7 +233,7 @@ eff_r_country_qa <- create_plot(
   facet_by = "population_country",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "outbreak"
-)
+) 
 
 # Save
 ggsave("R_plots/basic_r_outbreak_filtered.pdf", basic_r_outbreak_qa,
