@@ -6,5 +6,5 @@ plugins:
     eboladoubledb2: "Z:/Ebola/databases/NEW DOUBLE EXTRACTION DATABASES"
     eboladoubledb: "Z:/Ebola/databases/Double extraction databases"
     ebolasingledb: "Z:/Ebola/databases/Single extraction databases"
-    zikadoubledb: "C:/Users/kem22/OneDrive - Imperial College London/outbreaks/databases/Zika_dbs/Double_old"
+    # zikadoubledb: "C:/Users/kem22/OneDrive - Imperial College London/outbreaks/databases/Zika_dbs/Double_old"
     zikadoubledb2: "C:/Users/kem22/OneDrive - Imperial College London/outbreaks/databases/Zika_dbs/Double_new"
