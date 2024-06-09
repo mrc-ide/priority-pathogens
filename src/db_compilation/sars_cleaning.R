@@ -26,19 +26,19 @@ sars_cleaning <- function(df) {
           TRUE ~ volume)) %>%
         #issue typos
         mutate(issue = case_when(
-          covidence_id %in% c(558, 4217,	4676,	7256,	5650,	5484) ~ '1',
-          covidence_id %in% c(3421,	7260,	8759,	10922,	4261) ~ '2',
-          covidence_id %in% c(1036,	1564,	3449,	3468,	4169,	5635,	11040) ~ '3', 
-          covidence_id %in% c(1046,	5880,	6145) ~ '4',
-          covidence_id %in% c(1102,	2043,	3343,	4675) ~ '5',
-          covidence_id %in% c(2006,	11042) ~ '6',
-          covidence_id %in% c(523,	4614, 5585) ~ '9',
-          covidence_id %in% c(5589,	5595) ~ '10',
-          covidence_id %in% c(4184) ~ '12', 
-          covidence_id %in% c(5879) ~ '14', 
-          covidence_id %in% c(5069) ~ '1554', 
-          covidence_id %in% c(3375) ~ '5627', 
-          covidence_id %in% c(5393) ~ '7433', 								
+          covidence_id %in% c(558, 4217,	4676,	7256,	5650,	5484) ~ 1,
+          covidence_id %in% c(3421,	7260,	8759,	10922,	4261) ~ 2,
+          covidence_id %in% c(1036,	1564,	3449,	3468,	4169,	5635,	11040) ~ 3, 
+          covidence_id %in% c(1046,	5880,	6145) ~ 4,
+          covidence_id %in% c(1102,	2043,	3343,	4675) ~ 5,
+          covidence_id %in% c(2006,	11042) ~ 6,
+          covidence_id %in% c(523,	4614, 5585) ~ 9,
+          covidence_id %in% c(5589,	5595) ~ 10,
+          covidence_id %in% c(4184) ~ 12, 
+          covidence_id %in% c(5879) ~ 14, 
+          covidence_id %in% c(5069) ~ 1554, 
+          covidence_id %in% c(3375) ~ 5627, 
+          covidence_id %in% c(5393) ~ 7433, 								
           TRUE ~ issue)) %>%
         #page typos
         mutate(page_first = case_when(
