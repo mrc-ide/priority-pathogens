@@ -53,11 +53,13 @@ parameters <- dfs$parameters
 ## ARTICLES ##
 ##############
 
-quality <- articles %>%
+articles <- epireview::assign_qa_score(articles)$articles
+
+quality <- articles %>% 
   mutate_at(vars(starts_with("qa")), funs(replace(., . == "Yes", 1))) %>%
   mutate_at(vars(starts_with("qa")), funs(replace(., . == "No", 0))) %>%
   mutate_at(vars(starts_with("qa")), as.numeric)
-quality <- quality %>% rowwise() %>% mutate(score = 100*mean(c(qa_m1,qa_m2,qa_a3,qa_a4,qa_d5,qa_d6,qa_d7),na.rm=TRUE))
+quality <- quality %>% rowwise() %>% mutate(score = 100*qa_score)
 quality <- quality %>% mutate(category = ifelse(covidence_id %in% models$covidence_id, "Modelling Studies", "Non-Modelling Studies"))
 quality$category <- factor(quality$category, levels = c("Non-Modelling Studies", "Modelling Studies"))
 
