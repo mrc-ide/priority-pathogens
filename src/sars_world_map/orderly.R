@@ -53,12 +53,17 @@ create_inset_png <- function(data=non_imported_cnts_short,location='SGP')
   
   LOC <- data %>% filter(ISO3==location) %>% 
     dplyr::select(-ISO3) %>%
-    rename('Onset 1st case'=onset_first_probable_case,'Onset last case'=onset_last_probable_case,'Imported %'=pct_imported,'CFR %'=CFR) 
+    mutate(onset_first_probable_case = format(as.Date(onset_first_probable_case),format="%d-%b-%y"),
+           onset_last_probable_case  = format(as.Date(onset_last_probable_case),format="%d-%b-%y")) %>%
+    rename('Onset 1st case'=onset_first_probable_case,
+           'Onset last case'=onset_last_probable_case,
+           'Imported %'=pct_imported,'CFR %'=CFR) 
   
   LOC <- as_tibble(cbind(loc_name = names(LOC), t(LOC))) %>% 
     rename(' '=V2,!!loc_in:=loc_name) %>%
     gt() %>%
     cols_label(!!loc_in:= md(paste0('_**',loc_in ,'**_'))) %>%
+    tab_options(data_row.padding = px(1)) %>%
     tab_style(
       style = list(cell_borders(sides = "all", color = "white", style = "solid", weight = px(1))),
       location = cells_body()             
@@ -122,14 +127,14 @@ m1 <- metaprop_wrap(non_imported_cnts, subgroup = NA,
                     width = 4000, height = 1650, resolution = 500,
                     at = seq(0,0.3,by=0.05), xlim = c(0,0.35))
 
-inset_width <- 0.05*1.75
+inset_width <- 0.05*2.2
 inset_hight <- 0.125*1.75
 test <- world_map + patchwork::inset_element(grid::rasterGrob(png::readPNG("sgp_info.png")), 0.725,0.15,0.725+inset_width,.15+inset_hight) +
-  patchwork::inset_element(grid::rasterGrob(png::readPNG("hkg_info.png")), 0.825,0.275,0.825+inset_width,.275+inset_hight) +
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("hkg_info.png")), 0.85,0.275,0.85+inset_width,.275+inset_hight) +
   patchwork::inset_element(grid::rasterGrob(png::readPNG("twn_info.png")), 0.85,0.5,0.85+inset_width,.5+inset_hight) + 
   patchwork::inset_element(grid::rasterGrob(png::readPNG("chn_info.png")), 0.75,0.725,0.75+inset_width,0.725+inset_hight) + 
   patchwork::inset_element(grid::rasterGrob(png::readPNG("can_info.png")), 0.075,0.5,0.075+inset_width,.5+inset_hight) + 
-  patchwork::inset_element(grid::rasterGrob(png::readPNG("vnm_info.png")), 0.625,0.225,0.625+inset_width,.225+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("vnm_info.png")), 0.6,0.225,0.6+inset_width,.225+inset_hight) + 
   patchwork::inset_element(m1$plot, 0.01,0.01,0.425,0.375) 
 
 ggsave("world_map.png", plot = test, width = 18, height = 12)
