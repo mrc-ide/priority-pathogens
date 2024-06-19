@@ -95,11 +95,12 @@ curation <- function(articles, outbreaks, models, parameters) {
 ```
 
 ```{r prepare_data, message=FALSE, warning=FALSE, paged.print=FALSE}
+base_filepath <- "https://raw.githubusercontent.com/mrc-ide/epireview/main/inst/extdata"
 
-articles   <- epireview::load_epidata_raw("lassa", "article")
-models     <- epireview::load_epidata_raw("lassa", "model")
-outbreaks  <- epireview::load_epidata_raw("lassa", "outbreak")
-parameters <- epireview::load_epidata_raw("lassa", "parameter")
+articles   <- read.csv(file.path(base_filepath, "lassa_articles.csv"))
+models     <- read.csv(file.path(base_filepath, "lassa_models.csv"))
+outbreaks  <- read.csv(file.path(base_filepath, "lassa_outbreaks.csv"))
+parameters <- read.csv(file.path(base_filepath, "lassa_parameters.csv"))
 
 dfs <- curation(articles,outbreaks,models,parameters)
 
