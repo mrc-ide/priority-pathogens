@@ -41,7 +41,10 @@ dfs <- data_curation(articles,outbreaks,models,parameters, plotting = TRUE)
 articles   <- dfs$articles
 outbreaks  <- dfs$outbreaks
 models     <- dfs$models
-parameters <- dfs$parameters
+
+parameters <- dfs$parameters %>% left_join(qa_scores) %>% 
+  mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value))
+  
 
 ##################
 ## TRANSMISSION ##
@@ -50,7 +53,7 @@ parameters <- dfs$parameters
 #extract data to be plotted
 #
 # NEED TO SPLIT ATTACK RATES INTO ATTACK RATES + SECONDARY ATTACK RATES
-d1 <- parameters %>% filter(parameter_type == 'Mutations - evolutionary rate')
+d1 <- parameters %>% filter(parameter_type == 'Mutations – mutation rate')
 d2 <- parameters %>% filter(parameter_type == 'Mutations – substitution rate')
 d3 <- parameters %>% filter(parameter_class == 'Overdispersion')
 d4 <- parameters %>% filter(parameter_class == 'Attack rate')
@@ -113,8 +116,16 @@ p5 <- forest_plot(d5,'Growth Rate (per day)',"pathogen",c(0,1.25))
 # meta-analysis ?? how to deal with lack of sample size especially for CI rows etc?  --> double check 3468, 5722, 1023 to see if we can get sample sizes!
 # sd = sqrt(N) * (upper - lower ) / 3.92
 p6 <- forest_plot(d6,'Reproduction Number',"parameter_type",c(0,10))
-p6_1 <- forest_plot(d6|>filter(str_detect(parameter_type,('Basic'))),'Basic Reproduction Number',"population_country_v2",c(0,10))
-p6_2 <- forest_plot(d6|>filter(str_detect(parameter_type,('Effective'))),'Effective Reproduction Number',"population_country_v2",c(0,10))
+p6_1 <- forest_plot( d6 |> 
+                       filter(str_detect(parameter_type,('Basic'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                       arrange(population_country,desc(parameter_value)),
+                     'Basic Reproduction Number',"population_country_v2",c(0,6))
+p6_2 <- forest_plot( d6 |>
+                       filter(str_detect(parameter_type,('Effective'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                       arrange(population_country,desc(parameter_value)),
+                     'Effective Reproduction Number',"population_country_v2",c(0,6))
 
 p6_1 + p6_2 
 
