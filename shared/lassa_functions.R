@@ -215,34 +215,64 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
 
 metamean_wrap <- function(dataframe, estmeansd_method, 
                              plot_study, digits, lims, colour, label,
-                             width, height, resolution){
+                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
   
   dataframe <- epireview::filter_df_for_metamean(dataframe)
     
-  mtan <- metamean(data = dataframe,
-                   studlab = refs,
-                   mean = xbar,
-                   sd = parameter_uncertainty_single_value,
-                   median = median,
-                   q1 = q1,
-                   q3 = q3,
-                   min = min,
-                   max = max,
-                   n = population_sample_size,
-                   method.mean = estmeansd_method,
-                   method.sd = estmeansd_method,
-                   sm = "MRAW",
-                   method.tau = "ML")
-  
-  png(file = "temp.png", width = width, height = height, res = resolution)
-  forest(mtan, layout = "RevMan5",
-         overall = TRUE, pooled.events = TRUE,
-         study.results = plot_study,
-         digits = digits, digits.sd = digits, digits.weight = digits, 
-         col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-         weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-         at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
-  dev.off()
+  if(!is.na(subgroup))
+  {
+    mtan <- metamean(data = dataframe,
+                     studlab = refs,
+                     mean = xbar,
+                     sd = parameter_uncertainty_single_value,
+                     median = median,
+                     q1 = q1,
+                     q3 = q3,
+                     min = min,
+                     max = max,
+                     n = population_sample_size,
+                     method.mean = estmeansd_method,
+                     method.sd = estmeansd_method,
+                     subgroup = dataframe[[subgroup]],
+                     sm = "MRAW",
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off() 
+  } else {
+    mtan <- metamean(data = dataframe,
+                     studlab = refs,
+                     mean = xbar,
+                     sd = parameter_uncertainty_single_value,
+                     median = median,
+                     q1 = q1,
+                     q3 = q3,
+                     min = min,
+                     max = max,
+                     n = population_sample_size,
+                     method.mean = estmeansd_method,
+                     method.sd = estmeansd_method,
+                     sm = "MRAW",
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off()
+  }
   
   gg <- png::readPNG("temp.png", native = TRUE)
   file.remove("temp.png")
