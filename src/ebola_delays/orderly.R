@@ -54,16 +54,21 @@ orderly_artefact(
     "Delay_tables/qa_filtered/exposure_table.png",
     "Delay_tables/qa_filtered/other_table.png",
     "Meta_plots/incubation_period.png",
+    "Meta_plots/incubation_period_qafilter.png",
+    "Meta_plots/incubation_period_qafilter.pdf",
     "Meta_plots/incubation_period_species.png",
     "Meta_plots/infectious_period.png",
     "Meta_plots/serial_interval.png",
     "Meta_plots/serial_interval_qafilter.png",
+    "Meta_plots/serial_interval_qafilter.pdf",
     "Meta_plots/onset_to_death.png",
     "Meta_plots/onset_to_death_species.png",
     "Meta_plots/onset_to_death_qafilter.png",
+    "Meta_plots/onset_to_death_qafilter.pdf",
     "Meta_plots/onset_to_recovery.png",
     "Meta_plots/onset_to_recovery_species.png",
     "Meta_plots/onset_to_recovery_qafilter.png",
+    "Meta_plots/onset_to_recovery_qafilter.pdf",
     "Meta_plots/meta_delays_main_text.pdf",
     "Meta_plots/meta_delays_species_subgroups.png",
     "Meta_plots/meta_delays_unfiltered.png"
@@ -1054,7 +1059,6 @@ sotd_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
 forest(sotd_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -1062,7 +1066,20 @@ forest(sotd_ma_qa,
             col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
             at = seq(5, 15, by = 3),
             xlim = c(5, 15),
-            xlab = "Symptom onset to death (days)", fontsize = 10
+            xlab = "Symptom onset to death (days)", fontsize = 10, func.gr = pdf, 
+            file = "Meta_plots/onset_to_death_qafilter.pdf", width = 10
+       )
+
+
+png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
+forest(sotd_ma_qa,
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(5, 15, by = 3),
+               xlim = c(5, 15),
+               xlab = "Symptom onset to death (days)", fontsize = 10
 )
 dev.off()
 
@@ -1077,15 +1094,28 @@ serial_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
+forest(serial_ma_qa,
+       digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+       weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+       col.study = "black", col.inside = "black", col.diamond.lines = "black",
+       col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+       at = seq(9, 22, by = 3),
+       xlim = c(9, 22),
+       xlab = "Serial interval (days)", fontsize = 10, width =10,
+       file = "Meta_plots/serial_interval_qafilter.pdf"
+)
+
+
+
 png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3400, res = 1000)
 forest(serial_ma_qa,
-            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
-            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
-            col.study = "black", col.inside = "black", col.diamond.lines = "black",
-            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
-            at = seq(9, 22, by = 3),
-            xlim = c(9, 22),
-            xlab = "Serial interval (days)", fontsize = 10
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(9, 22, by = 3),
+               xlim = c(9, 22),
+               xlab = "Serial interval (days)", fontsize = 10
 )
 dev.off()
 
@@ -1100,7 +1130,6 @@ incub_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/incubation_period_qafilter.png", width = 9500, height = 4000, res = 1000)
 forest(incub_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -1108,7 +1137,19 @@ forest(incub_ma_qa,
             col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
             at = seq(5, 14, by = 3),
             xlim = c(5, 14),
-            xlab = "Incubation period (days)", fontsize = 10
+            xlab = "Incubation period (days)", fontsize = 10, width = 10,
+       file = "Meta_plots/incubation_period_qafilter.pdf"
+)
+
+png(file = "Meta_plots/incubation_period_qafilter.png", width = 9500, height = 4000, res = 1000)
+forest(incub_ma_qa,
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(5, 14, by = 3),
+               xlim = c(5, 14),
+               xlab = "Incubation period (days)", fontsize = 10
 )
 dev.off()
 
@@ -1123,7 +1164,6 @@ sotr_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/onset_to_recovery_qafilter.png", width = 9500, height = 3000, res = 1000)
 forest(sotr_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -1131,10 +1171,21 @@ forest(sotr_ma_qa,
             col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
             at = seq(7, 20, by = 3),
             xlim = c(7, 20),
-            xlab = "Symptom onset to recovery (days)", fontsize = 10
+            xlab = "Symptom onset to recovery (days)", fontsize = 10, width = 10,
+       file = "Meta_plots/onset_to_recovery_qafilter.pdf"
+)
+
+png(file = "Meta_plots/onset_to_recovery_qafilter.png", width = 9500, height = 3000, res = 1000)
+forest(sotr_ma_qa,
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(7, 20, by = 3),
+               xlim = c(7, 20),
+               xlab = "Symptom onset to recovery (days)", fontsize = 10
 )
 dev.off()
-
 #####################
 # SPECIES SUBGROUPS #
 #####################
@@ -1255,7 +1306,7 @@ plots_species <- list()
 plots_unfilt <- list()
 
 for (i in 1:4) {
-  plots_qa[[i]] <- rasterGrob(get(paste0("p", i, "_qa")), width = 0.9)
+  plots_qa[[i]] = rasterGrob(get(paste0("p", i, "_qa")), width = 0.9)
 }
 
 for (i in 1:3) {
@@ -1268,7 +1319,7 @@ for (i in 1:2) {
 
 ## This opens a new device and needs dev.off() to close it
 heights_qa <- sapply(plots_qa, heightDetails) 
-dev.off()
+#dev.off()
 heights_species <- sapply(plots_species, heightDetails)
 dev.off()
 heights_unfilt <- sapply(plots_unfilt, heightDetails)
