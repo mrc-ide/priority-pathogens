@@ -70,17 +70,17 @@ clean_params <- function(df, pathogen) {
   
   df <- df %>%
     mutate(
-      across(
-        c(
-          parameter_value, parameter_lower_bound, parameter_upper_bound,
-          parameter_uncertainty_single_value,
-          parameter_uncertainty_lower_value,
-          parameter_uncertainty_upper_value
-        ),
-        ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 2),
-          ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .)
-        )
-      ),
+      # across(
+      #   c(
+      #     parameter_value, parameter_lower_bound, parameter_upper_bound,
+      #     parameter_uncertainty_single_value,
+      #     parameter_uncertainty_lower_value,
+      #     parameter_uncertainty_upper_value
+      #   ),
+      #   ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 2),
+      #     ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .)
+      #   )
+      # ),
       # Combine central upper and lower bounds
       parameter_bounds =
         ifelse(!is.na(parameter_lower_bound) & !is.na(parameter_upper_bound),
