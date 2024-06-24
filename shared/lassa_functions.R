@@ -34,16 +34,16 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
            parameter_uncertainty_lower_value = case_when(
-             parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_value,
-             parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-             parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-             distribution_type == "Gamma" & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_lower_value),                                                 
            parameter_uncertainty_upper_value = case_when(
-             parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_uncertainty_single_value,
-             parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-             parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-             distribution_type == "Gamma" & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_upper_value)) %>%
     select(-c(no_unc)) %>%
     mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
