@@ -22,7 +22,7 @@ orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen
                    c("articles.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("sars-specific tables",c("figure_delays.png"))
+orderly_artefact("sars-specific tables",c("figure_delays.png","figure_delays.pdf"))
 
 ###################
 ## DATA CURATION ##
@@ -40,7 +40,9 @@ articles   <- epireview::assign_qa_score(articles = articles)$articles
 qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
 
 models     <- dfs$models
-parameters <- dfs$parameters %>% left_join(qa_scores) 
+parameters <- dfs$parameters %>% left_join(qa_scores) %>%
+  mutate(article_label = make.unique(refs)) %>%
+  mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
 
 # sample sd is the same as sd, so need to make this clear somehow / change param field to work for meta analysis
 
@@ -58,9 +60,10 @@ d6 <- parameters %>% filter(parameter_type == 'Human delay - infectious period')
 d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
 
 # Serial interval sub-plot (both papers have qa above 0.5)
-SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Serial Interval (days)',"parameter_type",c(0,20))
-IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30))
-GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20))
+SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Serial Interval (days)',"parameter_type",c(0,20),text_size = 22)
+IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30),text_size = 22)
+#IP_forest2 <- epireview::forest_plot_infectious_period(d6 %>% filter(qa_score>0.5), shape_by = 'parameter_value_type', ulim=30)
+GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20),text_size = 22)
 
 # Incubation period
 #p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
@@ -82,24 +85,15 @@ m2 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
                     width = 9500, height = 4200, resolution = 1000)
 
 # admission to outcome... 
-d3_subgroup <- d3 %>% 
-  filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>% 
-  mutate(group = stringr::str_to_title(str_replace(parameter_type,'Human delay - ','')),
-         parameter_type = 'Human delay') %>%  
-  filter(qa_score>0.5)
-
-outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5),'Admission to outcome',"parameter_type",c(0,50))
-
-
-m3 <- metamean_wrap(dataframe = d3_subgroup, estmeansd_method = "Cai", 
-                    plot_study = FALSE, digits = 2, lims = c(8,25), colour = "dodgerblue3", label = "Admission to outcome",
-                    width = 9500, height = 4500, resolution = 1000, subgroup = 'group', sort_by_subg = TRUE )
+outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5),'Admission to outcome',"parameter_type",c(0,50),text_size = 22)
 
 layout <- "
-AABBB
-CCDDD
-CCDDD
+AABB#
+CCDD#
+EEFFF
+EEFFF
 "
-delays_plot <-  SI_forest + outcome_forest + m1$plot + m2$plot  + plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
+delays_plot <-  SI_forest + outcome_forest + GT_forest + IP_forest + m1$plot + m2$plot  + plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
 
-ggsave("figure_delays.png", plot = delays_plot, width = 28, height = 18)
+ggsave("figure_delays.png", plot = delays_plot, width = 39, height = 23)
+ggsave("figure_delays.pdf", plot = delays_plot, width = 39, height = 23)
