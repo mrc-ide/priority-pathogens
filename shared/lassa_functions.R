@@ -36,12 +36,14 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
            parameter_uncertainty_lower_value = case_when(
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_value,
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value-sqrt(parameter_uncertainty_single_value),
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_lower_value),                                                 
            parameter_uncertainty_upper_value = case_when(
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_uncertainty_single_value,
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value+sqrt(parameter_uncertainty_single_value),
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_upper_value)) %>%
