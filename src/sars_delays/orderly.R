@@ -54,9 +54,13 @@ d3 <- parameters %>% filter(parameter_type == 'Human delay - time in care (lengt
 d4 <- parameters %>% filter(parameter_type == 'Human delay - symptom onset>discharge/recovery' |
                               parameter_type == 'Human delay - symptom onset>death')
 d5 <- parameters %>% filter(parameter_type == 'Human delay - serial interval')
+d6 <- parameters %>% filter(parameter_type == 'Human delay - infectious period')
+d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
 
 # Serial interval sub-plot (both papers have qa above 0.5)
 SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Serial Interval (days)',"parameter_type",c(0,20))
+IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30))
+GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20))
 
 # Incubation period
 #p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
