@@ -65,7 +65,7 @@ outs <- outbreaks %>%
          cases_suspected, cases_confirmed, cases_mode_detection, cases_severe, deaths,			
          refs,sdate,edate)
 outs$cases_mode_detection <- gsub(" \\(PCR etc\\)", "", outs$cases_mode_detection)
-outs <- outs %>% arrange(outbreak_country,desc(sdate),desc(edate))
+outs <- outs %>% arrange(tolower(outbreak_country),desc(sdate),desc(edate))
 outs$sdate <- NULL
 outs$edate <- NULL
 outs <- insert_blank_rows(outs,"outbreak_country")
@@ -164,9 +164,9 @@ parameters <- parameters %>%
                          ifelse(!is.na(parameter_uncertainty_singe_type),
                                 paste(parameter_uncertainty_singe_type),""))))
 parameters$unc_type <- gsub("Inter Quartile Range \\(IQR\\)", "IQR", parameters$unc_type)
-parameters$unc_type <- gsub("Standard Error \\(SE\\)", "SE", parameters$unc_type)
+parameters$unc_type <- gsub("Standard Error", "SE", parameters$unc_type)
 parameters$unc_type <- gsub("Gamma Standard deviation", "Gamma SD", parameters$unc_type)
-parameters$unc_type <- gsub("Standard deviation \\(Sd\\)", "SD", parameters$unc_type)
+parameters$unc_type <- gsub("Standard Deviation", "SD", parameters$unc_type)
 parameters$unc_type <- gsub("Highest Posterior Density Interval 95%", "CrI95%", parameters$unc_type)
 parameters$unc_type <- gsub("CRI95%", "CrI95%", parameters$unc_type)
 parameters$unc_type <- gsub("%", "\\\\%", parameters$unc_type)
@@ -187,7 +187,7 @@ parameters <- parameters %>% mutate(unc_type = case_when(
 ##                     
 #parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <- 
 #                                     parameters$population_sample_size[is.na(parameters$cfr_ifr_denominator)]        
-parameters$population_country <- gsub(",", "", parameters$population_country)
+#parameters$population_country <- gsub(",", "", parameters$population_country)
 #new as well
 parameters <- parameters %>%
   mutate(population_study_start_month = substr(population_study_start_month, 1, 3),
@@ -214,6 +214,9 @@ parameters$population_group <- str_to_title(parameters$population_group)
 parameters$method_disaggregated_by <- gsub("Disease generation","Disease Generation",parameters$method_disaggregated_by)
 parameters$method_disaggregated_by <- gsub("Level of exposure","Level of Exposure",parameters$method_disaggregated_by)
 parameters <- parameters %>% mutate_all(~ ifelse(is.na(.), "", .))
+
+parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
+                                    population_country = gsub(", ", ";", population_country))
 
 #parameters - transmission
 trns_params <- parameters %>%
@@ -289,7 +292,7 @@ cfrs_params <- parameters %>%
          population_country, dates,
          population_sample_type, population_group, refs, central)
 cfrs_params$population_country <- gsub(";", "\\, ", cfrs_params$population_country)
-cfrs_params <- cfrs_params %>% arrange(population_country,as.numeric(central))
+cfrs_params <- cfrs_params %>% arrange(tolower(population_country),as.numeric(central))
 cfrs_params <- cfrs_params %>% select(-central)
 cfrs_params <- insert_blank_rows(cfrs_params,"population_country")
 write.table(cfrs_params, file = "latex_severity.csv", sep = ",", 
@@ -306,7 +309,7 @@ sero_params <- parameters %>%
 sero_params$parameter_type <- sub("^.* - ", "", sero_params$parameter_type)
 sero_params$population_country <- gsub(";", "\\, ", sero_params$population_country)
 sero_params$population_country[sero_params$population_country==""] <- "Unspecified" 
-sero_params <- sero_params %>% arrange(population_country, parameter_type, as.numeric(central))
+sero_params <- sero_params %>% arrange(tolower(population_country), parameter_type, as.numeric(central))
 sero_params <- sero_params %>% select(-central)
 sero_params <- insert_blank_rows(sero_params,"population_country")
 write.table(sero_params, file = "latex_seroprevalence.csv", sep = ",", 

@@ -129,7 +129,7 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
   
   country_list <- unique(l0$COUNTRY)
   
-  df           <- df %>% separate_longer_delim(population_country, delim = ";") #dataframe with expanded list of countries
+  df           <- df %>% separate_longer_delim(population_country, delim = ",") %>% mutate(population_country = str_trim(population_country, side = "left"))#dataframe with expanded list of countries
   regional_dat <- unique(df$population_country[!is.na(df$population_location)])#countries with regional data
   regional_dat <- intersect(country_list,regional_dat)#only countries in country_list are plotted
   country_dat  <- country_list[!(country_list %in% regional_dat)]#countries with national data only
@@ -138,7 +138,7 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
   shp_country  <- l0 %>% filter(COUNTRY %in% country_dat) %>% mutate(REG_CODE = str_replace_all(COUNTRY," ",""))  
   shapes       <- bind_rows(shp_country,shp_regional)
   
-  regional_NA  <- shp_regional %>% group_by(COUNTRY) %>% summarise(all_codes = str_c(REG_CODE, collapse = ";"))#plot all regions for non-location-specific values for countries with OTHER location-specific values
+  regional_NA  <- shp_regional %>% group_by(COUNTRY) %>% summarise(all_codes = str_c(REG_CODE, collapse = ","))#plot all regions for non-location-specific values for countries with OTHER location-specific values
   
   df <- df %>% mutate(parameter_value = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator)) %>%
     mutate(parameter_value = if(range_mp) {
@@ -152,20 +152,20 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
                  is.na(population_location),  
                  regional_NA$all_codes[match(population_country,regional_NA$COUNTRY)],
                  case_when(
-                   population_country == "Benin" ~ str_replace_all(population_location, c("Central Region" = "BJ04;BJ05;BJ07;BJ12")),
-                   population_country == "Côte d'Ivoire" ~ str_replace_all(population_location, c("Abidjan" = "CI01", "Northeastern Region" = "CI08;CI14")),
+                   population_country == "Benin" ~ str_replace_all(population_location, c("Central Region" = "BJ04,BJ05,BJ07,BJ12")),
+                   population_country == "Côte d'Ivoire" ~ str_replace_all(population_location, c("Abidjan" = "CI01", "Northeastern Region" = "CI08,CI14")),
                    population_country == "Ghana" ~ str_replace_all(population_location, c("Ankaakur" = "GH02", "Ehiawenwu" = "GH06", "Amomaso" = "GH03", "Menkwo" = "GH04", "Mangoase" = "GH04", "Jirandogo" = "GH11", "Bowena" = "GH11", "Natorduori" = "GH13", "Teanoba" = "GH09", "Doniga Naveransa" = "GH12", "Tamale" = "GH08", "Agogo" = "GH02", "Kumasi" = "GH02")),#map in article
                    population_country == "Guinea" ~ str_replace_all(population_location, c("Gueckedou" = "GN08","Macenta" = "GN08","Pita" = "GN07","Lola" = "GN08","Yomou" = "GN08")),
                    population_country == "Mali" ~ str_replace_all(population_location, c("Bougouni District" = "ML03")),
-                   population_country == "Nigeria" ~ str_replace_all(population_location, c("Edo State" = "NG12", "Southeast" = "NG01;NG04;NG11;NG14;NG17","Benue River" = "NG07","Ibadan" = "NG31")),
+                   population_country == "Nigeria" ~ str_replace_all(population_location, c("Edo State" = "NG12", "Southeast" = "NG01,NG04,NG11,NG14,NG17","Benue River" = "NG07","Ibadan" = "NG31")),
                    population_country == "Sierra Leone" ~ str_replace_all(population_location, c("Kenema" = "SL01", "Port Loko" = "SL05", "Tonkolili" = "SL02","Niahun" = "SL01", "Konia" = "SL01", "Palima" = "SL01", "Semewabu" = "SL01", "Tongola" = "SL01", "Njakundoma" = "SL01", "Kpandebu" = "SL01", "Neama" = "SL01", "Lowoma" = "SL01", "Landoma" = "SL01", "Bomie" = "SL01", "Yengema" = "SL03", "Kamethe" = "SL05", "Kamabunyele" = "SL02", "Kathumpe" = "SL02")),
-                   population_country == "Central African Republic" ~ str_replace_all(population_location, c("Nola And Ikaumba" = "CF23;CF12", "The Pre\nForest\nGrassland Of Bozo And Bangassou" = "CF11;CF62", "The Moist\nWooded Grassland Of Bouar And Obo" = "CF22;CF63", "The Dry Wooded\nRassland Near Mbre" = "CF51", "And The Dry Grassland-Of Birao." = "CF53")),#map in article
+                   population_country == "Central African Republic" ~ str_replace_all(population_location, c("Nola And Ikaumba" = "CF23,CF12", "The Pre\nForest\nGrassland Of Bozo And Bangassou" = "CF11,CF62", "The Moist\nWooded Grassland Of Bouar And Obo" = "CF22,CF63", "The Dry Wooded\nRassland Near Mbre" = "CF51", "And The Dry Grassland-Of Birao." = "CF53")),#map in article
                    population_country == "Gabon" ~ str_replace_all(population_location, c("Haut-Ogooue" = "GA02")),
                    population_country == "Liberia" ~ str_replace_all(population_location, c("Zigida" = "LR08","Lofa County" = "LR08", "Montserrado County" = "LR11")),
                    TRUE ~ population_location)))) %>%
     mutate(REG_CODE = str_replace_all(REG_CODE, " ", "")) %>%
-    mutate(REG_CODE = sapply(str_split(REG_CODE, ";"), function(x) paste(unique(x), collapse = ";"))) %>% #remove duplicate regions for each value
-    separate_longer_delim(REG_CODE, delim = ";")#broadcast multi-region values
+    mutate(REG_CODE = sapply(str_split(REG_CODE, ","), function(x) paste(unique(x), collapse = ","))) %>% #remove duplicate regions for each value
+    separate_longer_delim(REG_CODE, delim = ",")#broadcast multi-region values
   
   if (summ_dups=="mean") {
     df <- df %>% group_by(REG_CODE) %>% 

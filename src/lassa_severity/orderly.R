@@ -63,9 +63,9 @@ d1 <- parameters %>% filter(parameter_type == 'Severity - case fatality rate (CF
                             covidence_id %in% c(1183,2611,2656,2760,3634) ~ "Lab-Confirmed;Probable",
                             covidence_id %in% c(854,871,1033,1447) ~ "Lab-Confirmed;Suspected")) %>%
                      mutate(lineage = case_when(
-                            population_country == "Nigeria" & population_location %in% c("Aboh Mbaise; Aba; Owerri","Ebonyi","Ebonyi State","Edo North; Central Senatorial District Of Edo State","Edo State","Ondo State","Irrua","Irrua; Edo State")~ "Lineage II Region - Nigeria",
+                            population_country == "Nigeria" & population_location %in% c("Aboh Mbaise, Aba, Owerri","Ebonyi","Ebonyi State","Edo North, Central Senatorial District Of Edo State","Edo State","Ondo State","Irrua","Irrua, Edo State")~ "Lineage II Region - Nigeria",
                             population_country == "Nigeria" & population_location %in% c("Bauchi State","Jos","Plateau State") ~ "Lineage III Region - Nigeria",  
-                            population_country %in% c("Guinea","Liberia","Sierra Leone","Guinea;Liberia;Sierra Leone") ~ "Lineage IV Region - Guinea, Liberia, Sierra Leone",
+                            population_country %in% c("Guinea","Liberia","Sierra Leone","Guinea, Liberia, Sierra Leone") ~ "Lineage IV Region - Guinea, Liberia, Sierra Leone",
                             population_country %in% c("Benin","Togo") ~ "Lineage VII Region - Benin,Togo",
                             TRUE ~ "Unspecified - Nigeria")) %>%
                      mutate(study_midyear = ifelse(!is.na(population_study_start_year) & !is.na(population_study_end_year),

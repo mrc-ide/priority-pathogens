@@ -274,7 +274,8 @@ p1 <- ggplot() +
       coord_flip()
 
 p2 <- ggplot() + 
-      geom_bar(data = parameters %>% separate_rows(population_country, sep = ";"),           
+      geom_bar(data = parameters %>% separate_rows(population_country , sep = ",") %>% 
+                                     mutate(population_country = str_trim(population_country, side = "left")),           
                aes(x = population_country, fill = parameter_class), color = "black") + 
       scale_x_discrete(limits = rev) + 
       scale_y_continuous(limits = c(0,180), breaks = seq(0,180,by = 30), expand = c(0,0)) +
