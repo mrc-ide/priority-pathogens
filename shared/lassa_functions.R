@@ -106,7 +106,7 @@ forest_plot <- function(df, label, color_column, lims) {
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
   
   gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24),breaks = c("Mean", "Median", "Unspecified")) +
+        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 8),breaks = c("Mean", "Median", "Unspecified", "Other")) +
         scale_x_continuous(limits = lims, expand = c(0, 0)) +
         scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
         labs(x = label, y = NULL) +
