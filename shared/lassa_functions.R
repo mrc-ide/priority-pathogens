@@ -83,7 +83,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -111,7 +111,8 @@ forest_plot <- function(df, label, color_column, lims) {
         scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
         labs(x = label, y = NULL) +
         theme_minimal() + 
-        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA))
+        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+              text = element_text(size = text_size))
   if (cats == 1) {
     gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
   } else {
