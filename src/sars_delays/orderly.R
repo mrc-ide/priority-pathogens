@@ -85,7 +85,9 @@ m2 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
                     width = 9500, height = 4200, resolution = 1000)
 
 # admission to outcome... 
-outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5),'Admission to outcome',"parameter_type",c(0,50),text_size = 22)
+outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) %>%
+                                mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
+                              'Admission to outcome',"parameter_type",c(0,60),text_size = 22)
 
 layout <- "
 AABB#
@@ -93,7 +95,17 @@ CCDD#
 EEFFF
 EEFFF
 "
-delays_plot <-  SI_forest + outcome_forest + GT_forest + IP_forest + m1$plot + m2$plot  + plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
+delays_plot <-  SI_forest + outcome_forest + GT_forest + IP_forest + m1$plot + m2$plot  + plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
 
-ggsave("figure_delays.png", plot = delays_plot, width = 39, height = 23)
-ggsave("figure_delays.pdf", plot = delays_plot, width = 39, height = 23)
+ggsave("figure_delays.png", plot = delays_plot, width = 39, height = 22)
+ggsave("figure_delays.pdf", plot = delays_plot, width = 39, height = 22)
+
+
+layout2 <- "
+AAABBBDDD
+EEEEFFFFF
+EEEEFFFFF
+"
+delays_plot2 <-  SI_forest + IP_forest + outcome_forest + m1$plot + theme(text = element_text(size = 22)) + m2$plot + theme(text = element_text(size = 22)) + 
+  plot_layout(design = layout2) + plot_annotation(tag_levels = 'A') 
+ggsave("figure_delays2.png", plot = delays_plot2, width = 39, height = 22)
