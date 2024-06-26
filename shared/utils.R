@@ -163,7 +163,7 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens Zika 2 - Ruth.accdb",
         "DIDE Priority Pathogens Zika 2 - Sangeeta.accdb",
         "DIDE Priority Pathogens Zika 2 - Sequoia.accdb",
-        # "DIDE Priority Pathogens Zika 2 - Shazia.accdb",
+        "DIDE Priority Pathogens Zika 2 - Shazia.accdb",
         "DIDE Priority Pathogens Zika 2 - Thom.accdb",
         "DIDE Priority Pathogens Zika 2 - Tristan.accdb"
       )

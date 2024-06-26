@@ -1,3 +1,4 @@
+
 # Task to compile single and double extraction databases together
 library(dplyr)
 library(janitor)
@@ -84,7 +85,7 @@ fixing_files <- list(
     qa_fix = "ebola_qa_fixing.csv"
   ),
   LASSA = list(
-     params_fix = "lassa_params_fixing.csv",
+    params_fix = "lassa_params_fixing.csv",
      models_fix = "lassa_models_fixing.csv",
      qa_fix = "lassa_qa_fixing.csv",
      outbreaks_fix = "lassa_outbreaks_fixing.csv"
@@ -248,10 +249,10 @@ article_single <- article_single %>%
 }
 # join ids
 param_double_ids <- param_double %>%
-   select(c(
-     "article_id", "name_data_entry", "access_param_id", "covidence_id",
-     "id", "parameter_data_id"
-   ))
+  select(c(
+    "article_id", "name_data_entry", "access_param_id", "covidence_id",
+    "id", "parameter_data_id"
+  ))
 
 parameter_fixed <- left_join(parameter_fixed, param_double_ids)
      
@@ -269,13 +270,13 @@ model_fixed <- left_join(model_fixed, model_double_ids)
 # bind single and double together
 if (pathogen == "LASSA") {
   article_all <- rbind(
-  article_single,
-  qa_fixed)
+    article_single,
+    qa_fixed)
 } else {
   article_all <- rbind(
-  article_single,
-  article_matching,
-  article_fixed)
+    article_single,
+    article_matching,
+    article_fixed)
 }
 
 parameter_all <- rbind(
