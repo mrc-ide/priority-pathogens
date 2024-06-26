@@ -27,6 +27,7 @@ orderly_artefact("sars-specific tables",c("figure_delays.png","figure_delays.pdf
 ###################
 ## DATA CURATION ##
 ###################
+TEXT_SIZE <- 28
 
 articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
@@ -60,10 +61,10 @@ d6 <- parameters %>% filter(parameter_type == 'Human delay - infectious period')
 d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
 
 # Serial interval sub-plot (both papers have qa above 0.5)
-SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Serial Interval (days)',"parameter_type",c(0,20),text_size = 22)
-IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30),text_size = 22)
+SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
 #IP_forest2 <- epireview::forest_plot_infectious_period(d6 %>% filter(qa_score>0.5), shape_by = 'parameter_value_type', ulim=30)
-GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20),text_size = 22)
+GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 
 # Incubation period
 #p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
@@ -72,7 +73,7 @@ d1_subgroups <- d1 %>% filter(population_group %in% c('General population','Mixe
   filter(qa_score>0.5) %>%
   mutate(parameter_value = coalesce(parameter_value,central))
 m1 <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
-                    plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Incubation Period",
+                    plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
                     width = 7500, height = 5750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE )
 
 #meta-analysis of onset-admission delay
@@ -106,6 +107,6 @@ AAABBBDDD
 EEEEFFFFF
 EEEEFFFFF
 "
-delays_plot2 <-  SI_forest + IP_forest + outcome_forest + m1$plot + theme(text = element_text(size = 22)) + m2$plot + theme(text = element_text(size = 22)) + 
+delays_plot2 <-  SI_forest + IP_forest + outcome_forest + m1$plot + theme(text = element_text(size = TEXT_SIZE)) + m2$plot + theme(text = element_text(size = TEXT_SIZE)) + 
   plot_layout(design = layout2) + plot_annotation(tag_levels = 'A') 
 ggsave("figure_delays2.png", plot = delays_plot2, width = 39, height = 22)
