@@ -1,3 +1,4 @@
+
 # Task to compile single and double extraction databases together
 library(dplyr)
 library(janitor)
@@ -80,10 +81,10 @@ fixing_files <- list(
     qa_fix = "ebola_qa_fixing.csv"
   ),
   LASSA = list(
-     params_fix = "lassa_params_fixing.csv",
-     models_fix = "lassa_models_fixing.csv",
-     qa_fix = "lassa_qa_fixing.csv",
-     outbreaks_fix = "lassa_outbreaks_fixing.csv"
+    params_fix = "lassa_params_fixing.csv",
+    models_fix = "lassa_models_fixing.csv",
+    qa_fix = "lassa_qa_fixing.csv",
+    outbreaks_fix = "lassa_outbreaks_fixing.csv"
   )
 )
 
@@ -139,17 +140,17 @@ model_matching <- model_matching %>% clean_names() %>% select(-c("num_rows", "ma
 
 if (pathogen == "LASSA") {
   parameter_matching <- parameter_matching %>%
-                        mutate(covidence_id=as.numeric(covidence_id),
-                               article_id=as.numeric(article_id),
-                               access_param_id=as.numeric(access_param_id))
-model_matching <- model_matching %>%
-                  mutate(covidence_id=as.numeric(covidence_id),
-                         article_id=as.numeric(article_id),
-                         access_model_id=as.numeric(access_model_id))
-outbreak_matching <- outbreak_matching %>%
-                  mutate(covidence_id=as.numeric(covidence_id),
-                         article_id=as.numeric(article_id),
-                         access_outbreak_id=as.numeric(access_outbreak_id))
+    mutate(covidence_id=as.numeric(covidence_id),
+           article_id=as.numeric(article_id),
+           access_param_id=as.numeric(access_param_id))
+  model_matching <- model_matching %>%
+    mutate(covidence_id=as.numeric(covidence_id),
+           article_id=as.numeric(article_id),
+           access_model_id=as.numeric(access_model_id))
+  outbreak_matching <- outbreak_matching %>%
+    mutate(covidence_id=as.numeric(covidence_id),
+           article_id=as.numeric(article_id),
+           access_outbreak_id=as.numeric(access_outbreak_id))
 }
 
 # Double extractions - needed to be resolved between extractors
@@ -212,32 +213,32 @@ if (pathogen == "LASSA") {
 }
 
 if (pathogen == "EBOLA") {
-# join article data to qa files
-article_double_details <- article_double %>% select(-c(starts_with("qa")))
-
-article_matching <- qa_matching %>%
-  left_join(article_double_details,
-    by = c("id", "covidence_id", "name_data_entry")
-  ) %>%
-  distinct(covidence_id, .keep_all = TRUE) %>%
-  mutate(double_extracted = 1)
-
-article_fixed <- qa_fixed %>%
-  left_join(article_double_details,
-    by = c("covidence_id", "name_data_entry")
-  ) %>%
-  mutate(double_extracted = 1)
-
-article_single <- article_single %>%
-  mutate(double_extracted = 0)
+  # join article data to qa files
+  article_double_details <- article_double %>% select(-c(starts_with("qa")))
+  
+  article_matching <- qa_matching %>%
+    left_join(article_double_details,
+              by = c("id", "covidence_id", "name_data_entry")
+    ) %>%
+    distinct(covidence_id, .keep_all = TRUE) %>%
+    mutate(double_extracted = 1)
+  
+  article_fixed <- qa_fixed %>%
+    left_join(article_double_details,
+              by = c("covidence_id", "name_data_entry")
+    ) %>%
+    mutate(double_extracted = 1)
+  
+  article_single <- article_single %>%
+    mutate(double_extracted = 0)
 }
 
 # join ids
 param_double_ids <- param_double %>%
-   select(c(
-     "article_id", "name_data_entry", "access_param_id", "covidence_id",
-     "id", "parameter_data_id"
-   ))
+  select(c(
+    "article_id", "name_data_entry", "access_param_id", "covidence_id",
+    "id", "parameter_data_id"
+  ))
 
 if (pathogen == 'LASSA') {
   parameter_fixed <- parameter_fixed %>%
@@ -281,31 +282,31 @@ if (pathogen == 'LASSA') {
 
 
 if (pathogen == "LASSA") {
-outbreak_double_ids <- outbreak_double %>%
-  select(c(
-    "article_id", "name_data_entry", "access_outbreak_id", "covidence_id",
-    "id", "outbreak_data_id"
-  ))
-
-outbreak_fixed <- outbreak_fixed %>%
-  left_join(outbreak_double_ids,
-            by = c(
-              "article_id", "name_data_entry",
-              "covidence_id", "id", "outbreak_data_id"
-            )
-  )
+  outbreak_double_ids <- outbreak_double %>%
+    select(c(
+      "article_id", "name_data_entry", "access_outbreak_id", "covidence_id",
+      "id", "outbreak_data_id"
+    ))
+  
+  outbreak_fixed <- outbreak_fixed %>%
+    left_join(outbreak_double_ids,
+              by = c(
+                "article_id", "name_data_entry",
+                "covidence_id", "id", "outbreak_data_id"
+              )
+    )
 }
 
 # bind single and double together
 if (pathogen == "LASSA") {
   article_all <- rbind(
-  article_single,
-  qa_fixed)
+    article_single,
+    qa_fixed)
 } else {
   article_all <- rbind(
-  article_single,
-  article_matching,
-  article_fixed)
+    article_single,
+    article_matching,
+    article_fixed)
 }
 
 parameter_all <- rbind(
@@ -338,16 +339,16 @@ if (pathogen == "LASSA") {
 }
 
 if (pathogen == "EBOLA") {
-# Add article QA scores to article data
-article_all <- add_qa_scores(article_all, parameter_all)
-
-# Add article QA scores as a parameter variable
-parameter_all <- parameter_all %>%
-  left_join(
-    select(article_all, covidence_id, article_qa_score),
-    by = "covidence_id"
-  )
-
+  # Add article QA scores to article data
+  article_all <- add_qa_scores(article_all, parameter_all)
+  
+  # Add article QA scores as a parameter variable
+  parameter_all <- parameter_all %>%
+    left_join(
+      select(article_all, covidence_id, article_qa_score),
+      by = "covidence_id"
+    )
+  
   parameter_all <- assign_ebola_outbreak(parameter_all)
   parameter_all <- assign_ebola_species(parameter_all)
 }
