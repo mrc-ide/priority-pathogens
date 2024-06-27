@@ -77,14 +77,17 @@ write.table(outs, file = "latex_outbreaks.csv", sep = ",",
 mods <- models %>%
   select(model_type,stoch_deter,transmission_route,assumptions,
          compartmental_type,theoretical_model,interventions_type,refs,covidence_id)
+mods$stoch_deter <- gsub("Deterministic;Stochastic", "Stochastic",mods$stoch_deter)
 mods$model_type  <- paste(mods$model_type, mods$stoch_deter, sep = " - ")
 mods$stoch_deter <- NULL
 mods$model_type  <- gsub("Branching process - Stochastic", "Branching Process", mods$model_type)
 mods$transmission_route <- gsub("Vector/Animal to human", "Rodent-Human", mods$transmission_route)
 mods$transmission_route <- gsub("Human to human \\(direct contact\\)", "Human-Human", mods$transmission_route)
 mods$transmission_route <- gsub("Airborne or close contact", "Airborne", mods$transmission_route)
+mods$transmission_route <- gsub("Sexual", "Human-Human (Sexual)", mods$transmission_route)
 mods$transmission_route <- gsub("Airborne;Human-Human;Rodent-Human","Rodent-Human;Human-Human;Airborne",mods$transmission_route)
 mods$transmission_route <- gsub("Human-Human;Rodent-Human","Rodent-Human;Human-Human",mods$transmission_route)
+mods$transmission_route <- gsub("Human-Human \\(Sexual\\);Rodent-Human","Rodent-Human;Human-Human \\(Sexual\\)",mods$transmission_route)
 mods$assumptions        <- gsub("Homogeneous mixing", "", mods$assumptions)
 mods$assumptions        <- gsub("Latent period is same as incubation period", "", mods$assumptions)
 mods$assumptions        <- gsub("Heterogenity in transmission rates - over time", "Time", mods$assumptions)
@@ -100,16 +103,17 @@ mods$interventions_type <- gsub("changes", "Changes", mods$interventions_type)
 mods$interventions_type <- gsub("tracing", "Tracing", mods$interventions_type)
 mods$interventions_type <- gsub("Unspecified", "", mods$interventions_type)
 mods                    <- mods %>% mutate(assumptions = case_when(
-  covidence_id %in% c(285,2617,2620) ~ gsub("Groups","Spatial",assumptions),
+  covidence_id %in% c(285,2617,2620,5511) ~ gsub("Groups","Spatial",assumptions),
   covidence_id %in% c(4120,4371) ~ gsub("Groups","Community Hygiene",assumptions),
   covidence_id %in% c(4136,4251) ~ gsub("Groups","Socio-Economic Status",assumptions),
   covidence_id %in% c(4343) ~ gsub("Groups","Protective Behaviour",assumptions),
   covidence_id %in% c(3735) ~ gsub("Groups","Quarantine Status",assumptions),
+  covidence_id %in% c(5513) ~ gsub("Groups","Sex",assumptions),
   TRUE ~ assumptions))
 mods <- mods %>% select(-c("covidence_id"))
 mods$transmission_route <- factor(mods$transmission_route,
                                   levels = c("Rodent-Human","Human-Human","Rodent-Human;Human-Human",
-                                             "Rodent-Human;Human-Human;Airborne"))
+                                             "Rodent-Human;Human-Human (Sexual)","Rodent-Human;Human-Human;Airborne"))
 mods$compartmental_type <- factor(mods$compartmental_type,
                                   levels = c("","SIR","SEIR","Other","Other;SIR"))
 mods <- mods[order(mods$model_type,mods$transmission_route,mods$assumptions,
@@ -143,10 +147,10 @@ parameters$parameter_unit <- gsub("Weeks", "weeks", parameters$parameter_unit)
 
 parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == 0 ~ parameter_unit,
-  exponent == -2 & parameter_unit == "" ~ "\\\\%",
-  exponent == -3 & parameter_unit == "" ~ "per 1000",
-  exponent == -4 & parameter_unit == "" ~ "per 10k",
-  exponent == -5 & parameter_unit == "" ~ "per 100k",
+  exponent == -2 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "\\%",
+  exponent == -3 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 1000",
+  exponent == -4 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 10k",
+  exponent == -5 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 100k",
   TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")))
 # new bit
 parameters <- parameters %>% mutate(parameter_value = case_when(
