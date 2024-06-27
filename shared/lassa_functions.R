@@ -36,12 +36,14 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
            parameter_uncertainty_lower_value = case_when(
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_value,
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value-sqrt(parameter_uncertainty_single_value),
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_lower_value),                                                 
            parameter_uncertainty_upper_value = case_when(
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_uncertainty_single_value,
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value+sqrt(parameter_uncertainty_single_value),
              str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_upper_value)) %>%
@@ -83,7 +85,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -106,12 +108,13 @@ forest_plot <- function(df, label, color_column, lims) {
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
   
   gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24),breaks = c("Mean", "Median", "Unspecified")) +
+        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
         scale_x_continuous(limits = lims, expand = c(0, 0)) +
         scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
         labs(x = label, y = NULL) +
         theme_minimal() + 
-        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA))
+        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+              text = element_text(size = text_size))
   if (cats == 1) {
     gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
   } else {
