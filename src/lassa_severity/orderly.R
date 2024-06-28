@@ -28,9 +28,9 @@ orderly_shared_resource("Africa_Boundaries-shp" = "Africa_Boundaries-shp",
                         "rivers_africa_37333"   = "rivers_africa_37333")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_3.png","figure_S5.png","figure_S6.png",
-                                            "figure_S7.png","figure_S8.png","figure_S9.png",
-                                            "figure_S10.png","figure_S11.png"))
+orderly_artefact("lassa-specific figures",c("figure_3.png","figure_S6.png","figure_S7.png",
+                                            "figure_S8.png","figure_S9.png","figure_S10.png",
+                                            "figure_S11.png","figure_S12.png"))
 
 ###################
 ## DATA CURATION ##
@@ -55,7 +55,7 @@ parameters <- dfs$parameters
 #extract data and define columns for meta-analysis
 d1 <- parameters %>% filter(parameter_type == 'Severity - case fatality rate (CFR)') %>%
                      mutate(case_def = case_when(
-                            covidence_id %in% c(18,88,167,174,307,461,645,845,870,873,874,920,921,1080,1173,1181,1254,1272,1368,1413,1426,1444,2567,2579,2585,2589,2636,2651,2662,2684,2818,3147,3215,3530,3635,3716,3841,3991,4314,4727) ~ "Lab-Confirmed",
+                            covidence_id %in% c(18,88,167,174,307,461,645,845,870,873,874,920,921,1080,1173,1181,1254,1272,1368,1413,1426,1444,2567,2579,2585,2589,2636,2651,2662,2684,2818,3147,3215,3530,3635,3716,3841,3991,4314,4727,5419,5439,5450) ~ "Lab-Confirmed",
                             covidence_id %in% c(252,1433,2714,4745) ~ "Clinically-Diagnosed",
                             covidence_id %in% c(1328) ~ "Probable",
                             covidence_id %in% c(832,2617) ~ "Suspected",
@@ -63,7 +63,7 @@ d1 <- parameters %>% filter(parameter_type == 'Severity - case fatality rate (CF
                             covidence_id %in% c(1183,2611,2656,2760,3634) ~ "Lab-Confirmed;Probable",
                             covidence_id %in% c(854,871,1033,1447) ~ "Lab-Confirmed;Suspected")) %>%
                      mutate(lineage = case_when(
-                            population_country == "Nigeria" & population_location %in% c("Aboh Mbaise, Aba, Owerri","Ebonyi","Ebonyi State","Edo North, Central Senatorial District Of Edo State","Edo State","Ondo State","Irrua","Irrua, Edo State")~ "Lineage II Region - Nigeria",
+                            population_country == "Nigeria" & population_location %in% c("Aboh Mbaise, Aba, Owerri","Ebonyi","Ebonyi State","Edo North, Central Senatorial District Of Edo State","Edo State","Ondo State","Irrua","Irrua, Edo State","Isth","Edo, Ebonyi, Ondo, Kebbi")~ "Lineage II Region - Nigeria",
                             population_country == "Nigeria" & population_location %in% c("Bauchi State","Jos","Plateau State") ~ "Lineage III Region - Nigeria",  
                             population_country %in% c("Guinea","Liberia","Sierra Leone","Guinea, Liberia, Sierra Leone") ~ "Lineage IV Region - Guinea, Liberia, Sierra Leone",
                             population_country %in% c("Benin","Togo") ~ "Lineage VII Region - Benin,Togo",
@@ -95,7 +95,7 @@ d1 <- parameters %>% filter(parameter_type == 'Severity - case fatality rate (CF
                             covidence_id %in% c(832,845,870) & population_group != "Persons Under Investigation" ~ "Known",
                             covidence_id == 1413 & cfr_ifr_method == "Naive" ~ "Known",
                             covidence_id %in% c(645,4745,870,871,1426,1413,1444,3147,2714,461,2818,1272,167,2567, 
-                                                2760,2656,4314,2589,3215,3991,2662,3635,874,920,2636,252,3530) ~ "Assumed",
+                                                2760,2656,4314,2589,3215,3991,2662,3635,874,920,2636,252,3530,1254,2684,5439,5419) ~ "Assumed",
                             TRUE ~ "False"))
 
 #meta-analysis with strict de-duplication
@@ -179,7 +179,7 @@ patchwork <- ((p1 | plot_spacer() | p5 | plot_spacer()) + plot_layout(ncol = 4, 
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') 
 ggsave("figure_3.png", plot = patchwork, width = 18, height = 12)
 
-#figure_S5-S9: meta-analysis with all estimates plotted
+#figure_S6-S10: meta-analysis with all estimates plotted
 m1 <- metaprop_wrap(dataframe = da %>% arrange(-central), subgroup = "lineage", 
                     plot_pooled = TRUE, sort_by_subg = TRUE, plot_study = TRUE, digits = 3, colour = "red", 
                     width = 1200, height = 1600, resolution = 115)
@@ -202,13 +202,13 @@ p3 <- m3$plot
 p4 <- m4$plot
 p5 <- m5$plot
 
-ggsave("figure_S5.png", plot = p1, width = 12, height = 16)
-ggsave("figure_S6.png", plot = p2, width = 12, height = 16)
-ggsave("figure_S7.png", plot = p3, width = 12, height = 16)
-ggsave("figure_S8.png", plot = p4, width = 12, height = 16)
-ggsave("figure_S9.png", plot = p5, width = 12, height = 16)
+ggsave("figure_S6.png", plot = p1, width = 12, height = 16)
+ggsave("figure_S7.png", plot = p2, width = 12, height = 16)
+ggsave("figure_S8.png", plot = p3, width = 12, height = 16)
+ggsave("figure_S9.png", plot = p4, width = 12, height = 16)
+ggsave("figure_S10.png", plot = p5, width = 12, height = 16)
 
-#figure_S10: meta-analysis with only known duplicates excluded
+#figure_S11: meta-analysis with only known duplicates excluded
 db <- d1 %>% filter(duplicate_cfr %in% c("False","Assumed"))
 
 m1 <- metaprop_wrap(dataframe = db, subgroup = "lineage", 
@@ -231,9 +231,9 @@ p4 <- m4$plot
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') 
-ggsave("figure_S10.png", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S11.png", plot = patchwork, width = 12, height = 12)
 
-#figure_S11: meta-analysis without de-duplication
+#figure_S12: meta-analysis without de-duplication
 dc <- d1
 
 m1 <- metaprop_wrap(dataframe = dc, subgroup = "lineage", 
@@ -256,4 +256,4 @@ p4 <- m4$plot
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') 
-ggsave("figure_S11.png", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S12.png", plot = patchwork, width = 12, height = 12)

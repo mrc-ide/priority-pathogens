@@ -64,6 +64,7 @@ database_files <- function(pathogen) {
         "DIDE Priority Pathogens LASSA - Joseph.accdb",
         "DIDE Priority Pathogens LASSA - Kelly.accdb",
         "DIDE Priority Pathogens LASSA - Patrick.accdb",
+        "DIDE Priority Pathogens LASSA - Revisions.accdb",
         "DIDE Priority Pathogens LASSA - Richard.accdb",
         "DIDE Priority Pathogens LASSA - Ruth.accdb",
         "DIDE Priority Pathogens LASSA - Thom.accdb",

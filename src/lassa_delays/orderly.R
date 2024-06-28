@@ -32,7 +32,7 @@ orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_4.png","figure_S4.png"))
+orderly_artefact("lassa-specific figures",c("figure_4.png","figure_S5.png"))
 
 ###################
 ## DATA CURATION ##
@@ -101,10 +101,10 @@ patchwork <- ((p1 | p2) / (p3 | p4) / p5)
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_4.png", plot = patchwork, width = 12, height = 16)
 
-#figure_S4: hypothetical probability distributions for onset-admission delay
+#figure_S5: hypothetical probability distributions for onset-admission delay
 p1 <- pdf_generic(m5$result,"common",c("Gamma","Lognormal","Weibull"),c(-0.2,30),'Onset-Admission Delay (days)')
 p2 <- pdf_generic(m5$result,"random",c("Gamma","Lognormal","Weibull"),c(-0.2,30),'Onset-Admission Delay (days)')
 
 patchwork <- (p1 + p2) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
-ggsave("figure_S4.png", plot = patchwork, width = 12, height = 6)
+ggsave("figure_S5.png", plot = patchwork, width = 12, height = 6)
