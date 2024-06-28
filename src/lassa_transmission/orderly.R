@@ -87,7 +87,7 @@ p2 <- forest_plot(d2,expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site
 p3 <- forest_plot(d3,'Human-Human Transmission Contribution (%)',"pathogen",c(10,35))
 p4 <- forest_plot(d4,'Attack Rate (%)',"arate",c(-0.01,1))
 p5 <- forest_plot(d5,'Growth Rate (per day)',"pathogen",c(0,1.25))
-p6 <- forest_plot(d6,'Reproduction Number',"parameter_type",c(0.5,2))
+p6 <- forest_plot(d6,'Reproduction Number',"parameter_type",c(-0.035,2))
 
 patchwork <- (p6 + p5 + p4 + p3 + p1 + p2) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') #+ plot_layout(guides = 'collect')

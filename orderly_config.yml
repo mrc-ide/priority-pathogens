@@ -6,3 +6,4 @@ plugins:
     eboladoubledb2: "Z:/Ebola/databases/NEW DOUBLE EXTRACTION DATABASES"
     eboladoubledb: "Z:/Ebola/databases/Double extraction databases"
     ebolasingledb: "Z:/Ebola/databases/Single extraction databases"
+    sarssingledb: "Y:/SARS/Databases/full_extraction"
