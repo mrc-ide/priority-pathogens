@@ -85,7 +85,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims, text_size = 11) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -120,6 +120,9 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11) {
   } else {
     gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
   
+  if(show_label)
+    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = df$population_country_v2), nudge_x = 1.5, segment.color = "grey90" ) 
+
   return(gg)
 }
 
@@ -265,6 +268,174 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                      method.sd = estmeansd_method,
                      sm = "MRAW",
                      method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off()
+  }
+  
+  gg <- png::readPNG("temp.png", native = TRUE)
+  file.remove("temp.png")
+  gg <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+  return(list(result = mtan, plot = gg))
+} 
+
+## THIS IS INITIAL VERSION ONLY -- WORK IN PROGRESS
+metagen_wrap <- function(dataframe, estmeansd_method, 
+                          plot_study, digits, lims, colour, label,
+                          width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
+  
+  #dataframe <- epireview::filter_df_for_metamean(dataframe)
+  # must have the correct columns
+  df <- dataframe
+  cols_needed <- c("parameter_value", "parameter_unit", "population_sample_size",
+                   "parameter_value_type", "parameter_uncertainty_singe_type",
+                   "parameter_uncertainty_type", "parameter_uncertainty_lower_value",
+                   "parameter_uncertainty_upper_value")
+  
+  if (!all(cols_needed %in% colnames(df))) {
+    cols_missing <- cols_needed[!cols_needed %in% colnames(df)]
+    stop(
+      "df must have columns named: ", paste(cols_needed, collapse = ", "),
+      ". Columns missing: ", paste(cols_missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  
+  ## Ensure that there is a single parameter type present
+  if(length(unique(df$parameter_type)) != 1) {
+    stop("parameter_type must be the same across all values.", call. = FALSE)
+  }
+  
+  ## First check that there are no rows where a value is present but unit is
+  ## missing, or vice versa
+  if(any(is.na(df$parameter_value) & !is.na(df$parameter_unit))) {
+    message("parameter_value must be present if parameter_unit is present.
+            Rows with non-NA parameter_value and NA parameter_unit will be
+            removed.")
+    df <- filter(df,!( is.na(.data[["parameter_value"]]) & !is.na(.data[["parameter_unit"]]) ))
+  }
+  
+  if(any(!is.na(df$parameter_value) & is.na(df$parameter_unit))) {
+    message("parameter_unit is missing but parameter_value is present.
+            Rows with non-NA parameter_value and NA parameter_unit will be
+            removed."
+    )
+    df <- filter(df,!( is.na(.data[["parameter_value"]]) & 
+                         !is.na(.data[["parameter_unit"]]) ))
+  }
+  
+  # values of the parameter must all have the same units
+  if(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) != 1) {
+    msg1 <- "parameter_unit must be the same across all values."
+    msg2 <- "Consider calling delays_to_days() if you are working with delays."
+    stop(paste(msg1, msg2), call. = FALSE)
+  }
+  
+  # For this meta analysis don't enforce that we need to have sample sizes
+  # df <- df %>% filter(!is.na(.data[["population_sample_size"]])) %>%
+  #   filter(!is.na(.data[["parameter_value"]])) %>%
+  #   filter(
+  #     (.data[["parameter_value_type"]] == 'Mean' & 
+  #        grepl(x = tolower(.data[["parameter_uncertainty_singe_type"]]), 
+  #              pattern = 'standard deviation')) |
+  #       (.data[["parameter_value_type"]] == 'Median' & 
+  #          grepl(x = tolower(.data[["parameter_uncertainty_type"]]), 
+  #                pattern = 'iqr')) |
+  #       (.data[["parameter_value_type"]] == 'Median' & 
+  #          grepl(x = tolower(.data[["parameter_uncertainty_type"]]), 
+  #                pattern = 'range'))
+  #   )
+  
+  df <- mutate(
+    df,
+    xbar = ifelse(
+      .data[["parameter_value_type"]] == "Mean", .data[["parameter_value"]], NA),
+    median = ifelse(
+      .data[["parameter_value_type"]] == "Median", .data[["parameter_value"]], NA
+    ),
+    q1 = ifelse(
+      grepl(x = tolower(.data[["parameter_uncertainty_type"]]), "iqr"),
+      .data[["parameter_uncertainty_lower_value"]], NA),
+    q3 = ifelse(grepl(x = tolower(.data[["parameter_uncertainty_type"]]), "iqr"),
+                .data[["parameter_uncertainty_upper_value"]], NA),
+    min = ifelse(
+      grepl(
+        x = tolower(.data[["parameter_uncertainty_type"]]), pattern = "range"
+      ) &
+        !grepl(x = tolower(.data[["parameter_uncertainty_type"]]), "iqr"),
+      .data[["parameter_uncertainty_lower_value"]], NA
+    ),
+    max = ifelse(
+      grepl(x = tolower(.data[["parameter_uncertainty_type"]]), pattern = "range"
+      ) &
+        !grepl(x = tolower(.data[["parameter_uncertainty_type"]]), pattern = "iqr"),
+      .data[["parameter_uncertainty_upper_value"]], NA
+    )
+  )
+  
+  CI_level     <- as.double(substr(df$parameter_uncertainty_type,1,2))/100
+  CI_level_adj <- CI_level + (1-CI_level)/2
+  SE           <- (df$parameter_uncertainty_upper_value-df$parameter_uncertainty_lower_value)/(2* qnorm(CI_level_adj))
+  ln_case      <- !is.na(str_detect(str_to_lower(df$distribution_type),'log'))
+  SE[ln_case]  <- (df$parameter_uncertainty_upper_value[ln_case]-df$parameter_uncertainty_lower_value[ln_case])/(2* qlnorm(CI_level_adj[ln_case]))
+  df$SE        <- SE  
+  
+  dataframe <- df %>% filter(!is.na(SE))
+  
+  if(!is.na(subgroup))
+  {
+    mtan <- metagen(data = dataframe,
+                    TE = parameter_value,
+                    seTE = SE,
+                    studlab = refs,
+                    #mean = xbar,
+                    #sd = parameter_uncertainty_single_value,
+                    median = median,
+                    q1 = q1,
+                    q3 = q3,
+                    min = min,
+                    max = max,
+                    method.mean = estmeansd_method,
+                    method.sd = estmeansd_method,
+                    subgroup = dataframe[[subgroup]],
+                    sm = "R0",
+                    method.tau = "REML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off() 
+  } else {
+    mtan <- metagen(data = dataframe,
+                    TE = parameter_value,
+                    seTE = SE,
+                    studlab = refs,
+                    #mean = xbar,
+                    #sd = parameter_uncertainty_single_value,
+                    median = median,
+                    q1 = q1,
+                    q3 = q3,
+                    min = min,
+                    max = max,
+                    #n = population_sample_size,
+                    method.mean = estmeansd_method,
+                    method.sd = estmeansd_method,
+                    sm = "R0",
+                    method.tau = "REML"
+                    )
     
     png(file = "temp.png", width = width, height = height, res = resolution)
     forest(mtan, layout = "RevMan5",
