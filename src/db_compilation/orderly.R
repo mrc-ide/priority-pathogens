@@ -300,6 +300,7 @@ outbreak_all <- rbind(
 
 # Cleaning
 article_all   <- clean_dfs(article_all, pathogen)
+
 if (pathogen == "LASSA") {
   ## SB 14.05.2024
 ## Temporary fix to deal with garbled characters 
@@ -321,14 +322,16 @@ if (pathogen == 'EBOLA') {
   
 }
 # # Add article QA scores to article data
-# article_all <- add_qa_scores(article_all, parameter_all)
-# 
+if (pathogen == 'EBOLA') {
+  article_all <- add_qa_scores(article_all, parameter_all)
+
 # # Add article QA scores as a parameter variable
-# parameter_all <- parameter_all %>%
-#   left_join(
-#     select(article_all, covidence_id, article_qa_score),
-#     by = "covidence_id"
-#   )
+ parameter_all <- parameter_all %>%
+   left_join(
+     select(article_all, covidence_id, article_qa_score),
+     by = "covidence_id"
+   )
+}
 print(class(article_all))
 write_csv(article_all, "articles.csv")
 if (pathogen %in% c("EBOLA", "SARS")) {
