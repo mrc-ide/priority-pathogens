@@ -65,7 +65,7 @@ all_conns <- map(
   infiles, function(infile) {
     message("Reading ", infile)
     con <- dbConnect(
-      drv = odbc(), encoding = "latin1", .connection_string =
+      drv = odbc(), .connection_string =
         paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
 
     if (is.null(con)) {

@@ -78,6 +78,8 @@ ebola_models_cleaning <- function(df) {
 }
 
 ebola_params_cleaning <- function(df) {
+
+  
   df <- df %>%
     # Remove parameters from theoretical model papers/synthetic data papers
     # (e.g. 2857, 2858)/correspondence/wrong entries, 6471: sneaky duplicate,
@@ -948,25 +950,6 @@ ebola_params_cleaning <- function(df) {
 
 
 more_ebola_params_cleaning <- function(df) {
-  # merge ebola_variant and ebola_variant_p
-  df <- df %>%
-    mutate(
-      ebola_variant_p = case_when(
-        ebola_variant_p == "Bundibugyo virus (BDBV)¬†" ~ ebola_variant,
-        TRUE ~ ebola_variant_p
-      )
-    ) %>%
-    mutate(
-      ebola_variant_fix = case_when(
-        covidence_id %in% c(163, 662, 847, 6346) ~ "Zaire Ebola virus (EBOV)",
-        covidence_id %in% c(2548, 904, 17835) ~
-          "Bundibugyo virus (BDBV);Sudan virus (SUDV);Taï Forest virus (TAFV);Zaire Ebola virus (EBOV)",
-        TRUE ~ ebola_variant_p
-      )
-    ) %>%
-    select(-c(ebola_variant_p, ebola_variant)) %>%
-    rename(ebola_variant = ebola_variant_fix)
-
 
   # fix the population start and population end month
   df <- df %>%
