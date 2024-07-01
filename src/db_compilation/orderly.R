@@ -300,6 +300,7 @@ outbreak_all <- rbind(
 
 # Cleaning
 article_all   <- clean_dfs(article_all, pathogen)
+
 if (pathogen == "LASSA") {
   ## SB 14.05.2024
 ## Temporary fix to deal with garbled characters 
@@ -321,8 +322,8 @@ if (pathogen == 'EBOLA') {
   
 }
 # # Add article QA scores to article data
-# article_all <- add_qa_scores(article_all, parameter_all)
-# 
+if (pathogen == 'EBOLA') article_all <- add_qa_scores(article_all, parameter_all)
+browser()
 # # Add article QA scores as a parameter variable
 # parameter_all <- parameter_all %>%
 #   left_join(
