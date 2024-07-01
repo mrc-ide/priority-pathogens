@@ -75,6 +75,8 @@ orderly_resource(
   )
 )
 
+orderly_shared_resource("ebola_functions.R" = "ebola_functions.R")
+source("ebola_functions.R")
 ## Here we map the fixing files to the
 ## pathogen.
 fixing_files <- list(
@@ -313,7 +315,11 @@ outbreak_all$outbreak_location <- iconv(
 model_all     <- clean_dfs(model_all, pathogen)
 if (pathogen == "LASSA") model_all <- lassa_models_cleaning(model_all)
 parameter_all <- clean_dfs(parameter_all, pathogen)
-
+if (pathogen == 'EBOLA') {
+  parameter_all <- assign_ebola_outbreak(parameter_all)
+  parameter_all <- assign_ebola_species(parameter_all)
+  
+}
 # # Add article QA scores to article data
 # article_all <- add_qa_scores(article_all, parameter_all)
 # 
