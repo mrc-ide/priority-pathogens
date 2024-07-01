@@ -154,9 +154,10 @@ order_ebola_outbreaks <- function(outbreak_var) {
 
 ## Function to assign ebola virus species based on outbreak (if missing)
 assign_ebola_species <- function(df) {
+  trim_right <- function(x) sub("\\s+$", "", x)
   df <- df %>%
     mutate(
-      ebola_variant = str_trim(ebola_variant, side = "right"),
+      ebola_variant = trim_right(ebola_variant),
       # handle non-breaking space
       ebola_variant = str_squish(ebola_variant),
       ebola_variant = case_when(is.na(ebola_variant) ~
