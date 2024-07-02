@@ -85,7 +85,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -107,21 +107,37 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
   
-  gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
-        scale_x_continuous(limits = lims, expand = c(0, 0)) +
-        scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
-        labs(x = label, y = NULL) +
-        theme_minimal() + 
-        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
-              text = element_text(size = text_size))
+  if(sum(!is.na(custom_colours)))
+  {
+    gg <- gg + 
+      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_x_continuous(limits = lims, expand = c(0, 0)) +
+      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+      labs(x = label, y = NULL) +
+      scale_color_manual(values = custom_colours) +
+      scale_fill_manual(values = custom_colours) +
+      theme_minimal() + 
+      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+            text = element_text(size = text_size))
+  } else {
+    gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_x_continuous(limits = lims, expand = c(0, 0)) +
+      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+      labs(x = label, y = NULL) +
+      theme_minimal() + 
+      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+            text = element_text(size = text_size))  
+  }
+  
   if (cats == 1) {
     gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
   } else {
     gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
   
   if(show_label)
-    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = df$population_country_v2), nudge_x = 1.5, segment.color = "grey90" ) 
+    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" ) 
+    #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" ) 
 
   return(gg)
 }
