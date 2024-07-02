@@ -22,7 +22,7 @@ orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen
                    c("articles.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("sars-specific tables",c("figure_delays.png","figure_delays.pdf"))
+orderly_artefact("sars-specific tables",c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png"))
 
 ###################
 ## DATA CURATION ##
@@ -63,18 +63,37 @@ d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
 # Serial interval sub-plot (both papers have qa above 0.5)
 SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
-#IP_forest2 <- epireview::forest_plot_infectious_period(d6 %>% filter(qa_score>0.5), shape_by = 'parameter_value_type', ulim=30)
 GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+
+SI_forest_noqa <- forest_plot(d5, 'Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+IP_forest_noqa <- forest_plot(d6, 'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
+GT_forest_noqa <- forest_plot(d7, 'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+
 
 # Incubation period
 #p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
-set.seed(42)
 d1_subgroups <- d1 %>% filter(population_group %in% c('General population','Mixed groups', 'Persons under investigation','Healthcare workers')) %>%
   filter(qa_score>0.5) %>%
   mutate(parameter_value = coalesce(parameter_value,central))
+
+d1_subgroups_noqa <- d1 %>% filter(population_group %in% c('General population','Mixed groups', 'Persons under investigation','Healthcare workers')) %>%
+  mutate(parameter_value = coalesce(parameter_value,central))
+
+set.seed(42)
 m1 <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
                     plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
                     width = 7500, height = 5750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE )
+
+set.seed(42)
+m1_SI <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
+                       plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
+                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE )
+
+set.seed(42)
+m1_SI_noqa <- metamean_wrap(dataframe = d1_subgroups_noqa, estmeansd_method = "Cai", 
+                       plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
+                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE )
+
 
 #meta-analysis of onset-admission delay
 set.seed(42)
@@ -85,28 +104,39 @@ m2 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
                     plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
                     width = 9500, height = 4200, resolution = 1000)
 
+set.seed(42)
+d2_noqa <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+  filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) 
+m2_noqa <- metamean_wrap(dataframe = d2_noqa, estmeansd_method = "Cai",
+                    plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
+                    width = 9500, height = 4200, resolution = 1000)
+
 # admission to outcome... 
 outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) %>%
                                 mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
                               'Admission to outcome',"parameter_type",c(0,60),text_size = 22)
+outcome_forest_noqa <- forest_plot(d3 %>% 
+                                mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
+                              'Admission to outcome',"parameter_type",c(0,60),text_size = 22)
+
+### Create plots!
 
 layout <- "
-AABB#
-CCDD#
-EEFFF
-EEFFF
-"
-delays_plot <-  SI_forest + outcome_forest + GT_forest + IP_forest + m1$plot + m2$plot  + plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
-
-ggsave("figure_delays.png", plot = delays_plot, width = 39, height = 22)
-ggsave("figure_delays.pdf", plot = delays_plot, width = 39, height = 22)
-
-
-layout2 <- "
 AAABBBDDD
 EEEEFFFFF
 EEEEFFFFF
 "
-delays_plot2 <-  SI_forest + IP_forest + outcome_forest + m1$plot + theme(text = element_text(size = TEXT_SIZE)) + m2$plot + theme(text = element_text(size = TEXT_SIZE)) + 
-  plot_layout(design = layout2) + plot_annotation(tag_levels = 'A') 
-ggsave("figure_delays2.png", plot = delays_plot2, width = 39, height = 22)
+delays_plot <-  SI_forest + IP_forest + outcome_forest + m1$plot + theme(text = element_text(size = TEXT_SIZE)) + m2$plot + theme(text = element_text(size = TEXT_SIZE)) + 
+  plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
+ggsave("figure_5_delays.png", plot = delays_plot, width = 39, height = 22)
+ggsave("figure_5_delays.pdf", plot = delays_plot, width = 39, height = 22)
+
+delays_plotSI <-  SI_forest_noqa + IP_forest_noqa + outcome_forest_noqa + m1_SI_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + m2_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + 
+  plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
+ggsave("figure_5SI_delays.png", plot = delays_plotSI, width = 39, height = 22)
+ggsave("figure_5SI_delays.pdf", plot = delays_plotSI, width = 39, height = 22)
+
+# SI figures
+ggsave("figure_5SI_subgroup_meta.png", plot = m1_SI$plot, width = 22, height = 22) # note that qa & noqa lets through sames papers
+
+
