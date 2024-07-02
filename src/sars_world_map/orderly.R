@@ -23,7 +23,7 @@ orderly_shared_resource("world_cases_table.xlsx" = "world_cases_table.xlsx")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 
-orderly_artefact("sars-specific tables",c("world_map.png","sgp_info.png","hkg_info.png","twn_info.png","can_info.png","chn_info.png","vnm_info.png"))
+orderly_artefact("sars-specific tables",c("figure_2_world_map.png","figure_2_world_map.pdf","sgp_info.png","hkg_info.png","twn_info.png","can_info.png","chn_info.png","vnm_info.png"))
 
 ###################
 ## DATA CURATION ##
@@ -137,4 +137,5 @@ test <- world_map + patchwork::inset_element(grid::rasterGrob(png::readPNG("sgp_
   patchwork::inset_element(grid::rasterGrob(png::readPNG("vnm_info.png")), 0.6,0.225,0.6+inset_width,.225+inset_hight) + 
   patchwork::inset_element(m1$plot, 0.01,0.01,0.425,0.375) 
 
-ggsave("world_map.png", plot = test, width = 18, height = 12)
+ggsave("figure_2_world_map.png", plot = test, width = 18, height = 12)
+ggsave("figure_2_world_map.pdf", plot = test, width = 18, height = 12)
