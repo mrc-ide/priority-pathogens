@@ -1,4 +1,4 @@
-#task to collate lassa outputs
+#task to collate sars outputs
 
 #orderly preparation 
 orderly_strict_mode()
@@ -18,6 +18,8 @@ orderly_dependency("sars_transmission", "latest(parameter:pathogen == this:patho
                              "figure_4SI_r_other.png"))
 orderly_dependency("sars_summary", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_S1.png","figure_S2.png","figure_S3.png"))
+orderly_dependency("sars_risk_factors", "latest(parameter:pathogen == this:pathogen)",
+                   files = c("figure_SI_risk_panel.png","figure_SI_risk_other.png"))
 orderly_dependency("sars_latex_tables", "latest(parameter:pathogen == this:pathogen)",
                    files = c("latex_models.csv",
                              "latex_transmission.csv","latex_delays.csv",
@@ -33,6 +35,7 @@ orderly_artefact("sars-specific outputs",
                    "supp/figure_3SI_r_plot.png", "supp/figure_3SI_r_plot_cnt.png",
                    "supp/figure_3SI_r_plot_method.png","supp/figure_4SI_r_other.png",
                    "supp/figure_5SI_subgroup_meta.png","supp/figure_5SI_delays.png",
+                   "supp/figure_SI_risk_panel.png","supp/figure_SI_risk_other.png",
                    
                    "supp/latex_models.csv", "supp/latex_seroprevalence.csv","supp/latex_riskfactors.csv",
                    "supp/latex_transmission.csv","supp/latex_delays.csv","supp/latex_severity.csv"))
@@ -71,6 +74,8 @@ file.copy(from = "figure_3SI_r_plot_method.png", to = "supp/figure_3SI_r_plot_me
 file.copy(from = "figure_4SI_r_other.png",       to = "supp/figure_4SI_r_other.png")
 file.copy(from = "figure_5SI_subgroup_meta.png", to = "supp/figure_5SI_subgroup_meta.png")
 file.copy(from = "figure_5SI_delays.png",        to = "supp/figure_5SI_delays.png")
+file.copy(from = "figure_SI_risk_panel.png",     to = "supp/figure_SI_risk_panel.png")
+file.copy(from = "figure_SI_risk_other.png",     to = "supp/figure_SI_risk_other.png")
 
 file.copy(from = "latex_models.csv",         to = "supp/latex_models.csv")
 file.copy(from = "latex_transmission.csv",   to = "supp/latex_transmission.csv")
