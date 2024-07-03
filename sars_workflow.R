@@ -50,13 +50,13 @@ orderly_init()
 ###############
 
 # # Extract databases from shared drive (ensure config file pathway matches your machine)
-# orderly_run("db_extraction", parameters = list(pathogen = "SARS"))
+orderly_run("db_extraction", parameters = list(pathogen = "SARS"))
 # 
 # # Sort into double extracted matching and fixing
-# orderly_run("db_double", parameters = list(pathogen = "SARS"))
+orderly_run("db_double", parameters = list(pathogen = "SARS"))
 # 
 # # Bring single, matching double, and fixed double together
-# orderly_run("db_compilation", parameters = list(pathogen = "SARS"))
+orderly_run("db_compilation", parameters = list(pathogen = "SARS"))
 
 ## The above tasks use the Access databases that have not been uploaded as part 
 ## of the repository. 
@@ -67,13 +67,14 @@ orderly_init()
 ## Create a random name for location in case user already has pathogen-outputs
 ## This will also help ensure that the script can be run multiple times without
 ## the need to remove location
-loc_name <- adjective_animal()
-orderly_location_add(
-  loc_name, type = "path", 
-  args = list(path = file.path(location, "sars-outputs"))
-)
-orderly_location_pull_metadata(location = loc_name)
-orderly_location_pull_packet()
+
+# loc_name <- adjective_animal()
+# orderly_location_add(
+#   loc_name, type = "path", 
+#   args = list(path = file.path(location, "sars-outputs"))
+# )
+# orderly_location_pull_metadata(location = loc_name)
+# orderly_location_pull_packet()
 
 ##############
 ## ANALYSIS ##
@@ -99,4 +100,4 @@ orderly_run("sars_latex_tables", parameters = list(pathogen = "SARS"))
 ######################
 
 # Collate figures and tables
-#orderly_run("lassa_collate", parameters = list(pathogen = "LASSA"))
+orderly_run("sars_collate", parameters = list(pathogen = "SARS"))
