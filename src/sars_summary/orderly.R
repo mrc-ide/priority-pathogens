@@ -34,11 +34,10 @@ orderly_artefact("sars-specific figures",
 ###################
 
 articles   <- read_csv("articles.csv")
-outbreaks  <- read_csv("outbreaks.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-dfs <- data_curation(articles,outbreaks,models,parameters, plotting = TRUE)
+dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE)
 
 articles   <- dfs$articles
 
@@ -350,4 +349,5 @@ p4 <- ggplot() +
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 1, heights = c(1.1,1.7,0.5,0.7))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
+dev.set(dev.next())
 ggsave("figure_S3.png", plot = patchwork, width = 12, height = 16)
