@@ -3,6 +3,7 @@
 library(tidyverse)
 library(readxl)
 library(harrypotter)
+library(meta)
 library(ggplot2)
 library(grid)
 library(rnaturalearth)
