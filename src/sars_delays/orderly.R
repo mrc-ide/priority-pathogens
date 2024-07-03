@@ -22,7 +22,11 @@ orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen
                    c("articles.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("sars-specific tables",c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png"))
+orderly_artefact("sars-specific tables",c("figure_5_delays.png",
+                                          "figure_5_delays.pdf",
+                                          "figure_5SI_subgroup_meta.png",
+                                          "figure_5SI_delays.png",
+                                          "figure_5SI_delays.pdf"))
 
 ###################
 ## DATA CURATION ##
