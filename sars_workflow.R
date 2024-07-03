@@ -95,6 +95,9 @@ orderly_run("sars_summary", parameters = list(pathogen = "SARS"))
 # Latex tables
 orderly_run("sars_latex_tables", parameters = list(pathogen = "SARS"))
 
+# Risk factor plots
+orderly_run("sars_risk_factors", parameters = list(pathogen = "SARS"))
+
 ######################
 ## FIGURES & TABLES ##
 ######################
