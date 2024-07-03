@@ -82,6 +82,10 @@ write.table(mods, file = "latex_models.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #parameters
+parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
+                                    population_country = gsub( ",", ";", population_country))
+
+parameters <- parameters %>% mutate(parameter_unit = replace_na(parameter_unit,""))
 parameters <- mutate_at(parameters, 
                         vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
@@ -264,8 +268,11 @@ cfrs_params <- parameters %>%
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
-         population_sample_type, population_group, refs, central)
-cfrs_params$population_country <- gsub(";", "\\, ", cfrs_params$population_country)
+         population_sample_type, population_group, refs, central) %>%
+  mutate(cfr_ifr_method = case_when(str_starts(cfr_ifr_method,'Na') ~ 'Naive',
+                                    TRUE ~ cfr_ifr_method))
+
+population_country <- gsub(";", "\\, ", cfrs_params$population_country)
 cfrs_params <- cfrs_params %>% arrange(population_country,as.numeric(central))
 cfrs_params <- cfrs_params %>% select(-central)
 cfrs_params <- insert_blank_rows(cfrs_params,"population_country")
