@@ -25,7 +25,7 @@ orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_5.png"))
+orderly_artefact("lassa-specific figures",c("figure_5.png","figure_5.pdf"))
 
 ###################
 ## DATA CURATION ##
@@ -92,3 +92,4 @@ p6 <- forest_plot(d6,'Reproduction Number',"parameter_type",c(-0.035,2))
 patchwork <- (p6 + p5 + p4 + p3 + p1 + p2) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') #+ plot_layout(guides = 'collect')
 ggsave("figure_5.png", plot = patchwork, width = 12, height = 10)
+ggsave("figure_5.pdf", plot = patchwork, width = 12, height = 10)

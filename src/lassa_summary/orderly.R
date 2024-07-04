@@ -25,7 +25,8 @@ orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_S2.png","figure_S3.png","figure_S4.png"))
+orderly_artefact("lassa-specific figures",c("figure_S2.png","figure_S3.png","figure_S4.png",
+                                            "figure_S2.pdf","figure_S3.pdf","figure_S4.pdf"))
 
 ###################
 ## DATA CURATION ##
@@ -124,6 +125,7 @@ p4 <- answers %>%
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_S2.png", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S2.pdf", plot = patchwork, width = 12, height = 12)
 
 ############
 ## MODELS ##
@@ -224,6 +226,7 @@ p6 <- ggplot() +
 patchwork <- (p1 + p2 + p3 + p4 + p5 + p6) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_S3.png", plot = patchwork, width = 12, height = 16)
+ggsave("figure_S3.pdf", plot = patchwork, width = 12, height = 16)
 
 ################
 ## PARAMETERS ##
@@ -332,3 +335,4 @@ p4 <- ggplot() +
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 1, heights = c(1.1,1.7,0.5,0.7))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_S4.png", plot = patchwork, width = 12, height = 16)
+ggsave("figure_S4.pdf", plot = patchwork, width = 12, height = 16)
