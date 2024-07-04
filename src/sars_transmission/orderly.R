@@ -244,29 +244,33 @@ p5_noqa <- forest_plot(d5, 'Growth rate (r per day)',"pathogen",c(0,.25),text_si
 p6_1 <- forest_plot( d6 |> 
                        filter(qa_score>0.5) |>
                        filter(str_detect(parameter_type,('Basic'))) |> 
-                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)),
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value))|> 
+                       arrange(population_country_v2,desc(parameter_value)),
                      'Basic Reproduction Number',"population_country_v2",c(0,6),
                      custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
                      text_size = 16)
 
 p6_1_noqa <- forest_plot( d6 |> 
                        filter(str_detect(parameter_type,('Basic'))) |> 
-                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)),
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value))|> 
+                       arrange(population_country_v2,desc(parameter_value)),
                      'Basic Reproduction Number',"population_country_v2",c(0,6),
                      custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
-                     text_size = 16)
+                     text_size = 16) 
 
 p6_2 <- forest_plot( d6 |>
                        filter(qa_score>0.5) |>
                        filter(str_detect(parameter_type,('Effective'))) |> 
-                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)),
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |> 
+                       arrange(population_country_v2,desc(parameter_value)),
                      'Effective Reproduction Number',"population_country_v2",c(-0.5,6),
                      custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
                      text_size = 16)
 
 p6_2_noqa <- forest_plot( d6 |>
                        filter(str_detect(parameter_type,('Effective'))) |> 
-                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)),
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value))|> 
+                         arrange(population_country_v2,desc(parameter_value)),
                      'Effective Reproduction Number',"population_country_v2",c(-0.5,6),
                      custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
                      text_size = 16)
@@ -288,6 +292,7 @@ p6_3_noqa <- forest_plot( d6 |>
                        mutate(method_moment_value = replace_na(method_moment_value,'Unspecified')) |> 
                        arrange(method_moment_value,desc(parameter_value)),
                      'Basic Reproduction Number',"method_moment_value",c(-0.5,6), show_label = TRUE,
+                     custom_colours = c('Start outbreak'='steelblue', 'Mid outbreak' = 'darkred', 'Post outbreak'='lightgreen','Unspecified' = 'grey'),
                      text_size = 16)
 
 
@@ -306,7 +311,7 @@ p6_4e_noqa <- forest_plot( d6 |>
                             mutate(method_r = replace_na(method_r,'Unspecified')) |> 
                             arrange(method_r,desc(parameter_value)),
                           'Basic Reproduction Number',"method_r",c(-0.5,6),
-                          text_size = 16)
+                          text_size = 16) + theme(legend.position = 'none')
 
 p6_4 <- forest_plot( d6 |> 
                        filter(qa_score>0.5) |>
@@ -323,7 +328,7 @@ p6_4_noqa <- forest_plot( d6 |>
                        mutate(method_r = replace_na(method_r,'Unspecified')) |> 
                        arrange(method_r,desc(parameter_value)),
                      'Basic Reproduction Number',"method_r",c(-0.5,6),
-                     text_size = 16)
+                     text_size = 16) 
 
 p6_5 <- forest_plot( d6 |>
                        filter(qa_score>0.5) |>
@@ -336,9 +341,11 @@ p6_5 <- forest_plot( d6 |>
 p6_5_noqa <- forest_plot( d6 |>
                        mutate(method_moment_value = replace_na(method_moment_value,'Unspecified') ) |> 
                        filter(str_detect(parameter_type,('Effective'))) |> 
-                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)),
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                         arrange(method_moment_value,desc(parameter_value)),
                      'Effective Reproduction Number',"method_moment_value",c(-0.5,6), show_label = TRUE,
-                     text_size = 16)
+                     custom_colours = c('Start outbreak'='steelblue', 'Mid outbreak' = 'darkred', 'Post outbreak'='lightgreen','Unspecified' = 'grey'),
+                     text_size = 16) + theme(legend.position = 'none')
 
 
 # Meta-analysis not possible as too few data points
