@@ -28,7 +28,7 @@ orderly_shared_resource("Africa_Boundaries-shp" = "Africa_Boundaries-shp",
                         "wca_admbnda_adm1_ocha" = "wca_admbnda_adm1_ocha")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_2.png"))
+orderly_artefact("lassa-specific figures",c("figure_2.png","figure_2.pdf"))
 
 ###################
 ## DATA CURATION ##
@@ -127,3 +127,4 @@ p2 <- map_generic(l0,l1,d2,f2,n2,range_mp=TRUE,summ_dups="mean",c(-18.5,13.13),c
 patchwork <- p1 / p2
 patchwork <- patchwork + plot_layout(heights = c(1,0.75)) + plot_annotation(tag_levels = 'A')
 ggsave("figure_2.png", plot = patchwork, width = 12, height = 14)
+ggsave("figure_2.pdf", plot = patchwork, width = 12, height = 14)
