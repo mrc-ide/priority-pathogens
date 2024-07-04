@@ -50,6 +50,44 @@ models     <- dfs$models
 parameters <- dfs$parameters %>% left_join(qa_scores) %>% 
   mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value))
 
+#####################
+## PARAMETER STATS ##                Leave out for now but may be used later
+#####################
+
+parameters %>% group_by(parameter_class) %>% 
+  summarise(n_param   = n(),
+            n_article = length(unique(refs)))
+
+parameters %>% 
+  filter(parameter_class == 'Severity') %>%
+  group_by(parameter_type,population_country) %>%   
+  mutate(parameter_uncertainty_lower_value = case_when(is.infinite(parameter_uncertainty_lower_value) ~ NA,
+                                                       TRUE ~ parameter_uncertainty_lower_value ), 
+         parameter_uncertainty_upper_value = case_when(is.infinite(parameter_uncertainty_upper_value) ~ NA,
+                                                       TRUE ~ parameter_uncertainty_upper_value )) %>%
+  summarise(n_param       = n(),
+            n_article     = length(unique(refs)),
+            mean          = mean(parameter_value, na.rm = TRUE),
+            central_min     = min(parameter_value,na.rm = TRUE ),
+            central_max     = max(parameter_value,na.rm = TRUE ),
+            #weighted.mean = weighted.mean(parameter_value, population_sample_size, na.rm = TRUE),
+            minimum       = min(parameter_uncertainty_lower_value,na.rm = TRUE ),
+            maximum       = max(parameter_uncertainty_upper_value,na.rm = TRUE )) 
+
+parameters %>% 
+  filter(parameter_class == 'Human delay') %>%
+  group_by(parameter_type) %>%   
+  mutate(parameter_uncertainty_lower_value = case_when(is.infinite(parameter_uncertainty_lower_value) ~ NA,
+                                                       TRUE ~ parameter_uncertainty_lower_value ), 
+         parameter_uncertainty_upper_value = case_when(is.infinite(parameter_uncertainty_upper_value) ~ NA,
+                                                       TRUE ~ parameter_uncertainty_upper_value )) %>%
+  summarise(n_param         = n(),
+            n_article       = length(unique(refs)),
+            central_min     = min(parameter_value,na.rm = TRUE ),
+            central_max     = max(parameter_value,na.rm = TRUE ),
+            uncertainty_min = min(parameter_uncertainty_lower_value,na.rm = TRUE ),
+            uncertainty_max = max(parameter_uncertainty_upper_value,na.rm = TRUE )) 
+
 ##############
 ## ARTICLES ##
 ##############
