@@ -158,14 +158,20 @@ risk_table <- risk_params %>%
             pop_size = sum(population_sample_size)) %>%
   unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
 
+text_size <- 20
+custom_colours <- c('Significant / Adjusted'='blue4', 'Significant / Not adjusted' = 'lightblue', 'Significant / Unspecified'='blue',
+                    'Not significant / Adjusted'='darkred', 'Not significant / Not adjusted' = 'pink', 'Not significant / Unspecified'='red',
+                    'Unspecified / Adjusted'='grey30', 'Unspecified / Not adjusted' = 'grey50', 'Unspecified / Unspecified'='grey70')
+  
 # Death
 risk_table_plt_death <- risk_table %>% filter(riskfactor_outcome=='Death') %>%
   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
-  scale_fill_lancet() +
-  scale_color_lancet() + xlab('') + ylab('') + theme_light() + 
-  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = 10 ),
-         strip.text = element_text( color = "black"),          
+  scale_color_manual(values = custom_colours) +
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
+  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
+         strip.text = element_text( color = "black"), 
+         text = element_text(size = text_size),
          strip.background =element_rect(fill="grey90"))
 
 
@@ -173,35 +179,39 @@ risk_table_plt_death <- risk_table %>% filter(riskfactor_outcome=='Death') %>%
 risk_table_plt_infection <- risk_table %>% filter(riskfactor_outcome=='Infection') %>%
   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
-  scale_fill_lancet() +
-  scale_color_lancet() + xlab('') + ylab('') + theme_light() + 
-  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = 10 ),
+  scale_color_manual(values = custom_colours) +
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
+  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
          strip.text = element_text( color = "black"),          
          strip.background =element_rect(fill="grey90"),
+         text = element_text(size = text_size),
          legend.position = 'none')
 
 
 #Severe disease
 risk_table_plt_severe_disease <- risk_table %>% filter(riskfactor_outcome=='Severe disease') %>%
   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
-  geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
-  scale_fill_lancet() +
-  scale_color_lancet() + xlab('') + ylab('') + theme_light() + 
-  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = 10 ),
+  geom_bar( stat='identity',position = position_dodge(preserve = "single")) + 
+  theme_light()+
+  scale_color_manual(values = custom_colours) +
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  + 
+  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
          strip.text = element_text( color = "black"),          
          strip.background =element_rect(fill="grey90"),
-         legend.position = 'none')
+         text = element_text(size = text_size),
+         legend.position = 'none') 
 
 # Everything else
 risk_table_plt_other <- risk_table %>% 
   filter(!(riskfactor_outcome %in% c( 'Death', 'Infection','Severe disease'))) %>%
   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`,fill=`Significant / Adjusted`)) + 
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
-  scale_fill_lancet() +
-  scale_color_lancet() + xlab('') + ylab('') + theme_light() + 
-  theme( axis.text.x = element_text( angle = 65, hjust = 1, size = 10 ),
+  scale_color_manual(values = custom_colours) +
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
+  theme( axis.text.x = element_text( angle = 65, hjust = 1, size = text_size ),
          strip.text = element_text( color = "black"),          
-         strip.background =element_rect(fill="grey90")) +
+         strip.background =element_rect(fill="grey90"),
+         text = element_text(size = text_size)) +
   facet_wrap(~riskfactor_outcome)
 
 risk_table_plt <- risk_table_plt_death / risk_table_plt_infection / risk_table_plt_severe_disease +
