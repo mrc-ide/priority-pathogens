@@ -308,7 +308,8 @@ p1 <- ggplot() +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal() +      
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
-        legend.position = c(1,1), legend.justification = c(1,1), legend.box.just = "left") +
+        legend.position = 'top' ) +
+        #legend.position = c(1,1), legend.justification = c(1,1), legend.box.just = "left") +
   coord_flip()
 
 p2 <- ggplot() + 
@@ -321,7 +322,8 @@ p2 <- ggplot() +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal() +      
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
-        legend.position = "none") +
+        legend.position = 'none') +
+        #legend.position = 'bottom', legend.justification = c(1,1), legend.box.just = "left") +
   coord_flip()
 
 p3 <- ggplot() + 
@@ -347,7 +349,8 @@ p4 <- ggplot() +
         legend.position = "none") +
   coord_flip()
 
-patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 1, heights = c(1.1,1.7,0.5,0.7))
-patchwork <- patchwork + plot_annotation(tag_levels = 'A')
+patchwork <- p1 / p2 / p3 / p4 + plot_layout(ncol = 1, 
+                                             heights = c(2.5,2,0.5,0.7), 
+                                             guides = "collect") + plot_annotation(tag_levels = 'A')
 dev.set(dev.next())
-ggsave("figure_S3.png", plot = patchwork, width = 12, height = 16)
+ggsave("figure_S3.png", plot = patchwork, width = 14, height = 18)
