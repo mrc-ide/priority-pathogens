@@ -25,7 +25,7 @@ articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE )
+dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE, switch_first_surname = TRUE )
 
 articles   <- dfs$articles
 models     <- dfs$models
@@ -97,7 +97,8 @@ parameters <- parameters %>%
            ifelse(parameter_value!="NA", 
                   parameter_value,
                   ifelse(parameter_lower_bound!="NA" & parameter_upper_bound!="NA",
-                         paste(parameter_lower_bound, parameter_upper_bound, sep = " - "), "")))
+                         paste(parameter_lower_bound, parameter_upper_bound, sep = " - "), "")),
+         exponent = replace_na(exponent,0))
 #
 parameters$parameter_unit <- gsub("Substitutions/site/year", "s/s/y", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Mutations/genome/generation \\(U\\)", "m/g/g", parameters$parameter_unit)
@@ -159,7 +160,8 @@ parameters <- parameters %>%
 # new bit
 parameters <- parameters %>% mutate(unc_type = case_when(
   unc_type %in% c("Unspecified","") ~ "",
-  TRUE ~  paste(unc_type, ": ", uncertainty, sep = "")))
+  TRUE ~  paste(unc_type, ": ", uncertainty, " ", parameter_unit, sep = "")))
+
 ##                     
 #parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <- 
 #                                     parameters$population_sample_size[is.na(parameters$cfr_ifr_denominator)]        
