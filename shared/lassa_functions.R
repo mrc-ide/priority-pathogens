@@ -1,6 +1,6 @@
 #function to tidy-up all dataframes
 
-data_curation <- function(articles, outbreaks, models, parameters, plotting) {
+data_curation <- function(articles, outbreaks, models, parameters, plotting,switch_first_surname=FALSE) {
   
   articles   <- articles %>%
     mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
@@ -69,6 +69,11 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
                                       population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
+  
+  if(switch_first_surname)   # this is due to legacy access database issue
+  {
+    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+  }
   
   return(list(articles = articles, outbreaks = outbreaks, 
               models = models, parameters = parameters))
