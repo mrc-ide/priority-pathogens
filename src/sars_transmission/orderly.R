@@ -218,17 +218,17 @@ p3_noqa <- forest_plot( d3_without_qa, 'Overdispersion',"method_moment_value",c(
 
 # Attack rates
 p4_primary   <- forest_plot(d4|> filter(qa_score>0.5) |> filter(arate=='Primary'),'Attack Rate (%)',"population_group",c(-5,75),
-                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple4', 'Household contacts of survivors'='yellow3'),
+                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple', 'Household contacts of survivors'='yellow3'),
                             text_size = 16)
 p4_secondary <- forest_plot(d4|> filter(qa_score>0.5) |> filter(arate=='Secondary'),'Secondary Attack Rate (%)',"population_group",c(-5,100),
-                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple4', 'Household contacts of survivors'='yellow3'),
+                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple', 'Household contacts of survivors'='yellow3'),
                             text_size = 16)
 
 p4_primary_noqa   <- forest_plot(d4 |> filter(arate=='Primary'),'Attack Rate (%)',"population_group",c(-5,75),
-                            custom_colours = c('General popultion'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple4', 'Household contacts of survivors'='yellow3', 'Mixed groups' = 'pink2'),
+                            custom_colours = c('General popultion'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple2', 'Household contacts of survivors'='yellow3', 'Mixed groups' = 'pink2'),
                             text_size = 16)
 p4_secondary_noqa <- forest_plot(d4 |> filter(arate=='Secondary'),'Secondary Attack Rate (%)',"population_group",c(-5,100),
-                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple4', 'Household contacts of survivors'='yellow3', 'Mixed groups' = 'pink2'),
+                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple2', 'Household contacts of survivors'='yellow3', 'Mixed groups' = 'pink2'),
                             text_size = 16)
 
 
