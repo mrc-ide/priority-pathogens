@@ -65,6 +65,17 @@ param_count_qa <- parameters %>% group_by(parameter_class) %>%
 
 param_count <- param_count_noqa %>% left_join(param_count_qa,by=c('parameter_class'),suffix = c('_noqa','_qa'))
 
+param_count_noqa_type <- parameters %>% group_by(parameter_type) %>% 
+  summarise(n_param   = n(),
+            n_article = length(unique(refs)))
+
+param_count_qa_type <- parameters %>% group_by(parameter_type) %>%
+  filter(qa_score>0.5) %>%
+  summarise(n_param   = n(),
+            n_article = length(unique(refs)))
+
+param_count_type <- param_count_noqa_type %>% left_join(param_count_qa_type,by=c('parameter_type'),suffix = c('_noqa','_qa'))
+
 parameters %>% 
   filter(parameter_class == 'Severity') %>%
   group_by(parameter_type,population_country) %>%   
