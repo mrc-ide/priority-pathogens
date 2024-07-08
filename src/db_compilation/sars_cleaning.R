@@ -119,3 +119,9 @@ sars_cleaning <- function(df) {
          TRUE ~ first_author_first_name))     
     df
 }
+
+sars_params_cleaning <- function(df) {
+  df <- df %>% mutate(parameter_type = case_when(parameter_type=="secondary attack rate" ~ "Secondary attack rate",
+                                                 TRUE ~ parameter_type))
+  
+}
