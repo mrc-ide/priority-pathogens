@@ -171,13 +171,18 @@ clean_params <- function(df, pathogen){
   df <- df %>%
     clean_names() %>%
     mutate(
-      across(.cols = where(is.character), .fns = ~na_if(.x, "NA")),
+      across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA")),
       # Change variable types
       cfr_ifr_numerator = as.integer(cfr_ifr_numerator),
       cfr_ifr_denominator = as.integer(cfr_ifr_denominator),
       population_study_start_day = as.numeric(population_study_start_day),
       method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
       population_location = str_replace_all(population_location, ";", ","),
+      across(c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, 
+               parameter_uncertainty_upper_value), .fns = as.numeric(.x)),
+      
+      # Update parameter type values 
+      parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT'),
       
       # Group parameters
       parameter_class = case_when(
