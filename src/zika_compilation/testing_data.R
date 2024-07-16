@@ -1,6 +1,9 @@
 orderly2::orderly_run(name = 'zika_compilation', parameters = list(pathogen ='ZIKA'))
+library(ggplot2)
+library(dplyr)
 
 parameters <- readRDS("P:/Zika/priority-pathogens/archive/zika_compilation/20240711-150144-015934c9/parameters.rds")
+outbreaks <- readRDS("P:/Zika/priority-pathogens/archive/zika_compilation/20240711-150144-015934c9/outbreaks.rds")
 table(parameters$parameter_type)
 
 # sero, attack rate, incubation period, R, risk factors 
@@ -24,6 +27,7 @@ table(outbreak_double$cases_confirmed)
 
 # Check that central estimate is within ranges / CrI / CI
 names(parameters)
+
 pars <- parameters %>%
   mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
   mutate(parameter_value = as.numeric(parameter_value),
@@ -60,14 +64,41 @@ table(pars[which(pars$parameter_type == 'Attack rate'),]$population_group)
 ggplot(pars[which(pars$parameter_type == 'Attack rate' & pars$parameter_unit == 'Percentage (%)'),]) + 
   geom_point(aes(y = as.factor(covidence_id), x = parameter_value)) 
 
+# ggplot(pars[which(pars$parameter_type == 'Attack rate' & 
+#                     pars$parameter_unit == 'Percentage (%)' &
+#                     pars$population_group == 'General population'),]) + 
+#   geom_point(aes(y = as.factor(covidence_id), x = parameter_value)) 
+# 
+# 
+# ggplot(pars[which(pars$parameter_type == 'Attack rate' & 
+#                     pars$parameter_unit == 'Percentage (%)' &
+#                     pars$population_group == 'Persons under investigation'),]) + 
+#   geom_point(aes(y = as.factor(covidence_id), x = parameter_value)) 
 
-ggplot(pars[which(pars$parameter_type == 'Attack rate' & 
-                    pars$parameter_unit == 'Percentage (%)' &
-                    pars$population_group == 'General population'),]) + 
-  geom_point(aes(y = as.factor(covidence_id), x = parameter_value)) 
+ggplot(pars) + 
+  geom_point(aes(x = as.factor(covidence_id), y = parameter_value, color = population_country)) + 
+  geom_errorbar(aes(x = as.factor(covidence_id), ymin = parameter_lower_bound, ymax = parameter_upper_bound, color = population_country)) +
+  geom_errorbar(aes(x = as.factor(covidence_id), ymin = parameter_uncertainty_lower_value, ymax = parameter_uncertainty_upper_value, color = population_country), 
+                linetype = 2) +
+  facet_wrap(~parameter_type, scales = 'free_y') + 
+  theme(legend.position = 'none')
+ggplot(pars %>% filter(parameter_type == 'Reproduction number (Basic R0)' & covidence_id!=1496 )) + 
+  geom_point(aes(x = as.factor(covidence_id), y = parameter_value, color = population_country)) + 
+  geom_errorbar(aes(x = as.factor(covidence_id), ymin = parameter_lower_bound, ymax = parameter_upper_bound, color = population_country)) +
+  geom_errorbar(aes(x = as.factor(covidence_id), ymin = parameter_uncertainty_lower_value, ymax = parameter_uncertainty_upper_value, color = population_country), 
+                linetype = 2) +
+  facet_wrap(~parameter_type, scales = 'free_y') + 
+  theme(legend.position = 'none')
+  
+outbreaks2 <- outbreaks %>%
+  mutate_at(vars(cases_confirmed,cases_suspected, cases_unspecified, cases_severe,cases_asymptomatic),
+            ~ na_if(.,'NA')) %>%
+  mutate_at(vars(cases_confirmed,cases_suspected, cases_unspecified, cases_severe,cases_asymptomatic),
+            ~ as.numeric(.))
 
-
-ggplot(pars[which(pars$parameter_type == 'Attack rate' & 
-                    pars$parameter_unit == 'Percentage (%)' &
-                    pars$population_group == 'Persons under investigation'),]) + 
-  geom_point(aes(y = as.factor(covidence_id), x = parameter_value)) 
+ggplot(outbreaks2 %>% filter(cases_suspected < 90000)) + 
+  geom_point(aes(x = as.factor(covidence_id), y = cases_confirmed, color = outbreak_country), shape = 1) +
+  geom_point(aes(x = as.factor(covidence_id), y = cases_suspected, color = outbreak_country), shape = 2) +
+  geom_point(aes(x = as.factor(covidence_id), y = cases_unspecified, color = outbreak_country), shape = 3) +
+  geom_point(aes(x = as.factor(covidence_id), y = cases_severe, color = outbreak_country), shape = 4) +
+  geom_point(aes(x = as.factor(covidence_id), y = cases_asymptomatic, color = outbreak_country), shape = 5) 
