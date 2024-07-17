@@ -58,6 +58,7 @@ database_files <- function(pathogen) {
     ),
     LASSA = list(
       lassasingledb = c(
+        "DIDE Priority Pathogens LASSA - Chaining.accdb",
         "DIDE Priority Pathogens LASSA - Christian.accdb",
         "DIDE Priority Pathogens LASSA - Dariya.accdb",
         "DIDE Priority Pathogens LASSA - Gina.accdb",

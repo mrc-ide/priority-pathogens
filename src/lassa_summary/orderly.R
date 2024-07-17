@@ -93,7 +93,7 @@ p1 <- ggplot(data=articles, aes(x = year_publication)) +
 p2 <- ggplot() +
       geom_histogram(data=quality, aes(x = score), binwidth = 20, boundary = 0, fill = "steelblue4", color = "black", alpha = 0.7) +
       scale_x_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20)) + 
-      scale_y_continuous(limits = c(0,50), expand = c(0, 0)) +
+      scale_y_continuous(limits = c(0,75), breaks = seq(0, 75, by = 15), expand = c(0, 0)) +
       theme_minimal() + 
       theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA)) + 
       labs(x = "Quality Assessment Score (%)", y = "Article Count")
@@ -114,7 +114,7 @@ p4 <- answers %>%
       group_by(Question,Assessment) %>% summarize(count=n()) %>% ungroup() %>%
       ggplot(aes(fill=Assessment, y=count, x=Question)) + 
       geom_bar(position="stack", stat="identity") + theme_bw() +
-      scale_y_continuous(limits = c(0,170), breaks = seq(0,170,by=85), expand = c(0, 0)) +
+      scale_y_continuous(limits = c(0,200), breaks = seq(0,200,by=50), expand = c(0, 0)) +
       scale_fill_manual(values = c("darkolivegreen2","coral1","grey70"),aesthetics = "fill",name="",breaks=c('Yes', 'No','NA')) +
       xlab("") + ylab("Article Count") + 
       coord_flip() +
@@ -134,13 +134,13 @@ ggsave("figure_S2.pdf", plot = patchwork, width = 12, height = 12)
 models <- models %>% mutate(model_type = str_replace_all(model_type,"Branching process","Branching Process"),
                             stoch_deter = str_replace_all(stoch_deter,"Deterministic;Stochastic","Stochastic"),
                             transmission_route = str_replace_all(transmission_route,"Sexual;Vector/Animal to human","Human to human (direct contact);Vector/Animal to human"),
-                            assumptions = str_replace_all(assumptions,";Latent period is same as incubation period",""),
+                            assumptions = str_replace_all(assumptions,c(";Latent period is same as incubation period"="","Age dependent susceptibility"="Heterogenity in transmission rates - between groups")),
                             compartmental_type = str_replace_all(compartmental_type,";SIR",""),
                             interventions_type = str_replace_all(interventions_type,"Unspecified","Other"))
 
 p1 <- ggplot() + 
       geom_bar(data = models, aes(x = model_type, fill = stoch_deter), color = "black") + 
-      scale_y_continuous(limits = c(0,40), breaks = seq(0,40,by = 10), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,by = 10), expand = c(0,0)) +
       xlab("Model Type") + ylab("Model Count") +
       scale_fill_manual(values = c("Deterministic" = "steelblue4","Stochastic" = "red"), name = NULL) +
       theme_minimal() +      
@@ -155,8 +155,8 @@ p2 <- ggplot() +
       scale_x_discrete(labels = c("Vector/Animal to human" = "Rodent-Human Only",
                                   "Human to human (direct contact);Vector/Animal to human" = "Rodent-Human\n& Human-Human",
                                   "Human to human (direct contact)" = "Human-Human Only",
-                                  "Airborne or close contact;Human to human (direct contact);Vector/Animal to human" = "Rodent-Human,\nHuman-Human\n& Airborne")) +
-      scale_y_continuous(limits = c(0,40), breaks = seq(0,40,by = 10), expand = c(0,0)) +
+                                  "Airborne or close contact;Human to human (direct contact);Vector/Animal to human" = "Rodent-Human,\nHuman-Human\n& Environment")) +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,by = 10), expand = c(0,0)) +
       xlab("Transmission Route(s)") + ylab("Model Count") +
       scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3"), name = NULL) +
       theme_minimal() +      
@@ -172,9 +172,8 @@ p3 <- ggplot() +
       scale_x_discrete(labels = c("Homogeneous mixing" = "Homogeneous",
                                   "Heterogenity in transmission rates - over time" = "Time-\nHeterogeneous",
                                   "Heterogenity in transmission rates - between groups" = "Subgroup-\nHeterogeneous",
-                                  "Age dependent susceptibility" = "Age-\nHeterogeneous",
                                   "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time" = "Time- & Subgroup-\nHeterogeneous")) +
-      scale_y_continuous(limits = c(0,40), breaks = seq(0,40,by = 10), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,by = 10), expand = c(0,0)) +
       xlab("Human Transmission Heterogeneity") + ylab("Model Count") +
       scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3"), name = NULL) +
       theme_minimal() +      
@@ -182,13 +181,13 @@ p3 <- ggplot() +
             legend.position = "none")
 
 p4 <- ggplot() + 
-      geom_bar(data = models, aes(x = factor(compartmental_type, levels = c("SIR",
+      geom_bar(data = models, aes(x = factor(compartmental_type, levels = c("SIS","SIR",
                                                                             "SEIR",
                                                                             "Other compartmental",
                                                                             "Not compartmental")), fill = model_type), color = "black") + 
-      scale_x_discrete(labels = c("Other compartmental" = "Other",
+      scale_x_discrete(labels = c("SIS"="SI","Other compartmental" = "Other",
                                   "Not compartmental" = "N/A")) +
-      scale_y_continuous(limits = c(0,40), breaks = seq(0,40,by = 10), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,by = 10), expand = c(0,0)) +
       xlab("Human Compartments") + ylab("Model Count") +
       scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3"), name = NULL) +
       theme_minimal() +      
@@ -200,7 +199,7 @@ p5 <- ggplot() +
                                                                            "TRUE")), fill = model_type), color = "black") +
       scale_x_discrete(labels = c("FALSE" = "Fitted to Data",
                                   "TRUE" = "Theoretical")) +
-      scale_y_continuous(limits = c(0,40), breaks = seq(0,40,by = 10), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,by = 10), expand = c(0,0)) +
       xlab("Model Calibration") + ylab("Model Count") +
       scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3"), name = NULL) +
       theme_minimal() +      
@@ -216,7 +215,7 @@ p6 <- ggplot() +
                                   "Behaviour changes" = "Behaviour\nChanges",
                                   "Contact tracing" = "Contact\nTracing",
                                   "Other" = "Other &\nUnspecified")) +
-      scale_y_continuous(limits = c(0,40), breaks = seq(0,40,by = 10), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,by = 10), expand = c(0,0)) +
       xlab("Interventions") + ylab("Model Count") +
       scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3"), name = NULL) +
       theme_minimal() +      
@@ -286,7 +285,7 @@ p1 <- ggplot() +
       geom_bar(data = parameters,
                aes(x = reorder(parameter_type, parameter_class), fill = parameter_class), color = "black") + 
       scale_x_discrete(limits = rev) + 
-      scale_y_continuous(limits = c(0,240), breaks = seq(0,240,by = 40), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,260), breaks = seq(0,260,by = 65), expand = c(0,0)) +
       xlab("Parameter Type") + ylab("Parameter Count") +
       scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
       theme_minimal() +      
@@ -299,7 +298,7 @@ p2 <- ggplot() +
                                      mutate(population_country = str_trim(population_country, side = "left")),           
                aes(x = population_country, fill = parameter_class), color = "black") + 
       scale_x_discrete(limits = rev) + 
-      scale_y_continuous(limits = c(0,240), breaks = seq(0,240,by = 40), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,260), breaks = seq(0,260,by = 65), expand = c(0,0)) +
       xlab("Study Country") + ylab("Parameter Count") +
       scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
       theme_minimal() +      
@@ -313,7 +312,7 @@ p3 <- ggplot() +
                                                                                "2000-2009","2010-2019",
                                                                                "2020-Present","Unspecified")), fill = parameter_class), color = "black") + 
       scale_x_discrete(limits = rev) + 
-      scale_y_continuous(limits = c(0,240), breaks = seq(0,240,by = 40), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,260), breaks = seq(0,260,by = 65), expand = c(0,0)) +
       xlab("Study Year") + ylab("Parameter Count") +
       scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
       theme_minimal() +      
@@ -324,7 +323,7 @@ p3 <- ggplot() +
 p4 <- ggplot() + 
       geom_bar(data = parameters, aes(x = population_sample_type, fill = parameter_class), color = "black") + 
       scale_x_discrete(limits = rev) + 
-      scale_y_continuous(limits = c(0,240), breaks = seq(0,240,by = 40), expand = c(0,0)) +
+      scale_y_continuous(limits = c(0,260), breaks = seq(0,260,by = 65), expand = c(0,0)) +
       xlab("Study Setting") + ylab("Parameter Count") +
       scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
       theme_minimal() +      
