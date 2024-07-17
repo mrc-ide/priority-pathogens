@@ -198,7 +198,7 @@ d3_without_qa <- d3_tmp
 ### Construct subplots
 
 # Evolutionary mutation rates
-p1 <- forest_plot(d1 |> filter(qa_score>0.5),expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(5,50),
+p1 <- forest_plot(d1 |> filter(qa_score>0.5),expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,50),
                   custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 p2 <- forest_plot(d2 |> filter(qa_score>0.5),expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,100),
