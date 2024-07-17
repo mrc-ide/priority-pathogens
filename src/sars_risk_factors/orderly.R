@@ -214,7 +214,7 @@ risk_table_plt_other <- risk_table %>%
          text = element_text(size = text_size)) +
   facet_wrap(~riskfactor_outcome)
 
-risk_table_plt <- risk_table_plt_death / risk_table_plt_infection / risk_table_plt_severe_disease +
+risk_table_plt <- risk_table_plt_infection / risk_table_plt_severe_disease / risk_table_plt_death +
   plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect")
 
 ggsave("figure_SI_risk_panel.png", plot = risk_table_plt, width = 20, height = 18)
