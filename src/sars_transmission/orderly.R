@@ -17,6 +17,7 @@ library(grid)
 library(patchwork)
 library(gridExtra)
 library(countrycode)
+library(ggrepel)
 
 #orderly preparation 
 orderly_strict_mode()
@@ -302,7 +303,7 @@ p6_4e <- forest_plot( d6 |>
                        filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
                        mutate(method_r = replace_na(method_r,'Unspecified')) |> 
                        arrange(method_r,desc(parameter_value)),
-                     'Basic Reproduction Number',"method_r",c(-0.5,6),
+                     'Effective Reproduction Number',"method_r",c(-0.5,6),
                      text_size = 16)
 
 p6_4e_noqa <- forest_plot( d6 |> 
@@ -310,7 +311,7 @@ p6_4e_noqa <- forest_plot( d6 |>
                             filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
                             mutate(method_r = replace_na(method_r,'Unspecified')) |> 
                             arrange(method_r,desc(parameter_value)),
-                          'Basic Reproduction Number',"method_r",c(-0.5,6),
+                          'Effective Reproduction Number',"method_r",c(-0.5,6),
                           text_size = 16) + theme(legend.position = 'none')
 
 p6_4 <- forest_plot( d6 |> 
