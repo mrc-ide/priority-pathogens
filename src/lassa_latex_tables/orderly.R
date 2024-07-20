@@ -58,7 +58,11 @@ outbreaks <- outbreaks %>%
 outbreaks <- outbreaks %>% mutate_all(~ ifelse(is.na(.), "", .))
 outbreaks <- outbreaks %>% mutate(outbreak_location = gsub("Fct;","FCT;",outbreak_location),
                                   outbreak_location = gsub("Kenema ;","Kenema;",outbreak_location),
-                                  outbreak_location = gsub("OuéMé","Ouémé",outbreak_location))
+                                  outbreak_location = gsub("OuéMé","Ouémé",outbreak_location)) %>%
+                           mutate(outbreak_location = case_when(
+                                  covidence_id == 560 & outbreak_country == "Liberia" ~ outbreak_location,
+                                  covidence_id %in% c(61,1161,152,60,3991,4316,5623,2791,558,1183) ~ outbreak_location,
+                                  TRUE ~ paste0(outbreak_location, "$^*$")))
 
 outs <- outbreaks %>%
   select(outbreak_country, outbreak_location, dates, 
@@ -297,6 +301,17 @@ write.table(hdel_params, file = "latex_delays.csv", sep = ",",
 #parameters - CFRs
 cfrs_params <- parameters %>%
   filter(grepl("Severity - case fatality rate", parameter_type, ignore.case = TRUE)) %>%
+  mutate(duplicate_cfr = case_when(
+          covidence_id %in% c(832,845,870) & population_group != "Persons Under Investigation" ~ "Known",
+          covidence_id == 1413 & cfr_ifr_method == "Naive" ~ "Known",
+          covidence_id %in% c(645,4745,870,871,1426,1413,1444,3147,2714,461,2818,1272,167,2567, 
+                              2760,2656,4314,2589,3215,3991,2662,3635,874,920,2636,252,3530,1254,2684,5439,5419,1366,1083,5622,1192,5623,3210) ~ "Assumed",
+          TRUE ~ "False")) %>% #only identified for estimates passed to meta-analysis (i.e. denominator not NA)
+  mutate(parameter_value = case_when(!is.na(cfr_ifr_denominator) & !(cfr_ifr_denominator=="") &
+                                     !(is.na(cfr_ifr_numerator) & is.na(parameter_value)) &  !(cfr_ifr_numerator=="" & parameter_value=="") &
+                                     duplicate_cfr == "False" 
+                                     ~ paste0(parameter_value, "$^*$"),
+                           TRUE ~ parameter_value)) %>%
   select(parameter_value, unc_type,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
