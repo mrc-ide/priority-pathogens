@@ -10,7 +10,9 @@ table(parameters$parameter_type)
 
 sero <- parameters %>% 
   filter(parameter_type %in% c('Seroprevalence - HAI/HI','Seroprevalence - IgG','Seroprevalence - Unspecified',
-                             'Seroprevalence - IgM','Seroprevalence - Neutralisation/PRNT'))
+                             'Seroprevalence - IgM','Seroprevalence - Neutralisation/PRNT') & population_group == 'General population' & 
+                       population_sample_type =='Population based') %>%
+  select(parameter_type, population_group, covidence_id, population_country, parameter_value)
 table(sero$population_group)
 table(sero$population_sample_type)
 table(as.numeric(sero$parameter_value))
@@ -82,6 +84,19 @@ ggplot(pars) +
                 linetype = 2) +
   facet_wrap(~parameter_type, scales = 'free_y') + 
   theme(legend.position = 'none')
+
+ggplot(pars %>% filter(parameter_type == 'Seroprevalence - IgG' & population_group == 'General population' & 
+                         population_sample_type =='Population based')) + 
+  geom_point(aes(x = as.factor(covidence_id), y = parameter_value, color = population_country)) + 
+  geom_errorbar(aes(x = as.factor(covidence_id), ymin = parameter_lower_bound, ymax = parameter_upper_bound, color = population_country)) +
+  geom_errorbar(aes(x = as.factor(covidence_id), ymin = parameter_uncertainty_lower_value, ymax = parameter_uncertainty_upper_value, color = population_country), 
+                linetype = 2) +
+  facet_wrap(~parameter_type, scales = 'free_y') + 
+  theme(legend.position = 'none')
+
+
+
+
 ggplot(pars %>% filter(parameter_type == 'Reproduction number (Basic R0)' & covidence_id!=1496 )) + 
   geom_point(aes(x = as.factor(covidence_id), y = parameter_value, color = population_country)) + 
   geom_errorbar(aes(x = as.factor(covidence_id), ymin = parameter_lower_bound, ymax = parameter_upper_bound, color = population_country)) +

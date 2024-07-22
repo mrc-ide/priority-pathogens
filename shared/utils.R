@@ -110,25 +110,25 @@ database_files <- function(pathogen) {
       )
     ),    
     ZIKA = list(
-      # zikasingledb = c(
-      #   "DIDE Priority Pathogens Zika - Anna.accdb",
-      #   "DIDE Priority Pathogens Zika - Anna-Maria.accdb",
-      #   "DIDE Priority Pathogens Zika - Christian.accdb",
-      #   "DIDE Priority Pathogens Zika - Dom.accdb",
-      #   "DIDE Priority Pathogens Zika - Ettie.accdb",
-      #   "DIDE Priority Pathogens Zika - Ilaria.accdb",
-      #   "DIDE Priority Pathogens Zika - Keith.accdb",
-      #   "DIDE Priority Pathogens Zika - Kelly.accdb",
-      #   "DIDE Priority Pathogens Zika - Patrick.accdb",
-      #   "DIDE Priority Pathogens Zika - Richard.accdb",
-      #   "DIDE Priority Pathogens Zika - Rob.accdb",
-      #   "DIDE Priority Pathogens Zika - Ruth.accdb",
-      #   "DIDE Priority Pathogens Zika - Sangeeta.accdb",
-      #   "DIDE Priority Pathogens Zika - Sequoia.accdb",
-      #   "DIDE Priority Pathogens Zika - Shazia.accdb",
-      #   "DIDE Priority Pathogens Zika - Thom.accdb",
-      #   "DIDE Priority Pathogens Zika - Tristan.accdb"
-      # ),
+      zikasingledb = c(
+        # "DIDE Priority Pathogens Zika 2 - Anna.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Anna-Maria.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Christian.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Dom.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Ettie.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Ilaria.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Keith.accdb",
+        "DIDE Priority Pathogens Zika 2 - Kelly.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Patrick.accdb",
+        "DIDE Priority Pathogens Zika 2 - Richard.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Rob.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Ruth.accdb",
+        "DIDE Priority Pathogens Zika 2 - Sangeeta.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Sequoia.accdb",
+        # "DIDE Priority Pathogens Zika 2 - Shazia.accdb",
+        "DIDE Priority Pathogens Zika 2 - Thom.accdb"
+        # "DIDE Priority Pathogens Zika 2 - Tristan.accdb"
+      ),
       # zikadoubledb = c(
       #   "DIDE Priority Pathogens Zika - Anna.accdb",
       #   "DIDE Priority Pathogens Zika - Anna-Maria.accdb",
