@@ -58,10 +58,8 @@ qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
 outbreaks  <- dfs$outbreaks
 models     <- dfs$models
 
-parameters <- dfs$parameters %>% left_join(qa_scores) %>% 
-  mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value))
+parameters <- dfs$parameters %>% left_join(qa_scores)
   
-
 ##################
 ## TRANSMISSION ##
 ##################
