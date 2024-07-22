@@ -65,11 +65,11 @@ d6 <- parameters %>% filter(parameter_type == 'Human delay - infectious period')
 d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
 
 # Serial interval sub-plot (both papers have qa above 0.5)
-SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Mean Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
 GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 
-SI_forest_noqa <- forest_plot(d5, 'Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+SI_forest_noqa <- forest_plot(d5, 'Mean Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 IP_forest_noqa <- forest_plot(d6, 'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
 GT_forest_noqa <- forest_plot(d7, 'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 
