@@ -1,4 +1,5 @@
 # Task to compile single and double1 and double2 Zika extraction databases together
+# orderly2::orderly_run(name = 'zika_compilation', parameters = list(pathogen = 'ZIKA'))
 # install.packages('rio')
 library(dplyr)
 library(janitor)
@@ -65,20 +66,34 @@ orderly_dependency(
 # second round of double 
 orderly_resource(
   c('zika_cleaning.R',
-    # First round of double extraction fixing files
-    'db1_qa_fixing.xlsx',
-    "db1_params_fixing.xlsx",
-    "db1_models_fixing.xlsx",
-    "db1_outbreaks_fixing.xlsx",
-    'db1_qa_matching.csv', # matching file for round 1 double extractions from here: 'P:/Zika/priority-pathogens/archive/db_double/20240411-094214-9cdb9e2e/qa_matching.csv'
-    'db1_double_extraction_articles.csv', # article information from round 1 double extractions
-    # Second round of double extraction fixing files 
-    'db2_qa_fixing.xlsx',
-    "db2_params_fixing.xlsx",
-    "db2_models_fixing.xlsx",
-    "db2_outbreaks_fixing.xlsx"
-  )
+    "db1_qa_fixing.xlsx" = "db1_qa_fixing.xlsx",
+    "db1_params_fixing.xlsx" = "db1_params_fixing.xlsx",
+    "db1_models_fixing.xlsx" = "db1_models_fixing.xlsx",
+    "db1_outbreaks_fixing.xlsx" = "db1_outbreaks_fixing.xlsx",
+    "db1_qa_matching.csv" = "db1_qa_matching.csv", # matching file for round 1 double extractions from here: 'P:/Zika/priority-pathogens/archive/db_double/20240411-094214-9cdb9e2e/qa_matching.csv'
+    "db1_double_extraction_articles.csv" = "db1_double_extraction_articles.csv", # article information from round 1 double extractions
+    # Second round of double extraction fixing files
+    "db2_qa_fixing.xlsx" = "db2_qa_fixing.xlsx",
+    "db2_params_fixing.xlsx" = "db2_params_fixing.xlsx",
+    "db2_models_fixing.xlsx" = "db2_models_fixing.xlsx",
+    "db2_outbreaks_fixing.xlsx" = "db2_outbreaks_fixing.xlsx")
 )
+
+# orderly_shared_resource(
+#   c(# First round of double extraction fixing files
+    # "db1_qa_fixing.xlsx" = "db1_qa_fixing.xlsx",
+    # "db1_params_fixing.xlsx" = "db1_params_fixing.xlsx",
+    # "db1_models_fixing.xlsx" = "db1_models_fixing.xlsx",
+    # "db1_outbreaks_fixing.xlsx" = "db1_outbreaks_fixing.xlsx",
+    # "db1_qa_matching.csv" = "db1_qa_matching.csv", # matching file for round 1 double extractions from here: 'P:/Zika/priority-pathogens/archive/db_double/20240411-094214-9cdb9e2e/qa_matching.csv'
+    # "db1_double_extraction_articles.csv" = "db1_double_extraction_articles.csv", # article information from round 1 double extractions
+    # # Second round of double extraction fixing files
+    # "db2_qa_fixing.xlsx" = "db2_qa_fixing.xlsx",
+    # "db2_params_fixing.xlsx" = "db2_params_fixing.xlsx",
+    # "db2_models_fixing.xlsx" = "db2_models_fixing.xlsx",
+    # "db2_outbreaks_fixing.xlsx" = "db2_outbreaks_fixing.xlsx"
+#   )
+# )
 
 source('zika_cleaning.R')
 

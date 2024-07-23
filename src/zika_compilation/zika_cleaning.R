@@ -40,6 +40,10 @@ clean_articles <- function(df, pathogen){
   # Pathogen-specific article cleaning #
   ######################################
   
+  if (pathogen == 'ZIKA'){
+    # here we need to remove duplicates by article and covidence IDs
+  }
+  
   # if (pathogen == "EBOLA") {
   #   df <- df %>%
   #     # 12389: model only paper (growth model), 2921: Not extracted from,
@@ -242,27 +246,57 @@ clean_params <- function(df, pathogen){
   df <- df %>%
     mutate(
       
+      population_group = case_when(
+        population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation'
+      ),
+      
       population_country =
         case_when(
+          population_country == 'Micronesia; Fed. Sts.' ~ 'Federated States of Micronesia',
+          population_country == 'Iran; Islamic Rep.' ~ 'Islamic Republic of Iran',
+          population_country == 'Congo; Dem. Rep.' ~ 'Democratic Republic of the Congo',
           population_country %in%
-            "France, Germany, Italy, Mali, Netherlands, Nigeria, Norway, Senegal, Spain, Switzerland, United Kingdom, United States" ~
-            "Multi-country: Africa, Europe, USA (n = 12)",
+            "El Salvador;Guatemala;Honduras;Mexico;Nicaragua" ~
+            "Multi-country: Central America (n = 5)",
           population_country %in%
-            "The Gambia, Guinea, Liberia, Nigeria, Senegal, Sierra Leone, United Kingdom, United States" ~
-            "Multi-country: Africa, Europe, USA (n = 8)",
+            "Brazil;French Polynesia" ~
+            "Multi-country: Brazil and French Polynesia",
           population_country %in%
-            "Guinea, Italy, Liberia, Mali, Nigeria, Senegal, Sierra Leone, Spain, United Kingdom, United States" ~
-            "Multi-country: Africa, Europe, USA (n = 10)",
+            "Brazil;Ecuador;Micronesia; Fed. Sts." ~
+            "Multi-country: Brazil, Ecuador, Federated States of Micronesia",
           population_country %in%
-            "DRC, Republic of the Congo, Côte d'Ivoire, Gabon, South Africa, South Sudan, Uganda" ~
-            "Multi-country: Africa (n = 7)",
+            "Brazil;Colombia;French Polynesia" ~
+            "Multi-country: Brazil, Colombia, French Polynesia",
           population_country %in%
-            "Cameroon, Central African Republic, Chad, Republic of the Congo, Equatorial Guinea, Gabon" ~
-            "Multi-country: Africa (n = 6)",
+            "Brazil;Colombia;El Salvador;Haiti;Honduras;Mexico;Puerto Rico;Venezuela; RB" ~
+            "Multi-country: Central and South America (n = 8)",
           population_country %in% c(
-            "DRC, Republic of the Congo, Gabon, Guinea, Sierra Leone",
-            "Cameroon, DRC, Republic of the Congo, Ghana, Uganda"
-          ) ~ "Multi-country: Africa (n = 5)",
+            "Brazil;Colombia;El Salvador"
+          ) ~ "Multi-country: Brazil, Colombia, El Salvador",
+          population_country %in% c(
+            'Brazil;Colombia;Dominican Republic;El Salvador;Guatemala;Haiti;Honduras;Jamaica;Puerto Rico;United States'
+            ) ~ 'Multi-country: Americas (n = 10)',
+          population_country %in% c(
+            "Brazil;Colombia"
+          ) ~ "Multi-country: Brazil and Colombia",
+          population_country %in% c(
+            'Brazil;Cambodia;China;Colombia;Dominican Republic;French Polynesia;Guatemala;Haiti;Mexico;Micronesia; Fed. Sts.;Philippines;Puerto Rico;Suriname;Thailand'
+          ) ~ "Multi-country: South and Central America (n = 8) and Asia (n = 6)",
+          population_country %in% c(
+            "Brazil;Cambodia;Central African Republic;China;French Polynesia;Guatemala;Haiti;Malaysia;Micronesia; Fed. Sts.;Nigeria;Philippines;Puerto Rico;Senegal;Suriname;Thailand;Uganda;Venezuela; RB"
+          ) ~ "Multi-country: South and Central America (n = 7), Asia (n = 7), Africa (n = 4)",
+          population_country %in% c(
+            "Brazil;Cambodia;Central African Republic;China;Colombia;Guatemala;Haiti;Italy;Malaysia;Mexico;Micronesia; Fed. Sts.;Nigeria;Panama;Philippines;Puerto Rico;Senegal;South Africa;Suriname;Thailand;Uganda;United States"
+          ) ~ "Multi-country: Americas (n = 8), Asia (n = 6), Africa (n = 5), Europe (n = 1)",
+          population_country %in% c(
+            "Argentina;Barbados;Bolivia;Colombia;Costa Rica;CuraÃ§ao;Dominican Republic;Ecuador;El Salvador;Guatemala;Haiti;Honduras;Jamaica;Mexico;Nicaragua;Panama;Sint Maarten (Dutch part);Suriname;Trinidad and Tobago;Venezuela; RB;Virgin Islands (U.S.)"
+          ) ~ "Multi-country: Americas (n = 21)",
+          population_country %in% c(
+            "Argentina, Austria, Barbados, Bolivia, Cabo Verde, Costa Rica, Denmark, Dominican Republic, Ecuador, El Salvador, Fiji, Finland, Guatemala, Haiti, Honduras, Jamaica, Mexico, Netherlands, Nicaragua, Panama, Paraguay, Peru, Portugal, Puerto Rico, Samoa, Spain, Suriname, Switzerland, Taiwan, China, Tonga, United Kingdom, Vanuatu, Venezuela, RB, Virgin Islands (U.S.)"
+          ) ~ "Multi-country: Americas (n = 20), Europe (n = 8), Asia (n = 6), Africa (n = 1)",
+          population_country %in% c(
+            "Antigua and Barbuda;Argentina;Aruba;Bahamas; The;Barbados;Belize;Bolivia;Brazil;Colombia;Costa Rica;Cuba;CuraÃ§ao;Dominican Republic;Ecuador;El Salvador;Grenada;Guatemala;Guyana;Haiti;Honduras;Jamaica;Mexico;Nicaragua;Panama;Paraguay;Peru;Puerto Rico;St. Vincent and the Grenadines;Suriname;Trinidad and Tobago;Venezuela; RB;Virgin Islands (U.S.)"
+          ) ~ "Multi-country: Americas (n = 32)",
           is.na(population_country) ~ "Unspecified",
           TRUE ~ population_country
         )
