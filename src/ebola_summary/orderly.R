@@ -159,16 +159,17 @@ param_tab <- summary_dat %>%
       ) %>%
   group_by(parameter_class, parameter_type) %>%
   summarise(count = n()) %>%
-  expandRows(., "count", drop = FALSE) %>%
-  mutate(
+  expandRows(., "count", drop = FALSE) 
+
+param_tab <-  mutate(param_tab,
     # Remove parameter class names from parameter type names for consistency
-    parameter_type = gsub("Seroprevalence - ", "", parameter_type),
-    parameter_type = gsub("Mutations - ", "", parameter_type),
-    parameter_type = gsub("Mutations – ", "", parameter_type),
-    parameter_type = gsub("^([a-z])", "\\U\\1", parameter_type, perl = TRUE),
+    parameter_type = gsub("Seroprevalence - ", "", parameter_type, useBytes = TRUE),
+    parameter_type = gsub("Mutations - ", "", parameter_type, useBytes = TRUE),
+    parameter_type = gsub("Mutations – ", "", parameter_type, useBytes = TRUE),
+    parameter_type = str_to_sentence(parameter_type),
     parameter_type =
       case_when(
-        parameter_class %in% "Mutations" ~ gsub("^([a-z])", "\\U\\1", parameter_type, perl = TRUE),
+        parameter_class %in% "Mutations" ~ str_to_sentence(parameter_type),
         parameter_class %in% "Delay" & count == 1 ~ "Other delay*",
       TRUE ~ parameter_type),
     # order by total in parameter class
@@ -177,8 +178,8 @@ param_tab <- summary_dat %>%
                  "Seroprevalence", "Mutations", "Attack rate", "Overdispersion",
                  "Growth rate", "Doubling time")
       )
-    ) %>%
-  select(-count) %>%
+    )
+param_tab <- select(param_tab, -count) %>%
   group_by(parameter_class, parameter_type) %>%
   summarise(count = n()) %>%
   select(
@@ -188,15 +189,33 @@ param_tab <- summary_dat %>%
   ) %>%
   ungroup() %>%
   group_by(`Parameter Group`) %>%
-  arrange(`Parameter Group`, desc(`Total Parameters`)) %>%
-  mutate(
+  arrange(`Parameter Group`, desc(`Total Parameters`)) 
+
+
+param_tab <- mutate(param_tab,
     index_of_change = row_number(),
     index_of_change = ifelse(
       index_of_change == max(index_of_change), 1, 0
     )
   ) %>%
-  as_grouped_data(groups = "Parameter Group") %>%
-  as_flextable(col_keys = c("Parameter Type", "Total Parameters"), hide_grouplabel = TRUE
+  as_grouped_data(groups = "Parameter Group") 
+
+## Get rid of special characters in Mutations
+idx <- param_tab$`Parameter Type` %in% "Mutations \x96 mutation rate"
+param_tab$`Parameter Type`[idx] <- "Mutations – substitution rate"
+
+idx <- param_tab$`Parameter Type` %in% "Mutations \x96 substitution rate"
+param_tab$`Parameter Type`[idx] <- "Mutations – substitution rate"
+
+idx <- param_tab$`Parameter Type` %in% "Mutations ‚äì substitution rate"
+param_tab$`Parameter Type`[idx] <- "Mutations – substitution rate"
+
+idx <- param_tab$`Parameter Type` %in% "Growth rate \xae"
+param_tab$`Parameter Type`[idx] <- "Growth rate"
+
+param_tab <- param_tab %>%
+  as_flextable(
+    col_keys = c("Parameter Type", "Total Parameters"), hide_grouplabel = TRUE
   ) %>%
   fontsize(i = 1, size = 12, part = "header") %>%
   autofit() %>%
