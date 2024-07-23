@@ -833,7 +833,8 @@ meta_dat <- delay_dat %>%
     # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
     !covidence_id %in% 17715,
     # remove entry where upper quantile is equal to median as it results in an error
-    !article_label_unique %in% "Paolo 2003.1",
+    ## The two labels point to the same paper
+    !article_label_unique %in% c("Paolo 2003.1", "Francesconi 2003.1"),
     !is.na(parameter_value),
     !is.na(population_sample_size),
     !is.na(parameter_uncertainty_singe_type) | !is.na(parameter_uncertainty_type),
