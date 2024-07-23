@@ -291,8 +291,11 @@ articles$article_title <- paste0(
 )
 # And make case consistent - sentence case
 articles$article_title <- str_to_title(articles$article_title)
+
+
+
 # remove \r\n
-articles$article_title <- gsub("\r\n", " ", articles$article_title)
+articles$article_title <- gsub("\r\n", " ", articles$article_title, useBytes = TRUE)
 
 ## Format the doi as a URL
 ## Some have the word "doi" in them, some don't
