@@ -1,4 +1,5 @@
 #  orderly2::orderly_run(name = 'db_extraction', parameters = list(pathogen = 'ZIKA'))
+# Works as of 23 July 2024
 library(dplyr)
 library(ids)
 library(odbc)
@@ -108,11 +109,11 @@ all_articles <- map(
   }
 )
 
-if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
-  # fixing files (which includes all of the entries)
-  articles2 <- readxl::read_xlsx(paste0(dir, 'db1_qa_fixing.xlsx'))
-  all_articles <- rbind(articles2, all_articles)
-}
+# if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
+#   # fixing files (which includes all of the entries)
+#   articles2 <- readxl::read_xlsx(paste0(dir, 'db1_qa_fixing.xlsx'))
+#   all_articles <- rbind(articles2, all_articles)
+# }
 # Save all objects directly as extracted from the database for ease of
 # debugging.
 saveRDS(all_articles, "all_articles_raw.rds")
@@ -132,11 +133,11 @@ all_models <- map(
   }
 )
 
-if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
-  # fixing files (which includes all of the entries)
-  models2 <- readxl::read_xlsx(paste0(dir, 'db1_models_fixing.xlsx'))
-  all_models <- rbind(models2, all_models)
-}
+# if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
+#   # fixing files (which includes all of the entries)
+#   models2 <- readxl::read_xlsx(paste0(dir, 'db1_models_fixing.xlsx'))
+#   all_models <- rbind(models2, all_models)
+# }
 saveRDS(all_models, "all_models_raw.rds")
 orderly_artefact("All Models", "all_models_raw.rds")
 
@@ -153,11 +154,11 @@ all_params <- map(
     params
   }
 )
-if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
-  # fixing files (which includes all of the entries)
-  params2 <- readxl::read_xlsx(paste0(dir, 'db1_params_fixing.xlsx'))
-  all_params <- rbind(params2, all_params)
-}
+# if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
+#   # fixing files (which includes all of the entries)
+#   params2 <- readxl::read_xlsx(paste0(dir, 'db1_params_fixing.xlsx'))
+#   all_params <- rbind(params2, all_params)
+# }
 saveRDS(all_params, "all_params_raw.rds")
 orderly_artefact("All parameters", "all_params_raw.rds")
 
@@ -181,11 +182,11 @@ if (!outbreaks_ex) {
     }
   )
 }
-if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
-  # fixing files (which includes all of the entries)
-  outbreaks2 <- readxl::read_xlsx(paste0(dir, 'db1_outbreaks_fixing.xlsx'))
-  all_outbreaks <- rbind(outbreaks2, all_outbreaks)
-}
+# if(pathogen == 'ZIKA'){# 25 June 2024 -- temporary fix to pull in 1st round of double extractions 
+#   # fixing files (which includes all of the entries)
+#   outbreaks2 <- readxl::read_xlsx(paste0(dir, 'db1_outbreaks_fixing.xlsx'))
+#   all_outbreaks <- rbind(outbreaks2, all_outbreaks)
+# }
 saveRDS(all_outbreaks, "all_outbreaks_raw.rds")
 orderly_artefact("All outbreaks", "all_outbreaks_raw.rds")
 

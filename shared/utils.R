@@ -113,7 +113,7 @@ database_files <- function(pathogen) {
       zikasingledb = c(
         # "DIDE Priority Pathogens Zika 2 - Anna.accdb",
         # "DIDE Priority Pathogens Zika 2 - Anna-Maria.accdb",
-        # "DIDE Priority Pathogens Zika 2 - Christian.accdb",
+        "DIDE Priority Pathogens Zika 2 - Christian.accdb",
         # "DIDE Priority Pathogens Zika 2 - Dom.accdb",
         # "DIDE Priority Pathogens Zika 2 - Ettie.accdb",
         # "DIDE Priority Pathogens Zika 2 - Ilaria.accdb",
@@ -122,7 +122,7 @@ database_files <- function(pathogen) {
         # "DIDE Priority Pathogens Zika 2 - Patrick.accdb",
         "DIDE Priority Pathogens Zika 2 - Richard.accdb",
         # "DIDE Priority Pathogens Zika 2 - Rob.accdb",
-        # "DIDE Priority Pathogens Zika 2 - Ruth.accdb",
+        "DIDE Priority Pathogens Zika 2 - Ruth.accdb",
         "DIDE Priority Pathogens Zika 2 - Sangeeta.accdb",
         # "DIDE Priority Pathogens Zika 2 - Sequoia.accdb",
         # "DIDE Priority Pathogens Zika 2 - Shazia.accdb",
