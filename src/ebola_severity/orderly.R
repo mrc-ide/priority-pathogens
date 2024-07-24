@@ -32,8 +32,8 @@ orderly_artefact(
     "Severity_tables/qa_filtered/range_country_outbreak.png",
     "Severity_tables/qa_filtered/range_species_outbreak.png",
     "Severity_tables/unfiltered/tab_unfiltered.png",
-    "Severity_tables/unfiltered/paginate_severity_all.docx",
-    "Severity_tables/unfiltered/paginate_severity_all.pdf"
+    "Severity_tables/unfiltered/paginate_severity_all.docx"
+    # "Severity_tables/unfiltered/paginate_severity_all.pdf"
   )
 )
 
@@ -348,8 +348,8 @@ save_as_docx(p_severity, path = "Severity_tables/unfiltered/paginate_severity_al
              ))
 
 # Then convert to pdf
-docx2pdf("Severity_tables/unfiltered/paginate_severity_all.docx",
-         output = "Severity_tables/unfiltered/paginate_severity_all.pdf")
+# docx2pdf("Severity_tables/unfiltered/paginate_severity_all.docx",
+         # output = "Severity_tables/unfiltered/paginate_severity_all.pdf")
 
 
 # Create summary tables giving the range of central values by specified groups

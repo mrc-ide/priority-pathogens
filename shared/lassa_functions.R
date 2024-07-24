@@ -1,65 +1,91 @@
 #function to tidy-up all dataframes
 
-curation <- function(articles, outbreaks, models, parameters, plotting) {
+data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   articles   <- articles %>%
-                mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
-                group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
-                mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
-                select(-counter,-refs) %>% rename(refs = new_refs)
-  outbreaks  <- outbreaks %>% 
-                mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+    mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
+    group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
+    mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
+    select(-counter,-refs) %>% rename(refs = new_refs)
+  
+  if(dim(outbreaks)[1]>0)  
+  {
+    outbreaks  <- outbreaks %>% 
+      mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+  }
+  
   models     <- models %>% 
-                mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+  
   parameters <- parameters %>% 
-                mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-                filter(!parameter_from_figure)
+    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
+    filter(!parameter_from_figure)
   
   param4plot <- parameters %>%
-                mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
-                               parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
-                          list(~ ifelse(inverse_param, 1/.x, .x))) %>%
-                mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
-                               parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
-                          list(~ .x * 10^exponent)) %>%
-                mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
-                               parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
-                          list(~ ifelse(parameter_unit == "Weeks", . * 7, .))) %>% 
-                mutate(parameter_unit = ifelse(parameter_unit == "Weeks", "Days", parameter_unit)) %>%
-                mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
-                       parameter_uncertainty_lower_value = case_when(
-                         parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_value,
-                         parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-                         parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-                         distribution_type == "Gamma" & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
-                         TRUE ~ parameter_uncertainty_lower_value),                                                 
-                       parameter_uncertainty_upper_value = case_when(
-                         parameter_uncertainty_singe_type == "Maximum" & no_unc ~ parameter_uncertainty_single_value,
-                         parameter_uncertainty_singe_type == "Standard deviation (Sd)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-                         parameter_uncertainty_singe_type == "Standard Error (SE)" & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-                         distribution_type == "Gamma" & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),      
-                         TRUE ~ parameter_uncertainty_upper_value)) %>%
-                select(-c(no_unc)) %>%
-                mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+              list(~ ifelse(inverse_param, 1/.x, .x))) %>%
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+              list(~ .x * 10^exponent)) %>%
+    mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
+                   parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
+              list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>% 
+    mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
+    mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
+           parameter_uncertainty_lower_value = case_when(
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value-sqrt(parameter_uncertainty_single_value),
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
+             TRUE ~ parameter_uncertainty_lower_value),                                                 
+           parameter_uncertainty_upper_value = case_when(
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value+sqrt(parameter_uncertainty_single_value),
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
+             TRUE ~ parameter_uncertainty_upper_value)) %>%
+    select(-c(no_unc)) %>%
+    mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
   
   if (plotting) {
     parameters <- param4plot    
   } else {
-    parameters <- parameters %>%
-                  left_join(param4plot %>% select(parameter_data_id, central), by = "parameter_data_id")
+    check_param_id <- (parameters$parameter_data_id == param4plot$parameter_data_id )    # check that parameter data ids didn't get scrambled 
+    if(sum(check_param_id)==dim(parameters)[1])
+    {
+      parameters$central <- param4plot$central
+    } else {
+      errorCondition('parameters not in right order to match')
+    }  
   }
   
-  outbreaks  <- outbreaks  %>% mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
+  if(dim(outbreaks)[1]>0)  
+  {
+    outbreaks  <- outbreaks  %>% mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
+  }
+  
   parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
                                       population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
-
+  
   return(list(articles = articles, outbreaks = outbreaks, 
               models = models, parameters = parameters))
 }
 
+
+curation <- function(articles, outbreaks, models, parameters, plotting) {
+  #call data_curation function (which at some stage will move to epireview) but keep curation to be backward competible
+  df <- data_curation(articles,outbreaks,models,parameters,plotting)
+  
+  return(list(articles = df$articles, outbreaks = df$outbreaks, 
+              models = df$models, parameters = df$parameters))
+}
+
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -82,17 +108,21 @@ forest_plot <- function(df, label, color_column, lims) {
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
   
   gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24),breaks = c("Mean", "Median", "Unspecified")) +
+        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
         scale_x_continuous(limits = lims, expand = c(0, 0)) +
         scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
         labs(x = label, y = NULL) +
         theme_minimal() + 
-        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA))
+        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+              text = element_text(size = text_size))
   if (cats == 1) {
     gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
   } else {
     gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
   
+  if(show_label)
+    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = df$population_country_v2), nudge_x = 1.5, segment.color = "grey90" ) 
+
   return(gg)
 }
 
@@ -105,7 +135,7 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
   
   country_list <- unique(l0$COUNTRY)
   
-  df           <- df %>% separate_longer_delim(population_country, delim = ";") #dataframe with expanded list of countries
+  df           <- df %>% separate_longer_delim(population_country, delim = ",") %>% mutate(population_country = str_trim(population_country, side = "left"))#dataframe with expanded list of countries
   regional_dat <- unique(df$population_country[!is.na(df$population_location)])#countries with regional data
   regional_dat <- intersect(country_list,regional_dat)#only countries in country_list are plotted
   country_dat  <- country_list[!(country_list %in% regional_dat)]#countries with national data only
@@ -114,7 +144,7 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
   shp_country  <- l0 %>% filter(COUNTRY %in% country_dat) %>% mutate(REG_CODE = str_replace_all(COUNTRY," ",""))  
   shapes       <- bind_rows(shp_country,shp_regional)
   
-  regional_NA  <- shp_regional %>% group_by(COUNTRY) %>% summarise(all_codes = str_c(REG_CODE, collapse = ";"))#plot all regions for non-location-specific values for countries with OTHER location-specific values
+  regional_NA  <- shp_regional %>% group_by(COUNTRY) %>% summarise(all_codes = str_c(REG_CODE, collapse = ","))#plot all regions for non-location-specific values for countries with OTHER location-specific values
   
   df <- df %>% mutate(parameter_value = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator)) %>%
     mutate(parameter_value = if(range_mp) {
@@ -128,20 +158,20 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
                  is.na(population_location),  
                  regional_NA$all_codes[match(population_country,regional_NA$COUNTRY)],
                  case_when(
-                   population_country == "Benin" ~ str_replace_all(population_location, c("Central Region" = "BJ04;BJ05;BJ07;BJ12")),
-                   population_country == "Côte d'Ivoire" ~ str_replace_all(population_location, c("Abidjan" = "CI01", "Northeastern Region" = "CI08;CI14")),
+                   population_country == "Benin" ~ str_replace_all(population_location, c("Central Region" = "BJ04,BJ05,BJ07,BJ12")),
+                   population_country == "Côte d'Ivoire" ~ str_replace_all(population_location, c("Abidjan" = "CI01", "Northeastern Region" = "CI08,CI14")),
                    population_country == "Ghana" ~ str_replace_all(population_location, c("Ankaakur" = "GH02", "Ehiawenwu" = "GH06", "Amomaso" = "GH03", "Menkwo" = "GH04", "Mangoase" = "GH04", "Jirandogo" = "GH11", "Bowena" = "GH11", "Natorduori" = "GH13", "Teanoba" = "GH09", "Doniga Naveransa" = "GH12", "Tamale" = "GH08", "Agogo" = "GH02", "Kumasi" = "GH02")),#map in article
                    population_country == "Guinea" ~ str_replace_all(population_location, c("Gueckedou" = "GN08","Macenta" = "GN08","Pita" = "GN07","Lola" = "GN08","Yomou" = "GN08")),
                    population_country == "Mali" ~ str_replace_all(population_location, c("Bougouni District" = "ML03")),
-                   population_country == "Nigeria" ~ str_replace_all(population_location, c("Edo State" = "NG12", "Southeast" = "NG01;NG04;NG11;NG14;NG17","Benue River" = "NG07","Ibadan" = "NG31")),
+                   population_country == "Nigeria" ~ str_replace_all(population_location, c("Edo State" = "NG12", "Southeast" = "NG01,NG04,NG11,NG14,NG17","Benue River" = "NG07","Ibadan" = "NG31")),
                    population_country == "Sierra Leone" ~ str_replace_all(population_location, c("Kenema" = "SL01", "Port Loko" = "SL05", "Tonkolili" = "SL02","Niahun" = "SL01", "Konia" = "SL01", "Palima" = "SL01", "Semewabu" = "SL01", "Tongola" = "SL01", "Njakundoma" = "SL01", "Kpandebu" = "SL01", "Neama" = "SL01", "Lowoma" = "SL01", "Landoma" = "SL01", "Bomie" = "SL01", "Yengema" = "SL03", "Kamethe" = "SL05", "Kamabunyele" = "SL02", "Kathumpe" = "SL02")),
-                   population_country == "Central African Republic" ~ str_replace_all(population_location, c("Nola And Ikaumba" = "CF23;CF12", "The Pre\nForest\nGrassland Of Bozo And Bangassou" = "CF11;CF62", "The Moist\nWooded Grassland Of Bouar And Obo" = "CF22;CF63", "The Dry Wooded\nRassland Near Mbre" = "CF51", "And The Dry Grassland-Of Birao." = "CF53")),#map in article
+                   population_country == "Central African Republic" ~ str_replace_all(population_location, c("Nola And Ikaumba" = "CF23,CF12", "The Pre\nForest\nGrassland Of Bozo And Bangassou" = "CF11,CF62", "The Moist\nWooded Grassland Of Bouar And Obo" = "CF22,CF63", "The Dry Wooded\nRassland Near Mbre" = "CF51", "And The Dry Grassland-Of Birao." = "CF53")),#map in article
                    population_country == "Gabon" ~ str_replace_all(population_location, c("Haut-Ogooue" = "GA02")),
                    population_country == "Liberia" ~ str_replace_all(population_location, c("Zigida" = "LR08","Lofa County" = "LR08", "Montserrado County" = "LR11")),
                    TRUE ~ population_location)))) %>%
     mutate(REG_CODE = str_replace_all(REG_CODE, " ", "")) %>%
-    mutate(REG_CODE = sapply(str_split(REG_CODE, ";"), function(x) paste(unique(x), collapse = ";"))) %>% #remove duplicate regions for each value
-    separate_longer_delim(REG_CODE, delim = ";")#broadcast multi-region values
+    mutate(REG_CODE = sapply(str_split(REG_CODE, ","), function(x) paste(unique(x), collapse = ","))) %>% #remove duplicate regions for each value
+    separate_longer_delim(REG_CODE, delim = ",")#broadcast multi-region values
   
   if (summ_dups=="mean") {
     df <- df %>% group_by(REG_CODE) %>% 
@@ -191,38 +221,236 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
 
 metamean_wrap <- function(dataframe, estmeansd_method, 
                              plot_study, digits, lims, colour, label,
-                             width, height, resolution){
+                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
   
   dataframe <- epireview::filter_df_for_metamean(dataframe)
     
-  mtan <- metamean(data = dataframe,
-                   studlab = refs,
-                   mean = xbar,
-                   sd = parameter_uncertainty_single_value,
-                   median = median,
-                   q1 = q1,
-                   q3 = q3,
-                   min = min,
-                   max = max,
-                   n = population_sample_size,
-                   method.mean = estmeansd_method,
-                   method.sd = estmeansd_method,
-                   sm = "MRAW",
-                   method.tau = "ML")
-  
-  png(file = "temp.png", width = width, height = height, res = resolution)
-  forest(mtan, layout = "RevMan5",
-         overall = TRUE, pooled.events = TRUE,
-         study.results = plot_study,
-         digits = digits, digits.sd = digits, digits.weight = digits, 
-         col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-         weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-         at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
-  dev.off()
+  if(!is.na(subgroup))
+  {
+    mtan <- metamean(data = dataframe,
+                     studlab = refs,
+                     mean = xbar,
+                     sd = parameter_uncertainty_single_value,
+                     median = median,
+                     q1 = q1,
+                     q3 = q3,
+                     min = min,
+                     max = max,
+                     n = population_sample_size,
+                     method.mean = estmeansd_method,
+                     method.sd = estmeansd_method,
+                     subgroup = dataframe[[subgroup]],
+                     sm = "MRAW",
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off() 
+  } else {
+    mtan <- metamean(data = dataframe,
+                     studlab = refs,
+                     mean = xbar,
+                     sd = parameter_uncertainty_single_value,
+                     median = median,
+                     q1 = q1,
+                     q3 = q3,
+                     min = min,
+                     max = max,
+                     n = population_sample_size,
+                     method.mean = estmeansd_method,
+                     method.sd = estmeansd_method,
+                     sm = "MRAW",
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off()
+  }
   
   gg <- png::readPNG("temp.png", native = TRUE)
   file.remove("temp.png")
-  #gg <- wrap_elements(plot = rasterGrob(pg, interpolate = TRUE))
+  gg <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+  return(list(result = mtan, plot = gg))
+} 
+
+## THIS IS INITIAL VERSION ONLY -- WORK IN PROGRESS
+metagen_wrap <- function(dataframe, estmeansd_method, 
+                          plot_study, digits, lims, colour, label,
+                          width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
+  
+  #dataframe <- epireview::filter_df_for_metamean(dataframe)
+  # must have the correct columns
+  df <- dataframe
+  cols_needed <- c("parameter_value", "parameter_unit", "population_sample_size",
+                   "parameter_value_type", "parameter_uncertainty_singe_type",
+                   "parameter_uncertainty_type", "parameter_uncertainty_lower_value",
+                   "parameter_uncertainty_upper_value")
+  
+  if (!all(cols_needed %in% colnames(df))) {
+    cols_missing <- cols_needed[!cols_needed %in% colnames(df)]
+    stop(
+      "df must have columns named: ", paste(cols_needed, collapse = ", "),
+      ". Columns missing: ", paste(cols_missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  
+  ## Ensure that there is a single parameter type present
+  if(length(unique(df$parameter_type)) != 1) {
+    stop("parameter_type must be the same across all values.", call. = FALSE)
+  }
+  
+  ## First check that there are no rows where a value is present but unit is
+  ## missing, or vice versa
+  if(any(is.na(df$parameter_value) & !is.na(df$parameter_unit))) {
+    message("parameter_value must be present if parameter_unit is present.
+            Rows with non-NA parameter_value and NA parameter_unit will be
+            removed.")
+    df <- filter(df,!( is.na(.data[["parameter_value"]]) & !is.na(.data[["parameter_unit"]]) ))
+  }
+  
+  if(any(!is.na(df$parameter_value) & is.na(df$parameter_unit))) {
+    message("parameter_unit is missing but parameter_value is present.
+            Rows with non-NA parameter_value and NA parameter_unit will be
+            removed."
+    )
+    df <- filter(df,!( is.na(.data[["parameter_value"]]) & 
+                         !is.na(.data[["parameter_unit"]]) ))
+  }
+  
+  # values of the parameter must all have the same units
+  if(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) != 1) {
+    msg1 <- "parameter_unit must be the same across all values."
+    msg2 <- "Consider calling delays_to_days() if you are working with delays."
+    stop(paste(msg1, msg2), call. = FALSE)
+  }
+  
+  # For this meta analysis don't enforce that we need to have sample sizes
+  # df <- df %>% filter(!is.na(.data[["population_sample_size"]])) %>%
+  #   filter(!is.na(.data[["parameter_value"]])) %>%
+  #   filter(
+  #     (.data[["parameter_value_type"]] == 'Mean' & 
+  #        grepl(x = tolower(.data[["parameter_uncertainty_singe_type"]]), 
+  #              pattern = 'standard deviation')) |
+  #       (.data[["parameter_value_type"]] == 'Median' & 
+  #          grepl(x = tolower(.data[["parameter_uncertainty_type"]]), 
+  #                pattern = 'iqr')) |
+  #       (.data[["parameter_value_type"]] == 'Median' & 
+  #          grepl(x = tolower(.data[["parameter_uncertainty_type"]]), 
+  #                pattern = 'range'))
+  #   )
+  
+  df <- mutate(
+    df,
+    xbar = ifelse(
+      .data[["parameter_value_type"]] == "Mean", .data[["parameter_value"]], NA),
+    median = ifelse(
+      .data[["parameter_value_type"]] == "Median", .data[["parameter_value"]], NA
+    ),
+    q1 = ifelse(
+      grepl(x = tolower(.data[["parameter_uncertainty_type"]]), "iqr"),
+      .data[["parameter_uncertainty_lower_value"]], NA),
+    q3 = ifelse(grepl(x = tolower(.data[["parameter_uncertainty_type"]]), "iqr"),
+                .data[["parameter_uncertainty_upper_value"]], NA),
+    min = ifelse(
+      grepl(
+        x = tolower(.data[["parameter_uncertainty_type"]]), pattern = "range"
+      ) &
+        !grepl(x = tolower(.data[["parameter_uncertainty_type"]]), "iqr"),
+      .data[["parameter_uncertainty_lower_value"]], NA
+    ),
+    max = ifelse(
+      grepl(x = tolower(.data[["parameter_uncertainty_type"]]), pattern = "range"
+      ) &
+        !grepl(x = tolower(.data[["parameter_uncertainty_type"]]), pattern = "iqr"),
+      .data[["parameter_uncertainty_upper_value"]], NA
+    )
+  )
+  
+  CI_level     <- as.double(substr(df$parameter_uncertainty_type,1,2))/100
+  CI_level_adj <- CI_level + (1-CI_level)/2
+  SE           <- (df$parameter_uncertainty_upper_value-df$parameter_uncertainty_lower_value)/(2* qnorm(CI_level_adj))
+  ln_case      <- !is.na(str_detect(str_to_lower(df$distribution_type),'log'))
+  SE[ln_case]  <- (df$parameter_uncertainty_upper_value[ln_case]-df$parameter_uncertainty_lower_value[ln_case])/(2* qlnorm(CI_level_adj[ln_case]))
+  df$SE        <- SE  
+  
+  dataframe <- df %>% filter(!is.na(SE))
+  
+  if(!is.na(subgroup))
+  {
+    mtan <- metagen(data = dataframe,
+                    TE = parameter_value,
+                    seTE = SE,
+                    studlab = refs,
+                    #mean = xbar,
+                    #sd = parameter_uncertainty_single_value,
+                    median = median,
+                    q1 = q1,
+                    q3 = q3,
+                    min = min,
+                    max = max,
+                    method.mean = estmeansd_method,
+                    method.sd = estmeansd_method,
+                    subgroup = dataframe[[subgroup]],
+                    sm = "R0",
+                    method.tau = "REML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off() 
+  } else {
+    mtan <- metagen(data = dataframe,
+                    TE = parameter_value,
+                    seTE = SE,
+                    studlab = refs,
+                    #mean = xbar,
+                    #sd = parameter_uncertainty_single_value,
+                    median = median,
+                    q1 = q1,
+                    q3 = q3,
+                    min = min,
+                    max = max,
+                    #n = population_sample_size,
+                    method.mean = estmeansd_method,
+                    method.sd = estmeansd_method,
+                    sm = "R0",
+                    method.tau = "REML"
+                    )
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = TRUE, pooled.events = TRUE,
+           study.results = plot_study,
+           digits = digits, digits.sd = digits, digits.weight = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+    dev.off()
+  }
+  
+  gg <- png::readPNG("temp.png", native = TRUE)
+  file.remove("temp.png")
+  gg <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
   return(list(result = mtan, plot = gg))
 } 
 
@@ -230,7 +458,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
 
 metaprop_wrap <- function(dataframe, subgroup, 
                              plot_pooled, sort_by_subg, plot_study, digits, colour, 
-                             width, height, resolution){
+                             width, height, resolution,
+                             at = seq(0,1,by=0.2), xlim = c(0,1)){
   
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
   
@@ -240,26 +469,49 @@ metaprop_wrap <- function(dataframe, subgroup,
                                     is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
                                     TRUE ~ cfr_ifr_numerator))
   
-  mtan <- metaprop(data = dataframe,
-                   studlab = refs, 
-                   event = cfr_ifr_numerator, 
-                   n = cfr_ifr_denominator, 
-                   subgroup = dataframe[[subgroup]],
-                   sm = "PLOGIT", 
-                   method="GLMM", 
-                   method.tau = "ML")
+  if(!is.na(subgroup))
+  {
+    mtan <- metaprop(data = dataframe,
+                     studlab = refs, 
+                     event = cfr_ifr_numerator, 
+                     n = cfr_ifr_denominator, 
+                     subgroup = dataframe[[subgroup]],
+                     sm = "PLOGIT", 
+                     method="GLMM", 
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = plot_pooled, pooled.events = TRUE,
+           print.subgroup.name = FALSE, sort.subgroup = sort_by_subg, 
+           study.results = plot_study, 
+           digits = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           col.subgroup = "black", col.inside = "black",
+           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
+           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+    dev.off()  
+  } else {
+    mtan <- metaprop(data = dataframe,
+                     studlab = refs, 
+                     event = cfr_ifr_numerator, 
+                     n = cfr_ifr_denominator, 
+                     sm = "PLOGIT", 
+                     method="GLMM", 
+                     method.tau = "ML")
+    
+    png(file = "temp.png", width = width, height = height, res = resolution)
+    forest(mtan, layout = "RevMan5",
+           overall = plot_pooled, pooled.events = TRUE,
+           study.results = plot_study, 
+           digits = digits, 
+           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           col.subgroup = "black", col.inside = "black",
+           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
+           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+    dev.off()
+  }
   
-  png(file = "temp.png", width = width, height = height, res = resolution)
-  forest(mtan, layout = "RevMan5",
-         overall = plot_pooled, pooled.events = TRUE,
-         print.subgroup.name = FALSE, sort.subgroup = sort_by_subg, 
-         study.results = plot_study, 
-         digits = digits, 
-         col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-         col.subgroup = "black", col.inside = "black",
-         weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-         at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio", fontsize=11)
-  dev.off()
   
   pg <- png::readPNG("temp.png", native = TRUE)
   file.remove("temp.png")
