@@ -20,7 +20,7 @@ orderly_strict_mode()
 orderly_artefact(
   "Plots and tables for reproduction number parameters",
   c(
-    "R_plots/basic_r_outbreak_filtered.png",
+    "R_plots/basic_r_outbreak_filtered.pdf",
     "R_plots/basic_r_country_filtered.png",
     "R_plots/eff_r_outbreak_filtered.png",
     "R_plots/eff_r_country_filtered.png",
@@ -29,6 +29,7 @@ orderly_artefact(
     "R_tables/unfiltered/basic_r_tab_all.png",
     "R_tables/unfiltered/eff_r_tab_all.png",
     "R_tables/qa_filtered/range_outbreak.png",
+    "R_tables/qa_filtered/range_outbreak.docx",
     "R_tables/qa_filtered/range_country.png",
     "R_tables/qa_filtered/range_species.png",
     "R_tables/qa_filtered/eff_range_outbreak.png",
@@ -147,7 +148,6 @@ ordered_dat <- df_plot %>%
     )
   )
 
-
 # Create directory for results
 dir.create("R_plots")
 dir.create("R_tables")
@@ -166,15 +166,15 @@ plot_dat <- ordered_dat %>%
 
 # Pull numbers on QA filtered basic R for text
 n_param <- plot_dat %>% filter(parameter_type_short %in% "Basic (R0)" & article_qa_score >= 50)
-n_param %>% nrow() # 71 parameters
-length(unique(n_param$covidence_id)) # 52 articles
-n_param %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 58 WA
+print(sprintf("R0 m: %d", n_param %>% nrow())) # 71 parameters
+print(sprintf("R0 n: %d", length(unique(n_param$covidence_id)))) # 52 articles
+print(sprintf("WA R0 m: %d", n_param %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow())) # 58 WA
 
 # Pull numbers on QA filtered effective R for text
 n_param_re <- plot_dat %>% filter(parameter_type_short %in% "Effective (Re)" & article_qa_score >= 50)
-n_param_re %>% nrow() # 32 parameters
-length(unique(n_param_re$covidence_id)) # 23 articles
-n_param_re %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow() # 23 WA
+print(sprintf("Re m: %d", n_param_re %>% nrow())) # 32 parameters
+print(sprintf("Re n: %d", length(unique(n_param_re$covidence_id)) ))# 23 articles
+print(sprintf("WA Re m: %d",n_param_re %>% filter(outbreak %in% "West Africa 2013-2016") %>% nrow())) # 23 WA
 # Not QA filtered
 n_param_re <- plot_dat %>% filter(parameter_type_short %in% "Effective (Re)")
 n_param_re %>% nrow() # 55 parameters
@@ -203,7 +203,7 @@ basic_r_outbreak_qa <- create_plot(
   facet_by = "outbreak_species",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
-)
+) 
 
 basic_r_country_qa <- create_plot(
   plot_dat,
@@ -213,7 +213,7 @@ basic_r_country_qa <- create_plot(
   facet_by = "population_country",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "outbreak"
-)
+) 
 
 eff_r_outbreak_qa <- create_plot(
   comb_facet_dat,
@@ -223,7 +223,7 @@ eff_r_outbreak_qa <- create_plot(
   facet_by = "outbreak_species",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "population_country"
-)
+) 
 
 eff_r_country_qa <- create_plot(
   plot_dat,
@@ -233,10 +233,10 @@ eff_r_country_qa <- create_plot(
   facet_by = "population_country",
   symbol_shape_by = "parameter_value_type",
   symbol_col_by = "outbreak"
-)
+) 
 
 # Save
-ggsave("R_plots/basic_r_outbreak_filtered.png", basic_r_outbreak_qa,
+ggsave("R_plots/basic_r_outbreak_filtered.pdf", basic_r_outbreak_qa,
   width = 9, height = 12, units = "in", bg = "white"
 )
 
@@ -359,6 +359,7 @@ save_as_image(range_outbreak, path = "R_tables/qa_filtered/range_outbreak.png")
 save_as_image(range_country, path = "R_tables/qa_filtered/range_country.png")
 save_as_image(range_species, path = "R_tables/qa_filtered/range_species.png")
 
+save_as_docx(range_outbreak, path = "R_tables/qa_filtered/range_outbreak.docx")
 
 # Same for effective R
 eff_range_dat <- ordered_dat %>%

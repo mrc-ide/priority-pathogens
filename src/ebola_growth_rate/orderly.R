@@ -115,6 +115,9 @@ ordered_dat <- gr_dat %>%
     )
   )
 
+print(sprintf("n model studies: %d", length(unique(ordered_dat$article_label))))
+print(sprintf("m models: %d", length(ordered_dat$article_label)))
+
 # Create table
 # No need for qa filter as all entries score >50
 gr_tab <- create_table(
