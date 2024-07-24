@@ -10,14 +10,14 @@ library(readr)
 ## use capital case; see code below where this pathogen
 ################### README ###################
 ## IMPORTANT WHEN RUNNING INTERACTIVELY, FIRST COMMENT OUT THIS LINE:
-orderly_parameters(pathogen = NULL)
+ orderly_parameters(pathogen = NULL)
 ## orderly will scan orderly.R in the interactive mode, so that
 ## even if the above line is not run, you WILL get an error
 ## It is therefore important that the line is commented out *BEFORE*
 ## you start executing the script line by line.
 ## In the interactive mode, uncomment the line below and set the pathogen variable directly
 ## like this
-#pathogen <- "EBOLA"
+## pathogen <- "EBOLA"
 ## then run as normal.
 ## ONCE DONE, PLEASE COMMENT OUT THE DIRECT SETTING OF THE VARIABLE pathogen
 ## and uncomment the call to orderly_parameters.

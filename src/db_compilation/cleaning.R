@@ -132,10 +132,7 @@ clean_params <- function(df, pathogen) {
         )
     )
 
-  if (pathogen == "EBOLA") {
-    df <- ebola_params_cleaning(df)
-    df <- more_ebola_params_cleaning(df)
-  }
+
 
   df
 }
