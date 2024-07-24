@@ -6,23 +6,23 @@ orderly_parameters(pathogen = NULL)
 orderly_dependency("lassa_serology", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_2.png"))
 orderly_dependency("lassa_severity", "latest(parameter:pathogen == this:pathogen)",
-                   files = c("figure_3.png","figure_S5.png","figure_S6.png","figure_S7.png",
-                             "figure_S8.png","figure_S9.png","figure_S10.png","figure_S11.png"))
+                   files = c("figure_3.png","figure_S6.png","figure_S7.png","figure_S8.png",
+                             "figure_S9.png","figure_S10.png","figure_S11.png","figure_S12.png"))
 orderly_dependency("lassa_delays", "latest(parameter:pathogen == this:pathogen)",
-                   files = c("figure_4.png","figure_S4.png"))
+                   files = c("figure_4.png","figure_S5.png"))
 orderly_dependency("lassa_transmission", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_5.png"))
 orderly_dependency("lassa_summary", "latest(parameter:pathogen == this:pathogen)",
-                   files = c("figure_S1.png","figure_S2.png","figure_S3.png"))
+                   files = c("figure_S2.png","figure_S3.png","figure_S4.png"))
 orderly_dependency("lassa_latex_tables", "latest(parameter:pathogen == this:pathogen)",
                    files = c("latex_outbreaks.csv","latex_models.csv",
                              "latex_transmission.csv","latex_delays.csv","latex_severity.csv",
                              "latex_seroprevalence.csv","latex_riskfactors.csv"))
 orderly_artefact("lassa-specific outputs",
                  c("main/figure_2.png","main/figure_3.png","main/figure_4.png","main/figure_5.png",
-                   "supp/figure_S1.png","supp/figure_S2.png","supp/figure_S3.png","supp/figure_S4.png",
+                   "supp/figure_S2.png","supp/figure_S3.png","supp/figure_S4.png",
                    "supp/figure_S5.png","supp/figure_S6.png","supp/figure_S7.png","supp/figure_S8.png",
-                   "supp/figure_S9.png","supp/figure_S10.png","supp/figure_S11.png",
+                   "supp/figure_S9.png","supp/figure_S10.png","supp/figure_S11.png","supp/figure_S12.png",
                    "supp/latex_outbreaks.csv","supp/latex_models.csv",
                    "supp/latex_transmission.csv","supp/latex_delays.csv","supp/latex_severity.csv",
                    "supp/latex_seroprevalence.csv","supp/latex_riskfactors.csv"))
@@ -48,8 +48,6 @@ file.copy(from = "figure_5.png",
 
 dir.create("supp")
 
-file.copy(from = "figure_S1.png",
-          to = "supp/figure_S1.png")
 file.copy(from = "figure_S2.png",
           to = "supp/figure_S2.png")
 file.copy(from = "figure_S3.png",
@@ -70,6 +68,8 @@ file.copy(from = "figure_S10.png",
           to = "supp/figure_S10.png")
 file.copy(from = "figure_S11.png",
           to = "supp/figure_S11.png")
+file.copy(from = "figure_S12.png",
+          to = "supp/figure_S12.png")
 
 file.copy(from = "latex_outbreaks.csv",
           to = "supp/latex_outbreaks.csv")

@@ -173,6 +173,9 @@ ordered_dat <- mut_dat %>%
     )
   )
 
+print(sprintf("n model studies: %d", length(unique(ordered_dat$article_label))))
+print(sprintf("m models: %d", length(ordered_dat$article_label)))
+
 # PLOTS
 
 mut_plot_qa <- create_plot(

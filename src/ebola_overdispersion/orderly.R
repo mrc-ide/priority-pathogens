@@ -79,7 +79,7 @@ over_dat <- left_join(
     # distributions which model offspring distribution
     distribution_models =
       case_when(covidence_id %in% 2065 & parameter_lower_bound %in% 0.72 ~ "Daily case counts",
-                covidence_id %in% 2065 & parameter_lower_bound %in% 0.72 ~ "Daily deaths counts",
+                covidence_id %in% 2065 & parameter_lower_bound %in% 0.62 ~ "Daily deaths counts",
                 TRUE ~ "Offspring distribution"),
     parameter_value_type =
       case_when(parameter_value_type %in% c("Unspecified", "Other")
