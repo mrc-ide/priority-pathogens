@@ -15,8 +15,6 @@ library(doconv)
 
 orderly_strict_mode()
 
-orderly_parameters(pathogen = "EBOLA")
-
 orderly_artefact(
   "Plots and tables for severity parameters",
   c(
@@ -40,7 +38,7 @@ orderly_artefact(
 # Get data from db_compilation
 orderly_dependency(
   "db_compilation",
-  "latest(parameter:pathogen == this:pathogen)",
+  "latest(parameter:pathogen == 'EBOLA')",
   c(
     "articles.csv",
     "parameters.csv"
@@ -190,6 +188,8 @@ ordered_dat <- sev_dat %>%
     )
   )
 
+saveRDS(ordered_dat, "ebola_severity.rds")
+orderly_artefact("Ebola severity estimates", "ebola_severity.rds")
 # Pull numbers
 ordered_dat %>% nrow() # 166
 length(unique(ordered_dat$covidence_id)) # 130
