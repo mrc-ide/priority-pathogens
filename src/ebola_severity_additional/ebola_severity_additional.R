@@ -123,14 +123,15 @@ wa$sample_size <- case_when(
   TRUE ~ NA_character_
 )
 
-ggplot(wa, aes(y = parameter_value, x = cfr_ifr_denominator)) +
+p <- ggplot(wa, aes(y = parameter_value, x = cfr_ifr_denominator)) +
   geom_point(alpha = 0.5) +
   facet_wrap(~sample_size, scales = "free_x") + 
   labs(x = "Case fatality rate (%)", 
     title = "Distribution of central values by denominator") +
   theme(legend.position = "bottom") +
   ylim(0, 100)
-  
+
+ggsave("cfr_denominator.png", width = 10, height = 6, units = "in")
 
 weighted_cfr <- function(x) {
   sum(
@@ -147,10 +148,12 @@ uw_by_method <- cfr |>
   group_by(cfr_ifr_method) |>
   summarise(uw = mean(parameter_value, na.rm = TRUE))
 
-ggplot(cfr, aes(parameter_value)) + 
+p <- ggplot(cfr, aes(parameter_value)) + 
   geom_histogram(binwidth = 1, position = position_dodge()) +
   facet_wrap(~cfr_ifr_method, ncol = 1) +
-  geom_vline(xintercept = weighted_cfr, color = "red") +
+  ##geom_vline(xintercept = weighted_cfr, color = "red") +
   labs(x = "Case fatality rate (%)", 
     title = "Distribution of central values") +
     theme_minimal()
+
+ggsave("cfr_hist.png", p, width = 10, height = 6, units = "in")

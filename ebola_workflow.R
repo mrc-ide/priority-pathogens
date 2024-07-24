@@ -77,7 +77,8 @@ orderly_location_pull_packet()
 orderly_run("ebola_reproduction_number", parameters = list(pathogen = "EBOLA"))
 
 # Severity (CFR/IFR)
-orderly_run("ebola_severity", parameters = list(pathogen = "EBOLA"))
+orderly_run("ebola_severity")
+orderly_run("ebola_severity_additional")
 
 # Human Delays
 orderly_run("ebola_delays", parameters = list(pathogen = "EBOLA"))
@@ -117,5 +118,7 @@ orderly_run("ebola_summary", parameters = list(pathogen = "EBOLA"))
 orderly_run("ebola_figures", parameters = list(pathogen = "EBOLA"))
 
 # Figures and tables for supplementary material
-orderly_run("ebola_supplementary_figures", parameters = list(pathogen = "EBOLA"))
+# This task will not run because it pulls in pdfs from the previous tasks and
+# we have commented out docx2pdf conversion.
+# orderly_run("ebola_supplementary_figures", parameters = list(pathogen = "EBOLA"))
 
