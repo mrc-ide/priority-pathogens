@@ -21,6 +21,7 @@ library(ids)
 clean_articles <- function(df, pathogen){
   df <- df %>%
     clean_names() %>%
+    mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
     select(-c("article_id", "name_data_entry")) %>%
     rename(first_author_surname = first_aauthor_surname) %>%
     relocate(c(
@@ -109,6 +110,7 @@ clean_models <- function(df, pathogen){
   
   df <- df %>%
     clean_names() %>%
+    mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
     select(-c("article_id", "name_data_entry")) %>%
     relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
@@ -116,7 +118,18 @@ clean_models <- function(df, pathogen){
   #########################################
   # Pathogen-specific model data cleaning #
   #########################################
-  
+  if(pathogen == 'ZIKA'){
+    df <- df %>%
+      
+      # Update compartmental type 
+      mutate(compartmental_type = case_when( 
+        compartmental_type == 'NA' | is.na(compartmental_type) ~ 'Not compartmental',
+        # need to check compartmental type for  1405, 2012, 3738, 5553, 5540 (other + SEIR-SEI?)
+        TRUE ~ compartmental_type
+      ))
+    # one model with missing name, ids, etc -- look into this? model_data_id = ccc0683c9eebf812a071f334fe2c8611
+    
+  }
   
   df <- df %>% select(-c("access_model_id"))
   return(df)
@@ -126,16 +139,32 @@ clean_models <- function(df, pathogen){
 # Outbreak cleaning #
 #####################
 
-clean_outbreaks <- function(df, pathogens){
+clean_outbreaks <- function(df, pathogen){
   df <- df %>%
     clean_names() %>%
+    mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
     select(-c("article_id", "outbreak_id", "name_data_entry")) %>%
     relocate(c(id, outbreak_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id) %>%
     mutate(
       # Format start/stop months for outbreaks
-      outbreak_start_month = substring(outbreak_start_month, 1, 3),
-      outbreak_end_month = substring(outbreak_end_month, 1, 3),
+      outbreak_start_month = lubridate::month(outbreak_start_month),
+      outbreak_end_month = lubridate::month(as.Date(as.numeric(outbreak_end_month) - 1, origin = "1899-12-30")),
+      # Make date variable 
+      outbreak_start_date = case_when((!is.na(outbreak_start_year) & !is.na(outbreak_start_month) & !is.na(outbreak_start_day)) ~
+                                        lubridate::ymd(paste(outbreak_start_year, outbreak_start_month, outbreak_start_day, sep ='-')),
+                                      (!is.na(outbreak_start_year) & !is.na(outbreak_start_month) & is.na(outbreak_start_day)) ~ 
+                                        lubridate::ymd(paste(outbreak_start_year, outbreak_start_month, 15, sep ='-')),
+                                      (!is.na(outbreak_start_year) & is.na(outbreak_start_month) & is.na(outbreak_start_day)) ~ 
+                                        lubridate::ymd(paste(outbreak_start_year, 01, 15, sep ='-')),
+                                      TRUE ~ NA),
+      outbreak_end_date = case_when((!is.na(outbreak_date_year) & !is.na(outbreak_end_month) & !is.na(outbreak_end_day)) ~
+                                        lubridate::ymd(paste(outbreak_date_year, outbreak_end_month, outbreak_end_day, sep ='-')),
+                                      (!is.na(outbreak_date_year) & !is.na(outbreak_end_month) & is.na(outbreak_end_day)) ~ 
+                                        lubridate::ymd(paste(outbreak_date_year, outbreak_end_month, 15, sep ='-')),
+                                      (!is.na(outbreak_date_year) & is.na(outbreak_end_month) & is.na(outbreak_end_day)) ~ 
+                                        lubridate::ymd(paste(outbreak_date_year, 01, 15, sep ='-')),
+                                      TRUE ~ NA),
       # Outbreak country names
       outbreak_country = str_replace(
         outbreak_country, "Congo, Rep.",
@@ -148,6 +177,10 @@ clean_outbreaks <- function(df, pathogens){
       outbreak_country = str_replace(
         outbreak_country, "Yuogslavia",
         "Yugoslavia"
+      ),
+      outbreak_country = str_replace(
+        outbreak_country, 'Micronesia, Fed. Sts.',
+        'Federated States of Micronesia'
       )
     )
   
@@ -182,8 +215,8 @@ clean_params <- function(df, pathogen){
       population_study_start_day = as.numeric(population_study_start_day),
       method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
       population_location = str_replace_all(population_location, ";", ","),
-      across(c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, 
-               parameter_uncertainty_upper_value), .fns = as.numeric(.x)),
+      across(.cols = c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, 
+               parameter_uncertainty_upper_value), .fns = as.numeric),
       
       # Update parameter type values 
       parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT'),

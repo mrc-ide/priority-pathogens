@@ -194,10 +194,10 @@ outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks)
 params_all <- rbind(db1_params, db2_fixing_params, single_params)
 
 #' cleaning script 
-articles_clean <- articles_all %>% clean_names()#clean_articles(articles_all)
-models_clean <- models_all %>% clean_names()#clean_models(models_all)
-outbreaks_clean <- outbreaks_all %>% clean_names()#clean_outbreaks(outbreaks_all)
-params_clean <- params_all %>% clean_names()#clean_params(params_all)
+articles_clean <- clean_articles(articles_all, pathogen = 'ZIKA')
+models_clean <- clean_models(models_all, pathogen = 'ZIKA')
+outbreaks_clean <- clean_outbreaks(outbreaks_all, pathogen = 'ZIKA')
+params_clean <- clean_params(params_all, pathogen = 'ZIKA')
 
 # save cleaned dfs
 saveRDS(articles_clean, 'articles.rds')

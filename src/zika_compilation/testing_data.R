@@ -117,3 +117,8 @@ ggplot(outbreaks2 %>% filter(cases_suspected < 90000)) +
   geom_point(aes(x = as.factor(covidence_id), y = cases_unspecified, color = outbreak_country), shape = 3) +
   geom_point(aes(x = as.factor(covidence_id), y = cases_severe, color = outbreak_country), shape = 4) +
   geom_point(aes(x = as.factor(covidence_id), y = cases_asymptomatic, color = outbreak_country), shape = 5) 
+
+
+## Outbreaks
+ggplot(outbreaks) + 
+  geom_point(aes(x = outbreak_date_year, y = as.numeric(cases_confirmed), color = outbreak_country))
