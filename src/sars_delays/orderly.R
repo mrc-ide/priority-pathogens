@@ -66,12 +66,12 @@ d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
 
 # Serial interval sub-plot (both papers have qa above 0.5)
 SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5),'Mean Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
-IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
-GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5),'Mean Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
+GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5),'Mean Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 
 SI_forest_noqa <- forest_plot(d5, 'Mean Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
-IP_forest_noqa <- forest_plot(d6, 'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
-GT_forest_noqa <- forest_plot(d7, 'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+IP_forest_noqa <- forest_plot(d6, 'Mean Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
+GT_forest_noqa <- forest_plot(d7, 'Mean Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
 
 
 # Incubation period
@@ -103,7 +103,27 @@ m1_SI_noqa <- metamean_wrap(dataframe = d1_subgroups_noqa, estmeansd_method = "C
 set.seed(42)
 d2 <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
-  filter(qa_score>0.5)
+  filter(qa_score>0.5) %>%
+  mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
+         population_group    = replace_na(population_group,'Unspecified'),
+         population_sample_type = replace_na(population_sample_type,'Unspecified'))
+
+oa_forest_mmv <- forest_plot(d2 |> arrange(method_moment_value,desc(parameter_value)),
+                             'Mean Onset-Admission Delay (days)','method_moment_value',c(0,20),text_size = TEXT_SIZE)
+
+oa_forest_pc <- forest_plot(d2 |> arrange(population_country,desc(parameter_value)),
+                             'Mean Onset-Admission Delay (days)','population_country',c(0,20),text_size = TEXT_SIZE)
+
+oa_forest_pg <- forest_plot(d2 |> arrange(population_group,desc(parameter_value)),
+                            'Mean Onset-Admission Delay (days)','population_group',c(0,20),text_size = TEXT_SIZE)
+
+oa_forest_pst <- forest_plot(d2 |> arrange(population_sample_type,desc(parameter_value)),
+                            'Mean Onset-Admission Delay (days)','population_sample_type',c(0,20),text_size = TEXT_SIZE)
+
+oa <- (oa_forest_mmv + oa_forest_pc) / (oa_forest_pg + oa_forest_pst ) + theme(text = element_text(size = TEXT_SIZE)) + 
+   plot_annotation(tag_levels = 'A') 
+ggsave("figure_5SI_onset_to_admission.png", plot = oa, width = 39, height = 22)
+
 m2 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
                     plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
                     width = 9500, height = 4200, resolution = 1000)
@@ -118,10 +138,10 @@ m2_noqa <- metamean_wrap(dataframe = d2_noqa, estmeansd_method = "Cai",
 # admission to outcome... 
 outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) %>%
                                 mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
-                              'Admission to outcome',"parameter_type",c(0,60),text_size = 22)
+                              'Mean Admission to outcome',"parameter_type",c(0,60),text_size = 22)
 outcome_forest_noqa <- forest_plot(d3 %>% 
                                 mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
-                              'Admission to outcome',"parameter_type",c(0,60),text_size = 22)
+                              'Mean Admission to outcome',"parameter_type",c(0,60),text_size = 22)
 
 ### Create plots!
 
