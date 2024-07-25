@@ -26,7 +26,8 @@ orderly_artefact("sars-specific tables",c("figure_5_delays.png",
                                           "figure_5_delays.pdf",
                                           "figure_5SI_subgroup_meta.png",
                                           "figure_5SI_delays.png",
-                                          "figure_5SI_delays.pdf"))
+                                          "figure_5SI_delays.pdf",
+                                          "figure_5SI_onset_to_admission.png"))
 
 ###################
 ## DATA CURATION ##
@@ -86,17 +87,17 @@ d1_subgroups_noqa <- d1 %>% filter(population_group %in% c('General population',
 set.seed(42)
 m1 <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
                     plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
-                    width = 7500, height = 5750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE )
+                    width = 7500, height = 5950, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
 
 set.seed(42)
 m1_SI <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
                        plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
-                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE )
+                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
 
 set.seed(42)
 m1_SI_noqa <- metamean_wrap(dataframe = d1_subgroups_noqa, estmeansd_method = "Cai", 
                        plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
-                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE )
+                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
 
 
 #meta-analysis of onset-admission delay
@@ -138,10 +139,10 @@ m2_noqa <- metamean_wrap(dataframe = d2_noqa, estmeansd_method = "Cai",
 # admission to outcome... 
 outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) %>%
                                 mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
-                              'Mean Admission to outcome',"parameter_type",c(0,60),text_size = 22)
+                              'Mean Admission to outcome (days)',"parameter_type",c(0,60),text_size = 22)
 outcome_forest_noqa <- forest_plot(d3 %>% 
                                 mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
-                              'Mean Admission to outcome',"parameter_type",c(0,60),text_size = 22)
+                              'Mean Admission to outcome (days)',"parameter_type",c(0,60),text_size = 22)
 
 ### Create plots!
 
