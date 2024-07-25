@@ -242,7 +242,7 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
 
 metamean_wrap <- function(dataframe, estmeansd_method, 
                              plot_study, digits, lims, colour, label,
-                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
+                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
   
   dataframe <- epireview::filter_df_for_metamean(dataframe)
     
@@ -272,7 +272,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits, 
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10,, colgap.forest.left = paste0( colgap_shift,"cm"))
     dev.off() 
   } else {
     mtan <- metamean(data = dataframe,
