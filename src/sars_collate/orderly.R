@@ -6,7 +6,7 @@ orderly_parameters(pathogen = NULL)
 orderly_dependency("sars_world_map", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_2_world_map.png","figure_2_world_map.pdf"))
 orderly_dependency("sars_delays", "latest(parameter:pathogen == this:pathogen)",
-                   files = c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png","figure_5SI_delays.png"))
+                   files = c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png","figure_5SI_delays.png","figure_5SI_onset_to_admission.png"))
 orderly_dependency("sars_transmission", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_3_r_plot.png",
                              "figure_3_r_plot.pdf",
@@ -36,6 +36,7 @@ orderly_artefact("sars-specific outputs",
                    "supp/figure_3SI_r_plot_method.png","supp/figure_4SI_r_other.png",
                    "supp/figure_5SI_subgroup_meta.png","supp/figure_5SI_delays.png",
                    "supp/figure_SI_risk_panel.png","supp/figure_SI_risk_other.png",
+                   "supp/figure_5SI_onset_to_admission.png",
                    
                    "supp/latex_models.csv", "supp/latex_seroprevalence.csv","supp/latex_riskfactors.csv",
                    "supp/latex_transmission.csv","supp/latex_delays.csv","supp/latex_severity.csv"))
@@ -76,6 +77,8 @@ file.copy(from = "figure_5SI_subgroup_meta.png", to = "supp/figure_5SI_subgroup_
 file.copy(from = "figure_5SI_delays.png",        to = "supp/figure_5SI_delays.png")
 file.copy(from = "figure_SI_risk_panel.png",     to = "supp/figure_SI_risk_panel.png")
 file.copy(from = "figure_SI_risk_other.png",     to = "supp/figure_SI_risk_other.png")
+file.copy(from = "figure_5SI_onset_to_admission.png",     to = "supp/figure_5SI_onset_to_admission.png")
+
 
 file.copy(from = "latex_models.csv",         to = "supp/latex_models.csv")
 file.copy(from = "latex_transmission.csv",   to = "supp/latex_transmission.csv")
