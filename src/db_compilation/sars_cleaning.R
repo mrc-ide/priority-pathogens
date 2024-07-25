@@ -122,6 +122,8 @@ sars_cleaning <- function(df) {
 
 sars_params_cleaning <- function(df) {
   df <- df %>% mutate(parameter_type = case_when(parameter_type=="secondary attack rate" ~ "Secondary attack rate",
-                                                 TRUE ~ parameter_type))
+                                                 TRUE ~ parameter_type),
+                      riskfactor_name = case_when(str_detect(riskfactor_name,'Ocupation')~str_replace(riskfactor_name,'Ocupation','Occupation'),
+                                                  TRUE ~ riskfactor_name))
   
 }
