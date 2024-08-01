@@ -22,7 +22,7 @@ clean_articles <- function(df, pathogen){
   df <- df %>%
     clean_names() %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
-    select(-c("article_id", "name_data_entry")) %>%
+    select(-c("article_id")) %>%#, "name_data_entry"
     rename(first_author_surname = first_aauthor_surname) %>%
     relocate(c(
       id, covidence_id, pathogen,
@@ -219,7 +219,8 @@ clean_params <- function(df, pathogen){
                parameter_uncertainty_upper_value), .fns = as.numeric),
       
       # Update parameter type values 
-      parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT'),
+      parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
+                                 TRUE ~ parameter_type),
       
       # Group parameters
       parameter_class = case_when(
@@ -372,7 +373,7 @@ clean_params <- function(df, pathogen){
       ),
       other_delay =
         case_when(
-          !is.na(other_delay_start) ~
+          !is.na(other_delay_start) & other_delay_start != "Other: type timepoint in this text box" ~
             paste(other_delay_start, "to", other_delay_end, sep = " ")
         ),
       parameter_type =

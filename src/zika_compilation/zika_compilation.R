@@ -166,6 +166,7 @@ qa_2 <- db2_fixing_articles %>%
   distinct(Covidence_ID, .keep_all = TRUE)
 qa_all2 <- db2_double_articles %>%
   select(-starts_with('QA'))
+##### here, we remove the duplicates in qa_all2 from Anna's document Zika_covidence_articles.xlsx
 
 db2_articles <- qa_all2 %>%
   filter(Covidence_ID %in% qa_2$Covidence_ID) %>%
@@ -194,8 +195,11 @@ models_clean <- clean_models(models_all, pathogen = 'ZIKA')
 outbreaks_clean <- clean_outbreaks(outbreaks_all, pathogen = 'ZIKA')
 params_clean <- clean_params(params_all, pathogen = 'ZIKA')
 
+# Add qa scores to article df
+articles_qa <- add_qa_scores(articles_clean, params_clean)
+
 # save cleaned dfs
-saveRDS(articles_clean, 'articles.rds')
+saveRDS(articles_qa, 'articles.rds')
 saveRDS(models_clean, 'models.rds')
 saveRDS(outbreaks_clean, 'outbreaks.rds')
 saveRDS(params_clean, 'parameters.rds')

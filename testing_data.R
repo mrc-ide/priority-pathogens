@@ -19,7 +19,7 @@ table(as.numeric(sero$parameter_value))
 table(sero$parameter_value_type)
 table(sero$population_country)
 
-ar <- param_double %>%
+ar <- parameters %>%
   filter(parameter_type == 'Attack rate')
 
 
@@ -62,10 +62,13 @@ table(pars[which(pars$parameter_type == 'Attack rate'),]$parameter_unit)
 table(pars[which(pars$parameter_type == 'Attack rate'),]$population_group)
 
 
+pars <- parameters
 
 ggplot(pars[which(pars$parameter_type == 'Attack rate' & pars$parameter_unit == 'Percentage (%)'),]) + 
-  geom_point(aes(y = as.factor(covidence_id), x = parameter_value)) 
-
+  geom_point(aes(y = as.factor(covidence_id), x = as.numeric(parameter_value)) )
+ars <- ar %>%
+  filter(parameter_unit == 'Percentage (%)') %>%
+  select(parameter_value, population_country, population_group, population_location)
 # ggplot(pars[which(pars$parameter_type == 'Attack rate' & 
 #                     pars$parameter_unit == 'Percentage (%)' &
 #                     pars$population_group == 'General population'),]) + 
