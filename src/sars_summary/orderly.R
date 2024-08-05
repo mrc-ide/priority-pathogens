@@ -20,7 +20,7 @@ library(ggbreak)
 
 #orderly preparation 
 orderly_strict_mode()
-orderly_parameters(pathogen = "SARS")
+orderly_parameters(pathogen = NULL)
 orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
@@ -53,58 +53,133 @@ parameters <- dfs$parameters %>% left_join(qa_scores) %>%
 #####################
 ## PARAMETER STATS ##                Leave out for now but may be used later
 #####################
-
-param_count_noqa <- parameters %>% group_by(parameter_class) %>% 
-  summarise(n_param   = n(),
-            n_article = length(unique(refs)))
-
-param_count_qa <- parameters %>% group_by(parameter_class) %>%
-  filter(qa_score>0.5) %>%
-  summarise(n_param   = n(),
-            n_article = length(unique(refs)))
-
-param_count <- param_count_noqa %>% left_join(param_count_qa,by=c('parameter_class'),suffix = c('_noqa','_qa'))
-
-param_count_noqa_type <- parameters %>% group_by(parameter_type) %>% 
-  summarise(n_param   = n(),
-            n_article = length(unique(refs)))
-
-param_count_qa_type <- parameters %>% group_by(parameter_type) %>%
-  filter(qa_score>0.5) %>%
-  summarise(n_param   = n(),
-            n_article = length(unique(refs)))
-
-param_count_type <- param_count_noqa_type %>% left_join(param_count_qa_type,by=c('parameter_type'),suffix = c('_noqa','_qa'))
-
-parameters %>% 
-  filter(parameter_class == 'Severity') %>%
-  group_by(parameter_type,population_country) %>%   
-  mutate(parameter_uncertainty_lower_value = case_when(is.infinite(parameter_uncertainty_lower_value) ~ NA,
-                                                       TRUE ~ parameter_uncertainty_lower_value ), 
-         parameter_uncertainty_upper_value = case_when(is.infinite(parameter_uncertainty_upper_value) ~ NA,
-                                                       TRUE ~ parameter_uncertainty_upper_value )) %>%
-  summarise(n_param       = n(),
-            n_article     = length(unique(refs)),
-            mean          = mean(parameter_value, na.rm = TRUE),
-            central_min     = min(parameter_value,na.rm = TRUE ),
-            central_max     = max(parameter_value,na.rm = TRUE ),
-            #weighted.mean = weighted.mean(parameter_value, population_sample_size, na.rm = TRUE),
-            minimum       = min(parameter_uncertainty_lower_value,na.rm = TRUE ),
-            maximum       = max(parameter_uncertainty_upper_value,na.rm = TRUE )) 
-
-parameters %>% 
-  filter(parameter_class == 'Human delay') %>%
-  group_by(parameter_type) %>%   
-  mutate(parameter_uncertainty_lower_value = case_when(is.infinite(parameter_uncertainty_lower_value) ~ NA,
-                                                       TRUE ~ parameter_uncertainty_lower_value ), 
-         parameter_uncertainty_upper_value = case_when(is.infinite(parameter_uncertainty_upper_value) ~ NA,
-                                                       TRUE ~ parameter_uncertainty_upper_value )) %>%
-  summarise(n_param         = n(),
-            n_article       = length(unique(refs)),
-            central_min     = min(parameter_value,na.rm = TRUE ),
-            central_max     = max(parameter_value,na.rm = TRUE ),
-            uncertainty_min = min(parameter_uncertainty_lower_value,na.rm = TRUE ),
-            uncertainty_max = max(parameter_uncertainty_upper_value,na.rm = TRUE )) 
+if( FALSE )
+{
+  param_count_overall <- parameters %>% filter(parameter_type!='Risk factors') %>%   # count without risk factors
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  param_count_noqa <- parameters %>% group_by(parameter_class) %>% 
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  param_count_qa <- parameters %>% group_by(parameter_class) %>%
+    filter(qa_score>0.5) %>%
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  param_count <- param_count_noqa %>% left_join(param_count_qa,by=c('parameter_class'),suffix = c('_noqa','_qa')) %>% 
+    mutate(param_post_qa_filter = paste0(round(replace_na(n_param_qa,0) / n_param_noqa * 100,0),'%'),
+           article_post_qa_filter = paste0(round(replace_na(n_article_qa,0) / n_article_noqa * 100,0),'%'))
+  
+  param_count_noqa_type <- parameters %>% group_by(parameter_type) %>% 
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  param_count_qa_type <- parameters %>% group_by(parameter_type) %>%
+    filter(qa_score>0.5) %>%
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  param_count_type <- param_count_noqa_type %>% left_join(param_count_qa_type,by=c('parameter_type'),suffix = c('_noqa','_qa'))%>% 
+    mutate(param_post_qa_filter = paste0(round(replace_na(n_param_qa,0) / n_param_noqa * 100,0),'%'),
+           article_post_qa_filter = paste0(round(replace_na(n_article_qa,0) / n_article_noqa * 100,0),'%'))
+  
+  parameters %>% 
+    filter(parameter_class == 'Severity') %>%
+    mutate(cfr_ifr_method = replace_na(cfr_ifr_method,'Unspecified'),
+           cfr_ifr_method = case_when(cfr_ifr_method=="Naïve" ~ 'Naive',
+                                      TRUE ~ cfr_ifr_method)) %>%
+    group_by(parameter_type,population_country) %>%   
+    mutate(parameter_uncertainty_lower_value = case_when(is.infinite(parameter_uncertainty_lower_value) ~ NA,
+                                                         TRUE ~ parameter_uncertainty_lower_value ), 
+           parameter_uncertainty_upper_value = case_when(is.infinite(parameter_uncertainty_upper_value) ~ NA,
+                                                         TRUE ~ parameter_uncertainty_upper_value )) %>%
+    summarise(n_param       = n(),
+              n_article     = length(unique(refs)),
+              mean          = mean(parameter_value, na.rm = TRUE),
+              central_min     = min(parameter_value,na.rm = TRUE ),
+              central_max     = max(parameter_value,na.rm = TRUE ),
+              #weighted.mean = weighted.mean(parameter_value, population_sample_size, na.rm = TRUE),
+              minimum       = min(parameter_uncertainty_lower_value,na.rm = TRUE ),
+              maximum       = max(parameter_uncertainty_upper_value,na.rm = TRUE )) 
+  
+  parameters %>% 
+    filter(parameter_class == 'Severity') %>%
+    mutate(cfr_ifr_method = replace_na(cfr_ifr_method,'Unspecified'),
+           cfr_ifr_method = case_when(cfr_ifr_method=="Naïve" ~ 'Naive',
+                                      TRUE ~ cfr_ifr_method)) %>% group_by(cfr_ifr_method) %>%  
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  
+  parameters %>% 
+    filter(parameter_class == 'Human delay') %>%
+    group_by(parameter_type) %>%   
+    mutate(parameter_uncertainty_lower_value = case_when(is.infinite(parameter_uncertainty_lower_value) ~ NA,
+                                                         TRUE ~ parameter_uncertainty_lower_value ), 
+           parameter_uncertainty_upper_value = case_when(is.infinite(parameter_uncertainty_upper_value) ~ NA,
+                                                         TRUE ~ parameter_uncertainty_upper_value )) %>%
+    summarise(n_param         = n(),
+              n_article       = length(unique(refs)),
+              central_min     = min(parameter_value,na.rm = TRUE ),
+              central_max     = max(parameter_value,na.rm = TRUE ),
+              uncertainty_min = min(parameter_uncertainty_lower_value,na.rm = TRUE ),
+              uncertainty_max = max(parameter_uncertainty_upper_value,na.rm = TRUE )) 
+  
+  
+  parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)') %>% 
+    filter(qa_score>0.5) %>% 
+    summarise(min=min(parameter_value),
+              max=max(parameter_value))
+  
+  
+  riskfactor_count_noqa <- parameters %>% filter(parameter_type=='Risk factors') %>% group_by(riskfactor_outcome) %>% 
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  parameters %>% filter(parameter_type=='Risk factors' & 
+                          riskfactor_outcome %in% c('Death','Severe disease','Infection') & 
+                          riskfactor_significant == 'Significant' ) %>% 
+    filter(str_detect(riskfactor_name,'Sex')) %>%
+    group_by(riskfactor_outcome) %>% 
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  parameters %>% filter(parameter_type=='Risk factors' ) %>%
+    mutate(qa_label = case_when(qa_score>0.5~'high_qa', TRUE ~ 'low_qa')) %>%
+    group_by(riskfactor_significant,qa_label) %>% 
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  parameters %>% filter(parameter_type=='Risk factors' ) %>%
+    mutate(qa_label = case_when(qa_score>0.5~'high_qa', TRUE ~ 'low_qa')) %>%
+    group_by(riskfactor_significant,qa_label) %>% 
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  parameters %>% filter(str_starts(parameter_type,'Seroprevalence ') ) %>%
+    filter(qa_score>0.5) %>%
+    #  filter(population_group %in% c("Children","General Population","Mixed Groups")) %>%
+    #  filter(population_group %in% c("Healthcare Workers")) %>%
+    filter(population_group %in% c("Persons Under Investigation")) %>%
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  parameters %>% filter(parameter_type == 'Human delay - incubation period' ) %>%
+    filter(qa_score>0.5) %>%
+    #  filter(population_group %in% c("Children","General Population","Mixed Groups")) %>%
+    #  filter(population_group %in% c("Healthcare Workers")) %>%
+    #filter(population_group %in% c("Persons Under Investigation")) %>%
+    summarise(n_param   = n(),
+              n_article = length(unique(refs)))
+  
+  models %>% group_by(model_type,stoch_deter ) %>%
+    summarise(n_param   = n()) %>%
+    mutate(stoch_deter=replace_na(stoch_deter,'Unspecified'),
+           stoch_deter=case_when(stoch_deter=="Deterministic;Stochastic"~'Both',TRUE~stoch_deter)) %>%
+    pivot_wider(names_from = stoch_deter,values_from = n_param,values_fill = 0)
+}
 
 ##############
 ## ARTICLES ##
@@ -410,3 +485,5 @@ patchwork <- p1 / p2 / p3 / p4 + plot_layout(ncol = 1,
                                              guides = "collect") + plot_annotation(tag_levels = 'A')
 dev.set(dev.next())
 ggsave("figure_S3.png", plot = patchwork, width = 14, height = 18)
+
+dev.set(dev.next())
