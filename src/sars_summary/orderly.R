@@ -303,8 +303,9 @@ p2 <- ggplot() +
   geom_bar(data = models, aes(x = factor(transmission_route, levels = c("Human to human (direct contact)", "Airborne or close contact",
                                                                         "Airborne or close contact;Human to human (direct contact)",
                                                                         "Unspecified")), fill = model_type), color = "black") + 
-  scale_x_discrete(labels = c("Airborne or close contact;Human to human (direct contact)" = "Airborne\n& Human-Human",
-                              "Human to human (direct contact)" = "Human-Human Only")) +
+  scale_x_discrete(labels = c("Airborne or close contact;Human to human (direct contact)" = "Airborne",
+                              "Human to human (direct contact)" = "Human \n(direct contact)",
+                              "Airborne or close contact" = 'Airbone or \n close contact')) +
   scale_y_continuous(limits = c(0,30), breaks = seq(0,30,by = 5), expand = c(0,0)) +
   xlab("Transmission Route(s)") + ylab("Model Count") +
   scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3", 'IBM' = 'steelblue' , 'Unspecified' = 'grey'), name = NULL) +
@@ -320,10 +321,11 @@ p3 <- ggplot() +
                                                                  "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time",
                                                                  'Unspecified', 'Several assumptions')), fill = model_type), color = "black") +
   scale_x_discrete(labels = c("Homogeneous mixing" = "Homogeneous",
-                              "Heterogenity in transmission rates - over time" = "Time-\nHeterogeneous",
-                              "Heterogenity in transmission rates - between groups" = "Subgroup-\nHeterogeneous",
-                              "Age dependent susceptibility" = "Age-\nHeterogeneous",
-                              "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time" = "Time- & Subgroup-\nHeterogeneous")) +
+                              "Heterogenity in transmission rates - over time" = "Time-\nHetero-\ngeneous",
+                              "Heterogenity in transmission rates - between groups" = "Subgroup-\nHetero-\ngeneous",
+                              "Age dependent susceptibility" = "Age-\nHetero-\ngeneous",
+                              "Several assumptions" = "Several \nassumptions",
+                              "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time" = "Time- & \nSubgroup-\nHetero-\ngeneous")) +
   scale_y_continuous(limits = c(0,30), breaks = seq(0,30,by = 5), expand = c(0,0)) +
   xlab("Human Transmission Heterogeneity") + ylab("Model Count") +
   scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3", 'IBM' = 'steelblue' , 'Unspecified' = 'grey'), name = NULL) +
