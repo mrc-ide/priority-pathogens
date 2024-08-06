@@ -170,7 +170,7 @@ qa_all2 <- db2_double_articles %>%
 
 db2_articles <- qa_all2 %>%
   filter(Covidence_ID %in% qa_2$Covidence_ID) %>%
-  left_join(qa_2) 
+  left_join(qa_2 %>% select(-ID), by = c('Covidence_ID', 'Name_data_entry')) 
 
 # Get files for single extractions 
 single_articles <- read_csv("single_extraction_articles.csv") %>%

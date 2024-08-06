@@ -2,8 +2,8 @@ orderly2::orderly_run(name = 'zika_compilation', parameters = list(pathogen ='ZI
 library(ggplot2)
 library(dplyr)
 
-parameters <- readRDS("P:/Zika/priority-pathogens/archive/zika_compilation/20240711-150144-015934c9/parameters.rds")
-outbreaks <- readRDS("P:/Zika/priority-pathogens/archive/zika_compilation/20240711-150144-015934c9/outbreaks.rds")
+parameters <- readRDS("P:/Zika/priority-pathogens/archive/zika_compilation/20240801-092947-7c5e9a82/parameters.rds")
+outbreaks <- readRDS("P:/Zika/priority-pathogens/archive/zika_compilation/20240801-092947-7c5e9a82/outbreaks.rds")
 table(parameters$parameter_type)
 
 # sero, attack rate, incubation period, R, risk factors 
