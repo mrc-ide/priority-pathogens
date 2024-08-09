@@ -16,7 +16,7 @@ library(purrr)
 library(readr)
 library(scales)
 library(stringr)
-
+library(tidyr)
 
 
 
@@ -50,20 +50,26 @@ orderly_artefact(
     "Delay_tables/qa_filtered/adm_ranges_table.png",
     "Delay_tables/qa_filtered/infp_ranges_table.png",
     "Delay_tables/qa_filtered/select_ranges_table.png",
+    "Delay_tables/qa_filtered/select_ranges_table.docx",
     "Delay_tables/qa_filtered/exposure_table.png",
     "Delay_tables/qa_filtered/other_table.png",
     "Meta_plots/incubation_period.png",
+    "Meta_plots/incubation_period_qafilter.png",
+    "Meta_plots/incubation_period_qafilter.pdf",
     "Meta_plots/incubation_period_species.png",
     "Meta_plots/infectious_period.png",
     "Meta_plots/serial_interval.png",
     "Meta_plots/serial_interval_qafilter.png",
+    "Meta_plots/serial_interval_qafilter.pdf",
     "Meta_plots/onset_to_death.png",
     "Meta_plots/onset_to_death_species.png",
     "Meta_plots/onset_to_death_qafilter.png",
+    "Meta_plots/onset_to_death_qafilter.pdf",
     "Meta_plots/onset_to_recovery.png",
     "Meta_plots/onset_to_recovery_species.png",
     "Meta_plots/onset_to_recovery_qafilter.png",
-    "Meta_plots/meta_delays_main_text.png",
+    "Meta_plots/onset_to_recovery_qafilter.pdf",
+    "Meta_plots/meta_delays_main_text.pdf",
     "Meta_plots/meta_delays_species_subgroups.png",
     "Meta_plots/meta_delays_unfiltered.png"
   )
@@ -309,33 +315,34 @@ ordered_dat <- delay_dat %>%
 
   # SI
 n_si <- delay_dat %>% filter(delay_short %in% "Serial interval")
-n_si %>% nrow() # total: 21 parameters
-length(unique(n_si$covidence_id)) # total: 17 articles
-table(n_si$ebola_species) # 2 sudan, 19 zaire
+print(sprintf("m models SI: %d", n_si %>% nrow())) # total: 21 parameters
+print(sprintf("n studies SI: %d", length(unique(n_si$covidence_id)))) # total: 17 articles
+print(table(n_si$ebola_species)) # 2 sudan, 19 zaire
 
   # Incubation
 n_incub <- delay_dat %>% filter(delay_short %in% "Incubation period")
-n_incub %>% nrow() # 52 parameters
-length(unique(n_incub$covidence_id)) # 43 articles
-table(n_incub$ebola_species) # 3 bundibugyo, 5 sudan, 43 zaire, 1 zaire & sudan
+print(sprintf("m models incub: %d",n_incub %>% nrow())) # 52 parameters
+print(sprintf("n studies incub: %d", length(unique(n_incub$covidence_id)))) # 43 articles
+print(table(n_incub$ebola_species)) # 3 bundibugyo, 5 sudan, 43 zaire, 1 zaire & sudan
+
 n_incub_filt <- delay_dat %>%
   filter(delay_short %in% "Incubation period" & article_qa_score >= 50)
-n_incub_filt %>% nrow() # 36 parameters with high QA score
-table(n_incub_filt$ebola_species) # filtered: 3 bundibugyo, 3 sudan, 30 zaire
+print(sprintf("m models incub filter: %d", n_incub_filt %>% nrow())) # 36 parameters with high QA score
+print(table(n_incub_filt$ebola_species)) # filtered: 3 bundibugyo, 3 sudan, 30 zaire
 
   # Latent
 n_latent <- delay_dat %>% filter(delay_short %in% "Latent period")
-n_latent %>% nrow() # 11 parameters
-length(unique(n_latent$covidence_id)) # 10 articles
-table(n_latent$ebola_species) # 11 zaire
+print(sprintf("m models latent: %d", n_latent %>% nrow())) # 11 parameters
+print(sprintf("n studies latent: %d",length(unique(n_latent$covidence_id)))) # 10 articles
+print(table(n_latent$ebola_species)) # 11 zaire
 delay_dat %>%
   filter(delay_short %in% "Latent period" & article_qa_score >= 50) %>% nrow() # 7
 
   # Infectious period
 n_infec <- delay_dat %>% filter(delay_short %in% "Infectious period")
-n_infec %>% nrow() # 27 parameters
-length(unique(n_infec$covidence_id)) # 23 articles
-table(n_infec$ebola_species) # 3 bundibugyo, 1 sudan, 23 zaire
+print(sprintf("m models infec: %d",n_infec %>% nrow())) # 27 parameters
+print(sprintf("n studies infec: %d",length(unique(n_infec$covidence_id)))) # 23 articles
+print(table(n_infec$ebola_species)) # 3 bundibugyo, 1 sudan, 23 zaire
 n_infec_filt <- delay_dat %>%
   filter(delay_short %in% "Infectious period" & article_qa_score >= 50)
 n_infec_filt %>% nrow() # 12
@@ -549,6 +556,7 @@ ggsave("Delay_plots/unfiltered/adm_plot_unfiltered.png", adm_plot_unf,
 ggsave("Delay_plots/unfiltered/infp_plot_unfiltered.png", infp_plot_unf,
        width = 10, height = 14, units = "in", bg = "white"
 )
+
 
 ggsave("Delay_plots/unfiltered/dtb_plot_unfiltered.png", dtb_plot_unf,
        width = 9, height = 2, units = "in", bg = "white"
@@ -814,6 +822,7 @@ save_as_image(selection_ranges_outbreak,
   path = "Delay_tables/qa_filtered/select_ranges_table.png"
 )
 
+save_as_docx(selection_ranges_outbreak, path = "Delay_tables/qa_filtered/select_ranges_table.docx")
 
 ##########################
 # VARIANCE META-ANALYSIS #
@@ -832,7 +841,8 @@ meta_dat <- delay_dat %>%
     # Remove Martinez 2022 - outlier, latent period mean 31.25 (range 11-71)
     !covidence_id %in% 17715,
     # remove entry where upper quantile is equal to median as it results in an error
-    !article_label_unique %in% "Francesconi 2003.1",
+    ## The two labels point to the same paper
+    !article_label_unique %in% c("Paolo 2003.1", "Francesconi 2003.1"),
     !is.na(parameter_value),
     !is.na(population_sample_size),
     !is.na(parameter_uncertainty_singe_type) | !is.na(parameter_uncertainty_type),
@@ -1051,7 +1061,6 @@ sotd_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
 forest(sotd_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -1059,7 +1068,20 @@ forest(sotd_ma_qa,
             col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
             at = seq(5, 15, by = 3),
             xlim = c(5, 15),
-            xlab = "Symptom onset to death (days)", fontsize = 10
+            xlab = "Symptom onset to death (days)", fontsize = 10, func.gr = pdf, 
+            file = "Meta_plots/onset_to_death_qafilter.pdf", width = 10
+       )
+
+
+png(file = "Meta_plots/onset_to_death_qafilter.png", width = 9500, height = 5500, res = 1000)
+forest(sotd_ma_qa,
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(5, 15, by = 3),
+               xlim = c(5, 15),
+               xlab = "Symptom onset to death (days)", fontsize = 10
 )
 dev.off()
 
@@ -1074,15 +1096,28 @@ serial_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
+forest(serial_ma_qa,
+       digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+       weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+       col.study = "black", col.inside = "black", col.diamond.lines = "black",
+       col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+       at = seq(9, 22, by = 3),
+       xlim = c(9, 22),
+       xlab = "Serial interval (days)", fontsize = 10, width =10,
+       file = "Meta_plots/serial_interval_qafilter.pdf"
+)
+
+
+
 png(file = "Meta_plots/serial_interval_qafilter.png", width = 9500, height = 3400, res = 1000)
 forest(serial_ma_qa,
-            digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
-            weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
-            col.study = "black", col.inside = "black", col.diamond.lines = "black",
-            col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
-            at = seq(9, 22, by = 3),
-            xlim = c(9, 22),
-            xlab = "Serial interval (days)", fontsize = 10
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(9, 22, by = 3),
+               xlim = c(9, 22),
+               xlab = "Serial interval (days)", fontsize = 10
 )
 dev.off()
 
@@ -1097,7 +1132,6 @@ incub_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/incubation_period_qafilter.png", width = 9500, height = 4000, res = 1000)
 forest(incub_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -1105,7 +1139,19 @@ forest(incub_ma_qa,
             col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
             at = seq(5, 14, by = 3),
             xlim = c(5, 14),
-            xlab = "Incubation period (days)", fontsize = 10
+            xlab = "Incubation period (days)", fontsize = 10, width = 10,
+       file = "Meta_plots/incubation_period_qafilter.pdf"
+)
+
+png(file = "Meta_plots/incubation_period_qafilter.png", width = 9500, height = 4000, res = 1000)
+forest(incub_ma_qa,
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(5, 14, by = 3),
+               xlim = c(5, 14),
+               xlab = "Incubation period (days)", fontsize = 10
 )
 dev.off()
 
@@ -1120,7 +1166,6 @@ sotr_ma_qa <- metamean(
   sm = "MRAW", method.tau = "ML"
 )
 
-png(file = "Meta_plots/onset_to_recovery_qafilter.png", width = 9500, height = 3000, res = 1000)
 forest(sotr_ma_qa,
             digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
             weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
@@ -1128,10 +1173,21 @@ forest(sotr_ma_qa,
             col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
             at = seq(7, 20, by = 3),
             xlim = c(7, 20),
-            xlab = "Symptom onset to recovery (days)", fontsize = 10
+            xlab = "Symptom onset to recovery (days)", fontsize = 10, width = 10,
+       file = "Meta_plots/onset_to_recovery_qafilter.pdf"
+)
+
+png(file = "Meta_plots/onset_to_recovery_qafilter.png", width = 9500, height = 3000, res = 1000)
+forest(sotr_ma_qa,
+               digits = 2, digits.sd = 2, digits.weight = 2, layout = "RevMan5",
+               weight.study = "same", col.square.lines = "black", col.square = "dodgerblue3",
+               col.study = "black", col.inside = "black", col.diamond.lines = "black",
+               col.diamond.common = "dodgerblue3", col.diamond.random = "dodgerblue3",
+               at = seq(7, 20, by = 3),
+               xlim = c(7, 20),
+               xlab = "Symptom onset to recovery (days)", fontsize = 10
 )
 dev.off()
-
 #####################
 # SPECIES SUBGROUPS #
 #####################
@@ -1252,7 +1308,7 @@ plots_species <- list()
 plots_unfilt <- list()
 
 for (i in 1:4) {
-  plots_qa[[i]] <- rasterGrob(get(paste0("p", i, "_qa")), width = 0.9)
+  plots_qa[[i]] = rasterGrob(get(paste0("p", i, "_qa")), width = 0.9)
 }
 
 for (i in 1:3) {
@@ -1265,7 +1321,7 @@ for (i in 1:2) {
 
 ## This opens a new device and needs dev.off() to close it
 heights_qa <- sapply(plots_qa, heightDetails) 
-dev.off()
+#dev.off()
 heights_species <- sapply(plots_species, heightDetails)
 dev.off()
 heights_unfilt <- sapply(plots_unfilt, heightDetails)
@@ -1279,23 +1335,27 @@ p_heights_unfilt <- heights_unfilt / sum(heights_unfilt)
 # create combined plots
 md_qa <- plot_grid(
   plots_qa[[1]], plots_qa[[2]], plots_qa[[3]], plots_qa[[4]],
-  labels = c("A", "B", "C", "D"),
+  labels = c("A) Serial interval", "B) Incubation period", 
+             "C) Time from symptom onset to death", "D) Time from symptom onset to recovery"),
   label_size = 12,
-  label_x = 0, label_y = c(0.8, 0.88, 0.85, 0.8),
-  hjust = -0.5, vjust = -0.5,
+  #label_y = c(0.8, 0.88, 0.85, 0.8),
+  hjust = c(-0.1, -0.08, -0.045, -0.035), 
+  #vjust = -0.5,
   ncol = 1,
   rel_heights = p_heights_qa) +
   theme(plot.background = element_rect(color = "white", fill = "white")
   )
 
-ggsave("Meta_plots/meta_delays_main_text.png", plot = md_qa, width = 7, height = 11)
+ggsave("Meta_plots/meta_delays_main_text.pdf", plot = md_qa, width = 7, height = 11)
 
 md_species <- plot_grid(
   plots_species[[1]], plots_species[[2]], plots_species[[3]],
-  labels = c("A", "B", "C"),
+  labels = c("A) Incubation period", "B) Time from symptom onset to death", 
+             "C) Time from symptom onset to recovery"),
   label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.9, 0.88),
-  hjust = -0.5, vjust = -0.5,
+  #label_x = 0, label_y = c(0.9, 0.9, 0.88),
+  hjust = c(-0.15, -0.1, -0.08), 
+  vjust = c(2.0, 0.3, -0.3),
   ncol = 1,
   rel_heights = p_heights_species) +
   theme(plot.background = element_rect(color = "white", fill = "white")
@@ -1305,10 +1365,10 @@ ggsave("Meta_plots/meta_delays_species_subgroups.png", plot = md_species, width 
 
 md_unfilt <- plot_grid(
   plots_unfilt[[1]], plots_unfilt[[2]],
-  labels = c("A", "B"),
+  labels = c("A) Infectious period", "B) Serial interval"),
   label_size = 12,
-  label_x = 0, label_y = c(0.9, 0.9),
-  hjust = -0.5, vjust = -0.5,
+  #label_x = 0, label_y = c(0.9, 0.9),
+  hjust = c(-0.425, -0.5), vjust = c(2, -0.5),
   ncol = 1,
   rel_heights = p_heights_unfilt) +
   theme(plot.background = element_rect(color = "white", fill = "white")

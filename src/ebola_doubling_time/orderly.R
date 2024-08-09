@@ -108,6 +108,9 @@ ordered_dat <- dt_dat %>%
     )
   )
 
+print(sprintf("n model studies: %d", length(unique(ordered_dat$article_label))))
+print(sprintf("m models: %d", length(ordered_dat$article_label)))
+
 dt_plot <- create_plot(
   ordered_dat,
   param = parameter,

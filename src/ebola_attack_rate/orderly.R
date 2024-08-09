@@ -161,6 +161,12 @@ ordered_dat <- ar_dat %>%
 primary_dat <- ordered_dat %>% filter(attack_rate_type %in% "Primary")
 secondary_dat <- ordered_dat %>% filter(attack_rate_type %in% "Secondary")
 
+print(sprintf("n model studies primary: %d", length(unique(primary_dat$article_label))))
+print(sprintf("m models primary: %d", length(primary_dat$article_label)))
+
+print(sprintf("n model studies secondary: %d", length(unique(secondary_dat$article_label))))
+print(sprintf("m models secondary: %d", length(secondary_dat$article_label)))
+
 primary_tab_qa <- create_table(
   primary_dat,
   param = parameter,
