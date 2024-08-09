@@ -1,0 +1,4 @@
+steps:
+  - command: .buildkite/pipeline.sh
+    agents:
+      queue: "paul"
