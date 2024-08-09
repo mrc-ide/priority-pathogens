@@ -3,6 +3,14 @@
 create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
                         facet_by = NA, symbol_shape_by = NA,
                         symbol_col_by = "population_country", axis_label = NA) {
+  # Sort out the uncertainty for plotting 
+  df$plot_uncertainty = NA
+  df$plot_uncertainty[which(df$parameter_uncertainty_type %in% c("95% CrI", "HPDI 95%", "95% CI",  "HDPI 95%"))] = "About estimate"
+  df$plot_uncertainty[which(df$parameter_uncertainty_type %in% c("Range", "IQR"))] = "About estimate"
+  df$plot_uncertainty[which(df$parameter_uncertainty_singe_type %in% c("SD of the inverse mean", "SD of the mean"))] = "About estimate"
+  df$plot_uncertainty[which(df$parameter_uncertainty_singe_type %in% c("SD of the sample"))] = "About sample"
+  
+  tmp = df[which(is.na(df$plot_uncertainty)), c(81, 16, 13)]
   
   mypalette <- hue_pal()(length(levels(df[[symbol_col_by]])))
   names(mypalette) <- sort(levels(df[[symbol_col_by]]))
@@ -66,7 +74,8 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
         y = article_label_unique,
         xmin = parameter_uncertainty_lower_value,
         xmax = parameter_uncertainty_upper_value,
-        group = parameter_data_id
+        group = parameter_data_id,
+        linetype = plot_uncertainty
       ),
       width = 0.4, lwd = 1
     ) +
@@ -83,7 +92,9 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
     guides(
       colour = guide_legend(order = 1, ncol = 1),
       linetype = guide_legend(order = 2, ncol = 1)
-    )
+    ) +
+    scale_linetype_manual(breaks = c("About estimate", "About sample"),
+                          values = c("solid", "dashed"))
   
   if (!is.na(facet_by)) {
     plot <- plot +
@@ -93,7 +104,8 @@ create_plot <- function(df, param = NA, r_type = NA, qa_filter = TRUE,
   if (param == "Reproduction number") {
     plot <- plot +
       scale_x_continuous(limits = c(0, 10), expand = c(0, 0), oob = scales::squish) +
-      geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")
+      geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey") + 
+      guides(linetype="none")
   }
 
   if (param == "Severity") {

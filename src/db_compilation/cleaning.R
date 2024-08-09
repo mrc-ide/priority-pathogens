@@ -132,10 +132,7 @@ clean_params <- function(df, pathogen) {
         )
     )
 
-  if (pathogen == "EBOLA") {
-    df <- ebola_params_cleaning(df)
-    df <- more_ebola_params_cleaning(df)
-  }
+
 
   df
 }
@@ -217,11 +214,11 @@ clean_dfs <- function(df, pathogen) {
 
   if ("model_type" %in% colnames(df)) {
     df <- clean_models(df, pathogen)
-
     if (pathogen == "EBOLA") ebola_models_cleaning(df)
     if (pathogen == "LASSA") lassa_models_cleaning(df)
     if (pathogen == "SARS") {
       df <- df %>% filter(!is.na(id))
+
     }
 
     df <- df %>% select(-c("access_model_id"))

@@ -268,3 +268,19 @@ save_as_image(sero_range_no_history,
               path = "Seroprevalence_tables/range_no_history.png"
 )
 
+# Numbers for text 
+tmp = sero_dat_history %>% filter(population_country == "DRC", population_sample_type == "Community based")
+print(sprintf("n model studies: %d", length(unique(tmp$article_label))))
+print(sprintf("m models: %d", length(tmp$article_label)))
+
+tmp = sero_dat_history %>% filter(population_country == "DRC", population_sample_type == "Hospital based")
+print(sprintf("n model studies: %d", length(unique(tmp$article_label))))
+print(sprintf("m models: %d", length(tmp$article_label)))
+
+tmp = sero_dat_no_history %>% filter(population_country %in% c("Cameroon", 
+                                                               "Central African Republic", "Kenya",  
+                                                               "Madagascar", "Mali", "Tanzania", 
+                                                               "Multi-country: Africa (n = 6)", 
+                                                               "Multi-country: Africa (n = 5)"))
+print(sprintf("n model studies: %d", length(unique(tmp$article_label))))
+print(sprintf("m models: %d", length(tmp$article_label)))
