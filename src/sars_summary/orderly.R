@@ -489,3 +489,4 @@ dev.set(dev.next())
 ggsave("figure_S3.png", plot = patchwork, width = 14, height = 18)
 
 dev.set(dev.next())
+while (dev.cur() > 1) dev.off()

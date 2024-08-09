@@ -14,6 +14,7 @@ library(png)
 library(grid)
 library(patchwork)
 library(gridExtra)
+library(orderly2)
 
 #orderly preparation 
 orderly_strict_mode()
