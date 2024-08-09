@@ -272,7 +272,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits, 
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10,, colgap.forest.left = paste0( colgap_shift,"cm"))
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10, colgap.forest.left = paste0( colgap_shift,"cm"))
     dev.off() 
   } else {
     mtan <- metamean(data = dataframe,
