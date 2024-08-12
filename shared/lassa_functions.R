@@ -245,7 +245,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                              width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
   
   dataframe <- epireview::filter_df_for_metamean(dataframe)
-    
+  dataframe <- dataframe[!is.na(dataframe$id),]
   if(!is.na(subgroup))
   {
     mtan <- metamean(data = dataframe,
