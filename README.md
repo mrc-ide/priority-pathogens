@@ -6,7 +6,7 @@ consists of a set of ``orderly tasks'' in the src folder that make up our analyt
 the pipeline (`db_extraction`, `db_double`, and `db_compilation`) read in the Access databases, clean, and compile a 
 clean dataset for downstream analysis. These tasks need access to the database files stored on Imperial's internal 
 network. Since an external user cannot run these tasks, we provide the outputs of these tasks with the associated 
-Github release. These outputs must be downloaded and `made visible' to the orderly project for the rest of the code
+Github release. These outputs must be downloaded and "made visible" to the orderly project for the rest of the code
 to work. The R script `ebola_workflow.R` will download the outputs and do the necessary configuration for this to
 happen. To run the script, 
 
