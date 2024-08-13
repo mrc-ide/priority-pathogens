@@ -4,9 +4,11 @@
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_dependency("sars_world_map", "latest(parameter:pathogen == this:pathogen)",
-                   files = c("figure_2_world_map.png","figure_2_world_map.pdf"))
+                   files = c("figure_2_world_map.png","figure_2_world_map.pdf",
+                             'sars_articles.csv','sars_models.csv','sars_parameters.csv'))
 orderly_dependency("sars_delays", "latest(parameter:pathogen == this:pathogen)",
-                   files = c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png","figure_5SI_delays.png","figure_5SI_onset_to_admission.png"))
+                   files = c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png",
+                             "figure_5SI_delays.png","figure_5SI_onset_to_admission.png"))
 orderly_dependency("sars_transmission", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_3_r_plot.png",
                              "figure_3_r_plot.pdf",
@@ -26,7 +28,8 @@ orderly_dependency("sars_latex_tables", "latest(parameter:pathogen == this:patho
                              "latex_severity.csv","latex_seroprevalence.csv",
                              "latex_riskfactors.csv"))
 orderly_artefact("sars-specific outputs",
-                 c("main/figure_2_world_map.png","main/figure_2_world_map.pdf",
+                 c('sars_articles.csv','sars_models.csv','sars_parameters.csv',
+                   "main/figure_2_world_map.png","main/figure_2_world_map.pdf",
                    "main/figure_3_r_plot.png","main/figure_3_r_plot.pdf",
                    "main/figure_4_r_other.png","main/figure_4_r_other.pdf",
                    "main/figure_5_delays.png","main/figure_5_delays.pdf",
