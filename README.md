@@ -2,7 +2,7 @@
 # pkgdown <img src="man/figures/logo.png" align="right" />
 
 The priority-pathogens repository is an [orderly](https://mrc-ide.github.io/orderly2/) project. The repository
-consists of a set of ``orderly tasks'' in the src folder that make up our analytical pipeline. The first three tasks in 
+consists of a set of "orderly tasks" in the src folder that make up our analytical pipeline. The first three tasks in 
 the pipeline (`db_extraction`, `db_double`, and `db_compilation`) read in the Access databases, clean, and compile a 
 clean dataset for downstream analysis. These tasks need access to the database files stored on Imperial's internal 
 network. Since an external user cannot run these tasks, we provide the outputs of these tasks with the associated 
