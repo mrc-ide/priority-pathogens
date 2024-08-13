@@ -18,6 +18,7 @@ Authors@R: c(
 Description: A live view of a the systematic literature reviews conducted by the Pathogen Epidemiology Review Group (PERG). The data in these plots come from PERG's epireview package, which contains the latest available open access pathogen data from the group. 
 License: CC
 Imports:
+    countrycode,
     estmeansd,
     flextable,
     ggforce,
