@@ -28,7 +28,8 @@ downloaded using the `-l` flag. On the command line, type the following:
 ```
 Rscript ebola_workflow.R -l ~/Downloads
 ```
-``~/Downloads'' should be replaced by the full path of the folder where you wish to download the outputs. Note that this
-*** location should not be a sub-folder of the priority-pathogens repo ***.
+
+`~/Downloads` should be replaced by the full path of the folder where you wish to download the outputs. Note that this
+**location should not be a sub-folder of the priority-pathogens repo**.
 The script will then download the outputs, configure the orderly project and run ebola analysis tasks sequentially. 
-* Note that the tasks create and save a number of images and word documents, and will take a long time to finish. *
+**Note that the tasks create and save a number of images and word documents, and will take a long time to finish.**
