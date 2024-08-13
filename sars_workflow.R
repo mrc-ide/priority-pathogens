@@ -31,17 +31,17 @@ location <- normalizePath(location)
 #}
 
 ## Download the zipped outputs from the database tasks
-#url <- "https://github.com/mrc-ide/priority-pathogens/releases/download/test2/sars-outputs.zip"
+url <- "https://github.com/mrc-ide/priority-pathogens/releases/download/sars/sars-outputs.zip"
 ## Download
-#download.file(url, destfile = file.path(location, "lassa-outputs.zip"), mode = "wb")
+download.file(url, destfile = file.path(location, "lassa-outputs.zip"), mode = "wb")
 ## unzip
-## The outputs are zipped in a folder called lassa-outputs
+## The outputs are zipped in a folder called sars-outputs
 ## Check that the folder does not already exist in the location
-#if (dir.exists(file.path(location, "sars-outputs"))) {
-#  stop("The folder lassa-outputs-test-location already exists in the location. 
-#  Please delete the folder and run the script again.")
-#}
-#unzip(zipfile = file.path(location, "lassa-outputs.zip"), exdir = location)
+if (dir.exists(file.path(location, "sars-outputs"))) {
+  stop("The folder sars-outputs already exists in the location. 
+  Please delete the folder and run the script again.")
+}
+unzip(zipfile = file.path(location, "sars-outputs.zip"), exdir = location)
 ## Initialize orderly
 orderly_init()
 
@@ -50,7 +50,7 @@ orderly_init()
 ###############
 
 # # Extract databases from shared drive (ensure config file pathway matches your machine)
-orderly_run("db_extraction", parameters = list(pathogen = "SARS"))
+## orderly_run("db_extraction", parameters = list(pathogen = "SARS"))
 # 
 # # Sort into double extracted matching and fixing
 orderly_run("db_double", parameters = list(pathogen = "SARS"))
@@ -58,8 +58,8 @@ orderly_run("db_double", parameters = list(pathogen = "SARS"))
 # # Bring single, matching double, and fixed double together
 orderly_run("db_compilation", parameters = list(pathogen = "SARS"))
 
-## The above tasks use the Access databases that have not been uploaded as part 
-## of the repository. 
+## The first task db_extraction uses the Access databases that have not been 
+## uploaded as part of the repository. 
 ## Outputs of the above tasks are made available as a zipped file from the 
 ## associated github release.
 ## The script will download these files, and add the downloaded folder 
@@ -68,13 +68,13 @@ orderly_run("db_compilation", parameters = list(pathogen = "SARS"))
 ## This will also help ensure that the script can be run multiple times without
 ## the need to remove location
 
-# loc_name <- adjective_animal()
-# orderly_location_add(
-#   loc_name, type = "path", 
-#   args = list(path = file.path(location, "sars-outputs"))
-# )
-# orderly_location_pull_metadata(location = loc_name)
-# orderly_location_pull_packet()
+ loc_name <- adjective_animal()
+ orderly_location_add(
+   loc_name, type = "path", 
+   args = list(path = file.path(location, "sars-outputs"))
+ )
+ orderly_location_pull_metadata(location = loc_name)
+ orderly_location_pull_packet()
 
 ##############
 ## ANALYSIS ##
