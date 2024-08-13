@@ -1,6 +1,6 @@
 Package: priority-pathogens
 Title:
-Version: 2.0.0
+Version: 3.0.0
 Authors@R: c(
     person("Rebecca", "Nash", email = "r.nash@imperial.ac.uk", role = "aut",
            comment = c(ORCID = "0000-0002-5213-4364")),
