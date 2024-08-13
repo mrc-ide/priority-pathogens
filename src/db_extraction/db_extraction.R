@@ -31,8 +31,8 @@ orderly_parameters(pathogen = NULL)
 ## When running as an orderly task leave line 13 as it is
 
 orderly_artefact(
-  "Merged data as csv and errors as RDS",
-  c(
+  description = "Merged data as csv and errors as RDS",
+  files = c(
     "single_extraction_articles.csv", "single_extraction_models.csv",
     "single_extraction_params.csv", "single_extraction_outbreaks.csv",
     "double_extraction_articles.csv", "double_extraction_models.csv",

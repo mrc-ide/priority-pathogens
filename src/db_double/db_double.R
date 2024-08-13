@@ -6,8 +6,8 @@ library(orderly2)
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_artefact(
-  "Double extraction matches and mismatches as csv files",
-  c(
+  description = "Double extraction matches and mismatches as csv files",
+  files = c(
     "qa_fixing.csv", "models_fixing.csv", "params_fixing.csv",
     "outbreaks_fixing.csv", "qa_matching.csv", "models_matching.csv",
     "params_matching.csv", "outbreaks_matching.csv"
