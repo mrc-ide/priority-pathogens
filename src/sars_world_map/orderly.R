@@ -24,7 +24,9 @@ orderly_shared_resource("world_cases_table.xlsx" = "world_cases_table.xlsx")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 
-orderly_artefact("sars-specific tables",c("figure_2_world_map.png","figure_2_world_map.pdf","sgp_info.png","hkg_info.png","twn_info.png","can_info.png","chn_info.png","vnm_info.png"))
+orderly_artefact("sars-specific tables",c("figure_2_world_map.png","figure_2_world_map.pdf","sgp_info.png",
+                                          "hkg_info.png","twn_info.png","can_info.png","chn_info.png","vnm_info.png",
+                                          "sars_articles.csv", "sars_models.csv", "sars_parameters.csv"))
 
 ###################
 ## DATA CURATION ##
@@ -34,12 +36,22 @@ articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE )
+# to save down for epireview use plotting = FALSE
+dfs <- data_curation(articles,tibble(),models,parameters, plotting =  FALSE, switch_first_surname = TRUE )
 
 articles   <- dfs$articles
 models     <- dfs$models
 parameters <- dfs$parameters
 
+write_csv(articles,'sars_articles.csv')
+write_csv(models,'sars_models.csv')
+write_csv(parameters,'sars_parameters.csv')
+
+dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE, switch_first_surname = TRUE )
+
+articles   <- dfs$articles
+models     <- dfs$models
+parameters <- dfs$parameters
 
 create_inset_png <- function(data=non_imported_cnts_short,location='SGP')
 {
