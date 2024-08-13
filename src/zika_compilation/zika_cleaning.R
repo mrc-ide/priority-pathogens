@@ -19,6 +19,7 @@ library(ids)
 # Article cleaning #
 ####################
 clean_articles <- function(df, pathogen){
+  
   df <- df %>%
     clean_names() %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
@@ -36,69 +37,94 @@ clean_articles <- function(df, pathogen){
       )
     )
   
-  
   ######################################
   # Pathogen-specific article cleaning #
   ######################################
   
   if (pathogen == 'ZIKA'){
     # here we need to remove duplicates by article and covidence IDs
+    df <- df %>%
+      mutate(# Fix issues with dois
+        doi = str_remove_all(doi, 'doi:'),
+        doi = str_remove_all(doi, 'http://dx.doi.org/'),
+        doi = str_remove_all(doi, 'https://doi.org/'),
+        doi = str_remove(doi, "^/"),
+        doi = case_when(
+          covidence_id %in% 435 ~ "10.1007/s00705-015-2695-5",
+          covidence_id %in% 845 ~ "10.1016/s1473-3099(18)30718-7",
+          covidence_id %in% 1154 ~ "10.1136/bmjgh-2017-000309",
+          covidence_id %in% 1993 ~ "10.1080/00034983.1983.11811687",
+          covidence_id %in% 3042 ~ "10.1371/journal.pntd.0004726",
+          TRUE ~ doi
+        )) #%>% 
+      # # Update article label
+      #   # for different articles by the same author in the same year
+      #   article_label = make.unique(article_label, sep = " ."),
+      #   article_label = gsub("\\.1", "(b)", article_label),
+      #   article_label = gsub("\\.2", "(c)", article_label),
+      #   article_label = gsub("\\.3", "(d)", article_label)
+      # )
+    
+    # De-duplicate by covidence ID
+    # df <- df %>%
+    #   
+    
   }
   
-  # if (pathogen == "EBOLA") {
-  #   df <- df %>%
-  #     # 12389: model only paper (growth model), 2921: Not extracted from,
-  #     # 6471: sneaky duplicate, 5898: mutation frequencies (not mutation rates
-  #     # as no time component) paper only had mutations so removing whole paper
-  #     filter(!covidence_id %in% c(2921, 12389, 5898, 6471)) %>%
-  #     mutate(
-  #       # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
-  #       # discussion with co-authors)
-  #       qa_m1 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_m1),
-  #       qa_a3 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_a3),
-  #       # add missing qa score for 17054
-  #       qa_m1 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m1),
-  #       qa_m2 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m2),
-  #       qa_a3 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a3),
-  #       qa_a4 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a4),
-  #       qa_d5 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d5),
-  #       qa_d6 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d6),
-  #       qa_d7 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d7),
-  #       # clean up author names (remove initials and fully capitalised names)
-  #       first_author_surname = str_replace(first_author_surname, "\\b[A-Z]\\.", ""),
-  #       first_author_surname = case_when(
-  #         first_author_surname %in% "OUEMBA TASSE ́" ~ "Ouemba Tasse",
-  #         first_author_surname %in% "R Glynn" ~ "Glynn",
-  #         first_author_surname %in% "JUGA" ~ "Juga",
-  #         first_author_surname %in% "KI" ~ "Ki",
-  #         first_author_surname %in% "Area\r\nArea" ~ "Area",
-  #         first_author_surname %in% "DAUTEL" ~ "Dautel",
-  #         covidence_id %in% 12045 & first_author_surname %in% "Gilda" ~ "Grard",
-  #         covidence_id %in% 4132 ~ "Hunt",
-  #         first_author_surname %in% "Report of an International Commission" ~
-  #           "International Commission",
-  #         TRUE ~ first_author_surname
-  #       ),
-  #       # Fix issues with dois
-  #       doi = case_when(
-  #         covidence_id %in% 3058 ~ "10.3201/eid2201.151410",
-  #         covidence_id %in% 1407 ~ "10.1038/nature14612",
-  #         covidence_id %in% 6472 ~ "10.1136/bmj.2.6086.539",
-  #         TRUE ~ doi
-  #       )
-  #     ) %>%
-  #     # Update article label
-  #     mutate(
-  #       article_label = as.character(
-  #         paste0(first_author_surname, " ", year_publication)
-  #       ),
-  #       # for different articles by the same author in the same year
-  #       article_label = make.unique(article_label, sep = " ."),
-  #       article_label = gsub("\\.1", "(b)", article_label),
-  #       article_label = gsub("\\.2", "(c)", article_label),
-  #       article_label = gsub("\\.3", "(d)", article_label)
-  #     )
-  # }
+  if (pathogen == "EBOLA") {
+    df <- df %>%
+      # 12389: model only paper (growth model), 2921: Not extracted from,
+      # 6471: sneaky duplicate, 5898: mutation frequencies (not mutation rates
+      # as no time component) paper only had mutations so removing whole paper
+      filter(!covidence_id %in% c(2921, 12389, 5898, 6471)) %>%
+      mutate(
+        # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
+        # discussion with co-authors)
+        qa_m1 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_m1),
+        qa_a3 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_a3),
+        # add missing qa score for 17054
+        qa_m1 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m1),
+        qa_m2 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m2),
+        qa_a3 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a3),
+        qa_a4 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a4),
+        qa_d5 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d5),
+        qa_d6 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d6),
+        qa_d7 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d7),
+        # clean up author names (remove initials and fully capitalised names)
+        first_author_surname = str_replace(first_author_surname, "\\b[A-Z]\\.", ""),
+        first_author_surname = case_when(
+          first_author_surname %in% "OUEMBA TASSE ́" ~ "Ouemba Tasse",
+          first_author_surname %in% "R Glynn" ~ "Glynn",
+          first_author_surname %in% "JUGA" ~ "Juga",
+          first_author_surname %in% "KI" ~ "Ki",
+          first_author_surname %in% "Area\r\nArea" ~ "Area",
+          first_author_surname %in% "DAUTEL" ~ "Dautel",
+          covidence_id %in% 12045 & first_author_surname %in% "Gilda" ~ "Grard",
+          covidence_id %in% 4132 ~ "Hunt",
+          first_author_surname %in% "Report of an International Commission" ~
+            "International Commission",
+          TRUE ~ first_author_surname
+        ),
+        # Fix issues with dois
+        doi = case_when(
+          covidence_id %in% 3058 ~ "10.3201/eid2201.151410",
+          covidence_id %in% 1407 ~ "10.1038/nature14612",
+          covidence_id %in% 6472 ~ "10.1136/bmj.2.6086.539",
+          TRUE ~ doi
+        )
+      ) %>%
+      # Update article label
+      mutate(
+        article_label = as.character(
+          paste0(first_author_surname, " ", year_publication)
+        ),
+        # for different articles by the same author in the same year
+        article_label = make.unique(article_label, sep = " ."),
+        article_label = gsub("\\.1", "(b)", article_label),
+        article_label = gsub("\\.2", "(c)", article_label),
+        article_label = gsub("\\.3", "(d)", article_label)
+      )
+  }
   
   return(df)
 }
@@ -165,6 +191,18 @@ clean_outbreaks <- function(df, pathogen){
                                       (!is.na(outbreak_date_year) & is.na(outbreak_end_month) & is.na(outbreak_end_day)) ~ 
                                         lubridate::ymd(paste(outbreak_date_year, 01, 15, sep ='-')),
                                       TRUE ~ NA),
+      # Outbreak location 
+      outbreak_location = case_when(
+        outbreak_location == 'Australes' | outbreak_location == "Polynesia: Austral Isl;S (Aus)" ~ "Austral Islands",
+        outbreak_location == 'Moorea' | outbreak_location == "Polynesia: Mo'orea Isl; (Moo)" ~ "Mo'orea",
+        outbreak_location == "Polynesia: Sous-Le-Vent Isl;S (Slv)" | outbreak_location == 'Iles Sous-Le-Vent' ~ 'Sous-Le-Vent Islands',
+        outbreak_location == "Polynesia: Marquesas Isl;S (Mrq)" | outbreak_location == "Marquises" ~ "Marquesas Islands",
+        outbreak_location == "West Indies: Guadelopue (Glp)" ~ 'Guadeloupe',
+          outbreak_location == "West Indies: Martinique (Mtq)" ~ "Martinique",
+      outbreak_location == "West Indies: Saint-Martin (Maf)" ~ "Saint Martin",
+          outbreak_location == "Polynesia: Tuamotus (Tua)" ~ "Tuamotus",
+          outbreak_location == "Polynesia: Tahiti (Tah)" ~ "Tahiti"
+      ),
       # Outbreak country names
       outbreak_country = str_replace(
         outbreak_country, "Congo, Rep.",
@@ -181,6 +219,14 @@ clean_outbreaks <- function(df, pathogen){
       outbreak_country = str_replace(
         outbreak_country, 'Micronesia, Fed. Sts.',
         'Federated States of Micronesia'
+      ),
+      outbreak_country = case_when(
+        covidence_id == 947 & outbreak_location %in% c("Austral Isl;S (Aus)", "Marquesas Isl;S (Mrq)",
+                                                       "Mo'orea Isl; (Moo)", "Sous-Le-Vent Isl;S (Slv)",
+                                                       "Tahiti (Tah)", "Tuamotus (Tua)") ~ "French Polynesia",
+        covidence_id == 947 & outbreak_location == "Martinique (Mtq)" ~ "France (Martinique)"
+        covidence_id == 947 & outbreak_location == "Guadelopue (Glp)" ~ "France (Guadeloupe)", 
+        covidence_id == 947 & outbreak_location == "Saint-Martin (Maf)" ~ "France (Saint-Martin)"
       )
     )
   
@@ -238,6 +284,27 @@ clean_params <- function(df, pathogen){
         grepl("Doubling time", parameter_type) ~ "Doubling time",
         grepl("Growth rate", parameter_type) ~ "Growth rate",
         TRUE ~ "Other transmission parameters"
+      )
+    )
+  
+  #############################################
+  # Pathogen-specific parameter data cleaning #
+  #############################################
+  
+  # if (pathogen == "MARBURG") {
+  #   df <- df %>%
+  #     mutate(
+  #       population_study_start_month = substring(population_study_start_month, 1, 3),
+  #       population_study_end_month = substring(population_study_end_month, 1, 3)
+  #     )
+  # }
+  
+  # More cleaning 
+  df <- df %>%
+    mutate(
+      
+      population_group = case_when(
+        population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation'
       ),
       # Population country
       population_country = str_replace_all(population_country, ";", ","),
@@ -261,29 +328,7 @@ clean_params <- function(df, pathogen){
         population_country, "Gambia, The",
         "The Gambia"
       ),
-      population_country = str_replace_all(population_country, ",", ", ")
-    )
-  
-  #############################################
-  # Pathogen-specific parameter data cleaning #
-  #############################################
-  
-  # if (pathogen == "MARBURG") {
-  #   df <- df %>%
-  #     mutate(
-  #       population_study_start_month = substring(population_study_start_month, 1, 3),
-  #       population_study_end_month = substring(population_study_end_month, 1, 3)
-  #     )
-  # }
-  
-  # Population country
-  df <- df %>%
-    mutate(
-      
-      population_group = case_when(
-        population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation'
-      ),
-      
+      population_country = str_replace_all(population_country, ",", ", "),
       population_country =
         case_when(
           population_country == 'Micronesia; Fed. Sts.' ~ 'Federated States of Micronesia',
