@@ -93,7 +93,7 @@ m1 <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai",
 set.seed(42)
 m1_SI <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
                        plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
-                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
+                       width = 11500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
 
 set.seed(42)
 m1_SI_noqa <- metamean_wrap(dataframe = d1_subgroups_noqa, estmeansd_method = "Cai", 
