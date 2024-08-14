@@ -224,7 +224,7 @@ clean_outbreaks <- function(df, pathogen){
         covidence_id == 947 & outbreak_location %in% c("Austral Isl;S (Aus)", "Marquesas Isl;S (Mrq)",
                                                        "Mo'orea Isl; (Moo)", "Sous-Le-Vent Isl;S (Slv)",
                                                        "Tahiti (Tah)", "Tuamotus (Tua)") ~ "French Polynesia",
-        covidence_id == 947 & outbreak_location == "Martinique (Mtq)" ~ "France (Martinique)"
+        covidence_id == 947 & outbreak_location == "Martinique (Mtq)" ~ "France (Martinique)",
         covidence_id == 947 & outbreak_location == "Guadelopue (Glp)" ~ "France (Guadeloupe)", 
         covidence_id == 947 & outbreak_location == "Saint-Martin (Maf)" ~ "France (Saint-Martin)"
       )
