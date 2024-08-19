@@ -25,7 +25,7 @@ articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE )
+dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE, switch_first_surname = TRUE )
 
 articles   <- dfs$articles
 models     <- dfs$models
@@ -82,6 +82,10 @@ write.table(mods, file = "latex_models.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #parameters
+parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
+                                    population_country = gsub( ",", ";", population_country))
+
+parameters <- parameters %>% mutate(parameter_unit = replace_na(parameter_unit,""))
 parameters <- mutate_at(parameters, 
                         vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
@@ -93,7 +97,8 @@ parameters <- parameters %>%
            ifelse(parameter_value!="NA", 
                   parameter_value,
                   ifelse(parameter_lower_bound!="NA" & parameter_upper_bound!="NA",
-                         paste(parameter_lower_bound, parameter_upper_bound, sep = " - "), "")))
+                         paste(parameter_lower_bound, parameter_upper_bound, sep = " - "), "")),
+         exponent = replace_na(exponent,0))
 #
 parameters$parameter_unit <- gsub("Substitutions/site/year", "s/s/y", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Mutations/genome/generation \\(U\\)", "m/g/g", parameters$parameter_unit)
@@ -155,7 +160,8 @@ parameters <- parameters %>%
 # new bit
 parameters <- parameters %>% mutate(unc_type = case_when(
   unc_type %in% c("Unspecified","") ~ "",
-  TRUE ~  paste(unc_type, ": ", uncertainty, sep = "")))
+  TRUE ~  paste(unc_type, ": ", uncertainty, " ", parameter_unit, sep = "")))
+
 ##                     
 #parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <- 
 #                                     parameters$population_sample_size[is.na(parameters$cfr_ifr_denominator)]        
@@ -264,8 +270,11 @@ cfrs_params <- parameters %>%
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
-         population_sample_type, population_group, refs, central)
-cfrs_params$population_country <- gsub(";", "\\, ", cfrs_params$population_country)
+         population_sample_type, population_group, refs, central) %>%
+  mutate(cfr_ifr_method = case_when(str_starts(cfr_ifr_method,'Na') ~ 'Naive',
+                                    TRUE ~ cfr_ifr_method))
+
+population_country <- gsub(";", "\\, ", cfrs_params$population_country)
 cfrs_params <- cfrs_params %>% arrange(population_country,as.numeric(central))
 cfrs_params <- cfrs_params %>% select(-central)
 cfrs_params <- insert_blank_rows(cfrs_params,"population_country")

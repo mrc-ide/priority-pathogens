@@ -1,7 +1,7 @@
 sars_cleaning <- function(df) {
           df <- df %>% 
         mutate(journal = str_to_title(journal)) %>%
-        mutate(journal = sub("^The\\s+", "", journal)) %>%
+        mutate(journal = sub("^The\\s+", "", journal, useBytes = TRUE)) %>%
         mutate(journal = ifelse(journal == 'Bmj','British Medical Journal',
                                 ifelse(journal == 'Transactions Of The Royal Society Tropical Medicine And Hygiene','Transactions Of The Royal Society Of Tropical Medicine And Hygiene',        
                                        journal))) %>%
@@ -77,12 +77,12 @@ sars_cleaning <- function(df) {
           covidence_id == 7260 ~ 'Reconstruction of the infection curve for SARS epidemic in Beijing, China using a back-projection method',
           covidence_id == 12002 ~ 'Heterogeneous and Stochastic Agent-Based Models for Analyzing Infectious Diseases Super Spreaders',
           TRUE ~ article_title)) %>%#title consistency
-        mutate(article_title = gsub(";", ",", article_title)) %>%
-        mutate(article_title = gsub("\n", " ", article_title)) %>%
-        mutate(article_title = gsub("\\s+", " ", article_title)) %>%
+        mutate(article_title = gsub(";", ",", article_title, useBytes = TRUE)) %>%
+        mutate(article_title = gsub("\n", " ", article_title, useBytes = TRUE)) %>%
+        mutate(article_title = gsub("\\s+", " ", article_title, useBytes = TRUE)) %>%
         mutate(article_title = str_to_title(article_title)) %>%
         #missing dois
-        mutate(doi = sub(".*?10\\.", "10.", doi)) %>%
+        mutate(doi = sub(".*?10\\.", "10.", doi, useBytes = TRUE)) %>%
         mutate(doi = case_when(
           covidence_id == 1090 ~ '10.1016/s019606440300828x',
           covidence_id == 4261 ~ '10.1017/s0950268805004826',
@@ -105,17 +105,25 @@ sars_cleaning <- function(df) {
         #   covidence_id %in% c(845,917) ~ FALSE,
         #   TRUE ~ paper_copy_only)) %>%
         #name typos
-        # mutate(first_author_surname = case_when(
+        mutate(first_author_surname = case_when(
         #   covidence_id == 2648 ~ 'Shirley C.',
-        #   covidence_id == 1447 ~ 'N.A.',
-        #   TRUE ~ first_author_surname)) %>%
-        mutate(first_author_first_name = sub(".*\\.(.*)", "\\1", first_author_first_name)) %>%
-        mutate(first_author_first_name = sub("^\\s+", "", first_author_first_name)) #%>%                 
-      # mutate(first_author_first_name = case_when(
+           covidence_id == 6909 ~ 'MEC', #The Chinese SARS Molecular Epidemiology Consortium
+           TRUE ~ first_author_surname)) %>%
+        mutate(first_author_first_name = sub(".*\\.(.*)", "\\1", first_author_first_name, useBytes = TRUE)) %>%
+        mutate(first_author_first_name = sub("^\\s+", "", first_author_first_name, useBytes = TRUE)) %>%                 
+       mutate(first_author_first_name = case_when(
       #   covidence_id == 2648 ~ 'Nimo-Paintsil',
       #   covidence_id == 2585 ~ 'Dalhat',
       #   covidence_id == 1033 ~ 'Ehichioya',
-      #   covidence_id == 661 ~ 'Kerneis',
-      #   TRUE ~ first_author_first_name))     
+         covidence_id == 6909 ~ 'MEC', #The Chinese SARS Molecular Epidemiology Consortium
+         TRUE ~ first_author_first_name))     
     df
+}
+
+sars_params_cleaning <- function(df) {
+  df <- df %>% mutate(parameter_type = case_when(parameter_type=="secondary attack rate" ~ "Secondary attack rate",
+                                                 TRUE ~ parameter_type),
+                      riskfactor_name = case_when(str_detect(riskfactor_name,'Ocupation')~str_replace(riskfactor_name,'Ocupation','Occupation'),
+                                                  TRUE ~ riskfactor_name))
+  
 }

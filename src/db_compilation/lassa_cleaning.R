@@ -175,7 +175,7 @@ lassa_outbreaks_cleaning <- function(df) {
 
 lassa_params_cleaning <- function(df) {
   # removed parameters
-  rmrows <- paste(c(61, 152), c(3, 1), sep = "_")
+  rmrows <- paste(c(61, 152, 920), c(3, 1, 4), sep = "_")
   df <- df %>%
     mutate(temp_col = paste(covidence_id, access_param_id, sep = "_")) %>%
     filter(!temp_col %in% rmrows) %>%

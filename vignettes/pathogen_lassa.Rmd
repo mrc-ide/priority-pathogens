@@ -8,13 +8,13 @@ In 2018, the World Health Organization (WHO) published a list of nine known path
 
 The Pathogen Epidemiology Review Group (PERG) has published a systematic review for LASV, if you use any of our results please cite our paper:
 
-> @article{,
- author = {},
+> @article{lassa_doohan_2023,
+ author = {Doohan et al},
  year={2024},  
- title={},  
- doi = {},
+ title={Lassa fever outbreaks, mathematical models, and disease parameters: a systematic review and meta-analysis},  
+ doi = {10.1101/2024.03.23.24304596},
  publisher = {Cold Spring Harbor Laboratory Press},
- URL = {},
+ URL = {https://www.medrxiv.org/content/10.1101/2024.03.23.24304596v1},
  eprint = {},
  journal = {medRxiv}
 }

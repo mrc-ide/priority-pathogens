@@ -1,0 +1,693 @@
+---
+title: "Severe acute respiratory syndrome (SARS)"
+date: "Latest update: `r Sys.Date()`"
+output: html_document
+---
+
+In 2018, the World Health Organization (WHO) published a list of nine known pathogens (in addition to an unknown _Pathogen X_) for research and development (R&D) prioritisation, due to both their epidemic and pandemic potential and the absence of licensed vaccines or therapeutics. Among these prioritised pathogens is SARS.
+
+The Pathogen Epidemiology Review Group (PERG) has published a systematic review for SARS, if you use any of our results please cite our paper:
+
+> @article{,
+ author = {},
+ year={2024},  
+ title={},  
+ doi = {},
+ publisher = {Cold Spring Harbor Laboratory Press},
+ URL = {},
+ eprint = {},
+ journal = {medRxiv}
+}
+
+All Figures from the paper are re-produced below on the **latest** available data in our data set. For convenience we label the Figures with the same numbers as in the paper.
+
+```{css echo=FALSE}
+.flextable-shadow-host{
+  overflow: scroll;
+  white-space: nowrap;
+}
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+source(file.path("..", "shared", "lassa_functions.R"))
+
+remotes::install_github("mrc-ide/epireview@develop")
+
+library(tidyverse)
+library(stringr)
+library(metafor)
+library(meta)
+library(estmeansd)
+library(mixdist)
+library(ggplot2)
+library(ggsci)
+library(sf)
+library(ragg)
+library(ggspatial)
+library(ggforce)
+library(png)
+library(grid)
+library(patchwork)
+library(gridExtra)
+library(readxl)
+library(harrypotter)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggrepel)
+library(gt)
+library(scales)
+
+create_inset_png <- function(data=non_imported_cnts_short,location='SGP')
+{
+  location_label_map <- list(SGP='Singapore',
+                             HKG='Hong Kong',
+                             CAN='Canada',
+                             CHN='China',
+                             TWN='Taiwan',
+                             VNM='Vietnam')
+  
+  loc_in <- location_label_map[[location]]
+  
+  LOC <- data %>% filter(ISO3==location) %>% 
+    dplyr::select(-ISO3) %>%
+    mutate(onset_first_probable_case = format(as.Date(onset_first_probable_case),format="%d-%b-%y"),
+           onset_last_probable_case  = format(as.Date(onset_last_probable_case),format="%d-%b-%y")) %>%
+    rename('Onset 1st case'=onset_first_probable_case,
+           'Onset last case'=onset_last_probable_case,
+           'Imported %'=pct_imported,'CFR %'=CFR) 
+  
+  LOC <- as_tibble(cbind(loc_name = names(LOC), t(LOC))) %>% 
+    rename(' '=V2,!!loc_in:=loc_name) %>%
+    gt() %>%
+    cols_label(!!loc_in:= md(paste0('_**',loc_in ,'**_'))) %>%
+    tab_options(data_row.padding = px(1)) %>%
+    tab_style(
+      style = list(cell_borders(sides = "all", color = "white", style = "solid", weight = px(1))),
+      location = cells_body()             
+    ) %>%
+    tab_style(
+      style = list( cell_text(weight = "bold")),
+      locations = cells_body( columns = !!loc_in ) ) %>%
+    gtsave(paste0(tolower(location),'_info.png'))
+}
+
+TEXT_SIZE <- 11
+```
+
+```{r prepare_data, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+articles   <- epireview::load_epidata_raw("sars", "article")
+articles   <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+models     <- epireview::load_epidata_raw("sars", "model")
+parameters <- epireview::load_epidata_raw("sars", "parameter")
+
+dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE, switch_first_surname = TRUE )
+
+articles   <- dfs$articles
+
+articles   <- epireview::assign_qa_score(articles = articles)$articles
+qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
+
+outbreaks  <- dfs$outbreaks
+models     <- dfs$models
+
+parameters <- dfs$parameters %>% left_join(qa_scores)
+```
+
+**Figure 1:** Please see the pre-print for the the PRISMA flowchart. This will remain static as data in the database is updated.
+
+## Overview of the SARS epidemic 
+
+Overview of the SARS epidemic, based on final report of the Hong Kong SARS Expert Committee. Coloured countries and special administrative regions are those which reported confirmed SARS cases. Inset tables are shown for all locations with reported local SARS-CoV-1 transmission, indicating total cases, median age (except for China, for which median age was not reported), CFR, percentage of imported cases and dates of symptom onset of first and last case. In the bottom left corner, we report the mixed-effect logistic regression estimates of adjusted CFRs for locations with local transmission: red squares indicate location-specific estimates. Red diamonds represent overall common effect estimates - in which all aggregated data are assumed to come from a single data-generating process with one common CFR, and overall random effect estimates - that allow the CFR to vary by location and accordingly give different weights to each location in the overall estimate (SM-A.3.2). The “Events” column indicates the reported number of deaths. GLMM=generalised linear mixed-effects model (SM-A.3.2).
+
+**Figure 2**
+
+```{r Figure_2A, echo=FALSE, fig.height=10, fig.width=15, message=FALSE, warning=FALSE, paged.print=TRUE}
+world               <- ne_countries(scale = "medium", returnclass = "sf")
+sars_data           <- read_excel(file.path("..", "shared", "world_cases_table.xlsx")) %>% filter(!is.na(ISO3)) %>% rename(`Total Cases`=Total)
+non_imported_cnts   <- sars_data %>% filter(pct_imported < .5 & ISO3 != 'RUS') 
+non_imported_cnts$Median_age[is.na(non_imported_cnts$Median_age)] <- '-'
+
+f <- data.frame(map_point = c("Beijing",
+                              "Guangzhou",
+                              "Singapore",
+                              "Toronto"),
+                latitude  = c(39.9042,23.1291,1.290270,43.6532),
+                longitude = c(116.4074,113.2644,103.851959,-79.3832),
+                type      = c("Outbreak Location","Outbreak Location","Outbreak Location","Outbreak Location"))
+
+world      <- world %>% left_join(sars_data,by=c('iso_a3'='ISO3'))
+world_local_transmission <- world %>% filter(iso_a3 %in% non_imported_cnts$ISO3)
+
+world_map <- ggplot() + 
+  geom_sf(data = world, lwd = 0.3, col = "grey70", aes(fill = `Total Cases`)) +
+  geom_sf(data = world_local_transmission, lwd = 1, col = "darkred",  fill = NA) +
+  geom_point(data = f, aes(x = longitude, y = latitude, color = "Outbreak Location"), shape = 8, size = 1.5, stroke = 1.5) +
+  theme_light() +
+  coord_sf(xlim=c(-180,180), ylim=c(-60,90)) +    # cut out antarctica
+  scale_color_manual(values = c("Outbreak Location" = "green2")) + 
+  geom_label_repel(data = world_local_transmission,aes(x=label_x,y=label_y,label=name),size = 2, fontface = "bold") +
+  scale_fill_hp(option = "NewtScamander",na.value='grey90',trans = 'log',labels = scales::label_comma(accuracy = 1)) +
+  scale_alpha_continuous(trans='log1p', limits=c(1,6000)) +
+  theme(panel.grid.minor = element_line(color = gray(0.5), linetype = "dashed", 
+                                        size = 0.3), panel.background = element_rect(fill = "aliceblue"),
+        legend.position = 'right') +
+  ylab('Latitude') + xlab('Longitude') + 
+  labs(colour="")
+
+# use inset_elements for location specific data we want to show for 6 outbreak regions with local transmission
+non_imported_cnts_short <- non_imported_cnts %>% 
+  dplyr::select(ISO3,`Total Cases`,Median_age,CFR,pct_imported,onset_first_probable_case,onset_last_probable_case) %>%
+  mutate(CFR=round(CFR*100,2),
+         pct_imported = round(pct_imported*100,2))
+
+for(iso3 in non_imported_cnts_short$ISO3)
+  create_inset_png(non_imported_cnts_short,iso3)
+
+non_imported_cnts <- non_imported_cnts %>% 
+  mutate(cfr_ifr_denominator = (n_recovered+n_currently_hospitalised+n_deaths),
+         cfr_ifr_numerator   = n_deaths,
+         refs                = Country,
+         parameter_value     = CFR,
+         parameter_unit      = 'Percentage') %>% arrange(desc(CFR))
+
+m1 <- metaprop_wrap(non_imported_cnts, subgroup = NA,  
+                    plot_pooled = TRUE, sort_by_subg = FALSE, plot_study = TRUE, digits = 3, colour = 'red', 
+                    width = 4000, height = 1650, resolution = 500,
+                    at = seq(0,0.3,by=0.05), xlim = c(0,0.35))
+
+inset_width <- 0.05*2.2
+inset_hight <- 0.125*1.75
+test <- world_map + patchwork::inset_element(grid::rasterGrob(png::readPNG('sgp_info.png')), 0.725,0.15,0.725+inset_width,.15+inset_hight) +
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("hkg_info.png")), 0.85,0.275,0.85+inset_width,.275+inset_hight) +
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("twn_info.png")), 0.85,0.5,0.85+inset_width,.5+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("chn_info.png")), 0.75,0.725,0.75+inset_width,0.725+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("can_info.png")), 0.075,0.5,0.075+inset_width,.5+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("vnm_info.png")), 0.6,0.225,0.6+inset_width,.225+inset_hight) + 
+  patchwork::inset_element(m1$plot, 0.01,0.01,0.425,0.375) 
+
+ggsave("figure_2_world_map.png", plot = test, width = 18, height = 12)
+gg <- png::readPNG("figure_2_world_map.png", native = TRUE)
+for(rm_file in c('figure_2_world_map.png','sgp_info.png','hkg_info.png','twn_info.png','chn_info.png','can_info.png','vnm_info.png'))
+file.remove(rm_file)
+
+wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+```
+
+
+## Overview of estimates SARS-CoV-1 reproduction numbers
+
+Overview of estimated SARS-CoV-1 (A) basic reproduction numbers (R0) and (B) effective reproduction numbers (Rt). Circles represent mean estimates, and triangles represent unspecified central estimates. Thin black solid lines represent uncertainty estimates, and solid shaded bars represent ranges of central estimates reported, e.g. when disaggregated by certain characteristics (e.g. age, sex, region, time) or using different estimation methods. Colours represent when during the outbreak the study was conducted, as extracted by reviewers. The vertical dashed line indicates the threshold value of 1. Estimates are labelled with the country of study. CHN = China, HKG = Hong Kong, SGP = Singapore, CAN = Canada, TWN = Taiwan, VNM = Vietnam. Outlying estimates from Kwok (2007) (33) and Moser (2015) (34) are not displayed. Only parameters from studies with a QA score > 0.5 are plotted.
+
+**Figure 3A: Basic Reproduction numbers**
+
+```{r Figure_3A, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+parameters[parameters$parameter_type=='Secondary attack rate',]$parameter_class = 'Attack rate'
+
+d1 <- parameters %>% filter(parameter_type == 'Mutations – mutation rate')
+d2 <- parameters %>% filter(parameter_type == 'Mutations – substitution rate')
+d3 <- parameters %>% filter(parameter_class == 'Overdispersion')
+d4 <- parameters %>% filter(parameter_class == 'Attack rate')
+d5 <- parameters %>% filter(parameter_class == 'Growth rate')
+d6 <- parameters %>% filter(parameter_class == 'Reproduction number')
+
+d_beta <- parameters %>% filter(parameter_type == 'beta - per capita contact rate per unit of time')
+
+### Arrange data and format for plotting across variables of interest
+d1 <- d1 %>% 
+  mutate(parameter_value = case_when(parameter_unit=='Percentage (%)'~parameter_value/100, TRUE ~ parameter_value)) %>%
+  mutate(across(c(parameter_value,parameter_lower_bound, parameter_upper_bound,
+                             parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+                           ~. * 10^4)) #multiply by 10^4
+d1 <- d1 %>% arrange(genome_site,-central) 
+d1 <- d1 %>% 
+  mutate(genome_site          = replace_na(genome_site,'Unspecified'),
+         parameter_value_type = replace_na(parameter_value_type, 'Unspecified') ) |>
+  mutate(genome_site = factor(genome_site,
+                              levels = unique(genome_site),
+                              labels = c("L","S", "Unspecified"))) 
+# post process extracted data for covidence id 6909
+d1[d1$covidence_id == 6909,]$parameter_value <- d1[d1$covidence_id == 6909,]$parameter_value * 365
+d1[d1$covidence_id == 6909,]$parameter_unit  <- 'Substitutions/site/year'
+
+
+d2 <- d2 %>% mutate(across(c(parameter_value,parameter_lower_bound, parameter_upper_bound,
+                             parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+                           ~. * 10^4)) #multiply by 10^4
+d2 <- d2 %>% arrange(genome_site,-central)
+d2 <- d2 %>% 
+  mutate(genome_site          = replace_na(genome_site,'Unspecified'),
+         parameter_value_type = replace_na(parameter_value_type, 'Unspecified') ) |>
+  mutate(genome_site = factor(genome_site,
+                              levels = unique(genome_site),
+                              labels = c("L","S", "Unspecified"))) 
+
+d3 <- d3 %>% arrange(-central)
+
+d4 <- d4 %>% 
+  mutate(parameter_unit = ifelse(parameter_unit == "No units", "Percentage (%)", parameter_unit),
+         parameter_unit = replace_na(parameter_unit , "Percentage (%)"),
+         parameter_value_type = replace_na(parameter_value_type, 'Unspecified')) %>%
+  mutate_at(vars(c("parameter_value","parameter_lower_bound","parameter_upper_bound",
+                   "parameter_uncertainty_lower_value","parameter_uncertainty_upper_value")), 
+                       list(~ ifelse(parameter_unit == "No units", . * 100, .))) 
+  
+
+d4 <- d4 %>% mutate(arate=ifelse(str_starts(d4$parameter_type,"Secondary"), 'Secondary', 'Primary')) %>%
+  arrange(arate,-central)
+
+d5 <- d5 %>% mutate(parameter_value_type = replace_na(parameter_value_type,'Unspecified')) %>%
+  arrange(-central)
+
+d6 <- d6 %>% arrange(parameter_type,-central)
+d6 <- d6 %>% mutate(parameter_type = factor(parameter_type,
+                                            levels = unique(parameter_type),
+                                            labels = c("Basic (R0)","Effective (Re)")),
+                    parameter_value = coalesce(parameter_value,central),
+                    parameter_unit  = replace_na(parameter_unit, "No units"),
+                    parameter_value_type  = replace_na(parameter_value_type, "Unspecified"),
+                    population_country    = replace_na(population_country,"Unspecified"),
+                    population_country_v2 = case_when(!str_detect(population_country,",")~population_country,
+                                                      population_country=='Hong Kong SAR,  China'~'Greater China',
+                                                      str_detect(population_country,'Canada, Hong Kong')|str_detect(population_country,'Canada;Singapore')~'Multi Region',
+                                                      str_detect(population_country,'Taiwan,  China')~'Taiwan + China',
+                                                      TRUE ~ population_country),
+                    population_country_ISO = case_when(str_detect(population_country,'Unspecified')~'Unspecified',
+                                                       !str_detect(population_country,",")~countrycode::countrycode(population_country,'country.name','iso3c'),
+                                                       population_country=='Hong Kong SAR,  China'~'CHN+HKG',
+                                                       str_detect(population_country,'Canada, Hong Kong')|str_detect(population_country,'Canada;Singapore')~'Multi Region',
+                                                       str_detect(population_country,'Taiwan,  China')~'CHN+TWN',
+                                                       TRUE ~ countrycode::countrycode(population_country,'country.name','iso3c')),
+                    population_sample_type = replace_na(population_sample_type, "Unspecified")) %>%
+  filter(!(parameter_value>10|(!is.na(parameter_upper_bound) & parameter_upper_bound>10))) # exclude Kwok (2007) and Moser (2015) due to extreme values
+
+### Additional computations for overdispersion plot
+# overdispersion
+##  Convert k params into the same type to be consistent between models.
+##  need to get betas for covidence 3685:   parameters %>% filter(covidence_id==3685), will need to get N & S for this from paper
+d3_tmp <- d3 %>% mutate(parameter_unit = replace_na(parameter_unit,'No units')) %>%
+  filter(parameter_unit == 'No units') %>%
+  filter(qa_score > 0.5)  # drop Chowell 2015 with this!
+
+d_beta_val   <- d_beta %>% filter(covidence_id==3685) |> pull(parameter_value)
+total_cases  <- d_beta %>% filter(covidence_id==3685) |> pull(population_sample_size)
+cases_phase1 <- 1114
+N_beijing    <- 1.4564e07
+
+tt <- d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_value <- (tt$parameter_value * N_beijing)/(d_beta_val*cases_phase1)
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_lower_bound <- (tt$parameter_lower_bound * N_beijing)/(d_beta_val*cases_phase1)
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_upper_bound <- (tt$parameter_upper_bound * N_beijing)/(d_beta_val*cases_phase1)
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_uncertainty_lower_value <- NA
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_uncertainty_upper_value <- NA
+
+tt <- d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_value <- (tt$parameter_value * N_beijing)/(d_beta_val*(total_cases - cases_phase1))
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_lower_bound <- (tt$parameter_lower_bound * N_beijing)/(d_beta_val*(total_cases - cases_phase1))
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_upper_bound <- (tt$parameter_upper_bound * N_beijing)/(d_beta_val*(total_cases - cases_phase1))
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_uncertainty_lower_value <- NA
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_uncertainty_upper_value <- NA
+
+d3_with_qa <- d3_tmp
+
+d3_tmp <- d3 %>% mutate(parameter_unit = replace_na(parameter_unit,'No units')) %>%
+  filter(parameter_unit == 'No units')
+
+tt <- d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_value <- (tt$parameter_value * N_beijing)/(d_beta_val*cases_phase1)
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_lower_bound <- (tt$parameter_lower_bound * N_beijing)/(d_beta_val*cases_phase1)
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_upper_bound <- (tt$parameter_upper_bound * N_beijing)/(d_beta_val*cases_phase1)
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_uncertainty_lower_value <- NA
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='Start outbreak',]$parameter_uncertainty_upper_value <- NA
+
+tt <- d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_value <- (tt$parameter_value * N_beijing)/(d_beta_val*(total_cases - cases_phase1))
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_lower_bound <- (tt$parameter_lower_bound * N_beijing)/(d_beta_val*(total_cases - cases_phase1))
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_upper_bound <- (tt$parameter_upper_bound * N_beijing)/(d_beta_val*(total_cases - cases_phase1))
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_uncertainty_lower_value <- NA
+d3_tmp[d3_tmp$covidence_id==3685 & d3_tmp$method_moment_value=='End outbreak',]$parameter_uncertainty_upper_value <- NA
+
+d3_without_qa <- d3_tmp
+
+### Construct subplots
+
+# Evolutionary mutation rates
+p1 <- forest_plot(d1 |> filter(qa_score>0.5),expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,50),
+                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+  guides(color = guide_legend(title = "Segment", order = 1))
+p2 <- forest_plot(d2 |> filter(qa_score>0.5),expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,100),
+                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+  guides(color = guide_legend(title = "Segment", order = 1))
+
+p1_noqa <- forest_plot(d1|>mutate(parameter_unit='Unspecified'), expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(-5,200),
+                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+  guides(color = guide_legend(title = "Segment", order = 1))
+p2_noqa <- forest_plot(d2, expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,100),
+                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+  guides(color = guide_legend(title = "Segment", order = 1))
+
+#Overdispersion
+p3 <- forest_plot( d3_with_qa, 'Overdispersion',"method_moment_value",c(-0.1,1.5),text_size = 16)      # Add location to plot??
+p3_noqa <- forest_plot( d3_without_qa, 'Overdispersion',"method_moment_value",c(-0.1,1.5),text_size = 16)      # Add location to plot??
+
+# Attack rates
+p4_primary   <- forest_plot(d4|> filter(qa_score>0.5) |> filter(arate=='Primary'),'Attack Rate (%)',"population_group",c(-5,75),
+                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple', 'Household contacts of survivors'='yellow3'),
+                            text_size = 16)
+p4_secondary <- forest_plot(d4|> filter(qa_score>0.5) |> filter(arate=='Secondary'),'Secondary Attack Rate (%)',"population_group",c(-5,100),
+                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple', 'Household contacts of survivors'='yellow3'),
+                            text_size = 16)
+
+p4_primary_noqa   <- forest_plot(d4 |> filter(arate=='Primary'),'Attack Rate (%)',"population_group",c(-5,75),
+                            custom_colours = c('General popultion'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple2', 'Household contacts of survivors'='yellow3', 'Mixed groups' = 'pink2'),
+                            text_size = 16)
+p4_secondary_noqa <- forest_plot(d4 |> filter(arate=='Secondary'),'Secondary Attack Rate (%)',"population_group",c(-5,100),
+                            custom_colours = c('General population'='darkblue', 'Healthcare workers' = 'darkred','Other'='lightgreen', 'Persons under investigation'='purple2', 'Household contacts of survivors'='yellow3', 'Mixed groups' = 'pink2'),
+                            text_size = 16)
+
+
+# Growth rate
+d5$parameter_unit <- 'Per day'
+p5 <- forest_plot(d5|> filter(qa_score>0.5) ,'Growth rate (r per day)',"pathogen",c(0,.25),text_size = 16)
+p5_noqa <- forest_plot(d5, 'Growth rate (r per day)',"pathogen",c(0,.25),text_size = 16)
+
+
+# make colours across plots the same to simplify legend!!! + add in consideration for setting
+# meta-analysis ?? how to deal with lack of sample size especially for CI rows etc?  --> double check 3468, 5722, 1023 to see if we can get sample sizes!
+# sd = sqrt(N) * (upper - lower ) / 3.92
+p6_1 <- forest_plot( d6 |> 
+                       filter(qa_score>0.5) |>
+                       filter(str_detect(parameter_type,('Basic'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value))|> 
+                       arrange(population_country_v2,desc(parameter_value)),
+                     'Basic Reproduction Number',"population_country_v2",c(0,6),
+                     custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
+                     text_size = 16)
+
+p6_1_noqa <- forest_plot( d6 |> 
+                       filter(str_detect(parameter_type,('Basic'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value))|> 
+                       arrange(population_country_v2,desc(parameter_value)),
+                     'Basic Reproduction Number',"population_country_v2",c(0,6),
+                     custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
+                     text_size = 16) 
+
+p6_2 <- forest_plot( d6 |>
+                       filter(qa_score>0.5) |>
+                       filter(str_detect(parameter_type,('Effective'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |> 
+                       arrange(population_country_v2,desc(parameter_value)),
+                     'Effective Reproduction Number',"population_country_v2",c(-0.5,6),
+                     custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
+                     text_size = 16)
+
+p6_2_noqa <- forest_plot( d6 |>
+                       filter(str_detect(parameter_type,('Effective'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value))|> 
+                         arrange(population_country_v2,desc(parameter_value)),
+                     'Effective Reproduction Number',"population_country_v2",c(-0.5,6),
+                     custom_colours = c('Canada'='darkblue', 'China' = 'darkred', 'Greater China'='red2','Multi Region'='lightgreen', 'Singapore'='purple4', 'Vietnam'='yellow3','Unspecified'='grey','Taiwan'='pink','Taiwan + China'= 'pink4','Hong Kong SAR' = 'brown4','Canada + Singapore' = 'darkgreen'),
+                     text_size = 16)
+
+
+d6$method_moment_value <- factor(d6$method_moment_value,levels = c('Start outbreak','Mid outbreak', 'Post outbreak', 'Unspecified'))
+p6_3 <- forest_plot( d6 |> 
+                       filter(qa_score>0.5) |>
+                       filter(str_detect(parameter_type,('Basic'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                       mutate(method_moment_value = replace_na(method_moment_value,'Unspecified')) |> 
+                       arrange(method_moment_value,desc(parameter_value)),
+                     'Basic Reproduction Number',"method_moment_value",c(-0.5,6), show_label = TRUE,
+                     text_size = 16)
+
+p6_3_noqa <- forest_plot( d6 |> 
+                       filter(str_detect(parameter_type,('Basic'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                       mutate(method_moment_value = replace_na(method_moment_value,'Unspecified')) |> 
+                       arrange(method_moment_value,desc(parameter_value)),
+                     'Basic Reproduction Number',"method_moment_value",c(-0.5,6), show_label = TRUE,
+                     custom_colours = c('Start outbreak'='steelblue', 'Mid outbreak' = 'darkred', 'Post outbreak'='lightgreen','Unspecified' = 'grey'),
+                     text_size = 16)
+
+
+p6_4e <- forest_plot( d6 |> 
+                       filter(qa_score>0.5) |>
+                       filter(str_detect(parameter_type,('Effective'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                       mutate(method_r = replace_na(method_r,'Unspecified')) |> 
+                       arrange(method_r,desc(parameter_value)),
+                     'Effective Reproduction Number',"method_r",c(-0.5,6),
+                     text_size = 16)
+
+p6_4e_noqa <- forest_plot( d6 |> 
+                            filter(str_detect(parameter_type,('Effective'))) |> 
+                            filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                            mutate(method_r = replace_na(method_r,'Unspecified')) |> 
+                            arrange(method_r,desc(parameter_value)),
+                          'Effective Reproduction Number',"method_r",c(-0.5,6),
+                          text_size = 16) + theme(legend.position = 'none')
+
+p6_4 <- forest_plot( d6 |> 
+                       filter(qa_score>0.5) |>
+                       filter(str_detect(parameter_type,('Basic'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                       mutate(method_r = replace_na(method_r,'Unspecified')) |> 
+                       arrange(method_r,desc(parameter_value)),
+                     'Basic Reproduction Number',"method_r",c(-0.5,6),
+                     text_size = 16)
+
+p6_4_noqa <- forest_plot( d6 |> 
+                       filter(str_detect(parameter_type,('Basic'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                       mutate(method_r = replace_na(method_r,'Unspecified')) |> 
+                       arrange(method_r,desc(parameter_value)),
+                     'Basic Reproduction Number',"method_r",c(-0.5,6),
+                     text_size = 16) 
+
+p6_5 <- forest_plot( d6 |>
+                       filter(qa_score>0.5) |>
+                       mutate(method_moment_value = replace_na(method_moment_value,'Unspecified') ) |> 
+                       filter(str_detect(parameter_type,('Effective'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)),
+                     'Effective Reproduction Number',"method_moment_value",c(-0.5,6), show_label = TRUE,
+                     text_size = 16)
+
+p6_5_noqa <- forest_plot( d6 |>
+                       mutate(method_moment_value = replace_na(method_moment_value,'Unspecified') ) |> 
+                       filter(str_detect(parameter_type,('Effective'))) |> 
+                       filter(parameter_uncertainty_upper_value<7|is.na(parameter_uncertainty_upper_value)) |>
+                         arrange(method_moment_value,desc(parameter_value)),
+                     'Effective Reproduction Number',"method_moment_value",c(-0.5,6), show_label = TRUE,
+                     custom_colours = c('Start outbreak'='steelblue', 'Mid outbreak' = 'darkred', 'Post outbreak'='lightgreen','Unspecified' = 'grey'),
+                     text_size = 16) + theme(legend.position = 'none')
+
+R_plot <- p6_3 + p6_5 + plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect")
+p6_3
+```
+
+
+**Figure 3B: Effective Reproduction numbers**
+```{r Figure_3B, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+p6_5
+```
+
+
+## Other SARS-CoV-1 transmission parameters
+
+Overview of estimated SARS (A) attack rates, (B) secondary attack rates, (C) growth rates, (D) overdispersion, (E) evolutionary rates, (F) substitution rates. Circles represent mean estimates, and triangles represent unspecified central estimates. Thin solid lines represent uncertainty estimates, and solid shaded bars represent ranges of central estimates reported, e.g. when disaggregated by certain characteristics (e.g. age, sex, region, time) or using different estimation methods (e.g. compartmental, branching process models, etc). Colour represents (A & B) the study population considered, (C & D) when during the outbreak the study was conducted, with “control measures” referring to a time in the outbreak when interventions were reported to be in place, (E & F) long (L)/short (S) gene segment. In E and F, s/s/y refers to nucleotide substitutions per site per year. Only parameters from studies with a QA score > 0.5 are plotted.
+
+
+**Figure 4A: Attack rates**
+
+```{r Figure_4A, fig.height=6, fig.width=8,echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+p4_primary
+```
+
+**Figure 4A: Secondary Attack rates**
+
+```{r Figure_4B, fig.height=4, fig.width=8,echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+p4_secondary
+```
+
+**Figure 4C: Growth rates**
+
+```{r Figure_4C, fig.height=3, fig.width=8,echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+p5
+```
+
+**Figure 4D: Overdispersion**
+
+```{r Figure_4D, fig.height=4, fig.width=8,echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+p3
+```
+
+**Figure 4E: Evolutionary rates**
+
+```{r Figure_4E, fig.height=2, fig.width=8,echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+p1
+```
+
+**Figure 4F: Substitution rates**
+
+```{r Figure_4F, fig.height=2, fig.width=8,echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+p2
+```
+
+
+## Delays
+
+Overview of SARS epidemiological delays: estimates of (A) mean serial interval, (B) mean infectious period, (C) mean duration from hospital admission to final health outcome (i.e. death or recovery); and meta-analysis of epidemiological delays: estimates of (D) mean incubation period, (E) mean duration from symptom onset to hospital admission. In panels A, B, & C, circles represent mean estimates, squares represent median estimates, and triangles represent unspecified central estimates. Thin solid lines represent uncertainty estimates, and solid shaded bars represent the range of central estimates reported, e.g. when disaggregated by certain characteristics (e.g. age, sex, region, time) or using different estimation methods. In plot C, colour represents different final health outcomes. In D, blue squares indicate common effect and random effect estimates across different study populations, and blue diamonds represent: overall common effect estimates - in which all aggregated data are assumed to come from a single data-generating process, and overall random effect estimates. In E, blue squares represent study specific estimates, and blue diamonds represent overall common effect and random effect estimates. Only parameters from studies with a QA score > 0.5 are plotted.
+
+
+**Figure 5A: Serial Interval** 
+
+```{r fig_5A, echo=FALSE, fig.height=3, fig.width=8, message=FALSE, warning=FALSE, paged.print=TRUE}
+d1 <- parameters %>% filter(parameter_type == 'Human delay - incubation period')
+d2 <- parameters %>% filter(parameter_type == 'Human delay - symptom onset>admission to care')
+d3 <- parameters %>% filter(parameter_type == 'Human delay - time in care (length of stay)' |
+                              parameter_type == 'Human delay - admission to care>discharge/recovery' |
+                              parameter_type == 'Human delay - admission to care>death') %>%
+  mutate(parameter_value_type = case_when(is.na(parameter_value_type)~'Unspecified',
+                                    TRUE ~ parameter_value_type))
+d4 <- parameters %>% filter(parameter_type == 'Human delay - symptom onset>discharge/recovery' |
+                              parameter_type == 'Human delay - symptom onset>death')
+d5 <- parameters %>% filter(parameter_type == 'Human delay - serial interval')
+d6 <- parameters %>% filter(parameter_type == 'Human delay - infectious period')
+d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
+
+# Serial interval sub-plot (both papers have qa above 0.5)
+SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),'Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
+GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+
+SI_forest_noqa <- forest_plot(d5|> arrange(desc(parameter_value)), 'Serial Interval (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+IP_forest_noqa <- forest_plot(d6|> arrange(desc(parameter_value)), 'Infectious Period (days)',"parameter_type",c(0,30),text_size = TEXT_SIZE)
+GT_forest_noqa <- forest_plot(d7|> arrange(desc(parameter_value)), 'Generation Time (days)',"parameter_type",c(0,20),text_size = TEXT_SIZE)
+
+
+# Incubation period
+#p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
+d1_subgroups <- d1 %>% filter(population_group %in% c('General population','Mixed groups', 'Persons under investigation','Healthcare workers')) %>%
+  filter(qa_score>0.5) %>%
+  mutate(parameter_value = coalesce(parameter_value,central))
+
+d1_subgroups_noqa <- d1 %>% filter(population_group %in% c('General population','Mixed groups', 'Persons under investigation','Healthcare workers')) %>%
+  mutate(parameter_value = coalesce(parameter_value,central))
+
+set.seed(42)
+m1 <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
+                    plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
+                    width = 7500, height = 5950, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
+
+set.seed(42)
+m1_SI <- metamean_wrap(dataframe = d1_subgroups, estmeansd_method = "Cai", 
+                       plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
+                       width = 11500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
+
+set.seed(42)
+m1_SI_noqa <- metamean_wrap(dataframe = d1_subgroups_noqa, estmeansd_method = "Cai", 
+                       plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
+                       width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
+
+
+#meta-analysis of onset-admission delay
+set.seed(42)
+d2 <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+  filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
+  filter(qa_score>0.5) %>%
+  mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
+         population_group    = replace_na(population_group,'Unspecified'),
+         population_sample_type = replace_na(population_sample_type,'Unspecified'))
+
+oa_forest_mmv <- forest_plot(d2 |> arrange(method_moment_value,desc(parameter_value)),
+                             'Onset-Admission Delay (days)','method_moment_value',c(0,20),text_size = TEXT_SIZE)
+
+oa_forest_pc <- forest_plot(d2 |> arrange(population_country,desc(parameter_value)),
+                             'Onset-Admission Delay (days)','population_country',c(0,20),text_size = TEXT_SIZE)
+
+oa_forest_pg <- forest_plot(d2 |> arrange(population_group,desc(parameter_value)),
+                            'Mean Onset-Admission Delay (days)','population_group',c(0,20),text_size = TEXT_SIZE)
+
+oa_forest_pst <- forest_plot(d2 |> arrange(population_sample_type,desc(parameter_value)),
+                            'Onset-Admission Delay (days)','population_sample_type',c(0,20),text_size = TEXT_SIZE)
+
+oa <- (oa_forest_mmv + oa_forest_pc) / (oa_forest_pg + oa_forest_pst ) + theme(text = element_text(size = TEXT_SIZE)) + 
+   plot_annotation(tag_levels = 'A') 
+#ggsave("figure_5SI_onset_to_admission.png", plot = oa, width = 39, height = 22)
+
+m2 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
+                    plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
+                    width = 9500, height = 4200, resolution = 1000)
+
+set.seed(42)
+d2_noqa <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+  filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) 
+m2_noqa <- metamean_wrap(dataframe = d2_noqa, estmeansd_method = "Cai",
+                    plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
+                    width = 9500, height = 4200, resolution = 1000)
+
+# admission to outcome... 
+outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) |> arrange(parameter_type,desc(parameter_value)) %>%
+                                mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
+                              'Admission to outcome (days)',"parameter_type",c(0,60),text_size = 22)
+outcome_forest_noqa <- forest_plot(d3 |> arrange(parameter_type,desc(parameter_value))  %>% 
+                                mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
+                              'Admission to outcome (days)',"parameter_type",c(0,60),text_size = 22)
+
+### Create plots!
+
+layout <- "
+AAABBBDDD
+EEEEFFFFF
+EEEEFFFFF
+"
+delays_plot <-  SI_forest + IP_forest + outcome_forest + m1$plot + theme(text = element_text(size = TEXT_SIZE)) + m2$plot + theme(text = element_text(size = TEXT_SIZE)) + 
+  plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
+#ggsave("figure_5_delays.png", plot = delays_plot, width = 39, height = 22)
+#ggsave("figure_5_delays.pdf", plot = delays_plot, width = 39, height = 22)
+
+delays_plotSI <-  SI_forest_noqa + IP_forest_noqa + outcome_forest_noqa + m1_SI_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + m2_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + 
+  plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
+#ggsave("figure_5SI_delays.png", plot = delays_plotSI, width = 39, height = 22)
+#ggsave("figure_5SI_delays.pdf", plot = delays_plotSI, width = 39, height = 22)
+
+# SI figures
+#ggsave("figure_5SI_subgroup_meta.png", plot = m1_SI$plot, width = 22, height = 22) # note that qa & noqa lets through sames papers
+
+SI_forest
+```
+
+**Figure 5B: Infectious Period** 
+
+```{r fig_5B, echo=FALSE, fig.height=3, fig.width=8, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+IP_forest
+```
+
+**Figure 5C: Admission to outcome** 
+
+```{r fig_5C, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+outcome_forest 
+```
+
+**Figure 5D: Mean Incubation period meta-analysis** 
+
+```{r fig_5D, echo=FALSE, fig.height=5, fig.width=10, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+m1$plot
+```
+
+**Figure 5E: Mean Onset to Admission meta-analysis** 
+
+```{r fig_5E, echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+m2$plot
+```

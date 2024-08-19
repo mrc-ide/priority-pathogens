@@ -259,6 +259,9 @@ clean_dfs <- function(df, pathogen) {
       df <- ebola_params_cleaning(df)
       df <- more_ebola_params_cleaning(df)
     }
+    if (pathogen == "SARS") {
+      df <- sars_params_cleaning(df)
+    }
     if (pathogen == "LASSA") {
       df <- lassa_params_cleaning(df)
       df <- more_lassa_cleaning_generic(df)
