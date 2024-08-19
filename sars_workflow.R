@@ -33,7 +33,7 @@ location <- normalizePath(location)
 ## Download the zipped outputs from the database tasks
 url <- "https://github.com/mrc-ide/priority-pathogens/releases/download/sars/sars-outputs.zip"
 ## Download
-download.file(url, destfile = file.path(location, "lassa-outputs.zip"), mode = "wb")
+download.file(url, destfile = file.path(location, "sars-outputs.zip"), mode = "wb")
 ## unzip
 ## The outputs are zipped in a folder called sars-outputs
 ## Check that the folder does not already exist in the location
