@@ -65,10 +65,6 @@ clean_articles <- function(df, pathogen){
       #   article_label = gsub("\\.3", "(d)", article_label)
       # )
     
-    # De-duplicate by covidence ID
-    # df <- df %>%
-    #   
-    
   }
   
   if (pathogen == "EBOLA") {
@@ -779,7 +775,11 @@ add_qa_scores <- function(articles_df, params_df) {
       ),
       article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
     ) %>%
-    select(-c(total_qa, yes_score))
+    select(-c(total_qa, yes_score)) %>%
+    # Remove observation without qa score (second extractor)
+    group_by(covidence_id) %>%
+    filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
+    ungroup
   
   articles_df
 }
