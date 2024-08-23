@@ -1,7 +1,7 @@
 ## ZIKA WORKFLOW
 # based on SARS workflow
 
-install.packages("orderly2", repos = c("https://mrc-ide.r-universe.dev", "https://cloud.r-project.org"))
+# install.packages("orderly2", repos = c("https://mrc-ide.r-universe.dev", "https://cloud.r-project.org"))
 #remotes::install_github("mrc-ide/orderly.sharedfile")
 #orderly2::orderly_init(".")
 library(orderly2)
