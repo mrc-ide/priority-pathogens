@@ -98,6 +98,14 @@ m5 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
 
 p5 <- m5$plot
 
+png(file = "temp.png", width = 9500, height = 6000, res = 750)
+meta::funnel(m5$result,studlab = TRUE)
+dev.off()
+
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funel_plt <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+
 patchwork <- ((p1 | p2) / (p3 | p4) / p5)
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_4.png", plot = patchwork, width = 12, height = 16)
@@ -111,3 +119,4 @@ patchwork <- (p1 + p2) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_S5.png", plot = patchwork, width = 12, height = 6)
 ggsave("figure_S5.pdf", plot = patchwork, width = 12, height = 6)
+ggsave("figure_SI_funnel.png", plot = funel_plt, width = 12, height = 8)
