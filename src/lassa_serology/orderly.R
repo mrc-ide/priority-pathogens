@@ -110,19 +110,35 @@ n1 <- data.frame(latitude  = c(19.1,18.1,17.1,15.1,15.0,12.5,
                                "Central\nAfrican\nRepublic","Gabon","Equatorial\nGuinea","Cameroon","Côte d'Ivoire","Ghana",
                                "Republic\nof Congo","Benin","Togo","Nigeria","Guinea","Gambia",
                                "Guinea\n-Bissau","Sierra\nLeone","Liberia"))
-n2 <- data.frame(latitude = numeric(0), longitude = numeric(0), c_name = character(0))
+n2 <- data.frame(latitude  = c(16.4,
+                               3.8,4.25,
+                               5.2,3.8,9.0,
+                               7.0,5), 
+                 longitude = c(-11.5,
+                               -4.5,-0.5,
+                               2.3,4.5,-15.5,
+                               -14.5,-11.5), 
+                 c_name    = c("Mali",
+                               "Côte d'Ivoire","Ghana",
+                               "Benin","Nigeria","Guinea",
+                               "Sierra\nLeone","Liberia"))
 
 #specify position of lines pointing to countries (added to map after function call)
-ll <- data.frame(lat1 = c(2.50,-3.2,1.0,5.1,3.3,13.4,11.500,7.200,4.5),
-                 lon1 = c(23.5,7.30,7.6,1.6,3.7,-17.8,-17.7,-14.5,-11),
-                 lat2 = c(3.80,-2.5,1.7,6.0,4.5,13.4,11.700,7.900,5.5),
-                 lon2 = c(22.5,9.20,9.4,1.4,5.3,-17,-16.500,-13.2,-10))
+ll1 <- data.frame(lat1 = c(2.50,-3.2,1.0,5.1,3.3,13.4,11.500,7.200,4.5),
+                  lon1 = c(23.5,7.30,7.6,1.6,3.7,-17.8,-17.7,-14.5,-11),
+                  lat2 = c(3.80,-2.5,1.7,6.0,4.5,13.4,11.700,7.900,5.5),
+                  lon2 = c(22.5,9.20,9.4,1.4,5.3,-17,-16.500,-13.2,-10))
+ll2 <- data.frame(lat1 = c( 16.1,  9.1,   7.45, 5.1, 4.1, 4.5, 5.4, 4),
+                  lon1 = c(-11.4,-14.75,-13.9,-10.8,-4.5,-0.5, 2.3, 4.5),
+                  lat2 = c( 15.3,  9.7,   7.9,  5.7, 5,   5.1, 6.2, 4.8),
+                  lon2 = c(-10.9,-14.0, -13.2,-10.2,-4.9,-0.8, 2.2, 5.3))
 
 #call mapping function
 p1 <- map_generic(l0,l1,d1,f1,n1,range_mp=TRUE,summ_dups="mean",c(-23.2,25.1),c(-3.9,22.25),c(0,60),'magma','')
 p1 <- p1 + geom_rect(aes(xmin = -18.8, xmax = 14.75, ymin = 2, ymax = 16.75), linetype = 2, color = "grey40", fill = NA)
-p1 <- p1 + geom_segment(data = ll, aes(x = lon1, xend = lon2, y = lat1, yend = lat2), size = 0.5, color = "black")
+p1 <- p1 + geom_segment(data = ll1, aes(x = lon1, xend = lon2, y = lat1, yend = lat2), size = 0.5, color = "black")
 p2 <- map_generic(l0,l1,d2,f2,n2,range_mp=TRUE,summ_dups="mean",c(-18.5,13.13),c(2.75,16.1),c(0,60),'magma','')
+p2 <- p2 + geom_segment(data = ll2, aes(x = lon1, xend = lon2, y = lat1, yend = lat2), size = 0.5, color = "black")
 
 patchwork <- p1 / p2
 patchwork <- patchwork + plot_layout(heights = c(1,0.75)) + plot_annotation(tag_levels = 'A')
