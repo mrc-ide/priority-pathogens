@@ -105,18 +105,18 @@ sars_cleaning <- function(df) {
         #   covidence_id %in% c(845,917) ~ FALSE,
         #   TRUE ~ paper_copy_only)) %>%
         #name typos
-        mutate(first_author_surname = case_when(
+        mutate(first_author_first_name = case_when(
         #   covidence_id == 2648 ~ 'Shirley C.',
            covidence_id == 6909 ~ 'MEC', #The Chinese SARS Molecular Epidemiology Consortium
-           TRUE ~ first_author_surname)) %>%
-        mutate(first_author_first_name = sub(".*\\.(.*)", "\\1", first_author_first_name, useBytes = TRUE)) %>%
-        mutate(first_author_first_name = sub("^\\s+", "", first_author_first_name, useBytes = TRUE)) %>%                 
-       mutate(first_author_first_name = case_when(
+           TRUE ~ first_author_first_name)) %>%
+        mutate(first_author_surname = sub(".*\\.(.*)", "\\1", first_author_surname, useBytes = TRUE)) %>%
+        mutate(first_author_surname = sub("^\\s+", "", first_author_surname, useBytes = TRUE)) %>%                 
+       mutate(first_author_surname = case_when(
       #   covidence_id == 2648 ~ 'Nimo-Paintsil',
       #   covidence_id == 2585 ~ 'Dalhat',
       #   covidence_id == 1033 ~ 'Ehichioya',
          covidence_id == 6909 ~ 'MEC', #The Chinese SARS Molecular Epidemiology Consortium
-         TRUE ~ first_author_first_name))     
+         TRUE ~ first_author_surname))     
     df
 }
 
