@@ -41,7 +41,7 @@ clean_articles <- function(df, pathogen){
   # Pathogen-specific article cleaning #
   ######################################
   
-  if (pathogen == 'ZIKA'){
+  
     # here we need to remove duplicates by article and covidence IDs
     df <- df %>%
       mutate(# Fix issues with dois
@@ -65,8 +65,6 @@ clean_articles <- function(df, pathogen){
       #   article_label = gsub("\\.3", "(d)", article_label)
       # )
     
-  }
-  
   if (pathogen == "EBOLA") {
     df <- df %>%
       # 12389: model only paper (growth model), 2921: Not extracted from,
@@ -137,11 +135,7 @@ clean_models <- function(df, pathogen){
     relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
   
-  #########################################
-  # Pathogen-specific model data cleaning #
-  #########################################
-  if(pathogen == 'ZIKA'){
-    df <- df %>%
+  df <- df %>%
       
       # Update compartmental type 
       mutate(compartmental_type = case_when( 
@@ -151,7 +145,7 @@ clean_models <- function(df, pathogen){
       ))
     # one model with missing name, ids, etc -- look into this? model_data_id = ccc0683c9eebf812a071f334fe2c8611
     
-  }
+  
   
   df <- df %>% select(-c("access_model_id"))
   return(df)
@@ -283,17 +277,6 @@ clean_params <- function(df, pathogen){
       )
     )
   
-  #############################################
-  # Pathogen-specific parameter data cleaning #
-  #############################################
-  
-  # if (pathogen == "MARBURG") {
-  #   df <- df %>%
-  #     mutate(
-  #       population_study_start_month = substring(population_study_start_month, 1, 3),
-  #       population_study_end_month = substring(population_study_end_month, 1, 3)
-  #     )
-  # }
   
   # More cleaning 
   df <- df %>%
@@ -757,12 +740,12 @@ add_qa_scores <- function(articles_df, params_df) {
       model_only =
         as.numeric(!id %in% params_df$id)
     ) %>%
-    # if an article is model_only, make 5-7 NA for consistency between scores
-    mutate(
-      qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
-      qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
-      qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
-    ) %>%
+    # if an article is model_only, make 5-7 NA for consistency between scores --  removed for Zika 
+    # mutate(
+    #   qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
+    #   qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
+    #   qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
+    # ) %>%
     # add qa score to article data
     mutate(
       total_qa =

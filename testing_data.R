@@ -20,7 +20,8 @@ table(sero$parameter_value_type)
 table(sero$population_country)
 
 ar <- parameters %>%
-  filter(parameter_type == 'Attack rate')
+  filter(parameter_type == 'Attack rate') %>%
+  select(parameter_value, parameter_unit)
 
 
 table(outbreak_double$outbreak_country)
