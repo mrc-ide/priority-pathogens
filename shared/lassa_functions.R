@@ -3,7 +3,7 @@
 data_curation <- function(articles, outbreaks, models, parameters, plotting,switch_first_surname=FALSE) {
   
   articles   <- articles %>%
-    mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
+    mutate(refs = paste(first_author_surname," (",year_publication,")",sep="")) %>% #define references
     group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
     mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
     select(-counter,-refs) %>% rename(refs = new_refs)
