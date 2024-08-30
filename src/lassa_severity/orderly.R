@@ -28,12 +28,12 @@ orderly_shared_resource("Africa_Boundaries-shp" = "Africa_Boundaries-shp",
                         "rivers_africa_37333"   = "rivers_africa_37333")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_3.png","figure_S6.png","figure_S7.png",
+orderly_artefact("lassa-specific figures",c("figure_3.png","figure_S7.png",
                                             "figure_S8.png","figure_S9.png","figure_S10.png",
-                                            "figure_S11.png","figure_S12.png",
-                                            "figure_3.pdf","figure_S6.pdf","figure_S7.pdf",
+                                            "figure_S11.png","figure_S12.png","figure_S13.png",
+                                            "figure_3.pdf","figure_S7.pdf",
                                             "figure_S8.pdf","figure_S9.pdf","figure_S10.pdf",
-                                            "figure_S11.pdf","figure_S12.pdf"))
+                                            "figure_S11.pdf","figure_S12.pdf","figure_S13.pdf"))
 
 ###################
 ## DATA CURATION ##
@@ -206,16 +206,16 @@ p3 <- m3$plot
 p4 <- m4$plot
 p5 <- m5$plot
 
-ggsave("figure_S6.png", plot = p1, width = 12, height = 16)
-ggsave("figure_S6.pdf", plot = p1, width = 12, height = 16)
-ggsave("figure_S7.png", plot = p2, width = 12, height = 16)
-ggsave("figure_S7.pdf", plot = p2, width = 12, height = 16)
-ggsave("figure_S8.png", plot = p3, width = 12, height = 16)
-ggsave("figure_S8.pdf", plot = p3, width = 12, height = 16)
-ggsave("figure_S9.png", plot = p4, width = 12, height = 16)
-ggsave("figure_S9.pdf", plot = p4, width = 12, height = 16)
-ggsave("figure_S10.png", plot = p5, width = 12, height = 16)
-ggsave("figure_S10.pdf", plot = p5, width = 12, height = 16)
+ggsave("figure_S7.png", plot = p1, width = 12, height = 16)
+ggsave("figure_S7.pdf", plot = p1, width = 12, height = 16)
+ggsave("figure_S8.png", plot = p2, width = 12, height = 16)
+ggsave("figure_S8.pdf", plot = p2, width = 12, height = 16)
+ggsave("figure_S9.png", plot = p3, width = 12, height = 16)
+ggsave("figure_S9.pdf", plot = p3, width = 12, height = 16)
+ggsave("figure_S10.png", plot = p4, width = 12, height = 16)
+ggsave("figure_S10.pdf", plot = p4, width = 12, height = 16)
+ggsave("figure_S11.png", plot = p5, width = 12, height = 16)
+ggsave("figure_S11.pdf", plot = p5, width = 12, height = 16)
 
 #figure_S11: meta-analysis with only known duplicates excluded
 db <- d1 %>% filter(duplicate_cfr %in% c("False","Assumed"))
@@ -240,8 +240,8 @@ p4 <- m4$plot
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') 
-ggsave("figure_S11.png", plot = patchwork, width = 12, height = 12)
-ggsave("figure_S11.pdf", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S12.png", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S12.pdf", plot = patchwork, width = 12, height = 12)
 
 #figure_S12: meta-analysis without de-duplication
 dc <- d1
@@ -266,5 +266,5 @@ p4 <- m4$plot
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') 
-ggsave("figure_S12.png", plot = patchwork, width = 12, height = 12)
-ggsave("figure_S12.pdf", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S13.png", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S13.pdf", plot = patchwork, width = 12, height = 12)
