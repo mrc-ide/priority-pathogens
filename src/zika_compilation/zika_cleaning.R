@@ -183,6 +183,37 @@ clean_outbreaks <- function(df, pathogen){
                                     TRUE ~ NA)) 
   
   df <- df %>%
+    # Clean outbreak location
+    mutate(# Outbreak location 
+      outbreak_location = case_when(
+        outbreak_location == 'Australes' | outbreak_location == "Polynesia: Austral Islands (AUS)" 
+        ~ "Austral Islands",
+        outbreak_location == 'Moorea' | outbreak_location == "Polynesia: Mo'orea Island (MOO)" 
+        ~ "Mo'orea",
+        outbreak_location == 'Iles Sous-Le-Vent' | outbreak_location == 'Iles sous-le-vent' | 
+          outbreak_location == "Polynesia: Sous-le-vent Islands (SLV)" | outbreak_location=='Sous-Le-Vent Islands'
+        ~ 'Sous-Le-Vent Islands',
+        outbreak_location == "Marquises" | outbreak_location == "Polynesia: Marquesas Islands (MRQ)"
+        ~ "Marquesas Islands",
+        outbreak_location == "West Indies: Guadelopue (GLP)" ~ 'Guadeloupe',
+        outbreak_location == "West Indies: Martinique (MTQ)" ~ "Martinique",
+        outbreak_location == "West Indies: Saint-Martin (MAF)" ~ "Saint Martin",
+        outbreak_location == "Polynesia: Tuamotus (TUA)" ~ "Tuamotus",
+        outbreak_location == "Polynesia: Tahiti (TAH)" ~ "Tahiti",
+        TRUE ~ outbreak_location
+      )
+    ) %>%
+    # mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
+    # mutate(outbreak_location = gsub("and", ";", outbreak_location)) %>%
+    # mutate(outbreak_location = sub("^\\s+", "", outbreak_location)) %>%
+    mutate(outbreak_location = str_to_title(outbreak_location)) %>%
+    # unspecified case detection mode
+    mutate(cases_mode_detection = case_when(
+      is.na(cases_mode_detection) ~ "Unspecified",
+      TRUE ~ cases_mode_detection
+    ))
+  
+  df <- df %>%
     mutate(      # Outbreak country names
       outbreak_country = str_replace(
         outbreak_country, "Congo, Rep.",
@@ -201,40 +232,15 @@ clean_outbreaks <- function(df, pathogen){
         'Federated States of Micronesia'
       ),
       outbreak_country = case_when(
-        covidence_id == 947 & outbreak_location %in% c("Austral Isl;S (Aus)", "Marquesas Isl;S (Mrq)",
-                                                       "Mo'orea Isl; (Moo)", "Sous-Le-Vent Isl;S (Slv)",
-                                                       "Tahiti (Tah)", "Tuamotus (Tua)") ~ "French Polynesia",
-        covidence_id == 947 & outbreak_location == "Martinique (Mtq)" ~ "France (Martinique)",
-        covidence_id == 947 & outbreak_location == "Guadelopue (Glp)" ~ "France (Guadeloupe)", 
-        covidence_id == 947 & outbreak_location == "Saint-Martin (Maf)" ~ "France (Saint-Martin)",
+        covidence_id == 947 & outbreak_location %in% c("Austral Islands", "Marquesas Islands",
+                                                       "Mo'orea", "Sous-Le-Vent Islands",
+                                                       "Tahiti", "Tuamotus") ~ "French Polynesia",
+        covidence_id == 947 & outbreak_location == "Martinique" ~ "France (Martinique)",
+        covidence_id == 947 & outbreak_location == "Guadelopue" ~ "France (Guadeloupe)", 
+        covidence_id == 947 & outbreak_location == "Saint-Martin" ~ "France (Saint-Martin)",
         TRUE ~ outbreak_country
       )) 
   
-  df <- df %>%
-    # Clean outbreak location
-    mutate(# Outbreak location 
-      outbreak_location = case_when(
-        outbreak_location == 'Australes' | outbreak_location == "Polynesia: Austral Isl;S (Aus)" ~ "Austral Islands",
-        outbreak_location == 'Moorea' | outbreak_location == "Polynesia: Mo'orea Isl; (Moo)" ~ "Mo'orea",
-        outbreak_location == "Polynesia: Sous-Le-Vent Isl;S (Slv)" | outbreak_location == 'Iles Sous-Le-Vent' ~ 'Sous-Le-Vent Islands',
-        outbreak_location == "Polynesia: Marquesas Isl;S (Mrq)" | outbreak_location == "Marquises" ~ "Marquesas Islands",
-        outbreak_location == "West Indies: Guadelopue (Glp)" ~ 'Guadeloupe',
-        outbreak_location == "West Indies: Martinique (Mtq)" ~ "Martinique",
-        outbreak_location == "West Indies: Saint-Martin (Maf)" ~ "Saint Martin",
-        outbreak_location == "Polynesia: Tuamotus (Tua)" ~ "Tuamotus",
-        outbreak_location == "Polynesia: Tahiti (Tah)" ~ "Tahiti",
-        TRUE ~ outbreak_location
-      )
-    ) %>%
-    mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
-    mutate(outbreak_location = gsub("and", ";", outbreak_location)) %>%
-    mutate(outbreak_location = sub("^\\s+", "", outbreak_location)) %>%
-    mutate(outbreak_location = str_to_title(outbreak_location)) %>%
-    # unspecified case detection mode
-    mutate(cases_mode_detection = case_when(
-      is.na(cases_mode_detection) ~ "Unspecified",
-      TRUE ~ cases_mode_detection
-    ))
   
   df <- df %>% select(-c("access_outbreak_id"))
   return(df)
