@@ -42,29 +42,29 @@ clean_articles <- function(df, pathogen){
   ######################################
   
   
-    # here we need to remove duplicates by article and covidence IDs
-    df <- df %>%
-      mutate(# Fix issues with dois
-        doi = str_remove_all(doi, 'doi:'),
-        doi = str_remove_all(doi, 'http://dx.doi.org/'),
-        doi = str_remove_all(doi, 'https://doi.org/'),
-        doi = str_remove(doi, "^/"),
-        doi = case_when(
-          covidence_id %in% 435 ~ "10.1007/s00705-015-2695-5",
-          covidence_id %in% 845 ~ "10.1016/s1473-3099(18)30718-7",
-          covidence_id %in% 1154 ~ "10.1136/bmjgh-2017-000309",
-          covidence_id %in% 1993 ~ "10.1080/00034983.1983.11811687",
-          covidence_id %in% 3042 ~ "10.1371/journal.pntd.0004726",
-          TRUE ~ doi
-        )) #%>% 
-      # # Update article label
-      #   # for different articles by the same author in the same year
-      #   article_label = make.unique(article_label, sep = " ."),
-      #   article_label = gsub("\\.1", "(b)", article_label),
-      #   article_label = gsub("\\.2", "(c)", article_label),
-      #   article_label = gsub("\\.3", "(d)", article_label)
-      # )
-    
+  # here we need to remove duplicates by article and covidence IDs
+  df <- df %>%
+    mutate(# Fix issues with dois
+      doi = str_remove_all(doi, 'doi:'),
+      doi = str_remove_all(doi, 'http://dx.doi.org/'),
+      doi = str_remove_all(doi, 'https://doi.org/'),
+      doi = str_remove(doi, "^/"),
+      doi = case_when(
+        covidence_id %in% 435 ~ "10.1007/s00705-015-2695-5",
+        covidence_id %in% 845 ~ "10.1016/s1473-3099(18)30718-7",
+        covidence_id %in% 1154 ~ "10.1136/bmjgh-2017-000309",
+        covidence_id %in% 1993 ~ "10.1080/00034983.1983.11811687",
+        covidence_id %in% 3042 ~ "10.1371/journal.pntd.0004726",
+        TRUE ~ doi
+      )) #%>% 
+  # # Update article label
+  #   # for different articles by the same author in the same year
+  #   article_label = make.unique(article_label, sep = " ."),
+  #   article_label = gsub("\\.1", "(b)", article_label),
+  #   article_label = gsub("\\.2", "(c)", article_label),
+  #   article_label = gsub("\\.3", "(d)", article_label)
+  # )
+  
   if (pathogen == "EBOLA") {
     df <- df %>%
       # 12389: model only paper (growth model), 2921: Not extracted from,
@@ -136,15 +136,15 @@ clean_models <- function(df, pathogen){
     arrange(covidence_id)
   
   df <- df %>%
-      
-      # Update compartmental type 
-      mutate(compartmental_type = case_when( 
-        compartmental_type == 'NA' | is.na(compartmental_type) ~ 'Not compartmental',
-        # need to check compartmental type for  1405, 2012, 3738, 5553, 5540 (other + SEIR-SEI?)
-        TRUE ~ compartmental_type
-      ))
-    # one model with missing name, ids, etc -- look into this? model_data_id = ccc0683c9eebf812a071f334fe2c8611
     
+    # Update compartmental type 
+    mutate(compartmental_type = case_when( 
+      compartmental_type == 'NA' | is.na(compartmental_type) ~ 'Not compartmental',
+      # need to check compartmental type for  1405, 2012, 3738, 5553, 5540 (other + SEIR-SEI?)
+      TRUE ~ compartmental_type
+    ))
+  # one model with missing name, ids, etc -- look into this? model_data_id = ccc0683c9eebf812a071f334fe2c8611
+  
   
   
   df <- df %>% select(-c("access_model_id"))
@@ -175,25 +175,15 @@ clean_outbreaks <- function(df, pathogen){
                                         lubridate::ymd(paste(outbreak_start_year, 01, 15, sep ='-')),
                                       TRUE ~ NA),
       outbreak_end_date = case_when((!is.na(outbreak_date_year) & !is.na(outbreak_end_month) & !is.na(outbreak_end_day)) ~
-                                        lubridate::ymd(paste(outbreak_date_year, outbreak_end_month, outbreak_end_day, sep ='-')),
-                                      (!is.na(outbreak_date_year) & !is.na(outbreak_end_month) & is.na(outbreak_end_day)) ~ 
-                                        lubridate::ymd(paste(outbreak_date_year, outbreak_end_month, 15, sep ='-')),
-                                      (!is.na(outbreak_date_year) & is.na(outbreak_end_month) & is.na(outbreak_end_day)) ~ 
-                                        lubridate::ymd(paste(outbreak_date_year, 01, 15, sep ='-')),
-                                      TRUE ~ NA),
-      # Outbreak location 
-      outbreak_location = case_when(
-        outbreak_location == 'Australes' | outbreak_location == "Polynesia: Austral Isl;S (Aus)" ~ "Austral Islands",
-        outbreak_location == 'Moorea' | outbreak_location == "Polynesia: Mo'orea Isl; (Moo)" ~ "Mo'orea",
-        outbreak_location == "Polynesia: Sous-Le-Vent Isl;S (Slv)" | outbreak_location == 'Iles Sous-Le-Vent' ~ 'Sous-Le-Vent Islands',
-        outbreak_location == "Polynesia: Marquesas Isl;S (Mrq)" | outbreak_location == "Marquises" ~ "Marquesas Islands",
-        outbreak_location == "West Indies: Guadelopue (Glp)" ~ 'Guadeloupe',
-          outbreak_location == "West Indies: Martinique (Mtq)" ~ "Martinique",
-      outbreak_location == "West Indies: Saint-Martin (Maf)" ~ "Saint Martin",
-          outbreak_location == "Polynesia: Tuamotus (Tua)" ~ "Tuamotus",
-          outbreak_location == "Polynesia: Tahiti (Tah)" ~ "Tahiti"
-      ),
-      # Outbreak country names
+                                      lubridate::ymd(paste(outbreak_date_year, outbreak_end_month, outbreak_end_day, sep ='-')),
+                                    (!is.na(outbreak_date_year) & !is.na(outbreak_end_month) & is.na(outbreak_end_day)) ~ 
+                                      lubridate::ymd(paste(outbreak_date_year, outbreak_end_month, 15, sep ='-')),
+                                    (!is.na(outbreak_date_year) & is.na(outbreak_end_month) & is.na(outbreak_end_day)) ~ 
+                                      lubridate::ymd(paste(outbreak_date_year, 01, 15, sep ='-')),
+                                    TRUE ~ NA)) 
+  
+  df <- df %>%
+    mutate(      # Outbreak country names
       outbreak_country = str_replace(
         outbreak_country, "Congo, Rep.",
         "Republic of the Congo"
@@ -216,12 +206,26 @@ clean_outbreaks <- function(df, pathogen){
                                                        "Tahiti (Tah)", "Tuamotus (Tua)") ~ "French Polynesia",
         covidence_id == 947 & outbreak_location == "Martinique (Mtq)" ~ "France (Martinique)",
         covidence_id == 947 & outbreak_location == "Guadelopue (Glp)" ~ "France (Guadeloupe)", 
-        covidence_id == 947 & outbreak_location == "Saint-Martin (Maf)" ~ "France (Saint-Martin)"
-      )
-    )
+        covidence_id == 947 & outbreak_location == "Saint-Martin (Maf)" ~ "France (Saint-Martin)",
+        TRUE ~ outbreak_country
+      )) 
   
-  # clean locations
   df <- df %>%
+    # Clean outbreak location
+    mutate(# Outbreak location 
+      outbreak_location = case_when(
+        outbreak_location == 'Australes' | outbreak_location == "Polynesia: Austral Isl;S (Aus)" ~ "Austral Islands",
+        outbreak_location == 'Moorea' | outbreak_location == "Polynesia: Mo'orea Isl; (Moo)" ~ "Mo'orea",
+        outbreak_location == "Polynesia: Sous-Le-Vent Isl;S (Slv)" | outbreak_location == 'Iles Sous-Le-Vent' ~ 'Sous-Le-Vent Islands',
+        outbreak_location == "Polynesia: Marquesas Isl;S (Mrq)" | outbreak_location == "Marquises" ~ "Marquesas Islands",
+        outbreak_location == "West Indies: Guadelopue (Glp)" ~ 'Guadeloupe',
+        outbreak_location == "West Indies: Martinique (Mtq)" ~ "Martinique",
+        outbreak_location == "West Indies: Saint-Martin (Maf)" ~ "Saint Martin",
+        outbreak_location == "Polynesia: Tuamotus (Tua)" ~ "Tuamotus",
+        outbreak_location == "Polynesia: Tahiti (Tah)" ~ "Tahiti",
+        TRUE ~ outbreak_location
+      )
+    ) %>%
     mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
     mutate(outbreak_location = gsub("and", ";", outbreak_location)) %>%
     mutate(outbreak_location = sub("^\\s+", "", outbreak_location)) %>%
@@ -252,30 +256,31 @@ clean_params <- function(df, pathogen){
       method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
       population_location = str_replace_all(population_location, ";", ","),
       across(.cols = c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, 
-               parameter_uncertainty_upper_value), .fns = as.numeric),
+                       parameter_uncertainty_upper_value), .fns = as.numeric),
       
       # Update parameter type values 
       parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
-                                 TRUE ~ parameter_type),
-      
-      # Group parameters
-      parameter_class = case_when(
-        grepl("Human delay", parameter_type) ~ "Human delay",
-        grepl("Seroprevalence", parameter_type) ~ "Seroprevalence",
-        grepl("Mutations", parameter_type) ~ "Mutations",
-        grepl("Risk factors", parameter_type) ~ "Risk factors",
-        grepl("Reproduction number", parameter_type) ~ "Reproduction number",
-        grepl("Severity", parameter_type) ~ "Severity",
-        grepl("Mosquito", parameter_type) ~ "Mosquito",
-        grepl("Relative", parameter_type) ~ "Relative contribution",
-        grepl("Overdispersion", parameter_type) ~ "Overdispersion",
-        grepl("Risk factors", parameter_type) ~ "Risk factors",
-        grepl("Attack rate", parameter_type) ~ "Attack rate",
-        grepl("Doubling time", parameter_type) ~ "Doubling time",
-        grepl("Growth rate", parameter_type) ~ "Growth rate",
-        TRUE ~ "Other transmission parameters"
-      )
-    )
+                                 TRUE ~ parameter_type))
+  
+  df <- df %>%
+    # Group parameters
+    mutate(parameter_class = case_when(
+      grepl("Human delay", parameter_type) ~ "Human delay",
+      grepl("Seroprevalence", parameter_type) ~ "Seroprevalence",
+      grepl("Mutations", parameter_type) ~ "Mutations",
+      grepl("Risk factors", parameter_type) ~ "Risk factors",
+      grepl("Reproduction number", parameter_type) ~ "Reproduction number",
+      grepl("Severity", parameter_type) ~ "Severity",
+      grepl("Mosquito", parameter_type) ~ "Mosquito",
+      grepl("Relative", parameter_type) ~ "Relative contribution",
+      grepl("Overdispersion", parameter_type) ~ "Overdispersion",
+      grepl("Risk factors", parameter_type) ~ "Risk factors",
+      grepl("Attack rate", parameter_type) ~ "Attack rate",
+      grepl("Doubling time", parameter_type) ~ "Doubling time",
+      grepl("Growth rate", parameter_type) ~ "Growth rate",
+      TRUE ~ "Other transmission parameters"
+    ))
+  
   
   
   # More cleaning 
@@ -333,7 +338,7 @@ clean_params <- function(df, pathogen){
           ) ~ "Multi-country: Brazil, Colombia, El Salvador",
           population_country %in% c(
             'Brazil;Colombia;Dominican Republic;El Salvador;Guatemala;Haiti;Honduras;Jamaica;Puerto Rico;United States'
-            ) ~ 'Multi-country: Americas (n = 10)',
+          ) ~ 'Multi-country: Americas (n = 10)',
           population_country %in% c(
             "Brazil;Colombia"
           ) ~ "Multi-country: Brazil and Colombia",
@@ -358,7 +363,9 @@ clean_params <- function(df, pathogen){
           is.na(population_country) ~ "Unspecified",
           TRUE ~ population_country
         )
-    ) %>%
+    ) 
+  
+  df <- df %>%
     # clean the other human delays and merge the common ones into parameter_type
     mutate(
       other_delay_start = case_when(
@@ -404,151 +411,76 @@ clean_params <- function(df, pathogen){
         case_when(
           !is.na(other_delay) ~ paste("Human delay -", other_delay),
           TRUE ~ parameter_type
-        ),
-      delay_short =
-        case_when(
-          parameter_class %in% "Human delay" ~
-            gsub("^Human delay - ", "", parameter_type),
-          TRUE ~ NA
-        ),
-      delay_short = str_to_sentence(delay_short),
-      delay_short =
-        str_replace_all(
-          delay_short, c(
-            "care/hospitalisation" = "care",
-            "care/hospital" = "care",
-            "onset/fever" = "onset"
-          )
-        ),
-      delay_short =
-        case_when(
-          delay_short %in% "Exposure/infection to infectiousness" ~
-            "Latent period",
-          delay_short %in% "Exposure/infection to symptom onset" ~
-            "Incubation period",
-          delay_short %in% "Time in care (length of stay)" ~
-            "Admission to care to death/discharge",
-          TRUE ~ delay_short
-        ),
-      delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
-      delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
-      delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
-      delay_short = str_replace(delay_short, "igg antibody detection", "antibody detection (IgM/IgG)"),
-      delay_short = str_replace(delay_short, "igm antibody detection", "antibody detection (IgM/IgG)"),
-      delay_start =
-        case_when(
-          startsWith(delay_short, "Admission to care") ~ "Admission to care",
-          startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
-          startsWith(delay_short, "Death to burial") ~ "Death to burial",
-          startsWith(delay_short, "Exposure/infection") ~ "Exposure/infection",
-          delay_short %in%
-            c(
-              "Incubation period", "Latent period", "Infectious period",
-              "Generation time", "Serial interval"
-            ) ~ "Infection process",
-          TRUE ~ "Other"
-        ),
-      # Exponent
-      # exponent = 
-      #   case_when(
-      #     parameter_class %in% "Mutations" &
-      #       covidence_id %in% 6340 ~ -3,
-      #     parameter_class %in% "Attack rate" &
-      #       covidence_id %in% c(241, 2240, 2241, 6472, 7199) ~ 0,
-      #     TRUE ~ exponent
-      #   ),
-      # Parameter_unit cleaning
-      parameter_unit =
-        case_when(
-          # delays
-          parameter_class %in% "Human delay" &
-            parameter_unit %in% "Per day" ~ "Days",
-          parameter_class %in% "Human delay" &
-            parameter_unit %in% "Per week" ~ "Weeks",
-          TRUE ~ parameter_unit
-        )
+        ))
+  
+  df <- df %>%
+    mutate(delay_short =
+             case_when(
+               parameter_class %in% "Human delay" ~
+                 gsub("^Human delay - ", "", parameter_type),
+               TRUE ~ NA
+             ),
+           delay_short = str_to_sentence(delay_short),
+           delay_short =
+             str_replace_all(
+               delay_short, c(
+                 "care/hospitalisation" = "care",
+                 "care/hospital" = "care",
+                 "onset/fever" = "onset"
+               )
+             ),
+           delay_short =
+             case_when(
+               delay_short %in% "Exposure/infection to infectiousness" ~
+                 "Latent period",
+               delay_short %in% "Exposure/infection to symptom onset" ~
+                 "Incubation period",
+               delay_short %in% "Time in care (length of stay)" ~
+                 "Admission to care to death/discharge",
+               TRUE ~ delay_short
+             ),
+           delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
+           delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
+           delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
+           delay_short = str_replace(delay_short, "igg antibody detection", "antibody detection (IgM/IgG)"),
+           delay_short = str_replace(delay_short, "igm antibody detection", "antibody detection (IgM/IgG)"),
+           delay_start =
+             case_when(
+               startsWith(delay_short, "Admission to care") ~ "Admission to care",
+               startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
+               startsWith(delay_short, "Death to burial") ~ "Death to burial",
+               startsWith(delay_short, "Exposure/infection") ~ "Exposure/infection",
+               delay_short %in%
+                 c(
+                   "Incubation period", "Latent period", "Infectious period",
+                   "Generation time", "Serial interval"
+                 ) ~ "Infection process",
+               TRUE ~ "Other"
+             ))
+  
+  # Exponent
+  # exponent = 
+  #   case_when(
+  #     parameter_class %in% "Mutations" &
+  #       covidence_id %in% 6340 ~ -3,
+  #     parameter_class %in% "Attack rate" &
+  #       covidence_id %in% c(241, 2240, 2241, 6472, 7199) ~ 0,
+  #     TRUE ~ exponent
+  #   ),
+  
+  # Parameter_unit cleaning
+  df <- df %>%
+    mutate(parameter_unit =
+             case_when(
+               # delays
+               parameter_class %in% "Human delay" &
+                 parameter_unit %in% "Per day" ~ "Days",
+               parameter_class %in% "Human delay" &
+                 parameter_unit %in% "Per week" ~ "Weeks",
+               TRUE ~ parameter_unit
+             )
     ) %>%
-    mutate(# Survey dates
-      # population_study_start_day =
-      #   case_when(
-      #     covidence_id %in% 404 ~ 1,
-      #     covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 30,
-      #     covidence_id %in% 1012 ~ 1,
-      #     covidence_id %in% 1170 ~ 27,
-      #     covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 23,
-      #     covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 5,
-      #     covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 3,
-      #     covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ 30,
-      #     covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ 14,
-      #     covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 28,
-      #     TRUE ~ population_study_start_day
-      #   ),
-      # population_study_end_day =
-      #   case_when(
-      #     covidence_id %in% 404 ~ 12,
-      #     covidence_id %in% 1170 ~ 31,
-      #     covidence_id %in% 16201 & parameter_class %in% "Seroprevalence" ~ 11,
-      #     covidence_id %in% 4364 & parameter_class %in% "Severity" ~ 28,
-      #     covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ 2,
-      #     covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ 27,
-      #     covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ 1,
-      #     covidence_id %in% 11688 ~ 12,
-      #     TRUE ~ population_study_end_day
-      #   ),
-      # population_study_start_month =
-      #   case_when(
-      #     covidence_id %in% 404 ~ "Mar",
-      #     covidence_id %in% 1170 ~ "May",
-      #     covidence_id %in% 1407 ~ "Mar",
-      #     covidence_id %in% 1686 ~ "Dec",
-      #     covidence_id %in% 1888 ~ "Oct",
-      #     covidence_id %in% 1912 ~ "Aug",
-      #     covidence_id %in% 1911 ~ "Aug",
-      #     covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Dec",
-      #     covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ "Aug",
-      #     covidence_id %in% 1012 ~ "Jul",
-      #     covidence_id %in% 17956 & parameter_class %in% "Human delay" ~ "Jul",
-      #     covidence_id %in% 11688 ~ "Jan",
-      #     covidence_id %in% 16951 & parameter_class %in% "Human delay" ~ "Apr",
-      #     covidence_id %in% 23669 & parameter_class %in% "Human delay" ~ "Mar",
-      #     covidence_id %in% c(2497, 16201) & parameter_class %in% "Seroprevalence" ~ "Mar",
-      #     covidence_id %in% 5005 & parameter_class %in% "Risk factors" ~ "Feb",
-      #     TRUE ~ population_study_start_month
-      #   ),
-      # population_study_end_month =
-      #   case_when(
-      #     population_study_end_month %in% "3" ~ "Mar",
-      #     covidence_id %in% 404 ~ "Jul",
-      #     covidence_id %in% 1170 ~ "Aug",
-      #     covidence_id %in% 1407 ~ "Dec",
-      #     covidence_id %in% 1686 ~ "Jan",
-      #     covidence_id %in% 1888 ~ "Feb",
-      #     covidence_id %in% 1911 ~ "Aug",
-      #     covidence_id %in% 1912 ~ "Sep",
-      #     covidence_id %in% 4364 & parameter_class %in% "Severity" ~ "Sep",
-      #     covidence_id %in% 18372 & parameter_class %in% "Human delay" ~ "Feb"),
-      
-      # # Clean genome_site for mutation rates
-      # genome_site = str_replace_all(genome_site, ";", ","),
-      # #(?i) makes it case-insensitive
-      # genome_site = str_replace(genome_site, "(?i)whole genome", "Whole genome"),
-      # genome_site = str_replace(genome_site, "Complete genome", "Whole genome"),
-      # # coding complete = all ORFs are complete (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068259/)
-      # genome_site = str_replace(genome_site, "Coding-complete genomes", "Partial genome"),
-      # genome_site = str_replace(genome_site, "partial genome", "Partial genome"),
-      # genome_site = str_replace(genome_site, "7 concatenated protein-coding sequences", "Partial genome"),
-      # genome_site = str_replace(genome_site, "partial sequences", "Partial sequences"),
-      # genome_site = str_replace(genome_site, "\\(GP\\)", ""),
-      # genome_site = str_replace(genome_site, "(?i)glycoprotein", "Glycoprotein"),
-      # genome_site = str_replace(genome_site, "GP", "Glycoprotein"),
-      # # The viral RNA genome is encapsidated by the nucleoprotein (NP)
-      # genome_site = str_replace(genome_site, "\\bNP\\b", "Nucleoprotein"),
-      # # The L protein of Ebola virus (EBOV) is the catalytic subunit of the RNA‑dependent RNA polymerase complex
-      # genome_site = str_replace(genome_site, "polymerase", "Polymerase"),
-      # # Now that unit cleaning of GFP entries are complete can remove indel and SNP from site names
-      # genome_site = str_replace(genome_site, "GFP-indel", "GFP (recombinant EBOV)"),
-      # genome_site = str_replace(genome_site, "GFP-SNP", "GFP (recombinant EBOV)"),
-      #
+    mutate(
       # Inverse parameters
       parameter_type = ifelse(
         inverse_param %in% TRUE,
@@ -634,7 +566,7 @@ clean_params <- function(df, pathogen){
           parameter_uncertainty_upper_value
         ),
         ~ as.numeric(.)
-        ),
+      ),
       # Rounding of parameter values and uncertainty
       across(
         c(
@@ -696,24 +628,26 @@ clean_params <- function(df, pathogen){
           !is.na(parameter_uncertainty_single_value) ~
             paste(parameter_uncertainty_single_value),
           TRUE ~ NA
-        ),
-      
-      # shorten a longer method_r name
-      method_r =
-        ifelse(method_r %in% "Renewal equations / Branching process",
-               "Branching process", method_r
-        ),
-      
-      # parameter_type name consistency
-      parameter_type =
-        case_when(
-          parameter_type %in% "Growth rate ®" ~ "Growth rate (r)",
-          parameter_type %in% "Reproduction number (Effective; Re)" ~
-            "Reproduction number (Effective, Re)",
-          parameter_type %in% "Mutations ‚Äì substitution rate" ~
-            "Mutations – substitution rate",
-          TRUE ~ parameter_type
-        )
+        ))
+  
+  df <- df %>%
+    
+    # shorten a longer method_r name
+    mutate(method_r =
+             ifelse(method_r %in% "Renewal equations / Branching process",
+                    "Branching process", method_r
+             ),
+           
+           # parameter_type name consistency
+           parameter_type =
+             case_when(
+               parameter_type %in% "Growth rate ®" ~ "Growth rate (r)",
+               parameter_type %in% "Reproduction number (Effective; Re)" ~
+                 "Reproduction number (Effective, Re)",
+               parameter_type %in% "Mutations ‚Äì substitution rate" ~
+                 "Mutations – substitution rate",
+               TRUE ~ parameter_type
+             )
     ) %>%
     select(-c("article_id", "access_param_id", "name_data_entry")) %>%
     relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
