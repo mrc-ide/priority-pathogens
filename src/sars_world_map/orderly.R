@@ -36,18 +36,12 @@ articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-# to save down for epireview use plotting = FALSE
-dfs <- data_curation(articles,tibble(),models,parameters, plotting =  FALSE, switch_first_surname = TRUE )
-
-articles   <- dfs$articles
-models     <- dfs$models
-parameters <- dfs$parameters
-
 write_csv(articles,'sars_articles.csv')
 write_csv(models,'sars_models.csv')
 write_csv(parameters,'sars_parameters.csv')
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE, switch_first_surname = TRUE )
+# to save down for epireview use plotting = FALSE
+dfs <- data_curation(articles,tibble(),models,parameters, plotting =  FALSE)
 
 articles   <- dfs$articles
 models     <- dfs$models
