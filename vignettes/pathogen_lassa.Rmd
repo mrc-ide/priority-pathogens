@@ -4,29 +4,30 @@ date: "Latest update: `r Sys.Date()`"
 output: html_document
 ---
 
-In 2018, the World Health Organization (WHO) published a list of nine known pathogens (in addition to an unknown _Pathogen X_) for research and development (R&D) prioritisation, due to both their epidemic and pandemic potential and the absence of licensed vaccines or therapeutics. Among these prioritised pathogens is Lassa fever.
-
-The Pathogen Epidemiology Review Group (PERG) has published a systematic review for LASV, if you use any of our results please cite our paper:
-
-> @article{lassa_doohan_2023,
- author = {Doohan et al},
- year={2024},  
- title={Lassa fever outbreaks, mathematical models, and disease parameters: a systematic review and meta-analysis},  
- doi = {10.1101/2024.03.23.24304596},
- publisher = {Cold Spring Harbor Laboratory Press},
- URL = {https://www.medrxiv.org/content/10.1101/2024.03.23.24304596v1},
- eprint = {},
- journal = {medRxiv}
-}
-
-All Figures from the paper are re-produced below on the **latest** available data in our data set. For convenience we label the Figures with the same numbers as in the paper.
-
 ```{css echo=FALSE}
 .flextable-shadow-host{
   overflow: scroll;
   white-space: nowrap;
 }
 ```
+
+In 2018, the World Health Organization (WHO) published a list of nine known pathogens (in addition to an unknown _Pathogen X_) for research and development (R&D) prioritisation, due to both their epidemic and pandemic potential and the absence of licensed vaccines or therapeutics. Among these prioritised pathogens is Lassa fever.
+
+The Pathogen Epidemiology Review Group (PERG) has published a systematic review for LASV, if you use any of our results please cite our paper:
+
+```{r,eval=FALSE}
+@article{lassa_doohan_2023,
+ author = {Doohan et al},
+ year={2024},  
+ title={Lassa fever outbreaks, mathematical models, and disease parameters: a systematic review and meta-analysis},  
+ doi = {10.1101/2024.03.23.24304596},
+ publisher = {Cold Spring Harbor Laboratory Press},
+ URL = {https://www.medrxiv.org/content/10.1101/2024.03.23.24304596v1},
+ journal = {medRxiv}
+}
+```
+All Figures from the paper are re-produced below on the **latest** available data in our data set. For convenience we label the Figures with the same numbers as in the paper.
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -209,7 +210,7 @@ Case fatality ratio (CFR) meta-analyses using logit-transformed proportions and 
 
 **Figure 3A:**
 
-```{r Figure_3A, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r Figure_3A, echo=FALSE, fig.height=6, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
 d1 <- parameters %>% filter(parameter_type == 'Severity - case fatality rate (CFR)') %>%
                      mutate(case_def = case_when(
                             covidence_id %in% c(18,88,167,174,307,461,645,845,870,873,874,920,921,1080,1173,1181,1254,1272,1368,1413,1426,1444,2567,2579,2585,2589,2636,2651,2662,2684,2818,3147,3215,3530,3635,3716,3841,3991,4314,4727) ~ "Lab-Confirmed",
@@ -357,7 +358,7 @@ forest(m2$result, layout = "RevMan5",
 
 **Figure 3D:**
 
-```{r Figure_3D, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE,fig.height=6, fig.width=9}
+```{r Figure_3D, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE,fig.height=7, fig.width=9}
 
 m3 <- metaprop_wrap(dataframe = da %>% arrange(cfr_ifr_denominator), subgroup = "cfr_denom_cat", 
                     plot_pooled = TRUE, sort_by_subg = FALSE, plot_study = FALSE, digits = 3, colour = "red", 
@@ -546,7 +547,7 @@ forest_plot(d1,expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(5,
 
 Quality Assessment
 
-```{r qa, message=FALSE, fig.height=6, fig.width=8, warning=FALSE, paged.print=FALSE}
+```{r qa, message=FALSE, fig.height=10, fig.width=8, warning=FALSE, paged.print=FALSE}
 quality <- articles %>%
            mutate_at(vars(starts_with("qa")), funs(replace(., . == "Yes", 1))) %>%
            mutate_at(vars(starts_with("qa")), funs(replace(., . == "No", 0))) %>%

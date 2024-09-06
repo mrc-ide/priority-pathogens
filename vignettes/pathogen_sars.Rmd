@@ -4,29 +4,31 @@ date: "Latest update: `r Sys.Date()`"
 output: html_document
 ---
 
-In 2018, the World Health Organization (WHO) published a list of nine known pathogens (in addition to an unknown _Pathogen X_) for research and development (R&D) prioritisation, due to both their epidemic and pandemic potential and the absence of licensed vaccines or therapeutics. Among these prioritised pathogens is SARS.
-
-The Pathogen Epidemiology Review Group (PERG) has published a systematic review for SARS, if you use any of our results please cite our paper:
-
-> @article{,
- author = {},
- year={2024},  
- title={},  
- doi = {},
- publisher = {Cold Spring Harbor Laboratory Press},
- URL = {},
- eprint = {},
- journal = {medRxiv}
-}
-
-All Figures from the paper are re-produced below on the **latest** available data in our data set. For convenience we label the Figures with the same numbers as in the paper.
-
 ```{css echo=FALSE}
 .flextable-shadow-host{
   overflow: scroll;
   white-space: nowrap;
 }
 ```
+
+In 2018, the World Health Organization (WHO) published a list of nine known pathogens (in addition to an unknown _Pathogen X_) for research and development (R&D) prioritisation, due to both their epidemic and pandemic potential and the absence of licensed vaccines or therapeutics. Among these prioritised pathogens is SARS.
+
+The Pathogen Epidemiology Review Group (PERG) has published a systematic review for SARS, if you use any of our results please cite our paper:
+
+```{r,eval=FALSE}
+@article{sars_morgenstern_2024,
+ author = {Morgenstern et al},
+ year={2024},  
+ title={Severe acute respiratory syndrome (SARS) mathematical models and disease parameters: a systematic review and meta-analysis},  
+ doi = {10.1101/2024.08.13.24311934},
+ publisher = {Cold Spring Harbor Laboratory Press},
+ URL = {https://www.medrxiv.org/content/10.1101/2024.08.13.24311934v1},
+ journal = {medRxiv}
+}
+```
+
+All Figures from the paper are re-produced below on the **latest** available data in our data set. For convenience we label the Figures with the same numbers as in the paper.
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
