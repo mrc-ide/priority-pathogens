@@ -101,11 +101,11 @@ TEXT_SIZE <- 11
 ```{r prepare_data, message=FALSE, warning=FALSE, paged.print=FALSE}
 
 articles   <- epireview::load_epidata_raw("sars", "article")
-articles   <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+#articles   <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
 models     <- epireview::load_epidata_raw("sars", "model")
 parameters <- epireview::load_epidata_raw("sars", "parameter")
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE, switch_first_surname = TRUE )
+dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE, switch_first_surname = FALSE )
 
 articles   <- dfs$articles
 
@@ -507,7 +507,7 @@ Overview of estimated SARS (A) attack rates, (B) secondary attack rates, (C) gro
 p4_primary
 ```
 
-**Figure 4A: Secondary Attack rates**
+**Figure 4B: Secondary Attack rates**
 
 ```{r Figure_4B, fig.height=4, fig.width=8,echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 
