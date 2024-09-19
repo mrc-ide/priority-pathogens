@@ -28,12 +28,12 @@ orderly_shared_resource("Africa_Boundaries-shp" = "Africa_Boundaries-shp",
                         "rivers_africa_37333"   = "rivers_africa_37333")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-orderly_artefact("lassa-specific figures",c("figure_3.png","figure_S6.png","figure_S7.png",
+orderly_artefact("lassa-specific figures",c("figure_3.png","figure_S7.png",
                                             "figure_S8.png","figure_S9.png","figure_S10.png",
-                                            "figure_S11.png","figure_S12.png",
-                                            "figure_3.pdf","figure_S6.pdf","figure_S7.pdf",
+                                            "figure_S11.png","figure_S12.png","figure_S13.png","figure_S14.png",
+                                            "figure_3.pdf","figure_S7.pdf",
                                             "figure_S8.pdf","figure_S9.pdf","figure_S10.pdf",
-                                            "figure_S11.pdf","figure_S12.pdf"))
+                                            "figure_S11.pdf","figure_S12.pdf","figure_S13.pdf","figure_S14.pdf"))
 
 ###################
 ## DATA CURATION ##
@@ -183,7 +183,7 @@ patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_3.png", plot = patchwork, width = 18, height = 12)
 ggsave("figure_3.pdf", plot = patchwork, width = 18, height = 12)
 
-#figure_S6-S10: meta-analysis with all estimates plotted
+#figure_S7-S11: meta-analysis with all estimates plotted
 m1 <- metaprop_wrap(dataframe = da %>% arrange(-central), subgroup = "lineage", 
                     plot_pooled = TRUE, sort_by_subg = TRUE, plot_study = TRUE, digits = 3, colour = "red", 
                     width = 1200, height = 1600, resolution = 115)
@@ -206,18 +206,18 @@ p3 <- m3$plot
 p4 <- m4$plot
 p5 <- m5$plot
 
-ggsave("figure_S6.png", plot = p1, width = 12, height = 16)
-ggsave("figure_S6.pdf", plot = p1, width = 12, height = 16)
-ggsave("figure_S7.png", plot = p2, width = 12, height = 16)
-ggsave("figure_S7.pdf", plot = p2, width = 12, height = 16)
-ggsave("figure_S8.png", plot = p3, width = 12, height = 16)
-ggsave("figure_S8.pdf", plot = p3, width = 12, height = 16)
-ggsave("figure_S9.png", plot = p4, width = 12, height = 16)
-ggsave("figure_S9.pdf", plot = p4, width = 12, height = 16)
-ggsave("figure_S10.png", plot = p5, width = 12, height = 16)
-ggsave("figure_S10.pdf", plot = p5, width = 12, height = 16)
+ggsave("figure_S7.png", plot = p1, width = 12, height = 16)
+ggsave("figure_S7.pdf", plot = p1, width = 12, height = 16)
+ggsave("figure_S8.png", plot = p2, width = 12, height = 16)
+ggsave("figure_S8.pdf", plot = p2, width = 12, height = 16)
+ggsave("figure_S9.png", plot = p3, width = 12, height = 16)
+ggsave("figure_S9.pdf", plot = p3, width = 12, height = 16)
+ggsave("figure_S10.png", plot = p4, width = 12, height = 16)
+ggsave("figure_S10.pdf", plot = p4, width = 12, height = 16)
+ggsave("figure_S11.png", plot = p5, width = 12, height = 16)
+ggsave("figure_S11.pdf", plot = p5, width = 12, height = 16)
 
-#figure_S11: meta-analysis with only known duplicates excluded
+#figure_S12: meta-analysis with only known duplicates excluded
 db <- d1 %>% filter(duplicate_cfr %in% c("False","Assumed"))
 
 m1 <- metaprop_wrap(dataframe = db, subgroup = "lineage", 
@@ -240,10 +240,10 @@ p4 <- m4$plot
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') 
-ggsave("figure_S11.png", plot = patchwork, width = 12, height = 12)
-ggsave("figure_S11.pdf", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S12.png", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S12.pdf", plot = patchwork, width = 12, height = 12)
 
-#figure_S12: meta-analysis without de-duplication
+#figure_S13: meta-analysis without de-duplication
 dc <- d1
 
 m1 <- metaprop_wrap(dataframe = dc, subgroup = "lineage", 
@@ -266,5 +266,18 @@ p4 <- m4$plot
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A') 
-ggsave("figure_S12.png", plot = patchwork, width = 12, height = 12)
-ggsave("figure_S12.pdf", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S13.png", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S13.pdf", plot = patchwork, width = 12, height = 12)
+
+#figure_S14: meta-analysis funnel plot
+png(file = "temp.png", width = 9500, height = 6500, res = 1000)
+funnel(m5$result, xlim = c(-3,2), ylim = c(0,1), common = FALSE,#only plots funnel for either common or random for some reason
+       pch = 22, bg = "red", level = 0.95, 
+       studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+gg <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+
+ggsave("figure_S14.png", plot = gg, width = 12, height = 8)
+ggsave("figure_S14.pdf", plot = gg, width = 12, height = 8)

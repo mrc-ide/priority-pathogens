@@ -89,20 +89,20 @@ lassa_cleaning <- function(df) {
       TRUE ~ paper_copy_only
     )) %>%
     # name typos
-    mutate(first_author_surname = case_when(
+    mutate(first_author_first_name = case_when(
       covidence_id %in% 2648 ~ "Shirley C.",
       covidence_id %in% 1447 ~ "N.A.",
-      TRUE ~ first_author_surname
+      TRUE ~ first_author_first_name
     )) %>%
-    mutate(first_author_first_name = case_when(
+    mutate(first_author_surname = case_when(
       covidence_id %in% 2648 ~ "Nimo-Paintsil",
       covidence_id %in% 2585 ~ "Dalhat",
       covidence_id %in% 1033 ~ "Ehichioya",
       covidence_id %in% 661 ~ "Kerneis",
-      TRUE ~ first_author_first_name
+      TRUE ~ first_author_surname
     )) %>%
-    mutate(first_author_first_name = sub(".*\\.(.*)", "\\1", first_author_first_name)) %>%
-    mutate(first_author_first_name = sub("^\\s+", "", first_author_first_name)) 
+    mutate(first_author_surname = sub(".*\\.(.*)", "\\1", first_author_surname)) %>%
+    mutate(first_author_surname = sub("^\\s+", "", first_author_surname)) 
      # revised qa after parameter removed: now outbreak only
   df[df$covidence_id %in% 152, c("qa_m1", "qa_m2", "qa_a3", "qa_a4", "qa_d6", "qa_d7")] <- NA
   df

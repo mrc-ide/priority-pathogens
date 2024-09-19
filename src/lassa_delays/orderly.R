@@ -103,7 +103,7 @@ patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_4.png", plot = patchwork, width = 12, height = 16)
 ggsave("figure_4.pdf", plot = patchwork, width = 12, height = 16)
 
-#figure_S5: hypothetical probability distributions for onset-admission delay
+# #figure_S5: hypothetical probability distributions for onset-admission delay
 p1 <- pdf_generic(m5$result,"common",c("Gamma","Lognormal","Weibull"),c(-0.2,30),'Onset-Admission Delay (days)')
 p2 <- pdf_generic(m5$result,"random",c("Gamma","Lognormal","Weibull"),c(-0.2,30),'Onset-Admission Delay (days)')
 
@@ -111,3 +111,16 @@ patchwork <- (p1 + p2) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
 ggsave("figure_S5.png", plot = patchwork, width = 12, height = 6)
 ggsave("figure_S5.pdf", plot = patchwork, width = 12, height = 6)
+
+#figure_S6: meta-analysis funnel plot
+png(file = "temp.png", width = 9500, height = 6500, res = 1000)
+funnel(m5$result, xlim = c(5,12), ylim = c(0,1.5), common = FALSE,#only plots funnel for either common or random for some reason
+       pch = 22, bg = "dodgerblue3", level = 0.95, 
+       studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+gg <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+
+ggsave("figure_S6.png", plot = gg, width = 12, height = 8)
+ggsave("figure_S6.pdf", plot = gg, width = 12, height = 8)

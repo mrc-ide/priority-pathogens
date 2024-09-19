@@ -325,6 +325,11 @@ if (pathogen == "EBOLA") {
   models$Covidence_ID[   models$Covidence_ID    == 3158] <- 3153
   params$Covidence_ID[   params$Covidence_ID    == 3158] <- 3153
   
+  #correct author first/last names
+  articles <- articles %>% rename(temp_col = FirstAuthor_FirstName,
+                                  FirstAuthor_FirstName = FirstAauthor_Surname) %>%
+                           rename(FirstAauthor_Surname = temp_col)
+  
   #blank outbreaks
   outbreaks <- outbreaks %>% filter(!(Covidence_ID == 845 & Outbreak_ID == 1))
   
@@ -343,7 +348,15 @@ if (pathogen == "EBOLA") {
   
   #missing parameter types
   params$Parameter_type[params$Covidence_ID==2684&params$access_param_id==37] <- 'Risk factors'
-}  
+} else if (pathogen == "SARS") {
+  
+  #correct author first/last names
+  articles <- articles %>% rename(temp_col = FirstAuthor_FirstName,
+                                  FirstAuthor_FirstName = FirstAauthor_Surname) %>%
+                           rename(FirstAauthor_Surname = temp_col)  
+  
+}
+
 # Pathogen-specific cleaning
 articles <- clean_articles(articles)
 models <- clean_models(models)
