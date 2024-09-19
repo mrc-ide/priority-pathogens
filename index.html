@@ -78,7 +78,7 @@
 <div class="section level1">
 <h1 id="pkgdown-">pkgdown <a class="anchor" aria-label="anchor" href="#pkgdown-"></a>
 </h1>
-<p>The priority-pathogens repository is an <a href="https://mrc-ide.github.io/orderly2/" class="external-link">orderly</a> project. The repository consists of a set of `<code>orderly tasks'' in the src folder that make up our analytical pipeline. The first three tasks in  the pipeline (</code>db_extraction<code>,</code>db_double<code>, and</code>db_compilation<code>) read in the Access databases, clean, and compile a  clean dataset for downstream analysis. These tasks need access to the database files stored on Imperial's internal  network. Since an external user cannot run these tasks, we provide the outputs of these tasks with the associated  Github release. These outputs must be downloaded and</code>made visible’ to the orderly project for the rest of the code to work. The R script <code>ebola_workflow.R</code> will download the outputs and do the necessary configuration for this to happen. To run the script,</p>
+<p>The priority-pathogens repository is an <a href="https://mrc-ide.github.io/orderly2/" class="external-link">orderly</a> project. The repository consists of a set of “orderly tasks” in the src folder that make up our analytical pipeline. The first three tasks in the pipeline (<code>db_extraction</code>, <code>db_double</code>, and <code>db_compilation</code>) read in the Access databases, clean, and compile a clean dataset for downstream analysis. These tasks need access to the database files stored on Imperial’s internal network. Since an external user cannot run these tasks, we provide the outputs of these tasks with the associated Github release. These outputs must be downloaded and “made visible” to the orderly project for the rest of the code to work. The R script <code>ebola_workflow.R</code> will download the outputs and do the necessary configuration for this to happen. To run the script,</p>
 <ol style="list-style-type: decimal">
 <li>First clone this git repository somewhere on your machine</li>
 </ol>
@@ -92,7 +92,7 @@
 <li>To run the Ebola analysis and recreate the findings in <a href="">Nash et al.</a>, navigate to the downloaded repository and run the script <code>ebola_workflow.R</code> specifying the location where the outputs from the first three tasks will be downloaded using the <code>-l</code> flag. On the command line, type the following:</li>
 </ol>
 <pre><code>Rscript ebola_workflow.R -l ~/Downloads</code></pre>
-<p>``~/Downloads’’ should be replaced by the full path of the folder where you wish to download the outputs. Note that this *** location should not be a sub-folder of the priority-pathogens repo **<em>. The script will then download the outputs, configure the orderly project and run ebola analysis tasks sequentially. </em> Note that the tasks create and save a number of images and word documents, and will take a long time to finish. *</p>
+<p><code>~/Downloads</code> should be replaced by the full path of the folder where you wish to download the outputs. Note that this <strong>location should not be a sub-folder of the priority-pathogens repo</strong>. The script will then download the outputs, configure the orderly project and run ebola analysis tasks sequentially. <strong>Note that the tasks create and save a number of images and word documents, and will take a long time to finish.</strong></p>
 </div>
 
   </main><aside class="col-md-3"><div class="links">
