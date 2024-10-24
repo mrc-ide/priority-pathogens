@@ -1,4 +1,4 @@
-# Task to compile single and double1 and double2 Zika extraction databases together
+# Task to compile single and double1 and double2 Zika extraction databases together (to be run after db_extraction)
 # orderly2::orderly_run(name = 'zika_compilation', parameters = list(pathogen = 'ZIKA'))
 # install.packages('rio')
 library(dplyr)
@@ -35,6 +35,7 @@ orderly_dependency(
     "single_extraction_params.csv" = "single_extraction_params.csv",
     "single_extraction_models.csv" = "single_extraction_models.csv",
     "single_extraction_outbreaks.csv" = "single_extraction_outbreaks.csv",
+    # these are fixed and will not change -- have a 
     "db2_double_extraction_articles.csv" = "double_extraction_articles.csv",
     "db2_double_extraction_params.csv" = "double_extraction_params.csv",
     "db2_double_extraction_models.csv" = "double_extraction_models.csv",
@@ -57,21 +58,21 @@ orderly_dependency(
 )
 
 # Manually fixed files and "cleaning" script - these need to be in the
-# src/db_compilation folder
+# src/zika_compilation folder
 # second round of double 
 orderly_resource(
   c('zika_cleaning.R' = 'zika_cleaning.R',
     "db1_qa_fixing.xlsx" = "db1_qa_fixing.xlsx",
     "db1_params_fixing.xlsx" = "db1_params_fixing.xlsx",
     "db1_models_fixing.xlsx" = "db1_models_fixing.xlsx",
-    "db1_outbreaks_fixing.xlsx" = "db1_outbreaks_fixing.xlsx",
+    "db1_outbreaks_fixing.csv" = "db1_outbreaks_fixing.csv",
     "db1_qa_matching.csv" = "db1_qa_matching.csv", # matching file for round 1 double extractions from here: 'P:/Zika/priority-pathogens/archive/db_double/20240411-094214-9cdb9e2e/qa_matching.csv'
     "db1_double_extraction_articles.csv" = "db1_double_extraction_articles.csv", # article information from round 1 double extractions
     # Second round of double extraction fixing files
     "db2_qa_fixing.xlsx" = "db2_qa_fixing.xlsx",
     "db2_params_fixing.xlsx" = "db2_params_fixing.xlsx",
     "db2_models_fixing.xlsx" = "db2_models_fixing.xlsx",
-    "db2_outbreaks_fixing.xlsx" = "db2_outbreaks_fixing.xlsx")
+    "db2_outbreaks_fixing.csv" = "db2_outbreaks_fixing.csv")
 )
 
 # orderly_shared_resource(
@@ -116,7 +117,7 @@ db1_articles <- rbind(qa_combined_pt1, qa_combined_pt2) %>%
 # pull in the other files for db 1 (model, outbreak, params)
 db1_models <- readxl::read_xlsx('db1_models_fixing.xlsx')[,2:16]  %>%# removing NA columns and fixed column
 select(sort(names(.)))
-db1_outbreaks <- readxl::read_xlsx('db1_outbreaks_fixing.xlsx')%>%
+db1_outbreaks <- read_csv('db1_outbreaks_fixing.csv')%>%
   select(-fixed, -num_rows, -matching) %>%
   select(sort(names(.)))
 db1_params <- readxl::read_xlsx('db1_params_fixing.xlsx')%>%
@@ -156,7 +157,7 @@ db2_fixing_params <- readxl::read_xlsx('db2_params_fixing.xlsx')%>%
 db2_fixing_models <- readxl::read_xlsx('db2_models_fixing.xlsx')%>%
   select(-num_rows, -matching, -fixed) %>%
   select(sort(names(.)))
-db2_fixing_outbreaks <- readxl::read_xlsx('db2_outbreaks_fixing.xlsx')%>%
+db2_fixing_outbreaks <- read_csv('db2_outbreaks_fixing.csv')%>%
   select(-num_rows, -matching, -fixed) %>%
   select(sort(names(.)))
 

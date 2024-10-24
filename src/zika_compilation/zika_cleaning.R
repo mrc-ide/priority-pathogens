@@ -164,8 +164,8 @@ clean_outbreaks <- function(df, pathogen){
     arrange(covidence_id) %>%
     mutate(
       # Format start/stop months for outbreaks
-      outbreak_start_month = lubridate::month(outbreak_start_month),
-      outbreak_end_month = lubridate::month(as.Date(as.numeric(outbreak_end_month) - 1, origin = "1899-12-30")),
+      outbreak_start_month = str_sub(outbreak_start_month, 1, 3),
+      outbreak_end_month = str_sub(outbreak_end_month, 1, 3),#lubridate::month(as.Date(as.numeric(outbreak_end_month) - 1, origin = "1899-12-30")),
       # Make date variable 
       outbreak_start_date = case_when((!is.na(outbreak_start_year) & !is.na(outbreak_start_month) & !is.na(outbreak_start_day)) ~
                                         lubridate::ymd(paste(outbreak_start_year, outbreak_start_month, outbreak_start_day, sep ='-')),
