@@ -35,7 +35,6 @@ orderly_dependency(
     "single_extraction_params.csv" = "single_extraction_params.csv",
     "single_extraction_models.csv" = "single_extraction_models.csv",
     "single_extraction_outbreaks.csv" = "single_extraction_outbreaks.csv",
-    # these are fixed and will not change -- have a 
     "db2_double_extraction_articles.csv" = "double_extraction_articles.csv",
     "db2_double_extraction_params.csv" = "double_extraction_params.csv",
     "db2_double_extraction_models.csv" = "double_extraction_models.csv",
