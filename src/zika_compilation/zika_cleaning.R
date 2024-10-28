@@ -294,7 +294,8 @@ clean_params <- function(df, pathogen){
     mutate(
       
       population_group = case_when(
-        population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation'
+        population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation',
+        TRUE ~ population_group
       ),
       # Population country
       population_country = str_replace_all(population_country, ";", ","),
