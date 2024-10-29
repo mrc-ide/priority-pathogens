@@ -323,6 +323,7 @@ clean_params <- function(df, pathogen){
       population_country =
         case_when(
           population_country == 'Micronesia; Fed. Sts.' ~ 'Federated States of Micronesia',
+          population_country == 'Micronesia, Fed. Sts.' ~ 'Federated States of Micronesia',
           population_country == 'Iran; Islamic Rep.' ~ 'Islamic Republic of Iran',
           population_country == 'Congo; Dem. Rep.' ~ 'Democratic Republic of the Congo',
           population_country %in%
