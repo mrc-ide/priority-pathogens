@@ -58,7 +58,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
     parameters <- param4plot    
   } else {
     check_param_id <- (parameters$parameter_data_id == param4plot$parameter_data_id )    # check that parameter data ids didn't get scrambled 
-    if(sum(check_param_id, na.rm = TRUE)==dim(parameters)[1]) {
+    if(sum(check_param_id)==dim(parameters)[1]) {
       parameters$central <- param4plot$central 
     } else {
       errorCondition('parameters not in right order to match')
