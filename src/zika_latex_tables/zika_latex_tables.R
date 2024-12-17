@@ -4,14 +4,15 @@ library(dplyr)
 library(stringr)
 library(tibble)
 library(purrr)
+library(readr)
 
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
-orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
-source("lassa_functions.R")
+orderly_shared_resource("zika_functions.R" = "zika_functions.R")
+source("zika_functions.R")
 orderly_artefact(description = "zika-specific tables", files = c("latex_outbreaks.csv",
                                            "latex_models.csv",
                                            "latex_transmission.csv","latex_delays.csv",
@@ -130,7 +131,13 @@ write.table(mods, file = "latex_models.csv", sep = ",",
 parameters <- mutate_at(parameters, 
                         vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
-                             parameter_uncertainty_single_value, distribution_par1_value, distribution_par2_value),
+                             parameter_uncertainty_single_value, distribution_par1_value, distribution_par2_value,
+                             distribution_par1_uncertainty, distribution_par2_uncertainty, 
+                             
+                             parameter_value, parameter_2_lower_bound, parameter_2_upper_bound,
+                             parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value,
+                             parameter_2_uncertainty_single_value, distribution_2_par1_value, distribution_2_par2_value,
+                             distribution_2_par1_uncertainty, distribution_2_par2_uncertainty),
                         ~sub("\\.?0+$", "", sprintf("%.10f", round(., 10))))
 ##
 parameters <- parameters %>%
@@ -146,6 +153,8 @@ parameters$parameter_unit <- gsub("Per day", "per day", parameters$parameter_uni
 parameters$parameter_unit <- gsub("Percentage \\(%\\)", "\\\\%", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Days", "days", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Weeks", "weeks", parameters$parameter_unit)
+parameters$parameter_unit <- gsub("per 100;000 population", "per 100k")
+parameters$parameter_unit <- gsub("per 100;000 population", "per 100k")
 
 parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == 0 ~ parameter_unit,
@@ -158,9 +167,9 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
 parameters <- parameters %>% mutate(parameter_value = case_when(
   (parameter_class %in% c("Severity","Seroprevalence") | parameter_unit == "") ~ parameter_value,
   TRUE ~ paste(parameter_value, parameter_unit, sep = " ")))
-# parameters <- parameters %>%
-#               mutate(parameter_unit = ifelse(parameter_unit == "Percentage (%)", "%", parameter_unit),
-#                      values = paste0(values, parameter_unit, sep = " "))
+parameters <- parameters %>%
+              mutate(parameter_unit = ifelse(parameter_unit == "Percentage (%)", "%", parameter_unit),
+                     values = paste0(values, parameter_unit, sep = " "))
 parameters <- parameters %>%
   mutate(unc_type=
            ifelse(!is.na(distribution_par2_type), 
