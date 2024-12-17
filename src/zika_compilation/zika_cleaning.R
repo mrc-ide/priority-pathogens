@@ -490,6 +490,11 @@ clean_params <- function(df, pathogen){
     ) %>%
     mutate(
       # Inverse parameters
+      inverse_param = case_when(
+        covidence_id == 5888 & parameter_class %in% "Human delay" ~ TRUE, 
+        covidence_id == 6765 & parameter_class %in% "Human delay" ~ TRUE, 
+        TRUE ~ inverse_param
+      ),
       parameter_type = ifelse(
         inverse_param %in% TRUE,
         paste(parameter_type, " (inverse parameter)"), parameter_type
@@ -665,7 +670,10 @@ clean_params <- function(df, pathogen){
 }
 
 
-
+clean_delays <- function(params_df){
+  params_df <- params_df %>%
+    
+}
 
 
 #################################
