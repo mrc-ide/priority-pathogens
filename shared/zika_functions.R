@@ -3,7 +3,7 @@
 data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   articles   <- articles %>%
-    mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
+    mutate(refs = paste(first_author_surname," (",year_publication,")",sep="")) %>% #define references
     group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
     mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
     select(-counter,-refs) %>% rename(refs = new_refs)
@@ -27,13 +27,19 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   param4plot <- parameters %>%
     mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
-                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+                   parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
+                   parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value),
               list(~ ifelse(inverse_param, 1/.x, .x))) %>%
     mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
-                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+                   parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
+                   parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value),
               list(~ .x * 10^exponent)) %>%
-    mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
-                   parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+                   parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
+                   parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value), #account for different units
               list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>% 
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
