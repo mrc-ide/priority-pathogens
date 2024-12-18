@@ -154,7 +154,6 @@ parameters$parameter_unit <- gsub("Percentage \\(%\\)", "\\\\%", parameters$para
 parameters$parameter_unit <- gsub("Days", "days", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Weeks", "weeks", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("per 100;000 population", "per 100k")
-parameters$parameter_unit <- gsub("per 100;000 population", "per 100k")
 
 parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == 0 ~ parameter_unit,
