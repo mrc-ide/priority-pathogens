@@ -261,8 +261,10 @@ clean_params <- function(df, pathogen){
       population_study_start_day = as.numeric(population_study_start_day),
       method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
       population_location = str_replace_all(population_location, ";", ","),
-      across(.cols = c(parameter_value, parameter_lower_bound, parameter_upper_bound, parameter_uncertainty_lower_value, 
-                       parameter_uncertainty_upper_value), .fns = as.numeric),
+      across(.cols = c(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                       parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+                       parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
+                       parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value), .fns = as.numeric),
       
       # Update parameter type values 
       parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
@@ -319,13 +321,30 @@ clean_params <- function(df, pathogen){
         population_country, "Gambia, The",
         "The Gambia"
       ),
+      population_country = str_replace(
+        population_country, "Micronesia,  Fed. Sts.",
+        'Federated States of Micronesia'
+      ),
+      population_country = str_replace(
+        population_country, "Venezuela, RB",
+        "Venezuela"
+      ),
+      population_country = str_replace(
+        population_country, "Taiwan, China",
+        "Taiwan"
+      ),
+      population_country = str_replace(
+        population_country, "Lao PDR",
+        "Laos"
+      ),
+      population_country = str_replace(
+        population_country, "Lao PDRIran;  Islamic Rep.",
+        "Iran"
+      ),
       population_country = str_replace_all(population_country, ",", ", "),
       population_country =
         case_when(
-          population_country == 'Micronesia; Fed. Sts.' ~ 'Federated States of Micronesia',
-          population_country == 'Micronesia, Fed. Sts.' ~ 'Federated States of Micronesia',
-          population_country == 'Iran; Islamic Rep.' ~ 'Islamic Republic of Iran',
-          population_country == 'Congo; Dem. Rep.' ~ 'Democratic Republic of the Congo',
+          population_country %in% c('Puerto Rico, United States') ~ 'Puerto Rico',
           population_country %in%
             "El Salvador;Guatemala;Honduras;Mexico;Nicaragua" ~
             "Multi-country: Central America (n = 5)",
@@ -373,98 +392,8 @@ clean_params <- function(df, pathogen){
         )
     ) 
   
-  df <- df %>%
-    # clean the other human delays and merge the common ones into parameter_type
-    mutate(
-      other_delay_start = case_when(
-        other_delay_start %in% "Other: Health center visit" ~ "Health center visit",
-        other_delay_start %in% c("Infection", "Contact with Primary Case") ~ "Exposure/Infection",
-        other_delay_start %in% "Funeral Start" ~ "Funeral start",
-        other_delay_start %in% "Positive Test" ~ "Positive test",
-        other_delay_start %in% "Sampling date" ~ "Sample collection",
-        other_delay_start %in% c("Who notification", "Notification") ~ "Reporting",
-        other_delay_start %in% c(
-          "Other: Not specified 'duration of illness of those who died'",
-          "Other: alert of illness onset"
-        ) ~ "Symptom Onset/Fever",
-        other_delay_start %in% "Testing" ~ "Test",
-        TRUE ~ other_delay_start
-      ),
-      other_delay_end = case_when(
-        other_delay_end %in% "Death in the community" ~ "Death in community",
-        other_delay_end %in% c("Negative RT-PCR", "Negative Test") ~ "Negative test",
-        other_delay_end %in% "Funeral End" ~ "Funeral end",
-        other_delay_end %in% "Other: first undetectable viremia" ~ "First undetectable viremia",
-        other_delay_end %in% "Other: Enter Timepoint in Text Box" ~ "Other",
-        other_delay_end %in% c(
-          "Removal from community", "Household quarantine", "Isolation"
-        ) ~ "Quarantine",
-        other_delay_end %in% "Symptom Resolution" ~ "Recovery/non-Infectiousness",
-        other_delay_end %in% c(
-          "Detection", "Notification", "Reporting of symptoms",
-          "Other: Case report completion", "Who notification",
-          "Report (for confirmed cases with known outcomes)",
-          "Other: official report"
-        ) ~ "Reporting",
-        other_delay_end %in% c("Testing", "EVD Testing") ~ "Test",
-        other_delay_end %in% c("Test result", "Result", "Test Results") ~ "Test result",
-        TRUE ~ other_delay_end
-      ),
-      other_delay =
-        case_when(
-          !is.na(other_delay_start) & other_delay_start != "Other: type timepoint in this text box" ~
-            paste(other_delay_start, "to", other_delay_end, sep = " ")
-        ),
-      parameter_type =
-        case_when(
-          !is.na(other_delay) ~ paste("Human delay -", other_delay),
-          TRUE ~ parameter_type
-        ))
-  
-  df <- df %>%
-    mutate(delay_short =
-             case_when(
-               parameter_class %in% "Human delay" ~
-                 gsub("^Human delay - ", "", parameter_type),
-               TRUE ~ NA
-             ),
-           delay_short = str_to_sentence(delay_short),
-           delay_short =
-             str_replace_all(
-               delay_short, c(
-                 "care/hospitalisation" = "care",
-                 "care/hospital" = "care",
-                 "onset/fever" = "onset"
-               )
-             ),
-           delay_short =
-             case_when(
-               delay_short %in% "Exposure/infection to infectiousness" ~
-                 "Latent period",
-               delay_short %in% "Exposure/infection to symptom onset" ~
-                 "Incubation period",
-               delay_short %in% "Time in care (length of stay)" ~
-                 "Admission to care to death/discharge",
-               TRUE ~ delay_short
-             ),
-           delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
-           delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
-           delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
-           delay_short = str_replace(delay_short, "igg antibody detection", "antibody detection (IgM/IgG)"),
-           delay_short = str_replace(delay_short, "igm antibody detection", "antibody detection (IgM/IgG)"),
-           delay_start =
-             case_when(
-               startsWith(delay_short, "Admission to care") ~ "Admission to care",
-               startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
-               startsWith(delay_short, "Death to burial") ~ "Death to burial",
-               startsWith(delay_short, "Exposure/infection") ~ "Exposure/infection",
-               delay_short %in%
-                 c(
-                   "Incubation period", "Latent period", "Infectious period",
-                   "Generation time", "Serial interval"
-                 ) ~ "Infection process",
-               TRUE ~ "Other"
-             ))
+  # Clean delays 
+  df <- clean_delays(df)
   
   # Exponent
   # exponent = 
@@ -493,7 +422,7 @@ clean_params <- function(df, pathogen){
       inverse_param = case_when(
         covidence_id == 5888 & parameter_class %in% "Human delay" ~ TRUE, 
         covidence_id == 6765 & parameter_class %in% "Human delay" ~ TRUE, 
-        TRUE ~ inverse_param
+        TRUE ~ as.logical(inverse_param)
       ),
       parameter_type = ifelse(
         inverse_param %in% TRUE,
@@ -671,8 +600,117 @@ clean_params <- function(df, pathogen){
 
 
 clean_delays <- function(params_df){
-  params_df <- params_df %>%
-    
+  
+  df <- params_df %>%
+    # clean the other human delays and merge the common ones into parameter_type
+    mutate(
+      other_delay_start = case_when(
+        other_delay_start %in% "Other: Health center visit" ~ "Health center visit",
+        other_delay_start %in% c("Infection", "Contact with Primary Case") ~ "Exposure/Infection",
+        other_delay_start %in% "Funeral Start" ~ "Funeral start",
+        other_delay_start %in% "Positive Test" ~ "Positive test",
+        other_delay_start %in% "Sampling date" ~ "Sample collection",
+        other_delay_start %in% c("Who notification", "Notification") ~ "Reporting",
+        other_delay_start %in% c(
+          "Other: Not specified 'duration of illness of those who died'",
+          "Other: alert of illness onset"
+        ) ~ "Symptom Onset/Fever",
+        other_delay_start %in% "Testing" ~ "Test",
+        other_delay_start %in% "Other: type timepoint in this text box" ~ NA, 
+        TRUE ~ other_delay_start
+      ),
+      other_delay_end = case_when(
+        other_delay_end %in% "Death in the community" ~ "Death in community",
+        other_delay_end %in% c("Negative RT-PCR", "Negative Test") ~ "Negative test",
+        other_delay_end %in% "Funeral End" ~ "Funeral end",
+        other_delay_end %in% "Other: first undetectable viremia" ~ "First undetectable viremia",
+        other_delay_end %in% "Other: Enter Timepoint in Text Box" ~ "Other",
+        other_delay_end %in% c(
+          "Removal from community", "Household quarantine", "Isolation"
+        ) ~ "Quarantine",
+        other_delay_end %in% "Symptom Resolution" ~ "Recovery/non-Infectiousness",
+        other_delay_end %in% c(
+          "Detection", "Notification", "Reporting of symptoms",
+          "Other: Case report completion", "Who notification",
+          "Report (for confirmed cases with known outcomes)",
+          "Other: official report",
+          "first reporting in country"
+        ) ~ "Reporting",
+        other_delay_end %in% c("Testing", "EVD Testing") ~ "Test",
+        other_delay_end %in% c("Test result", "Result", "Test Results", "Diagnosis/test result") ~ "Test result",
+        other_delay_end %in% "Onset of neurological symptoms" ~ "Onset of neurologic symptoms",
+        other_delay_end %in% "Seroconversion IgM" ~ "Seroconversion (IgM)",
+        other_delay_end %in% "Seroreversion IgM" ~ "Seroreversion (IgM)",
+        other_delay_end %in% "Susceptible" ~ "Susceptibility",
+        other_delay_end %in% "Seeking Care" ~ "Admission to care",
+        other_delay_end %in% "Negative PCR test - urine" ~ "Negative PCR test in urine",
+        other_delay_end %in% "Negative PCR test - saliva" ~ "Negative PCR test in saliva",
+        other_delay_end %in% "Negative PCR test - serum/plasma" ~ "Negative PCR test in serum/plasma",
+        other_delay_end %in% "Other: type timepoint in this text box" ~ NA, 
+        TRUE ~ other_delay_end
+      ),
+      other_delay =
+        case_when(
+          !is.na(other_delay_start) & other_delay_start != "Other: type timepoint in this text box" ~
+            paste(other_delay_start, "to", other_delay_end, sep = " ")
+        ),
+      parameter_type =
+        case_when(
+          !is.na(other_delay) ~ paste("Human delay -", other_delay),
+          TRUE ~ parameter_type
+        ))
+  
+  df <- df %>%
+    mutate(delay_short =
+             case_when(
+               parameter_class %in% "Human delay" ~
+                 gsub("^Human delay - ", "", parameter_type),
+               TRUE ~ NA
+             ),
+           delay_short = str_to_sentence(delay_short),
+           delay_short =
+             str_replace_all(
+               delay_short, c(
+                 "care/hospitalisation" = "care",
+                 "care/hospital" = "care",
+                 "onset/fever" = "onset"
+               )
+             ),
+           delay_short =
+             case_when(
+               delay_short %in% "Exposure/infection to infectiousness" ~
+                 "Latent period",
+               delay_short %in% "Exposure/infection to symptom onset" ~
+                 "Incubation period",
+               delay_short %in% "Time in care (length of stay)" ~
+                 "Admission to care to death/discharge",
+               TRUE ~ delay_short
+             ),
+           delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
+           delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
+           delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
+           delay_short = str_replace(delay_short, "\\bzikv\\b", "ZIKV"),
+           delay_short = str_replace(delay_short, "\\bigm\\b", "IgM"),
+           delay_short = str_replace(delay_short, "\\bigg\\b", "IgG"),
+           delay_short = str_replace(delay_short, "\\bnaat\\b", "NAAT"),
+           delay_short = str_replace(delay_short, "igg antibody detection", "antibody detection (IgM/IgG)"),
+           delay_short = str_replace(delay_short, "igm antibody detection", "antibody detection (IgM/IgG)"),
+           delay_short = str_replace(delay_short, ">", " to "),
+           delay_start =
+             case_when(
+               startsWith(delay_short, "Admission to care") ~ "Admission to care",
+               startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
+               startsWith(delay_short, "Death to burial") ~ "Death to burial",
+               startsWith(delay_short, "Exposure/infection") ~ "Exposure/infection",
+               delay_short %in%
+                 c(
+                   "Incubation period", "Latent period", "Infectious period",
+                   "Generation time", "Serial interval"
+                 ) ~ "Infection process",
+               TRUE ~ "Other"
+             ))
+  
+    return(df)
 }
 
 
