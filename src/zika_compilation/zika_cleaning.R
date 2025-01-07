@@ -654,12 +654,14 @@ clean_delays <- function(params_df){
           !is.na(other_delay_start) & other_delay_start != "Other: type timepoint in this text box" ~
             paste(other_delay_start, "to", other_delay_end, sep = " ")
         ),
+      # Update parameter type to have 'other' delay names 
       parameter_type =
         case_when(
           !is.na(other_delay) ~ paste("Human delay -", other_delay),
           TRUE ~ parameter_type
         ))
   
+  # Make shortened version of delay name
   df <- df %>%
     mutate(delay_short =
              case_when(
@@ -673,7 +675,8 @@ clean_delays <- function(params_df){
                delay_short, c(
                  "care/hospitalisation" = "care",
                  "care/hospital" = "care",
-                 "onset/fever" = "onset"
+                 "onset/fever" = "onset",
+                 "critical care/ICU" = "critical care"
                )
              ),
            delay_short =
@@ -692,16 +695,21 @@ clean_delays <- function(params_df){
            delay_short = str_replace(delay_short, "\\bzikv\\b", "ZIKV"),
            delay_short = str_replace(delay_short, "\\bigm\\b", "IgM"),
            delay_short = str_replace(delay_short, "\\bigg\\b", "IgG"),
-           delay_short = str_replace(delay_short, "\\bnaat\\b", "NAAT"),
+           delay_short = str_replace(delay_short, "\\bNaat\\b", "NAAT"),
+           delay_short = str_replace(delay_short, "\\bpcr\\b", "PCR"),
+           delay_short = str_replace(delay_short, "\\bicu\\b", "ICU"),
            delay_short = str_replace(delay_short, "igg antibody detection", "antibody detection (IgM/IgG)"),
            delay_short = str_replace(delay_short, "igm antibody detection", "antibody detection (IgM/IgG)"),
            delay_short = str_replace(delay_short, ">", " to "),
            delay_start =
              case_when(
                startsWith(delay_short, "Admission to care") ~ "Admission to care",
+               startsWith(delay_short, "Admission to critical care") ~ "Admission to critical care",
                startsWith(delay_short, "Symptom onset") ~ "Symptom onset",
+               startsWith(delay_short, 'Onset') ~ "Symptom onset",
                startsWith(delay_short, "Death to burial") ~ "Death to burial",
                startsWith(delay_short, "Exposure/infection") ~ "Exposure/infection",
+               startsWith(delay_short, "Recovery/non-infectiousness") ~ "Recovery",
                delay_short %in%
                  c(
                    "Incubation period", "Latent period", "Infectious period",
