@@ -1,6 +1,6 @@
 #function to tidy-up all dataframes
 
-data_curation <- function(articles, outbreaks, models, parameters, plotting) {
+data_curation <- function(articles, outbreaks, models, parameters, plotting,switch_first_surname=FALSE) {
   
   articles   <- articles %>%
     mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
@@ -72,6 +72,11 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
                                       population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
   
+  if(switch_first_surname)   # this is due to legacy access database issue
+  {
+    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+  }
+  
   return(list(articles = articles, outbreaks = outbreaks, 
               models = models, parameters = parameters))
 }
@@ -87,7 +92,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -109,21 +114,37 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
   
-  gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
-        scale_x_continuous(limits = lims, expand = c(0, 0)) +
-        scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
-        labs(x = label, y = NULL) +
-        theme_minimal() + 
-        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
-              text = element_text(size = text_size))
+  if(sum(!is.na(custom_colours)))
+  {
+    gg <- gg + 
+      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_x_continuous(limits = lims, expand = c(0, 0)) +
+      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+      labs(x = label, y = NULL) +
+      scale_color_manual(values = custom_colours) +
+      scale_fill_manual(values = custom_colours) +
+      theme_minimal() + 
+      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+            text = element_text(size = text_size))
+  } else {
+    gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_x_continuous(limits = lims, expand = c(0, 0)) +
+      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+      labs(x = label, y = NULL) +
+      theme_minimal() + 
+      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+            text = element_text(size = text_size))  
+  }
+  
   if (cats == 1) {
     gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
   } else {
     gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
   
   if(show_label)
-    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = df$population_country_v2), nudge_x = 1.5, segment.color = "grey90" ) 
+    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" ) 
+    #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" ) 
 
   return(gg)
 }
@@ -223,10 +244,10 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
 
 metamean_wrap <- function(dataframe, estmeansd_method, 
                              plot_study, digits, lims, colour, label,
-                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
+                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
   
   dataframe <- epireview::filter_df_for_metamean(dataframe)
-    
+  dataframe <- dataframe[!is.na(dataframe$id),]
   if(!is.na(subgroup))
   {
     mtan <- metamean(data = dataframe,
@@ -253,7 +274,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits, 
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10, colgap.forest.left = paste0( colgap_shift,"cm"))
     dev.off() 
   } else {
     mtan <- metamean(data = dataframe,

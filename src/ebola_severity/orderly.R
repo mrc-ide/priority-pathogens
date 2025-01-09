@@ -15,31 +15,30 @@ library(doconv)
 
 orderly_strict_mode()
 
-orderly_parameters(pathogen = "EBOLA")
-
 orderly_artefact(
   "Plots and tables for severity parameters",
   c(
     "Severity_plots/plot_outbreak_filtered.png",
-    "Severity_plots/plot_split_outbreak_filtered.png",
+    "Severity_plots/plot_split_outbreak_filtered.pdf",
     "Severity_plots/plot_country_filtered.png",
     "Severity_plots/plot_outbreak_unfiltered.png",
     "Severity_plots/plot_country_unfiltered.png",
     "Severity_tables/qa_filtered/tab_filtered.png",
     "Severity_tables/qa_filtered/range_outbreak.png",
     "Severity_tables/qa_filtered/range_outbreak_country.png",
+    "Severity_tables/qa_filtered/range_outbreak_country.docx",
     "Severity_tables/qa_filtered/range_country_outbreak.png",
     "Severity_tables/qa_filtered/range_species_outbreak.png",
     "Severity_tables/unfiltered/tab_unfiltered.png",
-    "Severity_tables/unfiltered/paginate_severity_all.docx",
-    "Severity_tables/unfiltered/paginate_severity_all.pdf"
+    "Severity_tables/unfiltered/paginate_severity_all.docx"
+    # "Severity_tables/unfiltered/paginate_severity_all.pdf"
   )
 )
 
 # Get data from db_compilation
 orderly_dependency(
   "db_compilation",
-  "latest(parameter:pathogen == this:pathogen)",
+  "latest(parameter:pathogen == 'EBOLA')",
   c(
     "articles.csv",
     "parameters.csv"
@@ -189,6 +188,8 @@ ordered_dat <- sev_dat %>%
     )
   )
 
+saveRDS(ordered_dat, "ebola_severity.rds")
+orderly_artefact("Ebola severity estimates", "ebola_severity.rds")
 # Pull numbers
 ordered_dat %>% nrow() # 166
 length(unique(ordered_dat$covidence_id)) # 130
@@ -293,7 +294,7 @@ ggsave("Severity_plots/plot_outbreak_filtered.png", plot_outbreak_qa,
   width = 9, height = 18, units = "in", bg = "white"
 )
 
-ggsave("Severity_plots/plot_split_outbreak_filtered.png", plot_split_outbreak,
+ggsave("Severity_plots/plot_split_outbreak_filtered.pdf", plot_split_outbreak,
        width = 16, height = 11, units = "in", bg = "white"
 )
 
@@ -347,8 +348,8 @@ save_as_docx(p_severity, path = "Severity_tables/unfiltered/paginate_severity_al
              ))
 
 # Then convert to pdf
-docx2pdf("Severity_tables/unfiltered/paginate_severity_all.docx",
-         output = "Severity_tables/unfiltered/paginate_severity_all.pdf")
+# docx2pdf("Severity_tables/unfiltered/paginate_severity_all.docx",
+         # output = "Severity_tables/unfiltered/paginate_severity_all.pdf")
 
 
 # Create summary tables giving the range of central values by specified groups
@@ -387,6 +388,9 @@ range_species_outbreak <- create_range_table(
 save_as_image(range_outbreak_country,
   path = "Severity_tables/qa_filtered/range_outbreak_country.png"
 )
+
+save_as_docx(range_outbreak_country, path = "Severity_tables/qa_filtered/range_outbreak_country.docx")
+
 save_as_image(range_outbreak,
               path = "Severity_tables/qa_filtered/range_outbreak.png"
 )

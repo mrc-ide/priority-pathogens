@@ -76,6 +76,8 @@ orderly_resource(
   )
 )
 
+orderly_shared_resource("ebola_functions.R" = "ebola_functions.R")
+source("ebola_functions.R")
 ## Here we map the fixing files to the
 ## pathogen.
 fixing_files <- list(
@@ -299,6 +301,7 @@ outbreak_all <- rbind(
 
 # Cleaning
 article_all   <- clean_dfs(article_all, pathogen)
+
 if (pathogen == "LASSA") {
   ## SB 14.05.2024
 ## Temporary fix to deal with garbled characters 
@@ -314,16 +317,22 @@ outbreak_all$outbreak_location <- iconv(
 model_all     <- clean_dfs(model_all, pathogen)
 if (pathogen == "LASSA") model_all <- lassa_models_cleaning(model_all)
 parameter_all <- clean_dfs(parameter_all, pathogen)
-
+if (pathogen == 'EBOLA') {
+  parameter_all <- assign_ebola_outbreak(parameter_all)
+  parameter_all <- assign_ebola_species(parameter_all)
+  
+}
 # # Add article QA scores to article data
-# article_all <- add_qa_scores(article_all, parameter_all)
-# 
+if (pathogen == 'EBOLA') {
+  article_all <- add_qa_scores(article_all, parameter_all)
+
 # # Add article QA scores as a parameter variable
-# parameter_all <- parameter_all %>%
-#   left_join(
-#     select(article_all, covidence_id, article_qa_score),
-#     by = "covidence_id"
-#   )
+ parameter_all <- parameter_all %>%
+   left_join(
+     select(article_all, covidence_id, article_qa_score),
+     by = "covidence_id"
+   )
+}
 print(class(article_all))
 write_csv(article_all, "articles.csv")
 if (pathogen %in% c("EBOLA", "SARS")) {

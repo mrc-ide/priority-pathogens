@@ -12,4 +12,4 @@ TRUE,1036,Richard Sheppard,5,Compartmental,Other compartmental,Deterministic,FAL
 TRUE,1672,Sangeeta,6,Compartmental,SEIR,Deterministic,TRUE,NA,FALSE,Human to human (direct contact),Homogeneous mixing,1,SARS-CoV,1,0
 TRUE,1906,Sequoia,1,Other,Other compartmental,Deterministic,TRUE,Quarantine;Other,FALSE,Unspecified,Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,1,SARS-CoV,1,0
 TRUE,1929,Christian,10,Compartmental,Other compartmental,Stochastic,FALSE,Behaviour changes;Hospitals;Other,FALSE,Airborne or close contact,Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time,2,SARS-CoV,1,0
-TRUE,4837,Anna V,10,Agent / Individual based,Not compartmental,Deterministic,FALSE,Contact tracing;Quarantine,FALSE,Unspecified,Homogeneous mixing,2,SARS-CoV,1,0
+TRUE,4837,Anna V,10,Agent / Individual based,Not compartmental,Stochastic,FALSE,Contact tracing;Quarantine,FALSE,Unspecified,Homogeneous mixing,2,SARS-CoV,1,0

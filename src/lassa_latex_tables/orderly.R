@@ -58,7 +58,11 @@ outbreaks <- outbreaks %>%
 outbreaks <- outbreaks %>% mutate_all(~ ifelse(is.na(.), "", .))
 outbreaks <- outbreaks %>% mutate(outbreak_location = gsub("Fct;","FCT;",outbreak_location),
                                   outbreak_location = gsub("Kenema ;","Kenema;",outbreak_location),
-                                  outbreak_location = gsub("OuéMé","Ouémé",outbreak_location))
+                                  outbreak_location = gsub("OuéMé","Ouémé",outbreak_location)) %>%
+                           mutate(outbreak_location = case_when(
+                                  covidence_id == 560 & outbreak_country == "Liberia" ~ outbreak_location,
+                                  covidence_id %in% c(61,1161,152,60,3991,4316,5623,2791,558,1183) ~ outbreak_location,
+                                  TRUE ~ paste0(outbreak_location, "$^*$")))
 
 outs <- outbreaks %>%
   select(outbreak_country, outbreak_location, dates, 
@@ -83,9 +87,10 @@ mods$stoch_deter <- NULL
 mods$model_type  <- gsub("Branching process - Stochastic", "Branching Process", mods$model_type)
 mods$transmission_route <- gsub("Vector/Animal to human", "Rodent-Human", mods$transmission_route)
 mods$transmission_route <- gsub("Human to human \\(direct contact\\)", "Human-Human", mods$transmission_route)
-mods$transmission_route <- gsub("Airborne or close contact", "Airborne", mods$transmission_route)
+mods$transmission_route <- gsub("Airborne or close contact", "Environment", mods$transmission_route)
 mods$transmission_route <- gsub("Sexual", "Human-Human (Sexual)", mods$transmission_route)
-mods$transmission_route <- gsub("Airborne;Human-Human;Rodent-Human","Rodent-Human;Human-Human;Airborne",mods$transmission_route)
+mods$transmission_route <- gsub("Environment;Human-Human;Rodent-Human","Rodent-Human;Human-Human;Environment",mods$transmission_route)
+mods$transmission_route <- gsub("Environment;Human-Human \\(Sexual\\);Rodent-Human","Rodent-Human;Human-Human (Sexual);Environment",mods$transmission_route)
 mods$transmission_route <- gsub("Human-Human;Rodent-Human","Rodent-Human;Human-Human",mods$transmission_route)
 mods$transmission_route <- gsub("Human-Human \\(Sexual\\);Rodent-Human","Rodent-Human;Human-Human \\(Sexual\\)",mods$transmission_route)
 mods$assumptions        <- gsub("Homogeneous mixing", "", mods$assumptions)
@@ -94,6 +99,7 @@ mods$assumptions        <- gsub("Heterogenity in transmission rates - over time"
 mods$assumptions        <- gsub("Heterogenity in transmission rates - between groups", "Groups", mods$assumptions)
 mods$assumptions        <- gsub("Age dependent susceptibility", "Age", mods$assumptions)
 mods$assumptions        <- gsub("^;|;$", "", mods$assumptions)
+mods$compartmental_type <- gsub("SIS", "SI", mods$compartmental_type)
 mods$compartmental_type <- gsub("Not compartmental", "", mods$compartmental_type)
 mods$compartmental_type <- gsub("Other compartmental", "Other", mods$compartmental_type)
 mods$theoretical_model  <- gsub("FALSE", "Fitted", mods$theoretical_model)
@@ -108,14 +114,15 @@ mods                    <- mods %>% mutate(assumptions = case_when(
   covidence_id %in% c(4136,4251) ~ gsub("Groups","Socio-Economic Status",assumptions),
   covidence_id %in% c(4343) ~ gsub("Groups","Protective Behaviour",assumptions),
   covidence_id %in% c(3735) ~ gsub("Groups","Quarantine Status",assumptions),
-  covidence_id %in% c(5513) ~ gsub("Groups","Sex",assumptions),
+  covidence_id %in% c(5513,5624) ~ gsub("Groups","Sex",assumptions),
   TRUE ~ assumptions))
 mods <- mods %>% select(-c("covidence_id"))
 mods$transmission_route <- factor(mods$transmission_route,
                                   levels = c("Rodent-Human","Human-Human","Rodent-Human;Human-Human",
-                                             "Rodent-Human;Human-Human (Sexual)","Rodent-Human;Human-Human;Airborne"))
+                                             "Rodent-Human;Human-Human (Sexual)","Rodent-Human;Human-Human;Environment",
+                                             "Rodent-Human;Human-Human (Sexual);Environment"))
 mods$compartmental_type <- factor(mods$compartmental_type,
-                                  levels = c("","SIR","SEIR","Other","Other;SIR"))
+                                  levels = c("","SI","SIR","SEIR","Other","Other;SIR"))
 mods <- mods[order(mods$model_type,mods$transmission_route,mods$assumptions,
                    mods$compartmental_type),]
 mods$transmission_route <- as.character(mods$transmission_route)
@@ -202,6 +209,10 @@ parameters <- parameters %>%
          dates = trimws(gsub("\\s{2,}"," ",dates)),
          dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE),
          dates = ifelse(dates == "-","",dates)) %>%
+  mutate(dates = ifelse(str_detect(dates, " - "),
+                  {parts <- str_split(dates, " - ", simplify = TRUE)
+                    ifelse(parts[, 1] == parts[, 2], parts[, 1], dates)},
+                  dates)) %>%
   mutate(population_study_start_day   = coalesce(population_study_start_day,1),
          population_study_start_month = ifelse(is.na(population_study_start_month),"Jan",population_study_start_month),
          population_study_start_year  = coalesce(population_study_start_year,0),
@@ -290,6 +301,17 @@ write.table(hdel_params, file = "latex_delays.csv", sep = ",",
 #parameters - CFRs
 cfrs_params <- parameters %>%
   filter(grepl("Severity - case fatality rate", parameter_type, ignore.case = TRUE)) %>%
+  mutate(duplicate_cfr = case_when(
+          covidence_id %in% c(832,845,870) & population_group != "Persons Under Investigation" ~ "Known",
+          covidence_id == 1413 & cfr_ifr_method == "Naive" ~ "Known",
+          covidence_id %in% c(645,4745,870,871,1426,1413,1444,3147,2714,461,2818,1272,167,2567, 
+                              2760,2656,4314,2589,3215,3991,2662,3635,874,920,2636,252,3530,1254,2684,5439,5419,1366,1083,5622,1192,5623,3210) ~ "Assumed",
+          TRUE ~ "False")) %>% #only identified for estimates passed to meta-analysis (i.e. denominator not NA)
+  mutate(parameter_value = case_when(!is.na(cfr_ifr_denominator) & !(cfr_ifr_denominator=="") &
+                                     !(is.na(cfr_ifr_numerator) & is.na(parameter_value)) &  !(cfr_ifr_numerator=="" & parameter_value=="") &
+                                     duplicate_cfr == "False" 
+                                     ~ paste0(parameter_value, "$^*$"),
+                           TRUE ~ parameter_value)) %>%
   select(parameter_value, unc_type,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
@@ -327,9 +349,10 @@ risk_params <- parameters %>%
          riskfactor_adjusted, population_sample_size,
          population_country, dates,
          population_sample_type, population_group, refs)
+risk_params$riskfactor_outcome <- gsub("Severe disease", "Severe Disease", risk_params$riskfactor_outcome)
 risk_params$riskfactor_outcome <- factor(risk_params$riskfactor_outcome, 
-                                         levels = c("Occurrence","Infection","Reproduction Number","Attack Rate","Incidence",
-                                                    "Onset-Admission Delay","Viremia","Death","Serology"))
+                                         levels = c("Occurrence","Infection","Incidence","Reproduction Number","Attack Rate",
+                                                    "Onset-Admission Delay","Severe Disease","Death","Serology"))
 risk_params$riskfactor_significant <- str_to_title(risk_params$riskfactor_significant)
 risk_params$riskfactor_significant <- factor(risk_params$riskfactor_significant, 
                                              levels = c("Significant","Not Significant","Unspecified"))
