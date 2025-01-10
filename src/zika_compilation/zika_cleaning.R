@@ -265,8 +265,12 @@ zika_clean_params <- function(df, pathogen){
                        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
                        parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
                        parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value,
+                       parameter_2_uncertainty_single_value,
                        exponent, exponent_2, distribution_2_par1_value, distribution_2_par2_value, 
                        distribution_par1_value, distribution_par2_value), .fns = as.numeric),
+      across(.cols = c(population_study_start_year, population_study_end_year,
+                       population_study_start_day, population_study_end_day),
+             .fns = as.integer),
       
       # Update parameter type values 
       parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
