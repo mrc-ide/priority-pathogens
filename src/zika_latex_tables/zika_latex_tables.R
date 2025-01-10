@@ -168,9 +168,9 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
 parameters <- parameters %>% mutate(parameter_value = case_when(
   (parameter_class %in% c("Severity","Seroprevalence") | parameter_unit == "") ~ parameter_value,
   TRUE ~ paste(parameter_value, parameter_unit, sep = " ")))
-parameters <- parameters %>%
-              mutate(parameter_unit = ifelse(parameter_unit == "Percentage (%)", "%", parameter_unit),
-                     values = paste0(values, parameter_unit, sep = " "))
+# parameters <- parameters %>%
+#               mutate(parameter_unit = ifelse(parameter_unit == "Percentage (%)", "%", parameter_unit),
+#                      values = paste0(values, parameter_unit, sep = " "))
 parameters <- parameters %>%
   mutate(unc_type=
            ifelse(!is.na(distribution_par2_type), 
@@ -274,6 +274,12 @@ hdel_params$parameter_type <- sub("^.* - ", "", hdel_params$parameter_type)
 hdel_params$parameter_type <- sub(">", " - ", hdel_params$parameter_type)
 hdel_params$parameter_type <- str_to_title(hdel_params$parameter_type)
 hdel_params$parameter_type <- gsub("  \\(.*?\\)", "", hdel_params$parameter_type)
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIcu\\b", "ICU")
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bNaat\\b", "NAAT")
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bRna\\b", "RNA")
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgm\\b", "IgM")
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgg\\b", "IgG")
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bPcr\\b", "PCR")
 hdel_params <- hdel_params %>% mutate(parameter_type = case_when(
   (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Symptom Resolution") ~ "Symptomatic Period",   
   (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Specimen Collection") ~ "Onset - Testing",   
