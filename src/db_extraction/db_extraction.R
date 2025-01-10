@@ -9,7 +9,6 @@ library(purrr)
 library(readr)
 library(readxl)
 
-dir <- 'P:/Zika/priority-pathogens/src/zika_compilation/'
 ## pathogen should be set to one of our priority-pathogens
 ## use capital case; see code below where this pathogen
 ################### README ###################
