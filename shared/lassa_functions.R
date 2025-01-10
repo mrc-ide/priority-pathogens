@@ -67,24 +67,24 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
     mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
   
   if (pathogen == 'ZIKA'){
-    # Zika database has extra variables for the variability -- all of these have _2    
-  
+    # Zika database has extra variables for the variability -- all of these have _2
+
     param4plot <- param4plot %>%
       mutate(no_unc = is.na(parameter_2_uncertainty_lower_value) & is.na(parameter_2_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
              parameter_2_uncertainty_lower_value = case_when(
              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value-parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value-sqrt(parameter_2_uncertainty_single_value),
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value-parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2), 
-             TRUE ~ parameter_2_uncertainty_lower_value),                                                 
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value - sqrt(parameter_2_uncertainty_single_value),
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value / distribution_2_par2_value)^2, rate = distribution_2_par1_value / distribution_2_par2_value^2),
+             TRUE ~ parameter_2_uncertainty_lower_value),
            parameter_2_uncertainty_upper_value = case_when(
              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_uncertainty_single_value,
              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value+sqrt(parameter_2_uncertainty_single_value),
              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2), 
-             TRUE ~ parameter_2_uncertainty_upper_value)) 
+             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2),
+             TRUE ~ parameter_2_uncertainty_upper_value))
   }
   
   if (plotting) {
