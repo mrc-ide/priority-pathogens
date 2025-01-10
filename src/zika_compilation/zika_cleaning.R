@@ -18,7 +18,7 @@ library(ids)
 ####################
 # Article cleaning #
 ####################
-clean_articles <- function(df, pathogen){
+zika_clean_articles <- function(df, pathogen){
   
   df <- df %>%
     clean_names() %>%
@@ -126,7 +126,7 @@ clean_articles <- function(df, pathogen){
 #################
 # Model cleaning #
 ##################
-clean_models <- function(df, pathogen){    
+zika_clean_models <- function(df, pathogen){    
   
   df <- df %>%
     clean_names() %>%
@@ -155,7 +155,7 @@ clean_models <- function(df, pathogen){
 # Outbreak cleaning #
 #####################
 
-clean_outbreaks <- function(df, pathogen){
+zika_clean_outbreaks <- function(df, pathogen){
   df <- df %>%
     clean_names() %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
@@ -249,7 +249,7 @@ clean_outbreaks <- function(df, pathogen){
 ######################
 # Parameter cleaning #
 ######################
-clean_params <- function(df, pathogen){
+zika_clean_params <- function(df, pathogen){
   
   df <- df %>%
     clean_names() %>%
@@ -264,7 +264,9 @@ clean_params <- function(df, pathogen){
       across(.cols = c(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
                        parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
-                       parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value), .fns = as.numeric),
+                       parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value,
+                       exponent, exponent_2, distribution_2_par1_value, distribution_2_par2_value, 
+                       distribution_par1_value, distribution_par2_value), .fns = as.numeric),
       
       # Update parameter type values 
       parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
@@ -393,7 +395,7 @@ clean_params <- function(df, pathogen){
     ) 
   
   # Clean delays 
-  df <- clean_delays(df)
+  df <- zika_clean_delays(df)
   
   # Exponent
   # exponent = 
@@ -599,7 +601,7 @@ clean_params <- function(df, pathogen){
 }
 
 
-clean_delays <- function(params_df){
+zika_clean_delays <- function(params_df){
   
   df <- params_df %>%
     # clean the other human delays and merge the common ones into parameter_type
@@ -722,43 +724,44 @@ clean_delays <- function(params_df){
 }
 
 
-#################################
-# Add QA scores to article data #
-#################################
-
-# input: articles data and parameter data
-# output: articles data with two new variables: model_only and article_qa_score
-
-add_qa_scores <- function(articles_df, params_df) {
-  # add a model_only variable to article data (as denominator for qa will be different)
-  articles_df <- articles_df %>%
-    mutate(
-      model_only =
-        as.numeric(!id %in% params_df$id)
-    ) %>%
-    # if an article is model_only, make 5-7 NA for consistency between scores --  removed for Zika 
-    # mutate(
-    #   qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
-    #   qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
-    #   qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
-    # ) %>%
-    # add qa score to article data
-    mutate(
-      total_qa =
-        rowSums(!is.na(
-          select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7)
-        )),
-      yes_score = rowSums(
-        select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
-        na.rm = TRUE
-      ),
-      article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
-    ) %>%
-    select(-c(total_qa, yes_score)) %>%
-    # Remove observation without qa score (second extractor)
-    group_by(covidence_id) %>%
-    filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
-    ungroup
-  
-  articles_df
-}
+# Commented out because it is in cleaning.R script now
+# #################################
+# # Add QA scores to article data #
+# #################################
+# 
+# # input: articles data and parameter data
+# # output: articles data with two new variables: model_only and article_qa_score
+# 
+# add_qa_scores <- function(articles_df, params_df) {
+#   # add a model_only variable to article data (as denominator for qa will be different)
+#   articles_df <- articles_df %>%
+#     mutate(
+#       model_only =
+#         as.numeric(!id %in% params_df$id)
+#     ) %>%
+#     # if an article is model_only, make 5-7 NA for consistency between scores --  removed for Zika
+#     # mutate(
+#     #   qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
+#     #   qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
+#     #   qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
+#     # ) %>%
+#     # add qa score to article data
+#     mutate(
+#       total_qa =
+#         rowSums(!is.na(
+#           select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7)
+#         )),
+#       yes_score = rowSums(
+#         select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
+#         na.rm = TRUE
+#       ),
+#       article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
+#     ) %>%
+#     select(-c(total_qa, yes_score)) %>%
+#     # Remove observation without qa score (second extractor)
+#     group_by(covidence_id) %>%
+#     filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
+#     ungroup
+# 
+#   articles_df
+# }
