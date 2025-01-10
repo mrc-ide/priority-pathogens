@@ -290,14 +290,14 @@ add_qa_scores <- function(articles_df, params_df) {
     mutate(
       model_only =
         as.numeric(!id %in% params_df$id)
-    ) %>%
-    # if an article is model_only, make 5-7 NA for consistency between scores
-    mutate(
-      qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
-      qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
-      qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
-    ) %>%
-    # add qa score to article data
+    )  %>%
+      # if an article is model_only, make 5-7 NA for consistency between scores
+      mutate(
+        qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
+        qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
+        qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
+      ) %>%
+      # add qa score to article data
     mutate(
       total_qa =
         rowSums(!is.na(
@@ -310,6 +310,14 @@ add_qa_scores <- function(articles_df, params_df) {
       article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
     ) %>%
     select(-c(total_qa, yes_score))
+  
+  if (pathogen == 'ZIKA'){
+    # Remove observation without qa score (second extractor)
+    articles_df <- articles_df %>%
+      group_by(covidence_id) %>%
+      filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
+      ungroup
+  }
 
   articles_df
 }
