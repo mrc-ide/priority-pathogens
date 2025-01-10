@@ -61,6 +61,7 @@ orderly_dependency(
 # second round of double 
 orderly_resource(
   c('zika_cleaning.R' = 'zika_cleaning.R',
+    'cleaning.R' = 'cleaning.R',
     "db1_qa_fixing.xlsx" = "db1_qa_fixing.xlsx",
     "db1_params_fixing.xlsx" = "db1_params_fixing.xlsx",
     "db1_models_fixing.xlsx" = "db1_models_fixing.xlsx",
@@ -90,6 +91,7 @@ orderly_resource(
 #   )
 # )
 
+source('cleaning.R')
 source('zika_cleaning.R')
 
 # Get article information into qa_fixing files for double extraction round 1
@@ -190,10 +192,10 @@ outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks)
 params_all <- rbind(db1_params, db2_fixing_params, single_params)
 
 #' cleaning script 
-articles_clean <- clean_articles(articles_all, pathogen = 'ZIKA')
-models_clean <- clean_models(models_all, pathogen = 'ZIKA')
-outbreaks_clean <- clean_outbreaks(outbreaks_all, pathogen = 'ZIKA')
-params_clean <- clean_params(params_all, pathogen = 'ZIKA')
+articles_clean <- zika_clean_articles(articles_all, pathogen = 'ZIKA')
+models_clean <- zika_clean_models(models_all, pathogen = 'ZIKA')
+outbreaks_clean <- zika_clean_outbreaks(outbreaks_all, pathogen = 'ZIKA')
+params_clean <- zika_clean_params(params_all, pathogen = 'ZIKA')
 
 # Add qa scores to article df
 articles_qa <- add_qa_scores(articles_clean, params_clean)
