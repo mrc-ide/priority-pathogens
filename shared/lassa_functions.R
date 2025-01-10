@@ -1,9 +1,14 @@
 #function to tidy-up all dataframes
 
-data_curation <- function(articles, outbreaks, models, parameters, plotting,switch_first_surname=FALSE) {
+data_curation <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
+  
+  if(switch_first_surname)   # this is due to legacy access database issue
+  {
+    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+  }
   
   articles   <- articles %>%
-    mutate(refs = paste(first_author_first_name," (",year_publication,")",sep="")) %>% #define references
+    mutate(refs = paste(first_author_surname," (",year_publication,")",sep="")) %>% #define references
     group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
     mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
     select(-counter,-refs) %>% rename(refs = new_refs)
@@ -18,22 +23,29 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
   
   parameters <- parameters %>% 
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-    filter(!parameter_from_figure) 
+    filter(!as.logical(parameter_from_figure)) # ensure that parameter_from_figure is logical not character
   
   if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
     colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type' 
     flag <- TRUE
   } else flag = FALSE
   
+  if (pathogen == 'ZIKA'){
+    var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 
+                    "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
+                    "parameter_2_value", "parameter_2_lower_bound", "parameter_2_upper_bound", 
+                    "parameter_2_uncertainty_lower_value", "parameter_2_uncertainty_upper_value")
+  } else {
+    var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 
+                    "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value")
+  }
+  
   param4plot <- parameters %>%
-    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
-                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+    mutate_at(vars(all_of(var_select)),
               list(~ ifelse(inverse_param, 1/.x, .x))) %>%
-    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
-                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+    mutate_at(vars(all_of(var_select)),
               list(~ .x * 10^exponent)) %>%
-    mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
-                   parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
+    mutate_at(vars(all_of(var_select)), #account for different units
               list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>% 
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
@@ -54,6 +66,27 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     select(-c(no_unc)) %>%
     mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
   
+  if (pathogen == 'ZIKA'){
+    # Zika database has extra variables for the variability -- all of these have _2    
+  
+    param4plot <- param4plot %>%
+      mutate(no_unc = is.na(parameter_2_uncertainty_lower_value) & is.na(parameter_2_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
+             parameter_2_uncertainty_lower_value = case_when(
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_value,
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value-parameter_2_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value-sqrt(parameter_2_uncertainty_single_value),
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value-parameter_2_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2), 
+             TRUE ~ parameter_2_uncertainty_lower_value),                                                 
+           parameter_2_uncertainty_upper_value = case_when(
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value+sqrt(parameter_2_uncertainty_single_value),
+             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2), 
+             TRUE ~ parameter_2_uncertainty_upper_value)) 
+  }
+  
   if (plotting) {
     parameters <- param4plot    
   } else {
@@ -71,11 +104,6 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
   
   parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
                                       population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
-  
-  if(switch_first_surname)   # this is due to legacy access database issue
-  {
-    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
-  }
   
   return(list(articles = articles, outbreaks = outbreaks, 
               models = models, parameters = parameters))

@@ -18,7 +18,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   parameters <- parameters %>% 
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-    filter(!parameter_from_figure) 
+    filter(!as.logical(parameter_from_figure) )
   
   if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
     colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type' 
