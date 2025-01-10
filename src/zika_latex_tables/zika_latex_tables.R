@@ -11,8 +11,10 @@ orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
-orderly_shared_resource("zika_functions.R" = "zika_functions.R")
-source("zika_functions.R")
+# orderly_shared_resource("zika_functions.R" = "zika_functions.R")
+# source("zika_functions.R")
+orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
+source("lassa_functions.R")
 orderly_artefact(description = "zika-specific tables", files = c("latex_outbreaks.csv",
                                            "latex_models.csv",
                                            "latex_transmission.csv","latex_delays.csv",
@@ -153,7 +155,7 @@ parameters$parameter_unit <- gsub("Per day", "per day", parameters$parameter_uni
 parameters$parameter_unit <- gsub("Percentage \\(%\\)", "\\\\%", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Days", "days", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Weeks", "weeks", parameters$parameter_unit)
-parameters$parameter_unit <- gsub("per 100;000 population", "per 100k")
+parameters$parameter_unit <- gsub("per 100;000 population", "per 100k", parameters$parameter_unit)
 
 parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == 0 ~ parameter_unit,
