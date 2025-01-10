@@ -57,7 +57,8 @@ orderly_run("db_extraction", parameters = list(pathogen = "ZIKA"))
 orderly_run("db_double", parameters = list(pathogen = "ZIKA"))
 
 # Bring single, matching double, and fixed double together
-orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
+# orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
+orderly_run("db_compilation", parameters = list(pathogen = "ZIKA"))
 
 ## The above tasks use the Access databases that have not been uploaded as part 
 ## of the repository. 
@@ -93,7 +94,7 @@ orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
 # orderly_run("sars_summary", parameters = list(pathogen = "SARS"))
 # 
 # # Latex tables
-# orderly_run("sars_latex_tables", parameters = list(pathogen = "SARS"))
+orderly_run("zika_latex_tables", parameters = list(pathogen = "ZIKA"))
 
 ######################
 ## FIGURES & TABLES ##
