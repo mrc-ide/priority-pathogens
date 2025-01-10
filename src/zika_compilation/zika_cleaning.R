@@ -640,7 +640,7 @@ zika_clean_delays <- function(params_df){
           "Other: Case report completion", "Who notification",
           "Report (for confirmed cases with known outcomes)",
           "Other: official report",
-          "first reporting in country"
+          "First reporting in country"
         ) ~ "Reporting",
         other_delay_end %in% c("Testing", "EVD Testing") ~ "Test",
         other_delay_end %in% c("Test result", "Result", "Test Results", "Diagnosis/test result") ~ "Test result",
@@ -665,7 +665,38 @@ zika_clean_delays <- function(params_df){
         case_when(
           !is.na(other_delay) ~ paste("Human delay -", other_delay),
           TRUE ~ parameter_type
-        ))
+        ),
+      parameter_type =
+        str_replace_all(
+          parameter_type, c(
+            "care/hospitalisation" = "care",
+            "care/hospital" = "care",
+            "onset/fever" = "onset",
+            "critical care/Icu" = "critical care"
+          )
+        ),
+      parameter_type =
+        case_when(
+          parameter_type %in% "Exposure/infection to infectiousness" ~
+            "Latent period",
+          parameter_type %in% "Exposure/infection to symptom onset" ~
+            "Incubation period",
+          parameter_type %in% "Time in care (length of stay)" ~
+            "Admission to care to death/discharge",
+          TRUE ~ parameter_type
+        ),
+      parameter_type = str_replace(parameter_type, "\\bwho\\b", "WHO"),
+      parameter_type = str_replace(parameter_type, "\\bWho\\b", "WHO"),
+      parameter_type = str_replace(parameter_type, "\\brna\\b", "RNA"),
+      parameter_type = str_replace(parameter_type, "\\bzikv\\b", "ZIKV"),
+      parameter_type = str_replace(parameter_type, "\\bigm\\b", "IgM"),
+      parameter_type = str_replace(parameter_type, "\\bigg\\b", "IgG"),
+      parameter_type = str_replace(parameter_type, "\\bNaat\\b", "NAAT"),
+      parameter_type = str_replace(parameter_type, "\\bpcr\\b", "PCR"),
+      parameter_type = str_replace(parameter_type, "\\bIcu\\b", "ICU"),
+      parameter_type = str_replace(parameter_type, "igg antibody detection", "antibody detection (IgM/IgG)"),
+      parameter_type = str_replace(parameter_type, "igm antibody detection", "antibody detection (IgM/IgG)"),
+      parameter_type = str_replace(parameter_type, ">", " to ")) 
   
   # Make shortened version of delay name
   df <- df %>%
@@ -676,37 +707,6 @@ zika_clean_delays <- function(params_df){
                TRUE ~ NA
              ),
            delay_short = str_to_sentence(delay_short),
-           delay_short =
-             str_replace_all(
-               delay_short, c(
-                 "care/hospitalisation" = "care",
-                 "care/hospital" = "care",
-                 "onset/fever" = "onset",
-                 "critical care/ICU" = "critical care"
-               )
-             ),
-           delay_short =
-             case_when(
-               delay_short %in% "Exposure/infection to infectiousness" ~
-                 "Latent period",
-               delay_short %in% "Exposure/infection to symptom onset" ~
-                 "Incubation period",
-               delay_short %in% "Time in care (length of stay)" ~
-                 "Admission to care to death/discharge",
-               TRUE ~ delay_short
-             ),
-           delay_short = str_replace(delay_short, "\\bwho\\b", "WHO"),
-           delay_short = str_replace(delay_short, "\\bWho\\b", "WHO"),
-           delay_short = str_replace(delay_short, "\\brna\\b", "RNA"),
-           delay_short = str_replace(delay_short, "\\bzikv\\b", "ZIKV"),
-           delay_short = str_replace(delay_short, "\\bigm\\b", "IgM"),
-           delay_short = str_replace(delay_short, "\\bigg\\b", "IgG"),
-           delay_short = str_replace(delay_short, "\\bNaat\\b", "NAAT"),
-           delay_short = str_replace(delay_short, "\\bpcr\\b", "PCR"),
-           delay_short = str_replace(delay_short, "\\bicu\\b", "ICU"),
-           delay_short = str_replace(delay_short, "igg antibody detection", "antibody detection (IgM/IgG)"),
-           delay_short = str_replace(delay_short, "igm antibody detection", "antibody detection (IgM/IgG)"),
-           delay_short = str_replace(delay_short, ">", " to "),
            delay_start =
              case_when(
                startsWith(delay_short, "Admission to care") ~ "Admission to care",
