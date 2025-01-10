@@ -234,7 +234,7 @@ parameters <- parameters %>% mutate_all(~ ifelse(is.na(.), "", .))
 parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
                                     population_country = gsub(", ", ";", population_country))
 
-#parameters - transmission
+#parameters - transmission ----
 trns_params <- parameters %>%
   filter(grepl("Mutations|Attack|Relative contribution|Growth rate|Reproduction", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_type, parameter_value, unc_type,
@@ -261,7 +261,7 @@ trns_params <- insert_blank_rows(trns_params,"parameter_type")
 write.table(trns_params, file = "latex_transmission.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-#parameters - human delays
+#parameters - human delays ----
 hdel_params <- parameters %>%
   filter(grepl("Human delay", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_type, other_delay_start, other_delay_end,
@@ -305,7 +305,7 @@ hdel_params <- insert_blank_rows(hdel_params,"parameter_type")
 write.table(hdel_params, file = "latex_delays.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-#parameters - CFRs
+#parameters - CFRs ----
 cfrs_params <- parameters %>%
   filter(grepl("Severity - case fatality rate", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_value, unc_type,
@@ -320,14 +320,15 @@ cfrs_params <- insert_blank_rows(cfrs_params,"population_country")
 write.table(cfrs_params, file = "latex_severity.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-#parameters - seroprevalence
+#parameters - seroprevalence ----
 sero_params <- parameters %>%
   filter(grepl("Seroprevalence", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_value, unc_type,
          method_disaggregated_by, 
          parameter_type,cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
-         population_sample_type, population_group, refs, central)
+         population_sample_type, population_group, refs, central, 
+         population_sample_size, covidence_id)
 sero_params$parameter_type <- sub("^.* - ", "", sero_params$parameter_type)
 sero_params$population_country <- gsub(";", "\\, ", sero_params$population_country)
 sero_params$population_country[sero_params$population_country==""] <- "Unspecified" 
@@ -337,7 +338,7 @@ sero_params <- insert_blank_rows(sero_params,"population_country")
 write.table(sero_params, file = "latex_seroprevalence.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-#parameters - risk factors
+#parameters - risk factors ----
 risk_params <- parameters %>%
   filter(grepl("Risk factors", parameter_type, ignore.case = TRUE)) %>%
   select(riskfactor_outcome, 
