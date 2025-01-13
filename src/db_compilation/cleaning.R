@@ -17,124 +17,125 @@ clean_params <- function(df, pathogen) {
       population_study_start_day = as.numeric(population_study_start_day),
       method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
       population_location = str_replace_all(population_location, ";", ","),
-  parameter_type = 
-    ifelse(df$parameter_type == "Growth rate ®", "Growth rate (r)",
-      ifelse(df$parameter_type == "Reproduction number (Effective; Re)", "Reproduction number (Effective, Re)",
-        ifelse(df$parameter_type %in% 
-          c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate"),
-          "Mutations – substitution rate", df$parameter_type
-        )
-      )
-    ), 
-      # Group parameters
-      parameter_class = case_when(
-        grepl("Human delay", parameter_type) ~ "Human delay",
-        grepl("Seroprevalence", parameter_type) ~ "Seroprevalence",
-        grepl("Mutations", parameter_type) ~ "Mutations",
-        grepl("Risk factors", parameter_type) ~ "Risk factors",
-        grepl("Reproduction number", parameter_type) ~ "Reproduction number",
-        grepl("Severity", parameter_type) ~ "Severity",
-        grepl("Mosquito", parameter_type) ~ "Mosquito",
-        grepl("Relative", parameter_type) ~ "Relative contribution",
-        grepl("Overdispersion", parameter_type) ~ "Overdispersion",
-        grepl("Risk factors", parameter_type) ~ "Risk factors",
-        grepl("Attack rate", parameter_type) ~ "Attack rate",
-        grepl("Doubling time", parameter_type) ~ "Doubling time",
-        grepl("Growth rate", parameter_type) ~ "Growth rate",
-        TRUE ~ "Other transmission parameters"
-      ),
-      # Population country
-      population_country = str_replace_all(population_country, ";", ","),
-      population_country = str_replace(
-        population_country, "Congo, Rep.", "Republic of the Congo"
-      ),
-      population_country = str_replace(
-        population_country, "Congo, Dem. Rep.",
-        "Democratic Republic of the Congo"
-      ),
-      population_country = str_replace(
-        population_country, "Democratic Republic of the Congo",
-        "DRC"
-      ),
-      population_country = str_replace(
-        population_country, "Yuogslavia", "Yugoslavia"
-      ),
-      population_country = str_replace(
-        population_country, "Gambia, The", "The Gambia"
-      ),
-      population_country = str_replace_all(population_country, ",", ", "),
-    
-) %>%
-    relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
-    arrange(covidence_id)
+      parameter_type = case_when(
+        parameter_type == "Growth rate ®" ~"Growth rate (r)",
+        parameter_type == "Reproduction number (Effective; Re)" ~ "Reproduction number (Effective, Re)",
+        parameter_type %in% 
+          c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate") ~ "Mutations - substitution rate",
+        parameter_type == "Mutations – mutation rate" ~ "Mutations - mutation rate",
+        TRUE ~ parameter_type), 
+  # Group parameters
+  parameter_class = case_when(
+    grepl("Human delay", parameter_type) ~ "Human delay",
+    grepl("Seroprevalence", parameter_type) ~ "Seroprevalence",
+    grepl("Mutations", parameter_type) ~ "Mutations",
+    grepl("Risk factors", parameter_type) ~ "Risk factors",
+    grepl("Reproduction number", parameter_type) ~ "Reproduction number",
+    grepl("Severity", parameter_type) ~ "Severity",
+    grepl("Mosquito", parameter_type) ~ "Mosquito",
+    grepl("Relative", parameter_type) ~ "Relative contribution",
+    grepl("Overdispersion", parameter_type) ~ "Overdispersion",
+    grepl("Risk factors", parameter_type) ~ "Risk factors",
+    grepl("Attack rate", parameter_type) ~ "Attack rate",
+    grepl("Doubling time", parameter_type) ~ "Doubling time",
+    grepl("Growth rate", parameter_type) ~ "Growth rate",
+    TRUE ~ "Other transmission parameters"),
+  # Population country
+  population_country = str_replace_all(population_country, ";", ","),
+  population_country = str_replace(
+    population_country, "Congo, Rep.", "Republic of the Congo"
+  ),
+  population_country = str_replace(
+    population_country, "Congo, Dem. Rep.",
+    "Democratic Republic of the Congo"
+  ),
+  population_country = str_replace(
+    population_country, "Democratic Republic of the Congo",
+    "DRC"
+  ),
+  population_country = str_replace(
+    population_country, "Yuogslavia", "Yugoslavia"
+  ),
+  population_country = str_replace(
+    population_country, "Gambia, The", "The Gambia"
+  ),
+  population_country = str_replace_all(population_country, ",", ", "),
   
-  df <- df %>%
-    mutate(
-      # across(
-      #   c(
-      #     parameter_value, parameter_lower_bound, parameter_upper_bound,
-      #     parameter_uncertainty_single_value,
-      #     parameter_uncertainty_lower_value,
-      #     parameter_uncertainty_upper_value
-      #   ),
-      #   ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 2),
-      #     ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .)
-      #   )
-      # ),
-      # Combine central upper and lower bounds
-      parameter_bounds =
-        ifelse(!is.na(parameter_lower_bound) & !is.na(parameter_upper_bound),
-          paste(parameter_lower_bound, "-", parameter_upper_bound),
-          NA
-        ),
-      # Uncertainty type
-      parameter_uncertainty_type = case_when(
-        parameter_uncertainty_type %in% "CI95%" ~ "95% CI",
-        parameter_uncertainty_type %in% "CRI95%" ~ "95% CrI",
-        parameter_uncertainty_type %in% "CI90%" ~ "90% CI",
-        parameter_uncertainty_type %in% "CRI90%" ~ "90% CrI",
-        parameter_uncertainty_type %in%
-          "Highest Posterior Density Interval 95%" ~ "HPDI 95%",
-        parameter_uncertainty_type %in%
-          "Inter Quartile Range (IQR)" ~ "IQR",
-        TRUE ~ parameter_uncertainty_type
+  ) %>%
+  relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
+  arrange(covidence_id)
+
+df <- df %>%
+  mutate(
+    across(
+      c(
+        parameter_value, parameter_lower_bound, parameter_upper_bound,
+        parameter_uncertainty_single_value,
+        parameter_uncertainty_lower_value,
+        parameter_uncertainty_upper_value
       ),
-      # Single uncertainty type
-      parameter_uncertainty_singe_type = case_when(
-        parameter_uncertainty_singe_type %in%
-          "Standard deviation (Sd)" ~ "Standard Deviation",
-        parameter_uncertainty_singe_type %in%
-          "Standard Error (SE)" ~ "Standard Error",
-        TRUE ~ parameter_uncertainty_singe_type
+      ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 3),
+        ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .)
+      )
+    ),
+    # Combine central upper and lower bounds
+    parameter_bounds =
+      ifelse(!is.na(parameter_lower_bound) & !is.na(parameter_upper_bound),
+             paste(parameter_lower_bound, "-", parameter_upper_bound),
+             NA
       ),
+    # Uncertainty type
+    parameter_uncertainty_type = case_when(
+      parameter_uncertainty_type %in%
+        "CI95%" ~ "95% CI",
+      parameter_uncertainty_type %in%
+        "CRI95%" ~ "95% CrI",
+      parameter_uncertainty_type %in%
+        "CI90%" ~ "90% CI",
+      parameter_uncertainty_type %in%
+        "CRI90%" ~ "90% CrI",
+      parameter_uncertainty_type %in%
+        "Highest Posterior Density Interval 95%" ~ "HPDI 95%",
+      parameter_uncertainty_type %in%
+        "Inter Quartile Range (IQR)" ~ "IQR",
+      TRUE ~ parameter_uncertainty_type
+    ),
+    # Single uncertainty type
+    parameter_uncertainty_singe_type = case_when(
+      parameter_uncertainty_singe_type %in%
+        "Standard deviation (Sd)" ~ "Standard Deviation",
+      parameter_uncertainty_singe_type %in%
+        "Standard Error (SE)" ~ "Standard Error",
+      TRUE ~ parameter_uncertainty_singe_type
+    ),
+    
+    # Combine uncertainty types and values
+    comb_uncertainty_type =
+      case_when(
+        !is.na(parameter_uncertainty_lower_value) ~
+          paste(parameter_uncertainty_type),
+        !is.na(parameter_uncertainty_single_value) ~
+          paste(parameter_uncertainty_singe_type),
+        TRUE ~ NA
+      ), comb_uncertainty =
+      case_when(
+        !is.na(parameter_uncertainty_lower_value) & !is.na(parameter_uncertainty_upper_value) ~
+          paste(parameter_uncertainty_lower_value, "-", parameter_uncertainty_upper_value),
+        !is.na(parameter_uncertainty_single_value) ~
+          paste(parameter_uncertainty_single_value),
+        TRUE ~ NA
+      ),
+    
+    # shorten a longer method_r name
+    method_r =
+      ifelse(method_r %in% "Renewal equations / Branching process",
+             "Branching process", method_r
+      )
+  )
 
-      # Combine uncertainty types and values
-      comb_uncertainty_type =
-        case_when(
-          !is.na(parameter_uncertainty_lower_value) ~
-            paste(parameter_uncertainty_type),
-          !is.na(parameter_uncertainty_single_value) ~
-            paste(parameter_uncertainty_singe_type),
-          TRUE ~ NA
-        ), comb_uncertainty =
-        case_when(
-          !is.na(parameter_uncertainty_lower_value) & !is.na(parameter_uncertainty_upper_value) ~
-            paste(parameter_uncertainty_lower_value, "-", parameter_uncertainty_upper_value),
-          !is.na(parameter_uncertainty_single_value) ~
-            paste(parameter_uncertainty_single_value),
-          TRUE ~ NA
-        ),
-
-      # shorten a longer method_r name
-      method_r =
-        ifelse(method_r %in% "Renewal equations / Branching process",
-          "Branching process", method_r
-        )
-    )
 
 
-
-  df
+df
 }
 clean_outbreaks <- function(df, pathogen) {
   df <- df %>%
@@ -166,8 +167,8 @@ clean_models <- function(df, pathogen) {
     select(-c("article_id", "name_data_entry")) %>%
     relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
     arrange(covidence_id)
-
-
+  
+  
   df
 }
 clean_articles <- function(df, pathogen) {
@@ -197,10 +198,10 @@ clean_dfs <- function(df, pathogen) {
   ####################
   # Article cleaning #
   ####################
-
+  
   if ("article_title" %in% colnames(df)) {
     df <- clean_articles(df, pathogen)
-
+    
     ######################################
     # Pathogen-specific article cleaning #
     ######################################
@@ -211,40 +212,40 @@ clean_dfs <- function(df, pathogen) {
   ##################
   # Model cleaning #
   ##################
-
+  
   if ("model_type" %in% colnames(df)) {
     df <- clean_models(df, pathogen)
     if (pathogen == "EBOLA") ebola_models_cleaning(df)
     if (pathogen == "LASSA") lassa_models_cleaning(df)
     if (pathogen == "SARS") {
       df <- df %>% filter(!is.na(id))
-
+      
     }
-
+    
     df <- df %>% select(-c("access_model_id"))
   }
-
+  
   #####################
   # Outbreak cleaning #
   #####################
-
+  
   if ("outbreak_id" %in% colnames(df)) {
     df <- clean_outbreaks(df, pathogen)
-
+    
     if (pathogen == "LASSA") lassa_outbreaks_cleaning(df)
     df <- df %>% select(-c("access_outbreak_id"))
   }
-
-
-
-
-
-
-
+  
+  
+  
+  
+  
+  
+  
   ######################
   # Parameter cleaning #
   ######################
-
+  
   if ("parameter_type" %in% colnames(df)) {
     df <- clean_params(df, pathogen)
     if (pathogen == "MARBURG") {
@@ -254,7 +255,7 @@ clean_dfs <- function(df, pathogen) {
           population_study_end_month = substring(population_study_end_month, 1, 3)
         )
     }
-
+    
     if (pathogen == "EBOLA") {
       df <- ebola_params_cleaning(df)
       df <- more_ebola_params_cleaning(df)
@@ -267,11 +268,11 @@ clean_dfs <- function(df, pathogen) {
       df <- more_lassa_cleaning_generic(df)
     }
     df <- select(df, -c("article_id", "access_param_id", "name_data_entry")) %>%
-          relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
-          arrange(covidence_id)
+      relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
+      arrange(covidence_id)
   }
-
-
+  
+  
   df
 }
 
@@ -291,13 +292,13 @@ add_qa_scores <- function(articles_df, params_df) {
       model_only =
         as.numeric(!id %in% params_df$id)
     )  %>%
-      # if an article is model_only, make 5-7 NA for consistency between scores
-      mutate(
-        qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
-        qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
-        qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
-      ) %>%
-      # add qa score to article data
+    # if an article is model_only, make 5-7 NA for consistency between scores
+    mutate(
+      qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
+      qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
+      qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
+    ) %>%
+    # add qa score to article data
     mutate(
       total_qa =
         rowSums(!is.na(
@@ -318,6 +319,6 @@ add_qa_scores <- function(articles_df, params_df) {
       filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
       ungroup()
   }
-
+  
   articles_df
 }
