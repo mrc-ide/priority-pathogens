@@ -408,6 +408,9 @@ zika_clean_params <- function(df, pathogen){
   # Clean delays 
   df <- zika_clean_delays(df)
   
+  # Clean genomic data 
+  df <- zika_clean_genomics(df)
+  
   # Exponent
   # exponent = 
   #   case_when(
@@ -510,54 +513,7 @@ zika_clean_params <- function(df, pathogen){
   ## GENERIC CLEANING AGAIN:
   
   df <- df %>%
-    mutate(
-      
-      # Conversion to numeric values 
-      across(
-        c(
-          parameter_value, parameter_lower_bound, parameter_upper_bound,
-          parameter_uncertainty_single_value,
-          parameter_uncertainty_lower_value,
-          parameter_uncertainty_upper_value
-        ),
-        ~ as.numeric(.)
-      ),
-      # Rounding of parameter values and uncertainty
-      across(
-        c(
-          parameter_value, parameter_lower_bound, parameter_upper_bound,
-          parameter_uncertainty_single_value,
-          parameter_uncertainty_lower_value,
-          parameter_uncertainty_upper_value
-        ),
-        ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 2),
-                 ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .))
-      ),
-      
-      # Parameter value
-      # Combine central upper and lower bounds
-      parameter_bounds =
-        ifelse(!is.na(parameter_lower_bound) & !is.na(parameter_upper_bound),
-               paste(parameter_lower_bound, "-", parameter_upper_bound),
-               NA
-        ),
-      
-      # Uncertainty type
-      parameter_uncertainty_type = case_when(
-        parameter_uncertainty_type %in%
-          "CI95%" ~ "95% CI",
-        parameter_uncertainty_type %in%
-          "CRI95%" ~ "95% CrI",
-        parameter_uncertainty_type %in%
-          "CI90%" ~ "90% CI",
-        parameter_uncertainty_type %in%
-          "CRI90%" ~ "90% CrI",
-        parameter_uncertainty_type %in%
-          "Highest Posterior Density Interval 95%" ~ "HPDI 95%",
-        parameter_uncertainty_type %in%
-          "Inter Quartile Range (IQR)" ~ "IQR",
-        TRUE ~ parameter_uncertainty_type
-      ),
+    
       # Single uncertainty type
       parameter_uncertainty_single_type = case_when(
         parameter_uncertainty_single_type %in%
@@ -599,8 +555,9 @@ zika_clean_params <- function(df, pathogen){
                parameter_type %in% "Growth rate ®" ~ "Growth rate (r)",
                parameter_type %in% "Reproduction number (Effective; Re)" ~
                  "Reproduction number (Effective, Re)",
-               parameter_type %in% "Mutations ‚Äì substitution rate" ~
+               parameter_type %in% c("Mutations ‚Äì substitution rate", "Mutations â€“ substitution rate") ~
                  "Mutations – substitution rate",
+               parameter_type %in% c("Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
                TRUE ~ parameter_type
              )
     ) %>%
@@ -734,6 +691,24 @@ zika_clean_delays <- function(params_df){
   return(df)
 }
 
+zika_clean_genomics <- function(params_df){
+  
+  df <- params_df %>%
+    mutate(
+      # Edit name of genome sites 
+      genome_site = case_when(
+        genome_site %in% c('wgs','WGS') ~ 'Whole genome sequence',
+        TRUE ~ genome_site
+      ),
+      # Fix incorrect parameter unit 
+      parameter_unit = case_when(
+        covidence_id == 7717 & parameter_type == "Mutations - evolutionary rate" ~ "Substitutions/site/year",
+        TRUE ~ parameter_unit
+      )
+    ) %>%
+    # Remove empty row 
+    filter(!(covidence_id == 4438 & parameter_type == "Mutations – mutation rate" & is.na(parameter_value)))
+}
 
 # Commented out because it is in cleaning.R script now
 # #################################
