@@ -316,7 +316,8 @@ add_qa_scores <- function(articles_df, params_df) {
     articles_df <- articles_df %>%
       group_by(covidence_id) %>%
       filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
-      ungroup()
+      ungroup
+    message('ZIKA')
   }
 
   articles_df
