@@ -498,11 +498,17 @@ if(pathogen == 'ZIKA'){
   outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks)
   params_all <- rbind(db1_params, db2_fixing_params, single_params)
   
-  #' cleaning script 
-  articles_clean <- zika_clean_articles(articles_all, pathogen = 'ZIKA')
-  models_clean <- zika_clean_models(models_all, pathogen = 'ZIKA')
-  outbreaks_clean <- zika_clean_outbreaks(outbreaks_all, pathogen = 'ZIKA')
-  params_clean <- zika_clean_params(params_all, pathogen = 'ZIKA')
+  # Cleaning in general 
+  articles_all2 <- clean_articles(articles_all, pathogen = 'ZIKA')
+  models_all2 <- clean_models(models_all, pathogen = 'ZIKA')
+  outbreaks_all2 <- clean_outbreaks(outbreaks_all, pathogen = "ZIKA")
+  params_all2 <- clean_params(params_all, pathogen = 'ZIKA')
+  
+  #' cleaning script for zika
+  articles_clean <- zika_clean_articles(articles_all2, pathogen = 'ZIKA')
+  models_clean <- zika_clean_models(models_all2, pathogen = 'ZIKA')
+  outbreaks_clean <- zika_clean_outbreaks(outbreaks_all2, pathogen = 'ZIKA')
+  params_clean <- zika_clean_params(params_all2, pathogen = 'ZIKA')
   
   # Add qa scores to article df
   articles_qa <- add_qa_scores(articles_clean, params_clean)
