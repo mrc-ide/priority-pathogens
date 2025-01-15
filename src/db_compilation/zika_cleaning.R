@@ -35,7 +35,10 @@ zika_clean_articles <- function(df, pathogen){
       article_label = as.character(
         paste0(first_author_surname, " ", year_publication)
       )
-    )
+    ) 
+  
+  # Fix any missing covidence IDs
+  df <- fix_cov_ids(df, pathogen = "ZIKA")
   
   ######################################
   # Pathogen-specific article cleaning #
@@ -65,61 +68,6 @@ zika_clean_articles <- function(df, pathogen){
   #   article_label = gsub("\\.3", "(d)", article_label)
   # )
   
-  if (pathogen == "EBOLA") {
-    df <- df %>%
-      # 12389: model only paper (growth model), 2921: Not extracted from,
-      # 6471: sneaky duplicate, 5898: mutation frequencies (not mutation rates
-      # as no time component) paper only had mutations so removing whole paper
-      filter(!covidence_id %in% c(2921, 12389, 5898, 6471)) %>%
-      mutate(
-        # edit qa score for Maganga 2014 (NOTE: qa scores only edited after
-        # discussion with co-authors)
-        qa_m1 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_m1),
-        qa_a3 = case_when(covidence_id %in% 3138 ~ "No", TRUE ~ qa_a3),
-        # add missing qa score for 17054
-        qa_m1 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m1),
-        qa_m2 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_m2),
-        qa_a3 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a3),
-        qa_a4 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_a4),
-        qa_d5 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d5),
-        qa_d6 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d6),
-        qa_d7 = case_when(covidence_id %in% 17054 ~ "Yes", TRUE ~ qa_d7),
-        # clean up author names (remove initials and fully capitalised names)
-        first_author_surname = str_replace(first_author_surname, "\\b[A-Z]\\.", ""),
-        first_author_surname = case_when(
-          first_author_surname %in% "OUEMBA TASSE ́" ~ "Ouemba Tasse",
-          first_author_surname %in% "R Glynn" ~ "Glynn",
-          first_author_surname %in% "JUGA" ~ "Juga",
-          first_author_surname %in% "KI" ~ "Ki",
-          first_author_surname %in% "Area\r\nArea" ~ "Area",
-          first_author_surname %in% "DAUTEL" ~ "Dautel",
-          covidence_id %in% 12045 & first_author_surname %in% "Gilda" ~ "Grard",
-          covidence_id %in% 4132 ~ "Hunt",
-          first_author_surname %in% "Report of an International Commission" ~
-            "International Commission",
-          TRUE ~ first_author_surname
-        ),
-        # Fix issues with dois
-        doi = case_when(
-          covidence_id %in% 3058 ~ "10.3201/eid2201.151410",
-          covidence_id %in% 1407 ~ "10.1038/nature14612",
-          covidence_id %in% 6472 ~ "10.1136/bmj.2.6086.539",
-          TRUE ~ doi
-        )
-      ) %>%
-      # Update article label
-      mutate(
-        article_label = as.character(
-          paste0(first_author_surname, " ", year_publication)
-        ),
-        # for different articles by the same author in the same year
-        article_label = make.unique(article_label, sep = " ."),
-        article_label = gsub("\\.1", "(b)", article_label),
-        article_label = gsub("\\.2", "(c)", article_label),
-        article_label = gsub("\\.3", "(d)", article_label)
-      )
-  }
-  
   return(df)
 }
 
@@ -127,6 +75,9 @@ zika_clean_articles <- function(df, pathogen){
 # Model cleaning #
 ##################
 zika_clean_models <- function(df, pathogen){    
+  
+  # Fix any missing covidence IDs
+  df <- fix_cov_ids(df, pathogen = "ZIKA")
   
   df <- df %>%
     clean_names() %>%
@@ -156,6 +107,10 @@ zika_clean_models <- function(df, pathogen){
 #####################
 
 zika_clean_outbreaks <- function(df, pathogen){
+  
+  # Fix any missing covidence IDs
+  df <- fix_cov_ids(df, pathogen = "ZIKA")
+  
   df <- df %>%
     clean_names() %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
@@ -257,6 +212,9 @@ zika_clean_outbreaks <- function(df, pathogen){
 # Parameter cleaning #
 ######################
 zika_clean_params <- function(df, pathogen){
+  
+  # Fix any missing covidence IDs
+  df <- fix_cov_ids(df, pathogen = "ZIKA")
   
   df <- df %>%
     clean_names() %>%
