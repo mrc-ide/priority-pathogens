@@ -25,11 +25,6 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
     filter(!as.logical(parameter_from_figure)) # ensure that parameter_from_figure is logical not character
   
-  if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
-    colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type' 
-    flag <- TRUE
-  } else flag = FALSE
-  
   if (pathogen == 'ZIKA'){
     var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 
                     "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",

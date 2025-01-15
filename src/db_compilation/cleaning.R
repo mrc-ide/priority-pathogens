@@ -10,6 +10,13 @@ library(ids)
 # Main cleaning function #
 ##########################
 clean_params <- function(df, pathogen) {
+  
+  # Make sure newer pathogens with correctly spelled variable name is consistent with old ones 
+  if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
+    colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type' 
+    flag <- TRUE
+  } else flag = FALSE
+  
   df <- df %>%
     mutate(
       # Change variable types
@@ -21,8 +28,8 @@ clean_params <- function(df, pathogen) {
         parameter_type == "Growth rate ®" ~"Growth rate (r)",
         parameter_type == "Reproduction number (Effective; Re)" ~ "Reproduction number (Effective, Re)",
         parameter_type %in% 
-          c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate") ~ "Mutations - substitution rate",
-        parameter_type == "Mutations – mutation rate" ~ "Mutations - mutation rate",
+          c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate") ~ "Mutations - substitution rate",
+        parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
         TRUE ~ parameter_type), 
   # Group parameters
   parameter_class = case_when(
