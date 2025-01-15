@@ -411,6 +411,9 @@ zika_clean_params <- function(df, pathogen){
   # Clean genomic data 
   df <- zika_clean_genomics(df)
   
+  # Clean seroprevalence
+  df <- zika_clean_serop(df)
+  
   # Exponent
   # exponent = 
   #   case_when(
@@ -510,60 +513,6 @@ zika_clean_params <- function(df, pathogen){
   #   random_id(n = length(idx), use_openssl = FALSE)
   
   
-  ## GENERIC CLEANING AGAIN:
-  
-  df <- df %>%
-    
-      # Single uncertainty type
-      parameter_uncertainty_single_type = case_when(
-        parameter_uncertainty_single_type %in%
-          "Standard deviation (Sd)" ~ "Standard Deviation",
-        parameter_uncertainty_single_type %in%
-          "Standard Error (SE)" ~ "Standard Error",
-        TRUE ~ parameter_uncertainty_single_type
-      ),
-      
-      # Combine uncertainty types and values
-      comb_uncertainty_type =
-        case_when(
-          !is.na(parameter_uncertainty_lower_value) ~
-            paste(parameter_uncertainty_type),
-          !is.na(parameter_uncertainty_single_value) ~
-            paste(parameter_uncertainty_single_type),
-          TRUE ~ NA
-        ),
-      comb_uncertainty =
-        case_when(
-          !is.na(parameter_uncertainty_lower_value) & !is.na(parameter_uncertainty_upper_value) ~
-            paste(parameter_uncertainty_lower_value, "-", parameter_uncertainty_upper_value),
-          !is.na(parameter_uncertainty_single_value) ~
-            paste(parameter_uncertainty_single_value),
-          TRUE ~ NA
-        ))
-  
-  df <- df %>%
-    
-    # shorten a longer method_r name
-    mutate(method_r =
-             ifelse(method_r %in% "Renewal equations / Branching process",
-                    "Branching process", method_r
-             ),
-           
-           # parameter_type name consistency
-           parameter_type =
-             case_when(
-               parameter_type %in% "Growth rate ®" ~ "Growth rate (r)",
-               parameter_type %in% "Reproduction number (Effective; Re)" ~
-                 "Reproduction number (Effective, Re)",
-               parameter_type %in% c("Mutations ‚Äì substitution rate", "Mutations â€“ substitution rate") ~
-                 "Mutations – substitution rate",
-               parameter_type %in% c("Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
-               TRUE ~ parameter_type
-             )
-    ) %>%
-    select(-c("article_id", "access_param_id", "name_data_entry")) %>%
-    relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
-    arrange(covidence_id)
   
   return(df)
 }
@@ -710,6 +659,88 @@ zika_clean_genomics <- function(params_df){
     filter(!(covidence_id == 4438 & parameter_type == "Mutations – mutation rate" & is.na(parameter_value)))
 }
 
+zika_clean_serop <- function(params_df){
+  
+  ID_PRNT_onELISA <- c(11011, 162, 6270, 10252, 6197, 1352, 10625, 5895, 3451, 5714, 4381, 
+                       6501, 5846, 6591, 6972, 17988, 5715, 10094, 1674, 7491, 1121, 7048, 
+                       12555, 5667, 9768, 23326, 6762, 4447, 6432) #not all of these have uncorrect den
+  
+  ID_unspecified_country <- c(10999, 5951, 6182, 5971, 6197, 6681)  #identified with filtered_params <- params_all %>% filter(grepl("^Seroprevalence.+", parameter_type))  %>% filter(is.na(Population_country))
+ 
+    df <- params_df %>%
+    
+      mutate(
+        # Add a new col that specifies if PRNT on positive ELISA only
+        prnt_on_elisa = ifelse(covidence_id %in% ID_PRNT_onELISA & parameter_type == "Seroprevalence - Neutralisation/PRNT", "V", "F"),
+        
+        #Change denominator when PRNT on ELISA pos only but den currently reports total tested samples
+        cfr_ifr_denominator = ifelse(covidence_id == 162 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  31, cfr_ifr_denominator),
+        cfr_ifr_numerator = ifelse(covidence_id == 162 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  1, cfr_ifr_numerator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 6197 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  229, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id ==5895 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  83, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 3451 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 13, 16, cfr_ifr_denominator),
+        cfr_ifr_numerator = ifelse(covidence_id == 3451 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 13, 12, cfr_ifr_numerator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 3451 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 18, 15, cfr_ifr_denominator),
+        cfr_ifr_numerator = ifelse(covidence_id == 3451 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 18, 5, cfr_ifr_numerator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 4381 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  36, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 6501 & parameter_type == "Seroprevalence - Neutralisation/PRNT", 144, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 5846 & parameter_type == "Seroprevalence - Neutralisation/PRNT", 82, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 2,  8, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 7,  11, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 47,  85, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 14,  23, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 15,  25, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 6,  12, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 29,  105, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 6591 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 22,  53, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 17988 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  5, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 10094 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  6, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 1674 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  65, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 7048 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  21, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 12555 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 48,  55, cfr_ifr_denominator),
+        cfr_ifr_denominator = ifelse(covidence_id == 12555 & parameter_type == "Seroprevalence - Neutralisation/PRNT" & cfr_ifr_numerator == 87, 93 , cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 23326 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  47, cfr_ifr_denominator),
+        
+        cfr_ifr_denominator = ifelse(covidence_id == 4447 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  4, cfr_ifr_denominator),
+        
+        # Change serop-Unspecified to specific type
+        parameter_type = ifelse(covidence_id == 5846 & parameter_type == "Seroprevalence - NS1 BOB ELISA" , "Seroprevalence - NS1 BOB ELISA" , parameter_type),
+        parameter_type = ifelse(covidence_id ==  & parameter_type == "Seroprevalence - ZIKV EDII"  , "Seroprevalence - Biotinylated-EDIII antigen capture ELISA" , parameter_type),
+        parameter_type = ifelse(covidence_id %in% c(5890, 2578) & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - IgG and IgM", parameter_type),
+        parameter_type = ifelse(covidence_id == 3589 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - IgM", parameter_type),
+        parameter_type = ifelse(covidence_id == 10697 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - MIA", parameter_type), 
+        parameter_type = ifelse(covidence_id %in% c(483, 7252, 23230) & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - NS1 BOB ELISA", parameter_type),
+        parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - Neutralisation/PRNT", parameter_type),
+        
+        #Specify country in locations defined as "Unspecified"
+        population_country = ifelse(covidence_id == 5971 & population_location ==  "22 municipalities of French Guiana" , "France" , population_country),
+        population_country = ifelse(covidence_id == 5951 & population_location ==  "Recife"  , "Brazil" , population_country),
+        population_country = ifelse(covidence_id == 10999 & population_location ==  "Adamawa state", "Nigeria" , population_country),
+        population_country = ifelse(covidence_id == 10999 & population_location ==  "Borno state", "Nigeria" , population_country),
+        population_country = ifelse(covidence_id == 10999 & population_location ==  "Bauchi state" , "Nigeria" , population_country),
+        population_country = ifelse(covidence_id == 6182 & population_location ==  "Sao Paulo" , "Brazil" , population_country),
+        population_country = ifelse(covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso", "Burkina Faso" , population_country),
+        population_country = ifelse(covidence_id == 6681, "Cabo Verde" , population_country)
+
+      )
+    
+    return(df)
+}
+    
 # Commented out because it is in cleaning.R script now
 # #################################
 # # Add QA scores to article data #
