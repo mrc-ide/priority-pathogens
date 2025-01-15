@@ -11,8 +11,9 @@ fix_cov_ids <- function(df, pathogen){
   
   if(pathogen == 'ZIKA'){
     df <- df %>%
-      # Fix incorrect covidence id 
-      covidence_id = ifelse(covidence_id == 6238, 6246, covidence_id)
+      mutate(# Fix incorrect covidence id 
+        covidence_id = ifelse(covidence_id == 6238, 6246, covidence_id)
+      )
   }
   
   return(df)
