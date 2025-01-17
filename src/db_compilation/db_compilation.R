@@ -434,7 +434,15 @@ if(pathogen == 'ZIKA'){
   
   #' Get files for second round of double extractions 
   db2_double_articles <- read_csv("db2_double_extraction_articles.csv") %>%
-    select(sort(names(.)))
+    select(sort(names(.))) %>%
+    # fix incorrect covidence ID 
+    mutate(Covidence_ID = case_when(
+      Covidence_ID == 6882 & FirstAauthor_Surname == "Sasmono" ~ 6886,
+      TRUE ~ Covidence_ID),
+      Covidence_ID_text = case_when(
+        Covidence_ID_text == 6882 & FirstAauthor_Surname == "Sasmono" ~ 6886,
+        TRUE ~ Covidence_ID_text)
+    )
   db2_double_params <- read_csv("db2_double_extraction_params.csv") %>%
     select(sort(names(.)))
   db2_double_models <- read_csv("db2_double_extraction_models.csv") %>%
@@ -478,8 +486,14 @@ if(pathogen == 'ZIKA'){
   ##### here, we remove the duplicates in qa_all2 from Anna's document Zika_covidence_articles.xlsx
   
   db2_articles <- qa_all2 %>%
-    filter(Covidence_ID %in% qa_2$Covidence_ID) %>%
+    # filter(Covidence_ID %in% qa_2$Covidence_ID) %>%
     left_join(qa_2 %>% select(-ID), by = c('Covidence_ID', 'Name_data_entry')) 
+  
+  # Make de-duplicated df of articles (these will miss some notes)
+  db1distinct <- distinct(db1_articles, Covidence_ID, .keep_all = TRUE)
+  db2distinct <- distinct(db2_articles, Covidence_ID, .keep_all = TRUE)
+  double_articles <- rbind(db1_articles, db2_articles) %>%
+    distinct(Covidence_ID, .keep_all = TRUE)
   
   # Get files for single extractions 
   single_articles <- read_csv("single_extraction_articles.csv") %>%
@@ -491,24 +505,27 @@ if(pathogen == 'ZIKA'){
   single_outbreaks <- read_csv("single_extraction_outbreaks.csv") %>%
     select(sort(names(.)))
   
+  # Make a file with article notes 
+  articlenotes <- rbind(db1_articles, db2_articles, single_articles)
+  write_csv(articlenotes, 'articlenotes.csv')
   
   # Combine double 1, double 2, and single extractions together 
-  articles_all <- rbind(db1_articles, db2_articles, single_articles)
+  articles_all <- rbind(double_articles, single_articles)
   models_all <- rbind(db1_models, db2_fixing_models, single_models)
   outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks)
   params_all <- rbind(db1_params, db2_fixing_params, single_params)
   
   # Cleaning in general 
-  articles_all2 <- clean_articles(articles_all, pathogen = 'ZIKA')
-  models_all2 <- clean_models(models_all, pathogen = 'ZIKA')
-  outbreaks_all2 <- clean_outbreaks(outbreaks_all, pathogen = "ZIKA")
-  params_all2 <- clean_params(params_all, pathogen = 'ZIKA')
+  # articles_all2 <- clean_articles(articles_all, pathogen = 'ZIKA')
+  # models_all2 <- clean_models(models_all, pathogen = 'ZIKA')
+  # outbreaks_all2 <- clean_outbreaks(outbreaks_all, pathogen = "ZIKA")
+  # params_all2 <- clean_params(params_all, pathogen = 'ZIKA')
   
   #' cleaning script for zika
-  articles_clean <- zika_clean_articles(articles_all2, pathogen = 'ZIKA')
-  models_clean <- zika_clean_models(models_all2, pathogen = 'ZIKA')
-  outbreaks_clean <- zika_clean_outbreaks(outbreaks_all2, pathogen = 'ZIKA')
-  params_clean <- zika_clean_params(params_all2, pathogen = 'ZIKA')
+  articles_clean <- zika_clean_articles(articles_all, pathogen = 'ZIKA')
+  models_clean <- zika_clean_models(models_all, pathogen = 'ZIKA')
+  outbreaks_clean <- zika_clean_outbreaks(outbreaks_all, pathogen = 'ZIKA')
+  params_clean <- zika_clean_params(params_all, pathogen = 'ZIKA')
   
   # Add qa scores to article df
   articles_qa <- add_qa_scores(articles_clean, params_clean)
