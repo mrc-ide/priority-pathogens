@@ -510,10 +510,14 @@ if(pathogen == 'ZIKA'){
   write_csv(articlenotes, 'articlenotes.csv')
   
   # Combine double 1, double 2, and single extractions together 
-  articles_all <- rbind(double_articles, single_articles)
-  models_all <- rbind(db1_models, db2_fixing_models, single_models)
-  outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks)
-  params_all <- rbind(db1_params, db2_fixing_params, single_params)
+  articles_all <- rbind(double_articles, single_articles) %>%
+    clean_names()
+  models_all <- rbind(db1_models, db2_fixing_models, single_models) %>%
+    clean_names()
+  outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks) %>%
+    clean_names()
+  params_all <- rbind(db1_params, db2_fixing_params, single_params) %>%
+    clean_names()
   
   # Cleaning in general 
   # articles_all2 <- clean_articles(articles_all, pathogen = 'ZIKA')

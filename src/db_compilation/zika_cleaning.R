@@ -20,8 +20,10 @@ library(ids)
 ####################
 zika_clean_articles <- function(df, pathogen){
   
+  # Fix any missing covidence IDs
+  df <- fix_cov_ids(df, pathogen = "ZIKA")
+  
   df <- df %>%
-    clean_names() %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
     select(-c("article_id")) %>%#, "name_data_entry"
     rename(first_author_surname = first_aauthor_surname) %>%
@@ -37,13 +39,9 @@ zika_clean_articles <- function(df, pathogen){
       )
     ) 
   
-  # Fix any missing covidence IDs
-  df <- fix_cov_ids(df, pathogen = "ZIKA")
-  
   ######################################
   # Pathogen-specific article cleaning #
   ######################################
-  
   
   # here we need to remove duplicates by article and covidence IDs
   df <- df %>%
@@ -80,7 +78,6 @@ zika_clean_models <- function(df, pathogen){
   df <- fix_cov_ids(df, pathogen = "ZIKA")
   
   df <- df %>%
-    clean_names() %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
     select(-c("article_id", "name_data_entry")) %>%
     relocate(c(id, model_data_id, covidence_id, pathogen)) %>%
@@ -112,7 +109,6 @@ zika_clean_outbreaks <- function(df, pathogen){
   df <- fix_cov_ids(df, pathogen = "ZIKA")
   
   df <- df %>%
-    clean_names() %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
     select(-c("article_id", "outbreak_id", "name_data_entry")) %>%
     relocate(c(id, outbreak_data_id, covidence_id, pathogen)) %>%
@@ -216,8 +212,13 @@ zika_clean_params <- function(df, pathogen){
   # Fix any missing covidence IDs
   df <- fix_cov_ids(df, pathogen = "ZIKA")
   
+  # # Make sure newer pathogens with correctly spelled variable name is consistent with old ones 
+  if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
+    colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type'
+    flag <- TRUE
+  } else flag = FALSE
+  
   df <- df %>%
-    clean_names() %>%
     mutate(
       across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA")),
       # Change variable types
@@ -621,7 +622,7 @@ zika_clean_serop <- function(params_df){
   
   ID_PRNT_onELISA <- c(11011, 162, 6270, 10252, 6197, 1352, 10625, 5895, 3451, 5714, 4381, 
                        6501, 5846, 6591, 6972, 17988, 5715, 10094, 1674, 7491, 1121, 7048, 
-                       12555, 5667, 9768, 23326, 6762, 4447, 6432) #not all of these have uncorrect den
+                       12555, 5667, 9768, 23326, 6762, 4447, 6432, 6681) #not all of these have uncorrect den
   
   ID_unspecified_country <- c(10999, 5951, 6182, 5971, 6197, 6681)  #identified with filtered_params <- params_all %>% filter(grepl("^Seroprevalence.+", parameter_type))  %>% filter(is.na(Population_country))
  
@@ -675,11 +676,13 @@ zika_clean_serop <- function(params_df){
         
         cfr_ifr_denominator = ifelse(covidence_id == 4447 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  4, cfr_ifr_denominator),
         
+        cfr_ifr_denominator = ifelse(covidence_id == 6681 & parameter_type == "Seroprevalence - Neutralisation/PRNT",  311, cfr_ifr_denominator),
+        
         # Change serop-Unspecified to specific type
         parameter_type = ifelse(covidence_id == 5846 & parameter_type == "Seroprevalence - NS1 BOB ELISA" , "Seroprevalence - NS1 BOB ELISA" , parameter_type),
-        parameter_type = ifelse(covidence_id ==  & parameter_type == "Seroprevalence - ZIKV EDII"  , "Seroprevalence - Biotinylated-EDIII antigen capture ELISA" , parameter_type),
+        parameter_type = ifelse(covidence_id == 6841 & parameter_type == "Seroprevalence - ZIKV EDII"  , "Seroprevalence - Biotinylated-EDIII antigen capture ELISA" , parameter_type),
         parameter_type = ifelse(covidence_id %in% c(5890, 2578) & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - IgG and IgM", parameter_type),
-        parameter_type = ifelse(covidence_id == 3589 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - IgM", parameter_type),
+        parameter_type = ifelse(covidence_id == 3589 & parameter_type == "Seroprevalence - Unspecified" , "cM", parameter_type),
         parameter_type = ifelse(covidence_id == 10697 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - MIA", parameter_type), 
         parameter_type = ifelse(covidence_id %in% c(483, 7252, 23230) & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - NS1 BOB ELISA", parameter_type),
         parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - Neutralisation/PRNT", parameter_type),
@@ -692,9 +695,17 @@ zika_clean_serop <- function(params_df){
         population_country = ifelse(covidence_id == 10999 & population_location ==  "Bauchi state" , "Nigeria" , population_country),
         population_country = ifelse(covidence_id == 6182 & population_location ==  "Sao Paulo" , "Brazil" , population_country),
         population_country = ifelse(covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso", "Burkina Faso" , population_country),
-        population_country = ifelse(covidence_id == 6681, "Cabo Verde" , population_country)
-
-      )
+        population_country = ifelse(covidence_id == 6681, "Cabo Verde" , population_country),
+        
+        #change a seroprevalence label in risk factor
+        parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Risk factors", parameter_type)
+        
+        
+      ) %>%
+      
+      #remove entry IgG from 6681 as it's all teste grouped together
+      filter(!(covidence_id == 6072 & parameter_type == "Seroprevalence - IgM"))%>%
+      filter(!(covidence_id == 10652 & grepl("^Seroprevalence.+", parameter_type)))
     
     return(df)
 }
