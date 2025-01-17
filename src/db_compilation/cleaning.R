@@ -12,7 +12,9 @@ fix_cov_ids <- function(df, pathogen){
   if(pathogen == 'ZIKA'){
     df <- df %>%
       mutate(# Fix incorrect covidence id 
-        covidence_id = ifelse(covidence_id == 6238, 6246, covidence_id)
+        covidence_id = case_when(
+          covidence_id == 6238 ~ 6246, 
+          TRUE ~ covidence_id)
       )
   }
   
@@ -24,11 +26,11 @@ fix_cov_ids <- function(df, pathogen){
 ##########################
 clean_params <- function(df, pathogen) {
   
-  # Make sure newer pathogens with correctly spelled variable name is consistent with old ones 
-  if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
-    colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type' 
-    flag <- TRUE
-  } else flag = FALSE
+  # # Make sure newer pathogens with correctly spelled variable name is consistent with old ones 
+  # if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
+  #   colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type' 
+  #   flag <- TRUE
+  # } else flag = FALSE
   
   df <- df %>%
     mutate(
@@ -331,14 +333,6 @@ add_qa_scores <- function(articles_df, params_df) {
       article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
     ) %>%
     select(-c(total_qa, yes_score))
-  
-  if (pathogen == 'ZIKA'){
-    # Remove observation without qa score (second extractor)
-    articles_df <- articles_df %>%
-      group_by(covidence_id) %>%
-      filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
-      ungroup()
-  }
   
   articles_df
 }
