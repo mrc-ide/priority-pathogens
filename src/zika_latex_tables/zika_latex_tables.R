@@ -9,7 +9,7 @@ library(readr)
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
+orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen)",
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
 # orderly_shared_resource("zika_functions.R" = "zika_functions.R")
 # source("zika_functions.R")
