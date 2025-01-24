@@ -6,6 +6,20 @@ library(tidyr)
 library(stringr)
 library(ids)
 
+# Covidence ID fixing function 
+fix_cov_ids <- function(df, pathogen){
+  
+  df <- df %>%
+    mutate(# Fix incorrect covidence id 
+      covidence_id = case_when(
+        covidence_id == 6238 ~ 6246, 
+        TRUE ~ covidence_id)
+    )
+  
+  
+  return(df)
+}
+
 ##########################
 # Cleaning functions for each df #
 ##########################
@@ -144,7 +158,7 @@ zika_clean_outbreaks <- function(df, pathogen){
         ~ "Mo'orea",
         outbreak_location == 'Iles Sous-Le-Vent' | outbreak_location == 'Iles sous-le-vent' | 
           outbreak_location == "Polynesia: Sous-le-vent Islands (SLV)" | outbreak_location=='Sous-Le-Vent Islands'
-        ~ 'Sous-Le-Vent Islands',
+        ~ 'Leeward Islands',
         outbreak_location == "Marquises" | outbreak_location == "Polynesia: Marquesas Islands (MRQ)"
         ~ "Marquesas Islands",
         outbreak_location == "West Indies: Guadelopue (GLP)" ~ 'Guadeloupe',
@@ -154,11 +168,6 @@ zika_clean_outbreaks <- function(df, pathogen){
         outbreak_location == "Polynesia: Tahiti (TAH)" ~ "Tahiti",
         outbreak_location == "Cucuta" ~ "Cúcuta",
         TRUE ~ outbreak_location
-      ),
-      outbreak_country = case_when(
-        outbreak_location == "Martinique" ~ "Martinique",
-        outbreak_location == "Saint Martin" ~ "Saint Martin",
-        TRUE ~ outbreak_country
       )
     ) %>%
     # mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
@@ -191,11 +200,14 @@ zika_clean_outbreaks <- function(df, pathogen){
       ),
       outbreak_country = case_when(
         covidence_id == 947 & outbreak_location %in% c("Austral Islands", "Marquesas Islands",
-                                                       "Mo'orea", "Sous-Le-Vent Islands",
+                                                       "Mo'orea", "Leeward Islands",
                                                        "Tahiti", "Tuamotus") ~ "French Polynesia",
-        covidence_id == 947 & outbreak_location == "Martinique" ~ "France (Martinique)",
-        covidence_id == 947 & outbreak_location == "Guadelopue" ~ "France (Guadeloupe)", 
-        covidence_id == 947 & outbreak_location == "Saint-Martin" ~ "France (Saint-Martin)",
+        outbreak_location == "Martinique" ~ "France (Martinique)",
+        outbreak_location == "Guadelopue" ~ "France (Guadeloupe)", 
+        outbreak_location == "Saint Martin" ~ "Saint Martin (French part)",
+        # outbreak_location == "Martinique" ~ "Martinique",
+        # outbreak_location == "Saint Martin" ~ "Saint Martin",
+        # outbreak_location == "Guadelopue" ~ "Guadeloupe", 
         TRUE ~ outbreak_country
       )) 
   
@@ -218,6 +230,7 @@ zika_clean_params <- function(df, pathogen){
     flag <- TRUE
   } else flag = FALSE
   
+  # Update the variable types 
   df <- df %>%
     mutate(
       across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA")),
@@ -262,23 +275,87 @@ zika_clean_params <- function(df, pathogen){
     ))
   
   
-  
   # More cleaning 
   df <- df %>%
     mutate(
-      
+      # Population group 
       population_group = case_when(
         population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation',
         TRUE ~ population_group
+      )) %>%
+    mutate(
+      # Population location 
+      population_location = str_replace(
+        population_location, "Ribeirao",
+        "Ribeirão"
       ),
+      population_location = str_replace(
+        population_location, "Sao Paulo",
+        "São Paulo"
+      ),
+      population_location = str_replace(
+        population_location, "Laneri model",
+        ""
+      ),
+      population_location = str_replace(
+        population_location, "; Laneri model",
+        ""
+      ),
+      population_location = str_replace(
+        population_location, "SEIR-SEI model",
+        ""
+      ),
+      population_location = str_replace(
+        population_location, "; SEIR-SEI model",
+        ""
+      ),
+      population_location = str_replace(
+        population_location, "Moorea", 
+        "Mo'orea"
+      ),
+      population_location  = str_replace(
+        population_location, "Marquises",
+        "Marquesas Islands"
+      ),
+      population_location = str_replace(
+        population_location, "Leon",
+        "León"
+      ),
+      population_location = case_when(
+        population_location %in% 
+          c("Salvador; Bahia", "Salvador city in Bahia","Salvador") ~ "Salvador, Bahia",
+        population_location %in% "Salvador (Hospital Geral\r\nRoberto Santos)" ~ "Salvador, Bahia (Hospital Geral Roberto Santos)",
+        population_location %in% "Saint-Martin" ~ "Saint Martin",
+        population_location %in% c("Rio de Janeiro (city)", "Rio de Janeiro", "Rio de janeiro", "Rio  de Janeiro") ~
+          "Rio de Janeiro",
+        population_location %in% c("Puerto Rico: Ponce; San Juan; Guayama") ~ "Ponce; San Juan; Guayama",
+        population_location %in% "3 states in Nigeria\r\nNigeria; Abia State in Southern Nigeria; and Kaduna\r\nState in Northern Nigeria" ~
+          "Nasarawa state, Abia state, Kaduna state",
+        population_location %in% "Sao Paolo state" ~
+          "São Paulo state",
+        population_location %in% "San Andres" ~ "San Andrés",
+        population_location %in% "risaralda" ~ "Risaralda",
+        population_location %in% "Pernambuco" ~ "Pernambuco State",
+        population_location %in% "Paraiba" ~ "Paraíba",
+        population_location %in% c("Northeastern Brazil", "North-East Brazil") ~ "Northeast Brazil",
+        population_location %in% "Maranhao" ~ "Maranhao state",
+        population_location %in% c("Ile Sous", "Iles Sous-le-vent") ~ "Leeward Islands",
+        population_location %in% "Hospital\r\nHospital da Restauração; Recife; Pernambuco;" ~
+          "Hospital da Restauração, Recife, Pernambuco",
+        population_location %in% "Hospital Universitari Vall d’Hebron\r\nBarcelona; Catalonia" ~
+          "Hospital Universitari Vall d’Hebron, Barcelona, Catalonia",
+        population_location %in% "Entire country" ~ NA,
+        TRUE ~ population_location
+      ),
+      population_location = str_replace_all(population_location, ";", ",")) %>%
+    mutate(
       # Population country
-      population_country = str_replace_all(population_country, ";", ","),
       population_country = str_replace(
-        population_country, "Congo, Rep.",
+        population_country, "Congo; Rep.",
         "Republic of the Congo"
       ),
       population_country = str_replace(
-        population_country, "Congo, Dem. Rep.",
+        population_country, "Congo; Dem. Rep.",
         "Democratic Republic of the Congo"
       ),
       population_country = str_replace(
@@ -290,19 +367,19 @@ zika_clean_params <- function(df, pathogen){
         "Yugoslavia"
       ),
       population_country = str_replace(
-        population_country, "Gambia, The",
+        population_country, "Gambia; The",
         "The Gambia"
       ),
       population_country = str_replace(
-        population_country, "Micronesia,  Fed. Sts.",
+        population_country, "Micronesia; Fed. Sts.",
         'Federated States of Micronesia'
       ),
       population_country = str_replace(
-        population_country, "Venezuela, RB",
+        population_country, "Venezuela; RB",
         "Venezuela"
       ),
       population_country = str_replace(
-        population_country, "Taiwan, China",
+        population_country, "Taiwan; China",
         "Taiwan"
       ),
       population_country = str_replace(
@@ -310,16 +387,40 @@ zika_clean_params <- function(df, pathogen){
         "Laos"
       ),
       population_country = str_replace(
-        population_country, "Lao PDRIran;  Islamic Rep.",
+        population_country, "Iran; Islamic Rep.",
         "Iran"
       ),
-      population_country = str_replace_all(population_country, ",", ", "),
       population_country =
         case_when(
-          population_country %in% c('Puerto Rico, United States') ~ 'Puerto Rico',
+          #Specify country in locations defined as "Unspecified"
+          covidence_id == 5971 & population_location == "22 municipalities of French Guiana" ~ "France" , 
+          covidence_id == 5951 & population_location ==  "Recife" ~ "Brazil", 
+          covidence_id == 10999 & population_location ==  "Adamawa state" ~ "Nigeria", 
+          covidence_id == 10999 & population_location ==  "Borno state" ~ "Nigeria" , 
+          covidence_id == 10999 & population_location ==  "Bauchi state" ~ "Nigeria", 
+          covidence_id == 6182 & population_location ==  "São Paulo" ~ "Brazil", 
+          covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso" ~ "Burkina Faso", 
+          covidence_id == 6681 ~ "Cabo Verde",
+          covidence_id == 879 & population_location == "Ponce; San Juan; Guayama" ~ 'Puerto Rico',
+          # Clean multi country names 
+          population_country %in% 
+            "Belize;Bolivia;Colombia;Costa Rica;Dominican Republic;Ecuador;El Salvador;Guatemala;Honduras;Mexico;Panama;Peru;Puerto Rico" ~
+            "Multi-country: South and Central America (n = 13)",
+          population_country %in%
+            "Belize;Colombia;Costa Rica;Dominican Republic;El Salvador;Guatemala;Honduras;Mexico;Panama;Peru" ~
+            "Multi-country: South and Central America (n = 10)",
+          population_country %in%
+            "Bolivia;Brazil;Ecuador;Nicaragua;Puerto Rico" ~
+            "Multi-country: South and Central America (n = 5)",
           population_country %in%
             "El Salvador;Guatemala;Honduras;Mexico;Nicaragua" ~
             "Multi-country: Central America (n = 5)",
+          population_country %in%
+            "Brazil;Cambodia;Central African Republic;China;Colombia;Guatemala;Haiti;Italy;Malaysia;Mexico;Federated States of Micronesia;Nigeria;Panama;Philippines;Puerto Rico;Senegal;South Africa;Suriname;Thailand;Uganda;United States" ~
+            "Multi-country: Americas (n = 9), Asia (n = 5), Oceania (n = 1), Africa (n = 5), Europe (n = 1)",
+          population_country %in% 
+            "Brazil;China;Colombia;Cuba;Dominican Republic;French Polynesia;Haiti;Honduras;Jamaica;Malaysia;Mexico;Nicaragua;Nigeria;Panama;Puerto Rico;Senegal;Thailand;Uganda;United States;Venezuela" ~
+            "Multi-country: Americas (n = 13), Asia (n = 3), Africa (n = 2), Oceania (n = 1)",
           population_country %in%
             "Brazil;French Polynesia" ~
             "Multi-country: Brazil and French Polynesia",
@@ -330,7 +431,7 @@ zika_clean_params <- function(df, pathogen){
             "Brazil;Colombia;French Polynesia" ~
             "Multi-country: Brazil, Colombia, French Polynesia",
           population_country %in%
-            "Brazil;Colombia;El Salvador;Haiti;Honduras;Mexico;Puerto Rico;Venezuela; RB" ~
+            "Brazil;Colombia;El Salvador;Haiti;Honduras;Mexico;Puerto Rico;Venezuela" ~
             "Multi-country: Central and South America (n = 8)",
           population_country %in% c(
             "Brazil;Colombia;El Salvador"
@@ -342,26 +443,35 @@ zika_clean_params <- function(df, pathogen){
             "Brazil;Colombia"
           ) ~ "Multi-country: Brazil and Colombia",
           population_country %in% c(
-            'Brazil;Cambodia;China;Colombia;Dominican Republic;French Polynesia;Guatemala;Haiti;Mexico;Micronesia; Fed. Sts.;Philippines;Puerto Rico;Suriname;Thailand'
-          ) ~ "Multi-country: South and Central America (n = 8) and Asia (n = 6)",
+            'Brazil;Cambodia;China;Colombia;Dominican Republic;French Polynesia;Guatemala;Haiti;Mexico;Federated States of Micronesia;Philippines;Puerto Rico;Suriname;Thailand'
+          ) ~ "Multi-country: South and Central America (n = 8), Asia (n = 5), Oceania (n = 1)",
           population_country %in% c(
-            "Brazil;Cambodia;Central African Republic;China;French Polynesia;Guatemala;Haiti;Malaysia;Micronesia; Fed. Sts.;Nigeria;Philippines;Puerto Rico;Senegal;Suriname;Thailand;Uganda;Venezuela; RB"
-          ) ~ "Multi-country: South and Central America (n = 7), Asia (n = 7), Africa (n = 4)",
+            "Brazil;Cambodia;Central African Republic;China;French Polynesia;Guatemala;Haiti;Malaysia;Federated States of Micronesia;Nigeria;Philippines;Puerto Rico;Senegal;Suriname;Thailand;Uganda;Venezuela"
+          ) ~ "Multi-country: South and Central America (n = 7), Asia (n = 6), Oceania (n = 1), Africa (n = 4)",
           population_country %in% c(
-            "Brazil;Cambodia;Central African Republic;China;Colombia;Guatemala;Haiti;Italy;Malaysia;Mexico;Micronesia; Fed. Sts.;Nigeria;Panama;Philippines;Puerto Rico;Senegal;South Africa;Suriname;Thailand;Uganda;United States"
+            "Brazil;Cambodia;Central African Republic;China;Colombia;Guatemala;Haiti;Italy;Malaysia;Mexico;Federated States of Micronesia;Nigeria;Panama;Philippines;Puerto Rico;Senegal;South Africa;Suriname;Thailand;Uganda;United States"
           ) ~ "Multi-country: Americas (n = 8), Asia (n = 6), Africa (n = 5), Europe (n = 1)",
           population_country %in% c(
-            "Argentina;Barbados;Bolivia;Colombia;Costa Rica;CuraÃ§ao;Dominican Republic;Ecuador;El Salvador;Guatemala;Haiti;Honduras;Jamaica;Mexico;Nicaragua;Panama;Sint Maarten (Dutch part);Suriname;Trinidad and Tobago;Venezuela; RB;Virgin Islands (U.S.)"
+            "Argentina;Barbados;Bolivia;Colombia;Costa Rica;CuraÃ§ao;Dominican Republic;Ecuador;El Salvador;Guatemala;Haiti;Honduras;Jamaica;Mexico;Nicaragua;Panama;Sint Maarten (Dutch part);Suriname;Trinidad and Tobago;Venezuela;Virgin Islands (U.S.)"
           ) ~ "Multi-country: Americas (n = 21)",
           population_country %in% c(
             "Argentina, Austria, Barbados, Bolivia, Cabo Verde, Costa Rica, Denmark, Dominican Republic, Ecuador, El Salvador, Fiji, Finland, Guatemala, Haiti, Honduras, Jamaica, Mexico, Netherlands, Nicaragua, Panama, Paraguay, Peru, Portugal, Puerto Rico, Samoa, Spain, Suriname, Switzerland, Taiwan, China, Tonga, United Kingdom, Vanuatu, Venezuela, RB, Virgin Islands (U.S.)"
-          ) ~ "Multi-country: Americas (n = 20), Europe (n = 8), Asia (n = 6), Africa (n = 1)",
+          ) ~ "Multi-country: Americas (n = 19), Europe (n = 8), Asia (n = 1), Oceania (n = 4)",
           population_country %in% c(
-            "Antigua and Barbuda;Argentina;Aruba;Bahamas; The;Barbados;Belize;Bolivia;Brazil;Colombia;Costa Rica;Cuba;CuraÃ§ao;Dominican Republic;Ecuador;El Salvador;Grenada;Guatemala;Guyana;Haiti;Honduras;Jamaica;Mexico;Nicaragua;Panama;Paraguay;Peru;Puerto Rico;St. Vincent and the Grenadines;Suriname;Trinidad and Tobago;Venezuela; RB;Virgin Islands (U.S.)"
+            "Antigua and Barbuda;Argentina;Aruba;Bahamas; The;Barbados;Belize;Bolivia;Brazil;Colombia;Costa Rica;Cuba;CuraÃ§ao;Dominican Republic;Ecuador;El Salvador;Grenada;Guatemala;Guyana;Haiti;Honduras;Jamaica;Mexico;Nicaragua;Panama;Paraguay;Peru;Puerto Rico;St. Vincent and the Grenadines;Suriname;Trinidad and Tobago;Venezuela;Virgin Islands (U.S.)"
           ) ~ "Multi-country: Americas (n = 32)",
+          population_country %in% c(
+            "France;Netherlands"  
+          ) ~ "Multi-country: France and Netherlands",
+          population_country %in% c(
+            "Puerto Rico;United States"
+          ) ~ "Multi-country: Puerto Rico and the United States",
+          population_country %in% "Brazil,Ecuador,Federated States of Micronesia" ~ 
+            "Multi-country: Brazil, Ecuador, Federated States of Micronesia",
           is.na(population_country) ~ "Unspecified",
           TRUE ~ population_country
-        )
+        ),
+      population_country = str_replace_all(population_country, ";", ",")
     ) 
   
   # Clean delays 
@@ -400,6 +510,7 @@ zika_clean_params <- function(df, pathogen){
       inverse_param = case_when(
         covidence_id == 5888 & parameter_class %in% "Human delay" ~ TRUE, 
         covidence_id == 6765 & parameter_class %in% "Human delay" ~ TRUE, 
+        covidence_id == 6670 ~ FALSE, 
         TRUE ~ as.logical(inverse_param)
       ),
       parameter_type = ifelse(
@@ -686,16 +797,6 @@ zika_clean_serop <- function(params_df){
         parameter_type = ifelse(covidence_id == 10697 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - MIA", parameter_type), 
         parameter_type = ifelse(covidence_id %in% c(483, 7252, 23230) & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - NS1 BOB ELISA", parameter_type),
         parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - Neutralisation/PRNT", parameter_type),
-        
-        #Specify country in locations defined as "Unspecified"
-        population_country = ifelse(covidence_id == 5971 & population_location ==  "22 municipalities of French Guiana" , "France" , population_country),
-        population_country = ifelse(covidence_id == 5951 & population_location ==  "Recife"  , "Brazil" , population_country),
-        population_country = ifelse(covidence_id == 10999 & population_location ==  "Adamawa state", "Nigeria" , population_country),
-        population_country = ifelse(covidence_id == 10999 & population_location ==  "Borno state", "Nigeria" , population_country),
-        population_country = ifelse(covidence_id == 10999 & population_location ==  "Bauchi state" , "Nigeria" , population_country),
-        population_country = ifelse(covidence_id == 6182 & population_location ==  "Sao Paulo" , "Brazil" , population_country),
-        population_country = ifelse(covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso", "Burkina Faso" , population_country),
-        population_country = ifelse(covidence_id == 6681, "Cabo Verde" , population_country),
         
         #change a seroprevalence label in risk factor
         parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Risk factors", parameter_type)

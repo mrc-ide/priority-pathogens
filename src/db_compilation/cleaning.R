@@ -6,20 +6,7 @@ library(tidyr)
 library(stringr)
 library(ids)
 
-# Covidence ID fixing function 
-fix_cov_ids <- function(df, pathogen){
-  
-  if(pathogen == 'ZIKA'){
-    df <- df %>%
-      mutate(# Fix incorrect covidence id 
-        covidence_id = case_when(
-          covidence_id == 6238 ~ 6246, 
-          TRUE ~ covidence_id)
-      )
-  }
-  
-  return(df)
-}
+
 
 ##########################
 # Main cleaning function #
