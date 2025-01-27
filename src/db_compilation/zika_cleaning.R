@@ -840,6 +840,15 @@ zika_clean_genomics <- function(params_df){
            parameter_2_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
                                             NA, parameter_2_upper_bound)
     )
+  
+  # Correct entries with missing variables 
+  df <- df %>%
+    mutate(parameter_statistical_approach = ifelse(covidence_id == 7717 & parameter_class == 'Mutations', 
+                                                   "Estimated model parameter", parameter_statistical_approach),
+           parameter_value_type = ifelse(covidence_id == 7717 & is.na(parameter_value_type), 
+                                         "Mean", parameter_value_type),
+           parameter_uncertainty_type = ifelse(covidence_id == 7717 & parameter_uncertainty_type == 'CI95%', 
+                                               "CRI95%", parameter_uncertainty_type)
 }
 
 zika_clean_serop <- function(params_df){
