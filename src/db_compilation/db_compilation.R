@@ -413,10 +413,12 @@ if(pathogen == 'ZIKA'){
   
   qa_combined_pt1 <- qa_all1 %>%
     filter(Covidence_ID %in% qa_matching1$Covidence_ID) %>%
-    left_join(qa_matching1) 
+    left_join(qa_matching1) %>%
+    filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values 
   qa_combined_pt2 <- qa_all1 %>%
     filter(Covidence_ID %in% qa_fixing1$Covidence_ID) %>%
-    left_join(qa_fixing1 %>% select(-fixed)) 
+    left_join(qa_fixing1 %>% select(-fixed)) %>%
+    filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values 
   db1_articles <- rbind(qa_combined_pt1, qa_combined_pt2) %>%
     select(-num_rows, -matching) %>%
     select(sort(names(.)))
@@ -482,12 +484,16 @@ if(pathogen == 'ZIKA'){
   qa_2 <- db2_fixing_articles %>%
     distinct(Covidence_ID, .keep_all = TRUE)
   qa_all2 <- db2_double_articles %>%
+    filter(Covidence_ID %in% qa_2$Covidence_ID) %>%
     select(-starts_with('QA'))
-  ##### here, we remove the duplicates in qa_all2 from Anna's document Zika_covidence_articles.xlsx
   
   db2_articles <- qa_all2 %>%
-    # filter(Covidence_ID %in% qa_2$Covidence_ID) %>%
-    left_join(qa_2 %>% select(-ID), by = c('Covidence_ID', 'Name_data_entry')) 
+    left_join(qa_2 %>% select(-ID), by = c('Covidence_ID', 'Name_data_entry')) %>%
+    filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values 
+  
+  # Add in those that still have article information (from doing 'double' extraction in single dbs)
+  db2_articles <- rbind(db2_articles, db2_double_articles %>% filter(!(Covidence_ID %in% qa_2$Covidence_ID) )) %>%
+    filter(!(Covidence_ID == 7174 & is.na(QA_M1)))
   
   # Make de-duplicated df of articles (these will miss some notes)
   db1distinct <- distinct(db1_articles, Covidence_ID, .keep_all = TRUE)
@@ -505,8 +511,13 @@ if(pathogen == 'ZIKA'){
   single_outbreaks <- read_csv("single_extraction_outbreaks.csv") %>%
     select(sort(names(.)))
   
+  # Remove articles that have nothing extracted
+  single_articles <- single_articles %>%
+    filter(!(Covidence_ID %in% c(6893, 1369, 1652, 1658, 23300)))
+  
   # Make a file with article notes 
-  articlenotes <- rbind(db1_articles, db2_articles, single_articles)
+  articlenotes <- rbind(db1_articles, db2_articles, single_articles) %>%
+    filter(!is.na(Notes))
   write_csv(articlenotes, 'articlenotes.csv')
   
   # Combine double 1, double 2, and single extractions together 
@@ -519,12 +530,6 @@ if(pathogen == 'ZIKA'){
   params_all <- rbind(db1_params, db2_fixing_params, single_params) %>%
     clean_names()
   
-  # Cleaning in general 
-  # articles_all2 <- clean_articles(articles_all, pathogen = 'ZIKA')
-  # models_all2 <- clean_models(models_all, pathogen = 'ZIKA')
-  # outbreaks_all2 <- clean_outbreaks(outbreaks_all, pathogen = "ZIKA")
-  # params_all2 <- clean_params(params_all, pathogen = 'ZIKA')
-  
   #' cleaning script for zika
   articles_clean <- zika_clean_articles(articles_all, pathogen = 'ZIKA')
   models_clean <- zika_clean_models(models_all, pathogen = 'ZIKA')
@@ -532,8 +537,8 @@ if(pathogen == 'ZIKA'){
   params_clean <- zika_clean_params(params_all, pathogen = 'ZIKA')
   
   # Add qa scores to article df
-  articles_qa <- add_qa_scores(articles_clean, params_clean)
-  
+  articles_qa <- assign_qa_score(articles_clean, ignore_errors = TRUE)#add_qa_scores(articles_clean, params_clean)
+  articles_qa <- as.data.frame(articles_qa$articles)
   # save cleaned dfs
   saveRDS(articles_qa, 'articles.rds')
   saveRDS(models_clean, 'models.rds')
