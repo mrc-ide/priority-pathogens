@@ -539,6 +539,20 @@ if(pathogen == 'ZIKA'){
   # Add qa scores to article df
   articles_qa <- assign_qa_score(articles_clean, ignore_errors = TRUE)#add_qa_scores(articles_clean, params_clean)
   articles_qa <- as.data.frame(articles_qa$articles)
+  
+  
+  # Save genomic data 
+  genomic <- params_clean %>%
+    filter(parameter_class == 'Mutations') %>%
+    left_join(articles_clean %>% select(-name_data_entry), by = c('covidence_id', 'pathogen', 'id')) %>% 
+    select(-c(starts_with('riskfactor'), r_pathway, seroprevalence_adjusted, third_sample_param_yn,
+              contains('delay'), method_2_from_supplement, starts_with('cfr'), 
+              starts_with('distribution'), case_definition, exponent_2,
+              inverse_param, inverse_param_2, name_data_entry, trimester_exposed))
+  
+  saveRDS(genomic, "zika_genomic.rds")
+  write_csv(genomic, "zika_genomic.csv")
+  
   # save cleaned dfs
   saveRDS(articles_qa, 'articles.rds')
   saveRDS(models_clean, 'models.rds')
