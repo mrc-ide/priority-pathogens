@@ -229,7 +229,7 @@ zika_clean_params <- function(df, pathogen){
   df <- fix_cov_ids(df, pathogen = "ZIKA")
   
   # # Make sure newer pathogens with correctly spelled variable name is consistent with old ones 
-  if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
+  if ('parameter_uncertainty_single_type' %in% colnames(df)) {
     colnames(df)[colnames(df) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type'
     flag <- TRUE
   } else flag = FALSE
@@ -243,6 +243,7 @@ zika_clean_params <- function(df, pathogen){
       cfr_ifr_denominator = as.integer(cfr_ifr_denominator),
       population_study_start_day = as.numeric(population_study_start_day),
       across(.cols = c(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                       parameter_uncertainty_single_value,
                        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
                        parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
                        parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value,
@@ -804,9 +805,9 @@ zika_clean_delays <- function(params_df){
   return(df)
 }
 
-zika_clean_genomics <- function(params_df){
+zika_clean_genomics <- function(df){
   
-  df <- params_df %>%
+  df <- df %>%
     mutate(
       # Edit name of genome sites 
       genome_site = case_when(
@@ -820,7 +821,7 @@ zika_clean_genomics <- function(params_df){
       )
     ) %>%
     # Remove empty row 
-    filter(!(covidence_id == 4438 & parameter_type == "Mutations – mutation rate" & is.na(parameter_value)))
+    filter(!(covidence_id == 4438 & parameter_type == "Mutations - mutation rate" & is.na(parameter_value)))
   
   # Correct specific genomic entry that had incorrect unit and values in incorrect variables 
   df <- df %>% 
@@ -935,5 +936,41 @@ zika_clean_serop <- function(params_df){
       filter(!(covidence_id == 10652 & grepl("^Seroprevalence.+", parameter_type)))
     
     return(df)
+}
+
+
+zika_clean_notes <- function(model_df){
+  
+  df <- model_df %>% 
+    mutate(compartmental_type = ifelse(covidence_id %in% c(430, 2632, 3017, 25488, 5536, 
+                                                           25512, 5910, 6380) & compartmental_type == "Other compartmental", 
+                                       "Other SEIR-SEI", compartmental_type),
+           
+           #Other models
+           compartmental_type = ifelse(covidence_id %in% c(8019, 27250,27081, 5744, 5700,
+                                                           6159, 5773, 5800, 8031, 6141, 
+                                                           6180, 5581, 5821, 5607) & compartmental_type == "Other compartmental", 
+                                       "SIR-SI", compartmental_type),
+           compartmental_type = ifelse(covidence_id %in% c(5874, 5776) & compartmental_type == "Other compartmental", 
+                                       "SIR-SEI", compartmental_type),
+           compartmental_type = ifelse(covidence_id %in% c(5747, 6247) & compartmental_type == "Other compartmental", 
+                                       "SIRS-SI", compartmental_type),
+           compartmental_type = ifelse(covidence_id == 7966 & compartmental_type == "Other compartmental", 
+                                       "SEI-SI", compartmental_type),
+           compartmental_type = ifelse(covidence_id == 25509 & compartmental_type == "Other compartmental", 
+                                       "SAIR-SEI", compartmental_type),
+           compartmental_type = ifelse(covidence_id == 5841 & compartmental_type == "Other compartmental", 
+                                       "SEIR-SI", compartmental_type),
+           compartmental_type = ifelse(covidence_id %in% c(19025,25075, 25162 ) & compartmental_type == "Other compartmental", 
+                                       "SI-SI", compartmental_type),
+           compartmental_type = ifelse(covidence_id == 6775 & compartmental_type == "Other compartmental", 
+                                       "SLIR-SLI", compartmental_type)
+           
+           #to check what kind of model extracted for ID 6772,  6015, 5725
+           
+           
+           
+    ) 
+  return(df)
 }
     
