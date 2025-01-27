@@ -849,6 +849,7 @@ zika_clean_genomics <- function(params_df){
                                          "Mean", parameter_value_type),
            parameter_uncertainty_type = ifelse(covidence_id == 7717 & parameter_uncertainty_type == 'CI95%', 
                                                "CRI95%", parameter_uncertainty_type)
+    )
 }
 
 zika_clean_serop <- function(params_df){
