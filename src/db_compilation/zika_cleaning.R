@@ -46,6 +46,9 @@ zika_clean_articles <- function(df, pathogen){
       first_author_first_name, first_author_surname
     )) %>%
     arrange(covidence_id) %>%
+    # Make Names title case 
+    mutate(first_author_surname = str_to_title(first_author_surname),
+           first_author_first_name = str_to_title(first_author_first_name)) %>%
     # Add article label
     mutate(
       article_label = as.character(
@@ -226,7 +229,7 @@ zika_clean_params <- function(df, pathogen){
   
   # # Make sure newer pathogens with correctly spelled variable name is consistent with old ones 
   if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
-    colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type'
+    colnames(df)[colnames(df) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type'
     flag <- TRUE
   } else flag = FALSE
   
@@ -238,23 +241,33 @@ zika_clean_params <- function(df, pathogen){
       cfr_ifr_numerator = as.integer(cfr_ifr_numerator),
       cfr_ifr_denominator = as.integer(cfr_ifr_denominator),
       population_study_start_day = as.numeric(population_study_start_day),
-      method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
-      population_location = str_replace_all(population_location, ";", ","),
       across(.cols = c(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
                        parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound, 
                        parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value,
                        parameter_2_uncertainty_single_value,
                        exponent, exponent_2, distribution_2_par1_value, distribution_2_par2_value, 
-                       distribution_par1_value, distribution_par2_value), .fns = as.numeric),
+                       distribution_par1_value, distribution_par2_value,
+                       parameter_2_sample_paired_lower, parameter_2_sample_paired_upper),
+             .fns = as.numeric),
       across(.cols = c(population_study_start_year, population_study_end_year,
                        population_study_start_day, population_study_end_day),
              .fns = as.integer),
+      # Replace ; with ,
+      method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
+      population_location = str_replace_all(population_location, ";", ","),
+      
       
       # Update parameter type values 
       parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
+                                 parameter_type == "Growth rate ®" ~"Growth rate (r)",
+                                 parameter_type == "Reproduction number (Effective; Re)" ~ "Reproduction number (Effective, Re)",
+                                 parameter_type %in% 
+                                   c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate") ~ "Mutations - substitution rate",
+                                 parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
                                  TRUE ~ parameter_type))
   
+  # Make paramter class
   df <- df %>%
     # Group parameters
     mutate(parameter_class = case_when(
@@ -272,10 +285,79 @@ zika_clean_params <- function(df, pathogen){
       grepl("Doubling time", parameter_type) ~ "Doubling time",
       grepl("Growth rate", parameter_type) ~ "Growth rate",
       TRUE ~ "Other transmission parameters"
-    ))
+    )) %>%
+    relocate(c(id, parameter_data_id, covidence_id, pathogen)) %>%
+    arrange(covidence_id)
   
+  # Round, combine uncertainty and bounds
+  df <- df %>%
+    mutate(
+      across(
+        c(
+          parameter_value, parameter_lower_bound, parameter_upper_bound,
+          parameter_uncertainty_single_value, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+          parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound,
+          parameter_2_uncertainty_single_value, parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value,
+        ),
+        ~ ifelse(!parameter_class %in% c("Mutations", "Attack rate", "Overdispersion"), round(., digits = 3),
+                 ifelse(parameter_class %in% c("Attack rate", "Overdispersion"), round(., digits = 3), .)
+        )
+      ),
+      # Combine central upper and lower bounds
+      parameter_bounds =
+        ifelse(!is.na(parameter_lower_bound) & !is.na(parameter_upper_bound),
+               paste(parameter_lower_bound, "-", parameter_upper_bound),
+               NA
+        ),
+      # Uncertainty type
+      parameter_uncertainty_type = case_when(
+        parameter_uncertainty_type %in%
+          "CI95%" ~ "95% CI",
+        parameter_uncertainty_type %in%
+          "CRI95%" ~ "95% CrI",
+        parameter_uncertainty_type %in%
+          "CI90%" ~ "90% CI",
+        parameter_uncertainty_type %in%
+          "CRI90%" ~ "90% CrI",
+        parameter_uncertainty_type %in%
+          "Highest Posterior Density Interval 95%" ~ "HPDI 95%",
+        parameter_uncertainty_type %in%
+          "Inter Quartile Range (IQR)" ~ "IQR",
+        TRUE ~ parameter_uncertainty_type
+      ),
+      # Single uncertainty type
+      parameter_uncertainty_singe_type = case_when(
+        parameter_uncertainty_singe_type %in%
+          "Standard deviation (Sd)" ~ "Standard Deviation",
+        parameter_uncertainty_singe_type %in%
+          "Standard Error (SE)" ~ "Standard Error",
+        TRUE ~ parameter_uncertainty_singe_type
+      ),
+      
+      # Combine uncertainty types and values
+      comb_uncertainty_type =
+        case_when(
+          !is.na(parameter_uncertainty_lower_value) ~
+            paste(parameter_uncertainty_type),
+          !is.na(parameter_uncertainty_single_value) ~
+            paste(parameter_uncertainty_singe_type),
+          TRUE ~ NA
+        ), comb_uncertainty =
+        case_when(
+          !is.na(parameter_uncertainty_lower_value) & !is.na(parameter_uncertainty_upper_value) ~
+            paste(parameter_uncertainty_lower_value, "-", parameter_uncertainty_upper_value),
+          !is.na(parameter_uncertainty_single_value) ~
+            paste(parameter_uncertainty_single_value),
+          TRUE ~ NA
+        ),
+      
+      # shorten a longer method_r name
+      method_r =
+        ifelse(method_r %in% "Renewal equations / Branching process",
+               "Branching process", method_r
+        ))
   
-  # More cleaning 
+  # Context cleaning
   df <- df %>%
     mutate(
       # Population group 
@@ -473,6 +555,17 @@ zika_clean_params <- function(df, pathogen){
         ),
       population_country = str_replace_all(population_country, ";", ",")
     ) 
+  
+  # Clean disaggregation variables 
+  df <- df %>%
+    # Fix variables mixed up from the db1 fixing file 
+    mutate(method_disaggregated = ifelse(method_disaggregated=='Method' & covidence_id == 729, TRUE, as.logical(method_disaggregated)),
+           method_disaggregated_by = ifelse(method_disaggregated_by == 'TRUE' & covidence_id == 729, "Method", as.logical(method_disaggregated_by))) %>%
+    # If method_disaggregated_by or method_disaggregated_only are true, then method_disaggregated should be TRUE
+    mutate(either = ifelse(method_disaggregated_by != 'NA' | method_disaggregated_only == TRUE, 1, 0),
+           correct = ifelse((either == 1 & method_disaggregated == TRUE) | (either == 0 & method_disaggregated == FALSE), 1, 0),
+           method_disaggregated = ifelse(correct == 0, TRUE, method_disaggregated)) %>%
+    select(-either, -correct)
   
   # Clean delays 
   df <- zika_clean_delays(df)
@@ -727,6 +820,26 @@ zika_clean_genomics <- function(params_df){
     ) %>%
     # Remove empty row 
     filter(!(covidence_id == 4438 & parameter_type == "Mutations – mutation rate" & is.na(parameter_value)))
+  
+  # Correct specific genomic entry that had incorrect unit and values in incorrect variables 
+  df <- df %>% 
+    mutate(parameter_unit = ifelse(covidence_id == 1954 & parameter_unit == 'Substitutions/site/year', 
+                                   "Mutations/year", parameter_unit),
+           parameter_lower_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                          NA, parameter_lower_bound),
+           parameter_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                          NA, parameter_upper_bound),
+           parameter_uncertainty_lower_value = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                                      12, parameter_uncertainty_lower_value),
+           parameter_uncertainty_upper_value = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                                      25, parameter_uncertainty_upper_value),
+           parameter_uncertainty_singe_type = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                               "Range", parameter_uncertainty_singe_type),
+           parameter_2_lower_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                            NA, parameter_2_lower_bound),
+           parameter_2_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                            NA, parameter_2_upper_bound)
+    )
 }
 
 zika_clean_serop <- function(params_df){
@@ -805,7 +918,9 @@ zika_clean_serop <- function(params_df){
       ) %>%
       
       #remove entry IgG from 6681 as it's all teste grouped together
-      filter(!(covidence_id == 6072 & parameter_type == "Seroprevalence - IgM"))%>%
+      # remove 6072 because papaer doesn't report IgG overall positivity 
+      filter(!(covidence_id == 6072 & parameter_type == "Seroprevalence - IgM")) %>%
+      # remove 10652 because it is same paper as 2302
       filter(!(covidence_id == 10652 & grepl("^Seroprevalence.+", parameter_type)))
     
     return(df)
