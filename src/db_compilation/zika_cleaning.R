@@ -6,7 +6,7 @@ library(tidyr)
 library(stringr)
 library(ids)
 
-# Covidence ID fixing function 
+# Covidence ID and filtering out papers that should be removed fixing function 
 fix_cov_ids <- function(df, pathogen){
   
   df <- df %>%
@@ -14,7 +14,8 @@ fix_cov_ids <- function(df, pathogen){
       covidence_id = case_when(
         covidence_id == 6238 ~ 6246, 
         TRUE ~ covidence_id)
-    )
+    ) %>%
+    filter(covidence_id != 3491) # this is a Research Letter
   
   
   return(df)
@@ -936,44 +937,3 @@ zika_clean_serop <- function(params_df){
     return(df)
 }
     
-# Commented out because it is in cleaning.R script now
-# #################################
-# # Add QA scores to article data #
-# #################################
-# 
-# # input: articles data and parameter data
-# # output: articles data with two new variables: model_only and article_qa_score
-# 
-# add_qa_scores <- function(articles_df, params_df) {
-#   # add a model_only variable to article data (as denominator for qa will be different)
-#   articles_df <- articles_df %>%
-#     mutate(
-#       model_only =
-#         as.numeric(!id %in% params_df$id)
-#     ) %>%
-#     # if an article is model_only, make 5-7 NA for consistency between scores --  removed for Zika
-#     # mutate(
-#     #   qa_d5 = ifelse(model_only %in% 1, NA, qa_d5),
-#     #   qa_d6 = ifelse(model_only %in% 1, NA, qa_d6),
-#     #   qa_d7 = ifelse(model_only %in% 1, NA, qa_d7)
-#     # ) %>%
-#     # add qa score to article data
-#     mutate(
-#       total_qa =
-#         rowSums(!is.na(
-#           select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7)
-#         )),
-#       yes_score = rowSums(
-#         select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
-#         na.rm = TRUE
-#       ),
-#       article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
-#     ) %>%
-#     select(-c(total_qa, yes_score)) %>%
-#     # Remove observation without qa score (second extractor)
-#     group_by(covidence_id) %>%
-#     filter(!(is.na(article_qa_score) & sum(!is.na(article_qa_score)) > 0)) %>%
-#     ungroup
-# 
-#   articles_df
-# }
