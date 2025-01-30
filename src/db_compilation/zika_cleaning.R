@@ -114,6 +114,9 @@ zika_clean_models <- function(df, pathogen){
   
   
   df <- df %>% select(-c("access_model_id"))
+  
+  #cleaning based on extractors notes
+  df <- zika_clean_mod_notes(df)
   return(df)
 }
 
@@ -578,6 +581,9 @@ zika_clean_params <- function(df, pathogen){
   # Clean seroprevalence
   df <- zika_clean_serop(df)
   
+  #cleaining based on extractors notes
+  df <- zika_clean_pars_notes(df)
+  
   # Exponent
   # exponent = 
   #   case_when(
@@ -939,7 +945,7 @@ zika_clean_serop <- function(params_df){
 }
 
 
-zika_clean_notes <- function(model_df){
+zika_clean_mod_notes <- function(model_df){
   
   df <- model_df %>% 
     mutate(compartmental_type = ifelse(covidence_id %in% c(430, 2632, 3017, 25488, 5536, 
@@ -973,4 +979,19 @@ zika_clean_notes <- function(model_df){
     ) 
   return(df)
 }
+
+zika_clean_pars_notes <-  function(params_df){
+  # unique(params_all$population_sample_type) "Travel based"
+  #unique(params_all$population_group) # Blood donors
+  df <- params_df %>%
+    
+    mutate(
+      # Add a new col that specifies if PRNT on positive ELISA only
+      population_sample_type = ifelse(covidence_id %in% c(1663, 2362, 28411, 7437, 10749), "Travel based", population_sample_type),
+      population_group = ifelse(covidence_id %in% c(3030, 3614, 18107, 5714, 4074, 4447, 6182, 6197), "Blood donors", population_group))
+# check 10252 because also sex workers
+
+return(df)
+}
+
     
