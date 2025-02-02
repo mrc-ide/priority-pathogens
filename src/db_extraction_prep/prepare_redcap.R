@@ -396,6 +396,9 @@ target_df_clean_list[data_table_names] <- lapply(
   )
 }
 
+# Expected by orderly in db_extraction_prep
+saveRDS(target_df_clean_list,"extracted_tables.rds")
+
 # *-------------------------- Create process report ---------------------------*
 targets_not_mapped <- Map(
   function (df, name) check_cols_not_mapped(output_df=df,
