@@ -264,9 +264,7 @@ generate_report <- function(df_list,
 }
 # *============================================================================*
 # *------------------------------ Orderly config ------------------------------*
-orderly_parameters(pathogen = NULL)
-
-config_file_path <- file.path("redcap_task_inputs", pathogen, "config.yaml")
+config_file_path <- file.path("redcap_task_inputs", tolower(pathogen), "config.yaml")
 orderly_resource(c(config_file_path))
 
 # Shared resources are assigned dynamically based on config file, so it is
