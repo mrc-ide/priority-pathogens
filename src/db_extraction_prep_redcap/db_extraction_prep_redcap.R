@@ -357,6 +357,18 @@ target_df_raw_list <- setNames(
   target_table_names)
 
 # *------------------------------ Process target ------------------------------*
+# Split date columns into day, month, year
+if (!is.null(date_cols_to_split)){
+  for (name in names(date_cols_to_split)){
+    cli_inform(paste("Expanding the following ", name, "table date columns:"))
+    for (col in date_cols_to_split[[name]]){
+      cli_inform(col)
+      target_df_clean_list[[name]] <- split_data_column(target_df_raw_list[[name]],
+                                                        col)
+    }
+  }
+}
+
 # Add UUID columns
 if (!is.null(uuid_col_names)){
   target_df_clean_list <- setNames(
@@ -386,18 +398,6 @@ target_df_clean_list[data_table_names] <- lapply(
   function(name) add_pks(input_df=target_df_clean_list[[name]],
                          pk_col=pk_col_names[[name]])
   )
-}
-
-# Split date columns into day, month, year
-if (!is.null(date_cols_to_split)){
-  for (name in names(date_cols_to_split)){
-    cli_inform(paste("Expanding the following ", name, "table date columns:"))
-    for (col in date_cols_to_split[[name]]){
-      cli_inform(col)
-      target_df_clean_list[[name]] <- split_data_column(target_df_clean_list[[name]],
-                                                        col)
-    }
-  }
 }
 
 # *-------------------------- Create process report ---------------------------*
