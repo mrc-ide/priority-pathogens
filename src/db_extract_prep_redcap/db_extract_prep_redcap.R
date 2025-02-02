@@ -2,6 +2,7 @@ library(cli)
 library(readr)
 library(uuid)
 library(yaml)
+library(orderly2)
 
 # *============================= Helper functions =============================*
 # *----------------------------- Filter functions -----------------------------*
@@ -262,19 +263,40 @@ generate_report <- function(df_list,
   return (filename)
 }
 # *============================================================================*
+# *------------------------------ Orderly config ------------------------------*
+orderly_parameters(pathogen = NULL)
+
+config_file_path <- file.path("task_inputs", pathogen, "config.yaml")
+orderly_resource(c(config_file_path))
+
+# Shared resources are assigned dynamically based on config file, so it is
+# loaded in the orderly config section
+config_list <- yaml.load_file(config_file_path)
+
+# Note: table_filenames_vec needs to be a named vector, with names corresponding
+# to config_list[["table_filepaths"]] names
+table_filenames_vec <- sapply(config_list[["table_filepaths"]], basename)
+table_filepath_list <- setNames(config_list[["table_filepaths"]],
+                                table_filenames_vec)
+
+do.call(orderly_shared_resource, table_filepath_list)
+
+mapping_filename <- basename(config_list[["mapping_filepath"]])
+
+do.call(orderly_shared_resource,
+        setNames(config_list["mapping_filepath"], mapping_filename))
+
+target_filename <-  basename(config_list[["target_filepath"]])
+
+do.call(orderly_shared_resource,
+        setNames(config_list["target_filepath"], target_filename))
+
+
 # *---------------------------- Config parameters -----------------------------*
-config_path <- "src/db_extract_prep_redcap/task_inputs/orov/config.yaml"
-config_list <- yaml.load_file(config_path)
-
 # Required
-pathogen <- config_list[["pathogen"]]
-
-mapping_filename <- config_list[["mapping_filename"]]
-target_filename <- config_list[["target_filename"]]
-table_filename_list <- config_list[["table_filenames"]]
-
 table_instrument_source_list <- config_list[["instrument_source_table"]]
 target_table_names <- config_list[["target_table_names"]]
+table_names_vec <- names(config_list[["table_filenames"]]) # main controller keys
 
 # Optional
 data_table_names <- config_list[["data_table_names"]]
@@ -285,7 +307,7 @@ date_cols_to_split <- config_list[["date_cols_to_split"]]
 article_cols_to_add <- config_list[["article_cols_to_add"]]
 
 # *------------------------------- Read in data -------------------------------*
-df_raw_list <- lapply(table_filename_list, function(x) read_csv(x))
+df_raw_list <- lapply(table_filenames_vec,function(x) read_csv(x))
 
 mapping_df <- read_csv(mapping_filename)
 mapping_df <- col_list_key_map(df=mapping_df,
@@ -406,5 +428,7 @@ log_filename <- generate_report(target_df_clean_list,
                 targets_not_mapped,
                 pathogen)
 
+orderly_artefact(description="Text file with the results of the extraction process",
+                 log_filename)
 # *============================================================================*
 

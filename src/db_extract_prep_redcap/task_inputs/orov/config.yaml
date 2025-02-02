@@ -1,14 +1,14 @@
 ---
 "pathogen": "Oropouche"
-"target_filename": "shared/redcap_data/table_target.csv"
-"mapping_filename": "shared/redcap_data/orov/mapping_table.csv"
-"table_filenames":
-    "articles": "shared/redcap_data/orov/raw_data/articles.csv"
-    "extractors": "shared/redcap_data/orov/raw_data/extractor.csv"
-    "qas": "shared/redcap_data/orov/raw_data/qa.csv"
-    "parameters": "shared/redcap_data/orov/raw_data/parameters.csv"
-    "models": "shared/redcap_data/orov/raw_data/models.csv"
-    "outbreaks": "shared/redcap_data/orov/raw_data/outbreaks.csv"
+"target_filepath": "redcap_data/table_target.csv"
+"mapping_filepath": "redcap_data/orov/mapping_table.csv"
+"table_filepaths":
+    "articles": "redcap_data/orov/raw_data/articles.csv"
+    "extractors": "redcap_data/orov/raw_data/extractor.csv"
+    "qas": "redcap_data/orov/raw_data/qa.csv"
+    "parameters": "redcap_data/orov/raw_data/parameters.csv"
+    "models": "redcap_data/orov/raw_data/models.csv"
+    "outbreaks": "redcap_data/orov/raw_data/outbreaks.csv"
 "instrument_source_table":
     "Article Data": "articles"
     "Record Id": "extractors"
