@@ -2,7 +2,6 @@ library(cli)
 library(readr)
 library(uuid)
 library(yaml)
-library(dplyr)
 
 # *============================= Helper functions =============================*
 # *----------------------------- Filter functions -----------------------------*
@@ -309,10 +308,15 @@ if (!is.null(linked_rows_list)){
 }
 
 # extractors quick fix:
-df_clean_list[["extractors"]] <- df_clean_list[["extractors"]] |>
-  group_by(record_id) |>
-  summarise(across(redcap_repeat_instrument:pathogen_other,
-                   ~paste(na.omit(.), collapse = ", ")))
+extractor_df <- df_clean_list[["extractors"]]
+
+df_clean_list[["extractors"]] <- aggregate(
+  extractor_df[, !(names(extractor_df) %in% "record_id")],
+  by = list(record_id = extractor_df[["record_id"]]),
+  FUN = function(x) paste(unique(na.omit(x)), collapse = ", ")
+)
+
+
 
 # Filter out irrelevant records
 record_ids <- get_pathogen_ids(df=df_clean_list[["extractors"]],
