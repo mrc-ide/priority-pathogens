@@ -1,5 +1,5 @@
 ---
-"pathogen": "Oropouche"
+"pathogen_filter_name": "Oropouche"
 "target_filepath": "redcap_data/table_target.csv"
 "mapping_filepath": "redcap_data/orov/mapping_table.csv"
 "table_filepaths":

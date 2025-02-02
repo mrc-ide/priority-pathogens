@@ -296,7 +296,7 @@ do.call(orderly_shared_resource,
 # Required
 table_instrument_source_list <- config_list[["instrument_source_table"]]
 target_table_names <- config_list[["target_table_names"]]
-table_names_vec <- names(config_list[["table_filenames"]]) # main controller keys
+pathogen_filter_name <- config_list[["pathogen_filter_name"]]
 
 # Optional
 data_table_names <- config_list[["data_table_names"]]
@@ -338,11 +338,9 @@ df_clean_list[["extractors"]] <- aggregate(
   FUN = function(x) paste(unique(na.omit(x)), collapse = ", ")
 )
 
-
-
 # Filter out irrelevant records
 record_ids <- get_pathogen_ids(df=df_clean_list[["extractors"]],
-                               pathogen="Oropouche",
+                               pathogen=pathogen_filter_name,
                                id_col="record_id",
                                pathogen_col = "pathogen")
 
