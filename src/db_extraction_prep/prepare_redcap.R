@@ -264,7 +264,7 @@ generate_report <- function(df_list,
 }
 # *============================================================================*
 # *------------------------------ Orderly config ------------------------------*
-config_file_path <- file.path("redcap_task_inputs", tolower(pathogen), "config.yaml")
+config_file_path <- file.path("redcap_task", tolower(pathogen), "config.yaml")
 orderly_resource(c(config_file_path))
 
 # Shared resources are assigned dynamically based on config file, so it is
@@ -354,6 +354,7 @@ target_df_raw_list <- setNames(
 
 # *------------------------------ Process target ------------------------------*
 # Split date columns into day, month, year
+target_df_clean_list <- list()
 if (!is.null(date_cols_to_split)){
   for (name in names(date_cols_to_split)){
     cli_inform(paste("Expanding the following ", name, "table date columns:"))
