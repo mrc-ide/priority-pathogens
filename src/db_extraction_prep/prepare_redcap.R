@@ -24,7 +24,7 @@ filter_linked_rows <- function(df, col, name, count_filter_cond=5){
   linked_rows <- grepl("\\byes\\b", df[[col]], ignore.case = TRUE)
   value_count_check <- rowSums(df != "" & !is.na(df)) > count_filter_cond
 
-  rows_to_keep = (linked_rows & value_count_check)
+  rows_to_keep <- (linked_rows & value_count_check)
 
   cli_inform(paste0("Keeping ",
                     sum(rows_to_keep), "/", NROW(df),
