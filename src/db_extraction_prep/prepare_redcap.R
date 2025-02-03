@@ -162,27 +162,34 @@ get_not_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="Pathogen"){
   return (record_vec)
 }
 
+pretty_format_incomplete_text <- function(incomplete_df){
+  incomplete_reduced_df <- aggregate(
+    incomplete_df[, "redcap_repeat_instance"],
+    by = list(record_id = incomplete_df[["record_id"]]),
+    FUN = function(x) paste(unique(na.omit(x)), collapse = ", ")
+  )
+
+  incomplete_combined_text <- apply(
+    incomplete_reduced_df, MARGIN=1,
+    function(row) paste(row["record_id"],
+                        row["redcap_repeat_instance"],
+                        sep=" | ")
+  )
+
+  return (incomplete_combined_text)
+}
+
 get_incomplete_rows <- function(df, col, name, incomplete_key="Incomplete"){
   incomplete_df <- df[df[[col]]==incomplete_key,
                       c("record_id", "redcap_repeat_instance")]
 
   if (NROW(incomplete_df)>0){
-    incomplete_reduced_df <- aggregate(
-      incomplete_df[, "redcap_repeat_instance"],
-      by = list(record_id = incomplete_df[["record_id"]]),
-      FUN = function(x) paste(unique(na.omit(x)), collapse = ", ")
-    )
-
-    incomplete_combined_text <- apply(
-      incomplete_reduced_df, MARGIN=1,
-      function(row) paste(row["record_id"],
-                          row["redcap_repeat_instance"],
-                          sep=" | ")
-    )
-
-    cli_warn(c(paste("The following", sub("s$", "", name),
-                     "rows are incomplete (record id | redcap repeat instance):"),
-               incomplete_combined_text))
+    incomplete_combined_text <- pretty_format_incomplete_text(incomplete_df)
+    cli_alert_warn(
+      c(paste("The following", sub("s$", "", name),
+              "rows are incomplete (record id | redcap repeat instance):"),
+        incomplete_combined_text)
+      )
   }
 
   return (incomplete_df)
@@ -248,17 +255,46 @@ check_cols_not_mapped <- function(output_df,
   return (cols_not_mapped)
 }
 
+create_comment_header <- function(header_text, decorator_char, header_length,
+                                  newline=FALSE){
+  if (header_text == ""){
+    header <- paste0(decorator_char, decorator_char)
+  }else{
+    # paste to add spaces between decorator char and header text
+    header <- paste(decorator_char, header_text, decorator_char)
+  }
+
+  pre_post_pad <- (header_length / 2 - nchar(header) / 2) - 2
+
+  pre_post_pad <- floor(pre_post_pad)
+
+  decorator_char_pad <- paste0(rep(decorator_char, pre_post_pad), collapse="")
+  header <- paste0(decorator_char_pad, header, decorator_char_pad)
+
+  if ((header_length - nchar(header_text)) %% 2 != 0){
+    header <- paste0(header, decorator_char)
+  }
+
+  if (newline){
+    header <- paste0("\n", header)
+  }
+
+  return (header)
+}
+
 generate_report <- function(df_list,
+                            incomplete_df_list,
                             inputs_not_mapped,
                             targets_not_mapped,
                             pathogen){
-  # browser()
   # Prepare log file content as a character vector
   table_names <- names(df_list)
+  header_length <- 75
 
-  header_string <- paste0("### Report for ", pathogen, " ###")
-  pad_length <- max(max(nchar(table_names)), nchar(header_string)-8)
-  sprintf_pad <- paste0("%-", pad_length, "s")
+  create_comment_header
+  header_string <- create_comment_header(paste0("Report for ", pathogen),
+                                         decorator_char="=",
+                                         header_length)
 
   process_time <- Sys.time()
   log_content <- c(toupper(header_string),
@@ -267,15 +303,56 @@ generate_report <- function(df_list,
 
   formatted_time <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
 
+  # The incomplete report code has a dependency on the input name
+  record_extractor_list <- setNames(
+    as.list(df_list[["articles"]][["Name_data_entry"]]),
+    df_list[["articles"]][["Article_ID"]])
+  write_warning_header <- TRUE
+  for (name in names(incomplete_rows_df_list)){
+    if (NROW(incomplete_rows_df_list[[name]]) > 0){
+      if (write_warning_header){
+        write_warning_header <- FALSE
+        warning_header <- paste0(
+        "!WARNING!",
+        "\nThe following rows are incomplete and were excluded from the analysis.",
+        "\n(Reminder: if QA or article data is incomplete, all rows corresponding",
+        "\nto that RecordID will be excluded, including data extraction rows.)",
+        "\nRows are reported as: record id | redcap repeat instance | extractor")
+        log_content <- c(log_content, warning_header)
+      }
+      incomplete_df <- incomplete_rows_df_list[[name]]
+
+      incomplete_combined_text <- pretty_format_incomplete_text(incomplete_df)
+      unique_incomplete_record_ids <- unique(incomplete_df[["record_id"]])
+      incomplete_combined_text <- sapply(
+        1:NROW(unique_incomplete_record_ids),
+        function(i) paste(incomplete_combined_text[i],
+                          record_extractor_list[[unique_incomplete_record_ids[i]]],
+                          sep =" | ")
+             )
+      incomplete_combined_text <- paste(incomplete_combined_text, collapse = "\n")
+      table_name_text <- paste0("\n",sub("s$", "", name), " rows")
+      log_text <- paste0(table_name_text, ":\n",
+                         incomplete_combined_text)
+      log_content <- c(log_content, log_text)
+    }
+  }
+
   for (table in table_names) {
-    pathogen_header <- sprintf(paste0("### ",sprintf_pad," ###"), toupper(table))
+    pathogen_header <- create_comment_header(toupper(table),
+                                             decorator_char="=",
+                                             header_length,
+                                             newline=TRUE)
     rows_extracted <- paste("Number of rows extracted:", NROW(df_list[[table]]))
     log_content <- c(log_content,
                      pathogen_header,
                      rows_extracted)
 
     if(length(inputs_not_mapped[[table]]) > 0){
-      inm_header <- sprintf(paste0("--- ",sprintf_pad," --"), "Inputs not mapped")
+      inm_header <- create_comment_header("Inputs not mapped",
+                                          decorator_char="-",
+                                          header_length,
+                                          newline=TRUE)
       inm_text <- paste0(sprintf("%2d", seq_along(inputs_not_mapped[[table]])),
                          ". ",
                          inputs_not_mapped[[table]],
@@ -287,7 +364,10 @@ generate_report <- function(df_list,
     }
 
     if(length(targets_not_mapped[[table]]) > 0){
-      tnm_header <- sprintf(paste0("\n--- ",sprintf_pad," --"), "Targets not mapped")
+      tnm_header <- create_comment_header("Targets not mapped",
+                                          decorator_char="-",
+                                          header_length,
+                                          newline=TRUE)
       tnm_text <- paste0(seq_along(targets_not_mapped[[table]]),
                          ". ",
                          targets_not_mapped[[table]],
@@ -297,10 +377,15 @@ generate_report <- function(df_list,
                        tnm_header,
                        tnm_text)
     }
-
     log_content <- c(log_content,
-                     "\n\n")
+                     "")
   }
+
+  blank_end_string <- create_comment_header("",
+                                            decorator_char="=",
+                                            header_length)
+
+  log_content <- c(log_content, blank_end_string)
 
   # Write to the log file
   filename <- paste0("process_report_",
@@ -503,6 +588,7 @@ inputs_not_mapped <- Map(
 )
 
 log_filename <- generate_report(target_df_clean_list,
+                                incomplete_df_list,
                                 inputs_not_mapped,
                                 targets_not_mapped,
                                 pathogen)
