@@ -503,9 +503,9 @@ inputs_not_mapped <- Map(
 )
 
 log_filename <- generate_report(target_df_clean_list,
-                inputs_not_mapped,
-                targets_not_mapped,
-                pathogen)
+                                inputs_not_mapped,
+                                targets_not_mapped,
+                                pathogen)
 
 orderly_artefact(description="Text file with the results of the extraction process",
                  log_filename)
