@@ -16,6 +16,12 @@
     "Parameter Data": "parameters"
     "Outbreak Data": "outbreaks"
     "Model Information": "models"
+"incomplete_col_names":
+    "articles": "article_data_complete"
+    "qas": "quality_assessment_complete"
+    "models": "model_information_complete"
+    "parameters": "parameter_data_complete"
+    "outbreaks": "outbreak_data_complete"
 "linked_row_col_names":
     "models": "model_linked"
     "outbreaks": "outbreak_linked"

@@ -33,7 +33,31 @@ filter_linked_rows <- function(df, col, name, count_filter_cond=5){
   return (df[rows_to_keep, ])
 }
 
-# TODO: filter incomplete rows
+filter_incomplete_rows <- function(df, incomplete_df, name){
+  record_match <- df[["record_id"]] %in% incomplete_df[["record_id"]]
+  redcap_repeat_match <- df[["redcap_repeat_instance"]] %in% incomplete_df[["redcap_repeat_instance"]]
+
+  rows_to_keep <- !(record_match & redcap_repeat_match)
+
+  cli_inform(paste0("Keeping ",
+                    sum(rows_to_keep), "/", NROW(df),
+                    " complete rows for ", name))
+
+  return (df[rows_to_keep,])
+}
+
+filter_record_ids <- function(df, record_id_vec, pathogen_filter, name){
+  record_match <- df[["record_id"]] %in% record_id_vec
+
+  rows_to_keep <- !record_match
+
+  cli_inform(paste0("Keeping ",
+                    sum(rows_to_keep), "/", NROW(df), " ", pathogen_filter,
+                    " rows with complete article and qa information for ",
+                    name))
+
+  return (df[rows_to_keep,])
+}
 # *------------------------------ Key functions -------------------------------*
 add_uuid_id <- function(input_df, uuid_col){
   if (NROW(input_df) > 0) {
@@ -130,12 +154,38 @@ add_article_cols <- function(input_df, article_df, cols_to_add, join_col){
   return(updated_df)
 }
 
-get_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="Pathogen"){
+get_not_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="Pathogen"){
   # Update for Pathogen other
   pathogen_lower_vec <- sapply(df[pathogen_col], tolower)
-  record_vec <- df[pathogen_lower_vec==tolower(pathogen), ][[id_col]]
+  record_vec <- df[pathogen_lower_vec!=tolower(pathogen), ][[id_col]]
   record_vec <- unique(record_vec)
   return (record_vec)
+}
+
+get_incomplete_rows <- function(df, col, name, incomplete_key="Incomplete"){
+  incomplete_df <- df[df[[col]]==incomplete_key,
+                      c("record_id", "redcap_repeat_instance")]
+
+  if (NROW(incomplete_df)>0){
+    incomplete_reduced_df <- aggregate(
+      incomplete_df[, "redcap_repeat_instance"],
+      by = list(record_id = incomplete_df[["record_id"]]),
+      FUN = function(x) paste(unique(na.omit(x)), collapse = ", ")
+    )
+
+    incomplete_combined_text <- apply(
+      incomplete_reduced_df, MARGIN=1,
+      function(row) paste(row["record_id"],
+                          row["redcap_repeat_instance"],
+                          sep=" | ")
+    )
+
+    cli_warn(c(paste("The following", sub("s$", "", name),
+                     "rows are incomplete (record id | redcap repeat instance):"),
+               incomplete_combined_text))
+  }
+
+  return (incomplete_df)
 }
 
 clean_dates <- function(date){
@@ -298,6 +348,8 @@ pathogen_filter_name <- config_list[["pathogen_filter_name"]]
 
 # Optional
 data_table_names <- config_list[["data_table_names"]]
+incomplete_cols  <- config_list[["incomplete_col_names"]]
+
 linked_rows_list <- config_list[["linked_row_col_names"]]
 uuid_col_names <- config_list[["uuid_col_names"]]
 pk_col_names <- config_list[["pk_col_names"]]
@@ -327,6 +379,7 @@ if (!is.null(linked_rows_list)){
                                                 name=names(linked_rows_list))
 }
 
+# The rows below are dependant on exact table names
 # extractors quick fix:
 extractor_df <- df_clean_list[["extractors"]]
 
@@ -337,13 +390,39 @@ df_clean_list[["extractors"]] <- aggregate(
 )
 
 # Filter out irrelevant records
-record_ids <- get_pathogen_ids(df=df_clean_list[["extractors"]],
-                               pathogen=pathogen_filter_name,
-                               id_col="record_id",
-                               pathogen_col = "pathogen")
+incomplete_rows_df_list <- Map(get_incomplete_rows,
+                               df_clean_list[names(incomplete_cols)],
+                               incomplete_cols,
+                               names(incomplete_cols))
 
-df_clean_list <- lapply(df_clean_list,
-                        function(df) df[df[["record_id"]] %in% record_ids, ])
+df_clean_list[data_table_names] <- Map(filter_incomplete_rows,
+                                       df_clean_list[data_table_names],
+                                       incomplete_rows_df_list[data_table_names],
+                                       data_table_names)
+
+
+detail_qa_table_names <- names(incomplete_rows_df_list)[!(names(incomplete_rows_df_list) %in% data_table_names)]
+
+# If an article or qa is incomplete all rows corresponding to that record are
+# removed. For data tables only the offending record is removed
+incomplete_record_ids <- unlist(
+  sapply(detail_qa_table_names,
+         function(name) incomplete_rows_df_list[[name]][["record_id"]])
+  )
+
+not_path_record_ids <- get_not_pathogen_ids(df=df_clean_list[["extractors"]],
+                                            pathogen=pathogen_filter_name,
+                                            id_col="record_id",
+                                            pathogen_col = "pathogen")
+
+records_to_remove <- c(not_path_record_ids, incomplete_record_ids)
+
+df_clean_list <-  Map(function(df, name) filter_record_ids(df,
+                                                           records_to_remove,
+                                                           pathogen_filter_name,
+                                                           name),
+                      df_clean_list,
+                      names(df_clean_list))
 
 target_df_raw_list <- setNames(
   lapply(target_table_names,
