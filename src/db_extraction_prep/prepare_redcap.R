@@ -185,7 +185,7 @@ get_incomplete_rows <- function(df, col, name, incomplete_key="Incomplete"){
 
   if (NROW(incomplete_df)>0){
     incomplete_combined_text <- pretty_format_incomplete_text(incomplete_df)
-    cli_alert_warn(
+    cli_alert_warning(
       c(paste("The following", sub("s$", "", name),
               "rows are incomplete (record id | redcap repeat instance):"),
         incomplete_combined_text)
