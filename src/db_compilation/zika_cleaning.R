@@ -237,6 +237,14 @@ zika_clean_params <- function(df, pathogen){
     flag <- TRUE
   } else flag = FALSE
   
+  # Reorder variables 
+  df <- df %>% 
+    select(covidence_id, parameter_type, parameter_unit, exponent, parameter_value, parameter_value_type, 
+           parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+           parameter_uncertainty_type, parameter_uncertainty_single_value, parameter_uncertainty_singe_type,
+           parameter_lower_bound, parameter_upper_bound, genome_site, everything()) %>%
+    relocate(pathogen, access_param_id, article_id, id, parameter_data_id, .after = last_col())
+  
   # Update the variable types 
   df <- df %>%
     mutate(
@@ -270,7 +278,13 @@ zika_clean_params <- function(df, pathogen){
                                  parameter_type %in% 
                                    c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate") ~ "Mutations - substitution rate",
                                  parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
-                                 TRUE ~ parameter_type))
+                                 TRUE ~ parameter_type)) %>%
+    # Fix incorrect parameter types 
+    mutate(parameter_type = case_when(
+      parameter_type == "Seroprevalence - Neutralisation/PRNT" & covidence_id == 6072 ~ "Risk factor",
+      parameter_type == "Zika congenital syndrome (microcephaly) risk" & covidence_id == 12202 ~ "Risk factor",
+      TRUE ~ parameter_type
+    ))
   
   # Make paramter class
   df <- df %>%
@@ -603,6 +617,10 @@ zika_clean_params <- function(df, pathogen){
                  parameter_unit %in% "Per day" ~ "Days",
                parameter_class %in% "Human delay" &
                  parameter_unit %in% "Per week" ~ "Weeks",
+               # others
+               covidence_id == 5535 & parameter_type == "Mosquito delay - extrinsic incubation period" ~ "Days",
+               covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ "Per 100,000",
+               covidence_id == 10933 & parameter_type == "Seroprevalence - IgG" ~ "Percentage (%)",
                TRUE ~ parameter_unit
              )
     ) %>%
@@ -616,7 +634,7 @@ zika_clean_params <- function(df, pathogen){
       ),
       parameter_type = ifelse(
         inverse_param %in% TRUE,
-        paste(parameter_type, " (inverse parameter)"), parameter_type
+        paste(parameter_type, "(inverse parameter)"), parameter_type
       ),
       
       # create combined variable for survey date
@@ -808,6 +826,11 @@ zika_clean_delays <- function(params_df){
                TRUE ~ "Other"
              ))
   
+  # Fix mosquito delays 
+  df <- df %>%
+    mutate(parameter_type = ifelse(covidence_id == 5535 & parameter_type == "Mosquito delay - extrinsic incubation period",
+                                   "Mosquito delay - extrinsic incubation period (EIP10)", parameter_type))
+  
   return(df)
 }
 
@@ -864,7 +887,8 @@ zika_clean_serop <- function(params_df){
   
   ID_PRNT_onELISA <- c(11011, 162, 6270, 10252, 6197, 1352, 10625, 5895, 3451, 5714, 4381, 
                        6501, 5846, 6591, 6972, 17988, 5715, 10094, 1674, 7491, 1121, 7048, 
-                       12555, 5667, 9768, 23326, 6762, 4447, 6432, 6681) #not all of these have uncorrect den
+                       12555, 5667, 9768, 23326, 6762, 4447, 6432, 6681,
+                       10429, 11434, 11328) #not all of these have uncorrect den
   
   ID_unspecified_country <- c(10999, 5951, 6182, 5971, 6197, 6681)  #identified with filtered_params <- params_all %>% filter(grepl("^Seroprevalence.+", parameter_type))  %>% filter(is.na(Population_country))
  
@@ -929,15 +953,24 @@ zika_clean_serop <- function(params_df){
         parameter_type = ifelse(covidence_id %in% c(483, 7252, 23230) & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - NS1 BOB ELISA", parameter_type),
         parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - Neutralisation/PRNT", parameter_type),
         
-        #change a seroprevalence label in risk factor
-        parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Risk factors", parameter_type)
+        parameter_type = ifelse(covidence_id %in% c(6680, 8155) & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - MIA" , parameter_type),
+        # parameter_type = ifelse(covidence_id == 11853 & parameter_type == "Seroprevalence - Unspecified"  , "Seroprevalence - Multiple assays combined" , parameter_type),
+       
+        parameter_type = ifelse(covidence_id == 174 & parameter_type == "Seroprevalence - Unspecified" ,  "Seroprevalence - Western blot", parameter_type),
+        parameter_type = ifelse(covidence_id == 10429 & parameter_type == "Seroprevalence - Unspecified" ,  "Seroprevalence - NS1 BOB ELISA", parameter_type),
+      
         
+        #change a seroprevalence label in risk factor
+        parameter_type = ifelse(covidence_id == 6072 & parameter_type == "Seroprevalence - Unspecified" , "Risk factors", parameter_type),
+        parameter_type = ifelse(covidence_id == 1941 & parameter_type == "Seroprevalence - Unspecified" , "Seroprevalence - IgM", parameter_type)
         
       ) %>%
       
       #remove entry IgG from 6681 as it's all teste grouped together
       # remove 6072 because papaer doesn't report IgG overall positivity 
       filter(!(covidence_id == 6072 & parameter_type == "Seroprevalence - IgM")) %>%
+      #remove 11853 because multiple tests combined
+      filter(!(covidence_id == 11853 & parameter_type == "Seroprevalence - Unspecified")) %>%
       # remove 10652 because it is same paper as 2302
       filter(!(covidence_id == 10652 & grepl("^Seroprevalence.+", parameter_type)))
     
@@ -987,7 +1020,7 @@ zika_clean_pars_notes <-  function(params_df){
     
     mutate(
       # Add a new col that specifies if PRNT on positive ELISA only
-      population_sample_type = ifelse(covidence_id %in% c(1663, 2362, 28411, 7437, 10749), "Travel based", population_sample_type),
+      population_sample_type = ifelse(covidence_id %in% c(1663, 2362, 28411, 7437, 10749, 6686), "Travel based", population_sample_type),
       population_group = ifelse(covidence_id %in% c(3030, 3614, 18107, 5714, 4074, 4447, 6182, 6197), "Blood donors", population_group))
 # check 10252 because also sex workers
 
