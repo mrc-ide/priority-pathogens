@@ -281,8 +281,8 @@ zika_clean_params <- function(df, pathogen){
                                  TRUE ~ parameter_type)) %>%
     # Fix incorrect parameter types 
     mutate(parameter_type = case_when(
-      parameter_type == "Seroprevalence - Neutralisation/PRNT" & covidence_id == 6072 ~ "Risk factor",
-      parameter_type == "Zika congenital syndrome (microcephaly) risk" & covidence_id == 12202 ~ "Risk factor",
+      parameter_type == "Seroprevalence - Unspecified" & covidence_id == 6072 ~ "Risk factors",
+      parameter_type == "Zika congenital syndrome (microcephaly) risk" & covidence_id == 12202 ~ "Risk factors",
       TRUE ~ parameter_type
     ))
   
@@ -382,6 +382,7 @@ zika_clean_params <- function(df, pathogen){
       # Population group 
       population_group = case_when(
         population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation',
+        grepl('Other', population_group) ~ "Other",
         TRUE ~ population_group
       )) %>%
     mutate(
@@ -598,6 +599,9 @@ zika_clean_params <- function(df, pathogen){
   #cleaining based on extractors notes
   df <- zika_clean_pars_notes(df)
   
+  # Cleaning reproduction number
+  df <- zika_clean_r(df)
+  
   # Exponent
   # exponent = 
   #   case_when(
@@ -619,8 +623,11 @@ zika_clean_params <- function(df, pathogen){
                  parameter_unit %in% "Per week" ~ "Weeks",
                # others
                covidence_id == 5535 & parameter_type == "Mosquito delay - extrinsic incubation period" ~ "Days",
-               covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ "Per 100,000",
+               covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ "Per 100,000 population",
                covidence_id == 10933 & parameter_type == "Seroprevalence - IgG" ~ "Percentage (%)",
+               covidence_id == 1679 & parameter_unit == "per 100;000 population" ~ "Per 100,000 population",
+               covidence_id == 4032 & parameter_unit == "Per 10000 population" ~ "Per 10,000 population",
+               covidence_id == 4268 & parameter_unit == "Per 100000" ~ "Per 100,000 population",
                TRUE ~ parameter_unit
              )
     ) %>%
@@ -700,8 +707,6 @@ zika_clean_params <- function(df, pathogen){
   # idx <- which(df$covidence_id %in% c(104, 1044, 2548) & is.na(df$parameter_data_id))
   # df$parameter_data_id[idx] <-
   #   random_id(n = length(idx), use_openssl = FALSE)
-  
-  
   
   return(df)
 }
@@ -834,6 +839,16 @@ zika_clean_delays <- function(params_df){
   return(df)
 }
 
+zika_clean_r <- function(params_df){
+  params_df <- params_df %>%
+    mutate(parameter_value = case_when(
+      covidence_id == 7647 & parameter_type == "Reproduction number (Basic R0)" ~ 1.12,
+      TRUE ~ parameter_value
+    ))
+  
+  return(params_df)
+}
+
 zika_clean_genomics <- function(df){
   
   df <- df %>%
@@ -841,6 +856,7 @@ zika_clean_genomics <- function(df){
       # Edit name of genome sites 
       genome_site = case_when(
         genome_site %in% c('wgs','WGS') ~ 'Whole genome sequence',
+        covidence_id ==506 & parameter_class == 'Mutations' ~ "Whole genome sequence",
         TRUE ~ genome_site
       ),
       # Fix incorrect parameter unit 
