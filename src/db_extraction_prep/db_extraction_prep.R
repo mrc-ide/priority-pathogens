@@ -1,3 +1,5 @@
+library(orderly2)
+
 orderly_parameters(pathogen = NULL,
                    mode="")
 
