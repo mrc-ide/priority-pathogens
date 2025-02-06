@@ -518,13 +518,12 @@ target_df_raw_list <- setNames(
 
 # *------------------------------ Process target ------------------------------*
 # Split date columns into day, month, year
-target_df_clean_list <- list()
+target_df_clean_list <- target_df_raw_list
 if (!is.null(date_cols_to_split)){
   for (name in names(date_cols_to_split)){
     cli_inform(paste("Expanding the following ", name, "table date columns:"))
     for (col in date_cols_to_split[[name]]){
-      cli_inform(col)
-      target_df_clean_list[[name]] <- split_data_column(target_df_raw_list[[name]],
+      target_df_clean_list[[name]] <- split_data_column(target_df_clean_list[[name]],
                                                         col)
     }
   }
@@ -534,7 +533,7 @@ if (!is.null(date_cols_to_split)){
 if (!is.null(uuid_col_names)){
   target_df_clean_list <- setNames(
     lapply(target_table_names,
-           function(name) add_uuid_id(input_df=target_df_raw_list[[name]],
+           function(name) add_uuid_id(input_df=target_df_clean_list[[name]],
                                       uuid_col=uuid_col_names[[name]])
            ),
     target_table_names)
