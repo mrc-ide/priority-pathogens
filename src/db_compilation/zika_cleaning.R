@@ -383,6 +383,9 @@ zika_clean_params <- function(df, pathogen){
       population_group = case_when(
         population_group == 'Persons under investigatioPersons under investigationPersons under investigation' ~ 'Persons under investigation',
         grepl('Other', population_group) ~ "Other",
+        grepl('Fertile', population_group) ~ "Other",
+        population_group %in% c("Pregnant women - mothers of cases","Pregnant women - mothers of controls","Pregnant women - Zika cases") ~ "Pregnant women",
+        population_group == c('Outdoor workers','Sex workers', 'Within 100m of index case households') ~ "Other",
         TRUE ~ population_group
       )) %>%
     mutate(
@@ -433,8 +436,7 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% c("Puerto Rico: Ponce; San Juan; Guayama") ~ "Ponce; San Juan; Guayama",
         population_location %in% "3 states in Nigeria\r\nNigeria; Abia State in Southern Nigeria; and Kaduna\r\nState in Northern Nigeria" ~
           "Nasarawa state, Abia state, Kaduna state",
-        population_location %in% "Sao Paolo state" ~
-          "São Paulo state",
+        population_location %in% "Sao Paolo State" ~ "São Paulo state",
         population_location %in% "San Andres" ~ "San Andrés",
         population_location %in% "risaralda" ~ "Risaralda",
         population_location %in% "Pernambuco" ~ "Pernambuco State",
@@ -602,6 +604,9 @@ zika_clean_params <- function(df, pathogen){
   # Cleaning reproduction number
   df <- zika_clean_r(df)
   
+  # Clean attack rate 
+  df <- zika_clean_ar(df)
+  
   # Exponent
   # exponent = 
   #   case_when(
@@ -711,6 +716,13 @@ zika_clean_params <- function(df, pathogen){
   return(df)
 }
 
+zika_clean_ar <- function(params_df){
+  params_df <- params_df %>%
+    mutate(parameter_value = case_when(
+      covidence_id == 6542 & parameter_type == "Attack rate" ~ cfr_ifr_numerator / cfr_ifr_denominator * 100, 
+      TRUE ~ parameter_value
+    ))
+}
 
 zika_clean_delays <- function(params_df){
   
