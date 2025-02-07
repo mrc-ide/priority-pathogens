@@ -67,6 +67,11 @@ orderly_resource(
     "sars_qa_fixing.csv",
     "sars_params_fixing.csv",
     "sars_models_fixing.csv",
+    ## OROV FIXING FILES
+    "orov_qa_fixing.csv",
+    "orov_params_fixing.csv",
+    "orov_models_fixing.csv",
+    "orov_outbreaks_fixing.csv",
     ## NIPAH FIXING FILES
     "cleaning.R",
     "sars_cleaning.R",
@@ -95,6 +100,12 @@ fixing_files <- list(
     params_fix = "sars_params_fixing.csv",
     models_fix = "sars_models_fixing.csv",
     qa_fix = "sars_qa_fixing.csv"
+  ),
+  OROV = list(
+    params_fix = "orov_params_fixing.csv",
+    models_fix = "orov_models_fixing.csv",
+    qa_fix = "orov_qa_fixing.csv",
+    outbreaks_fix = "orov_outbreaks_fixing.csv"
   )
 )
 
@@ -118,10 +129,22 @@ parameter_single <- parameter_single %>% clean_names()
 outbreak_single <- outbreak_single %>% clean_names()
 
 # Double extractions - matched between extractors
-article_double <- read_csv("double_extraction_articles.csv")
-model_double <- read_csv("double_extraction_models.csv")
-param_double <- read_csv("double_extraction_params.csv")
-outbreak_double <- read_csv("double_extraction_outbreaks.csv")
+article_double <- read_csv("double_extraction_articles.csv",
+                           col_types = cols(Covidence_ID = col_integer(),
+                                            Article_ID = col_integer()))
+model_double <- read_csv("double_extraction_models.csv",
+                         col_types = cols(Covidence_ID = col_integer(),
+                                          Article_ID = col_integer(),
+                                          access_model_id = col_integer()))
+param_double <- read_csv("double_extraction_params.csv",
+                         col_types = cols(Covidence_ID = col_integer(),
+                                          Article_ID = col_integer(),
+                                          access_param_id = col_integer()))
+outbreak_double <- read_csv("double_extraction_outbreaks.csv",
+                            col_types = cols(Covidence_ID = col_integer(),
+                                             Article_ID = col_integer(),
+                                             access_outbreak_id = col_integer()))
+
 
 article_double <- article_double %>%
   clean_names() %>%
@@ -228,7 +251,7 @@ model_fixed <- model_fixed %>%
   filter(fixed == 1) %>%
   select(-c("fixed", "num_rows", "matching"))
 
-if (pathogen %in% c("EBOLA", "SARS")) {
+if (pathogen %in% c("EBOLA", "SARS", "OROV")) {
 # join article data to qa files
 article_double_details <- article_double %>% select(-c(starts_with("qa")))
 
@@ -299,7 +322,9 @@ outbreak_all <- rbind(
 )
 
 # Cleaning
-article_all   <- clean_dfs(article_all, pathogen)
+if (pathogen != "OROV"){
+  article_all   <- clean_dfs(article_all, pathogen)
+}
 
 if (pathogen == "LASSA") {
   ## SB 14.05.2024
@@ -313,9 +338,16 @@ outbreak_all$outbreak_location <- iconv(
   outbreak_all  <- clean_dfs(outbreak_all, pathogen)
 } 
 
-model_all     <- clean_dfs(model_all, pathogen)
+if (pathogen != "OROV"){
+  model_all     <- clean_dfs(model_all, pathogen)
+}
+
 if (pathogen == "LASSA") model_all <- lassa_models_cleaning(model_all)
-parameter_all <- clean_dfs(parameter_all, pathogen)
+
+if (pathogen != "OROV"){
+  parameter_all <- clean_dfs(parameter_all, pathogen)
+}
+
 if (pathogen == 'EBOLA') {
   parameter_all <- assign_ebola_outbreak(parameter_all)
   parameter_all <- assign_ebola_species(parameter_all)
