@@ -2,13 +2,14 @@
 "pathogen_filter_name": "Oropouche"
 "target_filepath": "redcap_data/table_target.csv"
 "mapping_filepath": "redcap_data/orov/mapping_table.csv"
+orderly_download_depencency: true
 "table_filepaths":
-    "articles": "redcap_data/orov/raw_data/articles.csv"
-    "extractors": "redcap_data/orov/raw_data/extractor.csv"
-    "qas": "redcap_data/orov/raw_data/qa.csv"
-    "parameters": "redcap_data/orov/raw_data/parameters.csv"
-    "models": "redcap_data/orov/raw_data/models.csv"
-    "outbreaks": "redcap_data/orov/raw_data/outbreaks.csv"
+    "articles": "articles.csv"
+    "extractors": "extractors.csv"
+    "qas": "qas.csv"
+    "parameters": "parameters.csv"
+    "models": "models.csv"
+    "outbreaks": "outbreaks.csv"
 "instrument_source_table":
     "Article Data": "articles"
     "Record Id": "extractors"
