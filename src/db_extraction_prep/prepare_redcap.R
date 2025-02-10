@@ -233,7 +233,48 @@ split_data_column <- function(input_df, date_col){
 }
 
 # *------------------------- Transformation functions -------------------------*
+subset_long_df <- function(input_df, mapping_df, table_name){
+  colnames_no_underscore <- gsub("_\\d+", "", colnames(input_df))
 
+  table_input_cols <- mapping_df[mapping_df[["input_table"]]==table_name,][["input_col"]]
+  subset_df <- input_df[colnames_no_underscore %in% table_input_cols]
+
+  return (subset_df)
+}
+
+stack_rows <- function(df, id_col = "record_id"){
+  colnames_table <- colnames(df)
+  colnames_table <- colnames_table[!(colnames_table == id_col)]
+  repeat_ids <- sub("^.*_(\\d+)$", "\\1", colnames_table)
+
+  split_colname_list <- split(colnames_table,
+                              sub("^.*_(\\d+)$", "\\1", colnames_table))
+
+  combined_df <- data.frame()
+
+  for (repeat_id in names(split_colname_list)){
+    split_colnames <- split_colname_list[[repeat_id]]
+    temp_df <- df[, c(id_col, split_colnames)]
+
+    # list sorts 1, 10, so next rather than break
+    # Only filter out completely blank blocks => this approach will create empty
+    # rows that will be filtered out later
+    if (all(is.na(temp_df[split_colnames]))) next
+
+    # get names time to make reduce dependency on column order
+    colnames(temp_df) <- gsub("_\\d+", "", colnames(temp_df))
+
+    repeat_id_vec <- rep(repeat_id, NROW(temp_df))
+
+    df_to_rbind <- cbind(temp_df[,1, drop=FALSE],
+                         "repeat_id"=repeat_id_vec,
+                         temp_df[-1])
+
+    combined_df <- rbind(combined_df, df_to_rbind)
+  }
+
+  return(combined_df)
+}
 # *------------------------- Process report functions -------------------------*
 check_cols_not_mapped <- function(output_df,
                                   mapping_df,
@@ -444,6 +485,8 @@ target_table_names <- config_list[["target_table_names"]]
 pathogen_filter_name <- config_list[["pathogen_filter_name"]]
 
 # Optional
+tables_to_stack <- config_list[["tables_to_stack"]]
+
 data_table_names <- config_list[["data_table_names"]]
 incomplete_cols  <- config_list[["incomplete_col_names"]]
 
@@ -454,7 +497,24 @@ date_cols_to_split <- config_list[["date_cols_to_split"]]
 article_cols_to_add <- config_list[["article_cols_to_add"]]
 
 # *------------------------------- Read in data -------------------------------*
-df_raw_list <- lapply(table_filenames_vec,function(x) read_csv(x))
+df_raw_list <- lapply(table_filenames_vec, function(x) read_csv(x))
+
+if (!is.null(tables_to_stack)){
+  distinct_input_tables <- unique(mapping_df[["input_table"]])
+
+  # if transforming wide to long, df_raw_list should only have one element
+  df_raw_list <- setNames(lapply(
+    distinct_input_tables,
+    function(table_name) subset_long_df(df_raw_list[[1]], mapping_df, table_name)
+    ), distinct_input_tables)
+
+  df_raw_list[tables_to_stack] <- lapply(df_raw_list[tables_to_stack], stack_rows)
+
+  # Assign repeat_id in case needed for debugging but remove here for
+  # compatability with existing functions
+  df_raw_list[tables_to_stack] <- lapply(
+    df_raw_list[tables_to_stack], function(df) df[!colnames(df) %in% "repeat_id"])
+}
 
 mapping_df <- read_csv(mapping_filename)
 mapping_df <- col_list_key_map(df=mapping_df,
