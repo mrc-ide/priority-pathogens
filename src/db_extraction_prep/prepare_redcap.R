@@ -483,11 +483,11 @@ do.call(orderly_shared_resource,
 
 # *---------------------------- Config parameters -----------------------------*
 # Required
-table_instrument_source_list <- config_list[["instrument_source_table"]]
 target_table_names <- config_list[["target_table_names"]]
 pathogen_filter_name <- config_list[["pathogen_filter_name"]]
 
 # Optional
+table_instrument_source_list <- config_list[["instrument_source_table"]]
 tables_to_stack <- config_list[["tables_to_stack"]]
 
 data_table_names <- config_list[["data_table_names"]]
@@ -520,9 +520,12 @@ if (!is.null(tables_to_stack)){
 }
 
 mapping_df <- read_csv(mapping_filename)
-mapping_df <- col_list_key_map(df=mapping_df,
-                               col="input_table",
-                               mapping_list=table_instrument_source_list)
+
+if (!is.null(table_instrument_source_list)){
+  mapping_df <- col_list_key_map(df=mapping_df,
+                                 col="input_table",
+                                 mapping_list=table_instrument_source_list)
+}
 
 target_names_df <- read_csv(target_filename)
 
