@@ -232,6 +232,9 @@ split_data_column <- function(input_df, date_col){
   return (updated_df)
 }
 
+# *------------------------- Transformation functions -------------------------*
+
+# *------------------------- Process report functions -------------------------*
 check_cols_not_mapped <- function(output_df,
                                   mapping_df,
                                   mapping_col_name,
