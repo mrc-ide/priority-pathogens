@@ -114,7 +114,10 @@ generate_target_table <- function(input_df_list, mapping_df, target_table,
                                   input_col_name = "input_col",
                                   target_col_name = "target_col"){
   cli_inform(paste("Generating table:", target_table))
-  filtered_mapping_df <- mapping_df[mapping_df[target_table_col_name] == target_table,]
+
+  mapping_non_na_df <- mapping_df[!is.na(mapping_df[target_table_col_name]), ]
+  filtered_mapping_df <- (mapping_non_na_df[
+    mapping_non_na_df[target_table_col_name] == target_table,])
 
   input_table_names <- unlist(unique(filtered_mapping_df[input_table_col_name]))
 
