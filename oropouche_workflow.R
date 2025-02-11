@@ -3,10 +3,10 @@ library(orderly2)
 # load data
 
 # call Redcap API
-#setwd("src/db_redcap_download")
 orderly_run("db_redcap_download",list(pathogen="OROV"))
 # must have put API token from Redcap in environment for this to work:
 # usethis::edit_r_environ() - run this and then restart R to make work
+# 9/2: this seems to have all the data we want (rough eyeball/n_obs)
 
 # run extraction prep
 #setwd(src/db_extraction_prep)
@@ -15,12 +15,21 @@ orderly_run("db_extraction_prep",list(pathogen="OROV"))
 ### had to comment a line out of this to make it work in generate_report file
 ## cannot get anything from changing mapping files in shared
 ## need to revisit this but move on for now
+# 9/2 - Shazia and Patrick's extractions not coming through - but worked through interactively and looked fine (this was me being stupid)
+
+# run db_extraction
+orderly_run("db_extraction",list(pathogen="OROV"))
+# oops didn't run this before and that is why it wasn't happy
+# this runs fine 
 
 # run db_double
 orderly_run("db_double",list(pathogen="OROV"))
+## then once you have run this you fix the fixing sheet
 
 # run db_compilation
 orderly_run("db_compilation",list(pathogen="OROV"))
+### should be able to rerun multiple times with the same fixing files 
+
 
 
 
