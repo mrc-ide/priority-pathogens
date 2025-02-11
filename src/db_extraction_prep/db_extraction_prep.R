@@ -16,6 +16,6 @@ orderly_artefact(description="rds file with the processed tables",
 # If you use a different method, you need to provide the necessary files.
 if (pathogen %in% c("MARBURG", "EBOLA", "SARS", "ZIKA") & mode!="REDCAP"| mode=="ACCESS"){
   source("prepare_access.R")
-} else if (pathogen %in% c("OROV") & mode!="ACCESS"| mode=="REDCAP"){
+} else if (pathogen %in% c("OROV", "NIPAH") & mode!="ACCESS"| mode=="REDCAP"){
   source("prepare_redcap.R")
 }
