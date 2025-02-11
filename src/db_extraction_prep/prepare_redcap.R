@@ -661,7 +661,8 @@ target_df_raw_list <- setNames(
 target_df_clean_list <- target_df_raw_list
 if (!is.null(date_cols_to_split)){
   for (name in names(date_cols_to_split)){
-    cli_inform(paste("Expanding the following ", name, "table date columns:"))
+    cli_inform(paste("Expanding the following ", name, "table date columns:",
+                     paste(date_cols_to_split[[name]], collapse=", ")))
     for (col in date_cols_to_split[[name]]){
       target_df_clean_list[[name]] <- split_data_column(target_df_clean_list[[name]],
                                                         col)
