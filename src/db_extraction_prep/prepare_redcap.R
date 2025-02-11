@@ -33,8 +33,9 @@ filter_linked_rows <- function(df, col, name, count_filter_cond=5){
   return (df[rows_to_keep, ])
 }
 
-filter_incomplete_rows <- function(df, incomplete_df, name){
+filter_incomplete_data_rows <- function(df, incomplete_df, name){
   record_match <- df[["record_id"]] %in% incomplete_df[["record_id"]]
+
   redcap_repeat_match <- df[["redcap_repeat_instance"]] %in% incomplete_df[["redcap_repeat_instance"]]
 
   rows_to_keep <- !(record_match & redcap_repeat_match)
@@ -46,18 +47,17 @@ filter_incomplete_rows <- function(df, incomplete_df, name){
   return (df[rows_to_keep,])
 }
 
-filter_record_ids <- function(df, record_id_vec, pathogen_filter, name){
+filter_record_ids <- function(df, record_id_vec, name, cli_text){
   record_match <- df[["record_id"]] %in% record_id_vec
 
   rows_to_keep <- !record_match
 
   cli_inform(paste0("Keeping ",
-                    sum(rows_to_keep), "/", NROW(df), " ", pathogen_filter,
-                    " rows with complete article and qa information for ",
-                    name))
+                    sum(rows_to_keep), "/", NROW(df), " ", cli_text, " ", name))
 
   return (df[rows_to_keep,])
 }
+
 # *------------------------------ Key functions -------------------------------*
 add_uuid_id <- function(input_df, uuid_col){
   if (NROW(input_df) > 0) {
@@ -157,7 +157,7 @@ add_article_cols <- function(input_df, article_df, cols_to_add, join_col){
   return(updated_df)
 }
 
-get_not_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="Pathogen"){
+get_not_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="pathogen"){
   # Update for Pathogen other
   pathogen_lower_vec <- sapply(df[pathogen_col], tolower)
   record_vec <- df[pathogen_lower_vec!=tolower(pathogen), ][[id_col]]
@@ -182,15 +182,31 @@ pretty_format_incomplete_text <- function(incomplete_df){
   return (incomplete_combined_text)
 }
 
-get_incomplete_rows <- function(df, col, name, incomplete_key="Incomplete"){
+get_incomplete_rows <- function(df, col, name, redcap_repeat_instances,
+                                incomplete_key="Incomplete"){
+  if (redcap_repeat_instances){
+    cols <- c("record_id", "redcap_repeat_instance")
+    alert_text <- "(record id | redcap repeat instance)"
+
+  }else{
+    cols <- "record_id"
+    alert_text <- "(record_id)"
+  }
+
   incomplete_df <- df[df[[col]]==incomplete_key,
-                      c("record_id", "redcap_repeat_instance")]
+                      cols]
 
   if (NROW(incomplete_df)>0){
-    incomplete_combined_text <- pretty_format_incomplete_text(incomplete_df)
+    if (redcap_repeat_instances){
+      incomplete_combined_text <- pretty_format_incomplete_text(incomplete_df)
+    } else{
+      incomplete_combined_text <- paste(incomplete_df[["record_id"]],
+                                        collapse=", ")
+    }
+
     cli_alert_warning(
       c(paste("The following", sub("s$", "", name),
-              "rows are incomplete (record id | redcap repeat instance): "),
+              "rows are incomplete", alert_text, ": "),
         incomplete_combined_text)
       )
   }
@@ -330,10 +346,12 @@ create_comment_header <- function(header_text, decorator_char, header_length,
 }
 
 generate_report <- function(df_list,
-                            incomplete_df_list,
+                            unfiltered_article_df,
+                            incomplete_rows_df_list,
                             inputs_not_mapped,
                             targets_not_mapped,
-                            pathogen){
+                            pathogen,
+                            redcap_repeat_instances){
   # Prepare log file content as a character vector
   table_names <- names(df_list)
   header_length <- 75
@@ -352,8 +370,8 @@ generate_report <- function(df_list,
 
   # The incomplete report code has a dependency on the input name
   record_extractor_list <- setNames(
-    as.list(df_list[["articles"]][["Name_data_entry"]]),
-    df_list[["articles"]][["Article_ID"]])
+    as.list(unfiltered_article_df[["extractor_name"]]),
+    unfiltered_article_df[["record_id"]])
   write_warning_header <- TRUE
   for (name in names(incomplete_rows_df_list)){
     if (NROW(incomplete_rows_df_list[[name]]) > 0){
@@ -361,20 +379,29 @@ generate_report <- function(df_list,
         write_warning_header <- FALSE
         warning_header <- paste0(
         "!WARNING!",
-        "\nThe following rows are incomplete and were excluded from the analysis.",
-        "\n(Reminder: if QA or article data is incomplete, all rows corresponding",
-        "\nto that RecordID will be excluded, including data extraction rows.)",
-        "\nRows are reported as: record id | redcap repeat instance | extractor")
+        "\nThe following rows are incomplete and were excluded from the analysis.")
+
+        if(redcap_repeat_instances){
+          warning_header <- paste0(
+            warning_header,
+            "\n(Reminder: if QA or article data is incomplete, all rows corresponding",
+            "\nto that RecordID will be excluded, including data extraction rows.)",
+            "\nRows are reported as: record id | redcap repeat instance | extractor")
+        }
         log_content <- c(log_content, warning_header)
       }
       incomplete_df <- incomplete_rows_df_list[[name]]
 
-      incomplete_combined_text <- pretty_format_incomplete_text(incomplete_df)
+      if (redcap_repeat_instances){
+        incomplete_combined_text <- pretty_format_incomplete_text(incomplete_df)
+      }else{
+        incomplete_combined_text <- incomplete_df[["record_id"]]
+      }
       unique_incomplete_record_ids <- unique(incomplete_df[["record_id"]])
       incomplete_combined_text <- sapply(
         1:NROW(unique_incomplete_record_ids),
         function(i) paste(incomplete_combined_text[i],
-                          record_extractor_list[[unique_incomplete_record_ids[i]]],
+                          record_extractor_list[[as.character(unique_incomplete_record_ids[i])]],
                           sep =" | ")
              )
       incomplete_combined_text <- paste(incomplete_combined_text, collapse = "\n")
@@ -490,6 +517,10 @@ pathogen_filter_name <- config_list[["pathogen_filter_name"]]
 table_instrument_source_list <- config_list[["instrument_source_table"]]
 tables_to_stack <- config_list[["tables_to_stack"]]
 
+# Assumes if there are not tables to stack then data is in a REDCap repeat
+# instance format
+redcap_repeat_instances <- is.null(tables_to_stack)
+
 data_table_names <- config_list[["data_table_names"]]
 incomplete_cols  <- config_list[["incomplete_col_names"]]
 
@@ -543,49 +574,70 @@ if (!is.null(linked_rows_list)){
 }
 
 # The rows below are dependant on exact table names
-# extractors quick fix:
-extractor_df <- df_clean_list[["extractors"]]
+# (RedCap orov extractor report does not export rows correctly => quick fix:
+if ("extractors" %in% names(df_clean_list)){
+  extractor_df <- df_clean_list[["extractors"]]
 
-df_clean_list[["extractors"]] <- aggregate(
-  extractor_df[, !(names(extractor_df) %in% "record_id")],
-  by = list(record_id = extractor_df[["record_id"]]),
-  FUN = function(x) paste(unique(na.omit(x)), collapse = ", ")
-)
-
-# Filter out irrelevant records
-incomplete_rows_df_list <- Map(get_incomplete_rows,
-                               df_clean_list[names(incomplete_cols)],
-                               incomplete_cols,
-                               names(incomplete_cols))
-
-df_clean_list[data_table_names] <- Map(filter_incomplete_rows,
-                                       df_clean_list[data_table_names],
-                                       incomplete_rows_df_list[data_table_names],
-                                       data_table_names)
-
-
-detail_qa_table_names <- names(incomplete_rows_df_list)[!(names(incomplete_rows_df_list) %in% data_table_names)]
-
-# If an article or qa is incomplete all rows corresponding to that record are
-# removed. For data tables only the offending record is removed
-incomplete_record_ids <- unlist(
-  sapply(detail_qa_table_names,
-         function(name) incomplete_rows_df_list[[name]][["record_id"]])
+  df_clean_list[["extractors"]] <- aggregate(
+    extractor_df[, !(names(extractor_df) %in% "record_id")],
+    by = list(record_id = extractor_df[["record_id"]]),
+    FUN = function(x) paste(unique(na.omit(x)), collapse = ", ")
   )
+  pathogen_table <- "extractors"
+}else{
+  pathogen_table <- "articles"
+}
 
-not_path_record_ids <- get_not_pathogen_ids(df=df_clean_list[["extractors"]],
-                                            pathogen=pathogen_filter_name,
-                                            id_col="record_id",
-                                            pathogen_col = "pathogen")
-
-records_to_remove <- c(not_path_record_ids, incomplete_record_ids)
+not_pathogen_ids <- get_not_pathogen_ids(df=df_clean_list[[pathogen_table]],
+                                          pathogen=pathogen_filter_name,
+                                          id_col="record_id",
+                                          pathogen_col = "pathogen")
 
 df_clean_list <-  Map(function(df, name) filter_record_ids(df,
-                                                           records_to_remove,
-                                                           pathogen_filter_name,
-                                                           name),
+                                                           not_pathogen_ids,
+                                                           name,
+                                                           paste(pathogen_filter_name, "rows for")),
                       df_clean_list,
                       names(df_clean_list))
+
+# contains a list of all articles before they're filtered so that they can be printed
+unfiltered_article_df <- df_clean_list[[pathogen_table]]
+
+# Filter out irrelevant records
+if (!is.null(incomplete_cols)){
+  incomplete_rows_df_list <- Map(get_incomplete_rows,
+                                 df_clean_list[names(incomplete_cols)],
+                                 incomplete_cols,
+                                 names(incomplete_cols),
+                                 redcap_repeat_instances)
+
+  if (redcap_repeat_instances){
+    df_clean_list[data_table_names] <- Map(filter_incomplete_data_rows,
+                                           df_clean_list[data_table_names],
+                                           incomplete_rows_df_list[data_table_names],
+                                           data_table_names)
+  }
+
+  detail_qa_table_names <- names(incomplete_rows_df_list)[!(names(incomplete_rows_df_list) %in% data_table_names)]
+
+  # If an article or qa is incomplete all rows corresponding to that record are
+  # removed. For data tables only the offending record is removed
+  incomplete_record_ids <- unlist(
+    sapply(detail_qa_table_names,
+           function(name) incomplete_rows_df_list[[name]][["record_id"]])
+  )
+
+  incomplete_cli_text <- ifelse(pathogen_table=="articles",
+                                "complete rows for",
+                                "rows with complete qa and article information")
+
+  df_clean_list <-  Map(function(df, name) filter_record_ids(df,
+                                                             records_to_remove,
+                                                             name,
+                                                             incomplete_cli_text),
+                        df_clean_list,
+                        names(df_clean_list))
+}
 
 target_df_raw_list <- setNames(
   lapply(target_table_names,
@@ -665,10 +717,12 @@ inputs_not_mapped <- Map(
 )
 
 log_filename <- generate_report(target_df_clean_list,
-                                incomplete_df_list,
+                                unfiltered_article_df,
+                                incomplete_rows_df_list,
                                 inputs_not_mapped,
                                 targets_not_mapped,
-                                pathogen)
+                                pathogen,
+                                redcap_repeat_instances)
 
 orderly_artefact(description="Text file with the results of the extraction process",
                  log_filename)
