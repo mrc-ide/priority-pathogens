@@ -1,5 +1,5 @@
 ---
-"pathogen_filter_name": "Nipa virus"
+"pathogen_filter_name": "Nipah virus"
 "tables_to_stack": ["parameters", "models", "outbreaks"]
 "target_filepath": "redcap_data/table_target.csv"
 "mapping_filepath": "redcap_data/nipah/mapping_table.csv"
