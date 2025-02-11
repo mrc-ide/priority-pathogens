@@ -642,7 +642,7 @@ if (!is.null(incomplete_cols)){
                                 "rows with complete qa and article information")
 
   df_clean_list <-  Map(function(df, name) filter_record_ids(df,
-                                                             records_to_remove,
+                                                             incomplete_record_ids,
                                                              name,
                                                              incomplete_cli_text),
                         df_clean_list,
