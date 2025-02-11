@@ -313,6 +313,7 @@ check_cols_not_mapped <- function(output_df,
   output_colnames <- colnames(output_df)
 
   mapping_filtered_df <- mapping_df[mapping_df[[table_col_name]]==table_name,]
+  mapping_filtered_df <- mapping_filtered_df[!is.na(mapping_filtered_df[mapping_col_name]), ]
 
   if (target_map){
     cols_not_mapped_filter <- !(mapping_filtered_df[[mapping_col_name]] %in%
