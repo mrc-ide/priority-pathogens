@@ -81,13 +81,13 @@ orderly_resource(
     ## OROV FIXING FILES
     "orov_qa_fixing.csv",
     "orov_params_fixing.csv",
-    #"orov_models_fixing.csv",
     "orov_outbreaks_fixing.csv",
     ## NIPAH FIXING FILES
     "cleaning.R",
     "sars_cleaning.R",
     "ebola_cleaning.R",
-    "lassa_cleaning.R"
+    "lassa_cleaning.R",
+    "orov_cleaning.R"
   )
 )
 
@@ -114,7 +114,6 @@ fixing_files <- list(
   ),
   OROV = list(
     params_fix = "orov_params_fixing.csv",
-    #models_fix = "orov_models_fixing.csv",
     qa_fix = "orov_qa_fixing.csv",
     outbreaks_fix = "orov_outbreaks_fixing.csv"
   )
@@ -124,6 +123,7 @@ source("cleaning.R")
 source("ebola_cleaning.R")
 source("lassa_cleaning.R")
 source("sars_cleaning.R")
+source("orov_cleaning.R")
 
 # Single extractions
 article_single <- read_csv("single_extraction_articles.csv")
@@ -182,7 +182,7 @@ model_matching <- model_matching %>% clean_names()
 outbreak_matching <- outbreak_matching %>% clean_names()
 
 qa_matching <- qa_matching %>% select(-c("num_rows", "matching")) 
-parameter_matching <- parameter_matching %>% select(-c("num_rows", "matching")) %>%
+  parameter_matching <- parameter_matching %>% select(-c("num_rows", "matching")) %>%
                   mutate(covidence_id=as.numeric(covidence_id),
                          article_id=as.numeric(article_id),
                          access_param_id=as.numeric(access_param_id))
@@ -393,6 +393,11 @@ if (pathogen == 'EBOLA') {
      by = "covidence_id"
    )
 }
+
+if (pathogen=="OROV"){
+  article_all <- article_all %>% orov_cleaning_articles()
+}
+
 print(class(article_all))
 write_csv(article_all, "articles.csv")
 if (pathogen %in% c("EBOLA", "SARS")) {
