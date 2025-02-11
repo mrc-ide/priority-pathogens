@@ -230,23 +230,32 @@ split_data_column <- function(input_df, date_col){
   # assumes month is always second
   input_date_vec <- as.character(input_df[[date_col]])
   input_date_vec <- clean_dates(input_date_vec)
+  if (!all(is.na(input_date_vec))){
+    split_date_df <- do.call(rbind, strsplit(input_date_vec,"-", fixed = TRUE))
 
-  split_date_df <- do.call(rbind, strsplit(input_date_vec,"-", fixed = TRUE))
+    split_date_df[split_date_df == "xx" | is.na(input_date_vec)] <- ""
+    col_1_is_year <- grepl("^\\d{4}$", split_date_df[,1])
+    base_select_vec <- rep(2, NROW(split_date_df))
+    year_offset_vec <- converted_vector <- ifelse(col_1_is_year, -1, 1)
 
-  split_date_df[split_date_df == "xx" | is.na(input_date_vec)] <- ""
-  col_1_is_year <- grepl("^\\d{4}$", split_date_df[,1])
-  base_select_vec <- rep(2, NROW(split_date_df))
-  year_offset_vec <- converted_vector <- ifelse(col_1_is_year, -1, 1)
+    year_select_vec <- base_select_vec + year_offset_vec
+    day_select_vec <- base_select_vec + (year_offset_vec * -1)
 
-  year_select_vec <- base_select_vec + year_offset_vec
-  day_select_vec <- base_select_vec + (year_offset_vec * -1)
+    day_vec <- sapply(1:length(day_select_vec),
+                      function (i) split_date_df[i, day_select_vec[i]])
+    month_vec <- split_date_df[,2]
+    year_vec <- sapply(1:length(year_select_vec),
+                       function (i) split_date_df[i, year_select_vec[i]])
+  }else{
+    day_vec <- rep(NA, length(input_date_vec))
+    month_vec <- day_vec
+    year_vec <- day_vec
+  }
 
   updated_df <- input_df[names(input_df)!=date_col]
-  updated_df[paste0(date_col, "_day")] <- sapply(1:length(day_select_vec),
-                                                 function (i) split_date_df[i, day_select_vec[i]])
-  updated_df[paste0(date_col, "_month")] <- split_date_df[,2]
-  updated_df[paste0(date_col, "_year")] <- sapply(1:length(year_select_vec),
-                                                  function (i) split_date_df[i, year_select_vec[i]])
+  updated_df[paste0(date_col, "_day")] <- day_vec
+  updated_df[paste0(date_col, "_month")] <- month_vec
+  updated_df[paste0(date_col, "_year")] <- year_vec
 
   return (updated_df)
 }
