@@ -541,6 +541,16 @@ date_cols_to_split <- config_list[["date_cols_to_split"]]
 article_cols_to_add <- config_list[["article_cols_to_add"]]
 
 # *------------------------------- Read in data -------------------------------*
+mapping_df <- read_csv(mapping_filename)
+
+if (!is.null(table_instrument_source_list)){
+  mapping_df <- col_list_key_map(df=mapping_df,
+                                 col="input_table",
+                                 mapping_list=table_instrument_source_list)
+}
+
+target_names_df <- read_csv(target_filename)
+
 df_raw_list <- lapply(table_filenames_vec, function(x) read_csv(x))
 
 if (!is.null(tables_to_stack)){
@@ -560,15 +570,7 @@ if (!is.null(tables_to_stack)){
     df_raw_list[tables_to_stack], function(df) df[!colnames(df) %in% "repeat_id"])
 }
 
-mapping_df <- read_csv(mapping_filename)
 
-if (!is.null(table_instrument_source_list)){
-  mapping_df <- col_list_key_map(df=mapping_df,
-                                 col="input_table",
-                                 mapping_list=table_instrument_source_list)
-}
-
-target_names_df <- read_csv(target_filename)
 
 # *------------------------- Clean & generate targets -------------------------*
 df_clean_list <- Map(filter_empty_rows,
