@@ -304,6 +304,25 @@ stack_rows <- function(df, id_col = "record_id"){
   return(combined_df)
 }
 # *------------------------- Process report functions -------------------------*
+check_raw_cols_in_mapping <- function(raw_df_list,
+                                      mapping_df,
+                                      tables_to_stack){
+  if(!is.null(tables_to_stack)){
+    colnames_vec <- unlist(sapply(df_raw_list, function(df) unique(gsub("_\\d+", "", colnames(df)))))
+  }else{
+    colnames_vec <- unlist(sapply(df_raw_list, colnames))
+  }
+
+  not_in_mapping <- colnames_vec[!(colnames_vec %in% mapping_df[["input_col"]])]
+
+  if (length(not_in_mapping) > 1){
+    cli_alert_info(paste0("The following ", NROW(not_in_mapping), " columns are",
+                          " in the input but not in the mapping file and will",
+                          " be exlcuded in the final output:\n",
+                         paste(not_in_mapping, collapse=", ")))
+  }
+}
+
 check_cols_not_mapped <- function(output_df,
                                   mapping_df,
                                   mapping_col_name,
@@ -552,6 +571,8 @@ if (!is.null(table_instrument_source_list)){
 target_names_df <- read_csv(target_filename)
 
 df_raw_list <- lapply(table_filenames_vec, function(x) read_csv(x))
+
+check_raw_cols_in_mapping(df_raw_list, mapping_df, tables_to_stack)
 
 if (!is.null(tables_to_stack)){
   distinct_input_tables <- unique(mapping_df[["input_table"]])
