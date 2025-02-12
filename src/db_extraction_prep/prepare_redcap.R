@@ -337,12 +337,15 @@ check_cols_not_mapped <- function(output_df,
   if (target_map){
     cols_not_mapped_filter <- !(mapping_filtered_df[[mapping_col_name]] %in%
                                   output_colnames)
+
+    cols_not_mapped <- mapping_filtered_df[[mapping_col_name]][cols_not_mapped_filter]
   }else{
     cols_not_mapped_filter <- (output_colnames %in%
                                  mapping_filtered_df[[mapping_col_name]])
+
+    cols_not_mapped <- output_colnames[cols_not_mapped_filter]
   }
 
-  cols_not_mapped <- (mapping_filtered_df[[mapping_col_name]][cols_not_mapped_filter])
 
   return (cols_not_mapped)
 }
