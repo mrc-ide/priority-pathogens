@@ -539,7 +539,6 @@ target_filename <-  basename(config_list[["target_filepath"]])
 do.call(orderly_shared_resource,
         setNames(config_list["target_filepath"], target_filename))
 
-
 # *---------------------------- Config parameters -----------------------------*
 # Required
 target_table_names <- config_list[["target_table_names"]]
@@ -593,8 +592,6 @@ if (!is.null(tables_to_stack)){
   df_raw_list[tables_to_stack] <- lapply(
     df_raw_list[tables_to_stack], function(df) df[!colnames(df) %in% "repeat_id"])
 }
-
-
 
 # *------------------------- Clean & generate targets -------------------------*
 df_clean_list <- Map(filter_empty_rows,
@@ -654,7 +651,8 @@ if (!is.null(incomplete_cols)){
                                            data_table_names)
   }
 
-  detail_qa_table_names <- names(incomplete_rows_df_list)[!(names(incomplete_rows_df_list) %in% data_table_names)]
+  detail_qa_table_names <- (names(incomplete_rows_df_list)[
+    !(names(incomplete_rows_df_list) %in% data_table_names)])
 
   # If an article or qa is incomplete all rows corresponding to that record are
   # removed. For data tables only the offending record is removed
