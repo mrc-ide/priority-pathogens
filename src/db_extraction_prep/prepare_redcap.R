@@ -36,7 +36,8 @@ filter_linked_rows <- function(df, col, name, count_filter_cond=5){
 filter_incomplete_data_rows <- function(df, incomplete_df, name){
   record_match <- df[["record_id"]] %in% incomplete_df[["record_id"]]
 
-  redcap_repeat_match <- df[["redcap_repeat_instance"]] %in% incomplete_df[["redcap_repeat_instance"]]
+  redcap_repeat_match <- (df[["redcap_repeat_instance"]] %in%
+                            incomplete_df[["redcap_repeat_instance"]])
 
   rows_to_keep <- !(record_match & redcap_repeat_match)
 
@@ -80,7 +81,7 @@ add_pks <- function(input_df, pk_col){
 
 # *------------------------ Name-replacement functions ------------------------*
 col_list_key_map <- function(df, col, mapping_list){
-  # assumes all matches are accounted for, wrap in
+  # assumes all matches are accounted for
   mapping_df[col]  <- unlist(sapply(mapping_df[col],
                                     function (key) mapping_list[key]))
   return (mapping_df)
@@ -101,8 +102,8 @@ df_cols_key_map <- function(input_vec,
   names_not_updated <- updated_vec[input_vec %in% updated_vec]
   n_no_updated <- length(names_not_updated)
   if (n_no_updated > 0) {
-    cli_alert_info(paste("No mappings found for the following", n_no_updated,"columns: ",
-                         paste0(names_not_updated, collapse=", ")))
+    cli_alert_info(paste("No mappings found for the following", n_no_updated,
+                         "columns: ", paste0(names_not_updated, collapse=", ")))
   }
 
   return (updated_vec)
@@ -308,7 +309,8 @@ check_raw_cols_in_mapping <- function(raw_df_list,
                                       mapping_df,
                                       tables_to_stack){
   if(!is.null(tables_to_stack)){
-    colnames_vec <- unlist(sapply(df_raw_list, function(df) unique(gsub("_\\d+", "", colnames(df)))))
+    colnames_vec <- unlist(
+      sapply(df_raw_list, function(df) unique(gsub("_\\d+", "", colnames(df)))))
   }else{
     colnames_vec <- unlist(sapply(df_raw_list, colnames))
   }
@@ -626,14 +628,15 @@ not_pathogen_ids <- get_not_pathogen_ids(df=df_clean_list[[pathogen_table]],
                                           id_col="record_id",
                                           pathogen_col = "pathogen")
 
-df_clean_list <-  Map(function(df, name) filter_record_ids(df,
-                                                           not_pathogen_ids,
-                                                           name,
-                                                           paste(pathogen_filter_name, "rows for")),
-                      df_clean_list,
-                      names(df_clean_list))
+df_clean_list <-  Map(
+  function(df, name) filter_record_ids(df,
+                                       not_pathogen_ids,
+                                       name,
+                                       paste(pathogen_filter_name, "rows for")),
+  df_clean_list,
+  names(df_clean_list))
 
-# contains a list of all articles before they're filtered so that they can be printed
+# contains a list of all articles before they are filtered
 unfiltered_article_df <- df_clean_list[[pathogen_table]]
 
 # Filter out irrelevant records
@@ -665,12 +668,13 @@ if (!is.null(incomplete_cols)){
                                 "complete rows for",
                                 "rows with complete qa and article information")
 
-  df_clean_list <-  Map(function(df, name) filter_record_ids(df,
-                                                             incomplete_record_ids,
-                                                             name,
-                                                             incomplete_cli_text),
-                        df_clean_list,
-                        names(df_clean_list))
+  df_clean_list <-  Map(
+    function(df, name) filter_record_ids(df,
+                                         incomplete_record_ids,
+                                         name,
+                                         incomplete_cli_text),
+    df_clean_list,
+    names(df_clean_list))
 }
 
 target_df_raw_list <- setNames(
@@ -759,7 +763,8 @@ log_filename <- generate_report(target_df_clean_list,
                                 pathogen,
                                 redcap_repeat_instances)
 
-orderly_artefact(description="Text file with the results of the extraction process",
-                 log_filename)
+orderly_artefact(
+  description="Text file with the results of the extraction process",
+  log_filename)
 # *============================================================================*
 
