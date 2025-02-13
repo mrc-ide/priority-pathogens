@@ -6,7 +6,6 @@ library(orderly2)
 
 # *============================= Helper functions =============================*
 # *----------------------------- Filter functions -----------------------------*
-# Filter out rows that are completely except for having a record_id
 filter_empty_rows <- function(df, name){
   filtered_df <-  df[, !colnames(df) %in% "record_id"]
   rows_to_keep <- rowSums(filtered_df!= "" & !is.na(filtered_df)) != 0
@@ -57,105 +56,6 @@ filter_record_ids <- function(df, record_id_vec, name, cli_text){
                     sum(rows_to_keep), "/", NROW(df), " ", cli_text, " ", name))
 
   return (df[rows_to_keep,])
-}
-
-# *------------------------------ Key functions -------------------------------*
-add_uuid_id <- function(input_df, uuid_col){
-  if (NROW(input_df) > 0) {
-    input_df[uuid_col] <- replicate(NROW(input_df), UUIDgenerate())
-  } else {
-    input_df[uuid_col] <- character(0)
-  }
-
-  return (input_df)
-}
-
-add_pks <- function(input_df, pk_col){
-  if (NROW(input_df) > 0) {
-    input_df[pk_col] <- 1:NROW(input_df)
-  } else {
-    input_df[pk_col] <- character(0)
-  }
-  return(input_df)
-}
-
-# *------------------------ Name-replacement functions ------------------------*
-col_list_key_map <- function(df, col, mapping_list){
-  # assumes all matches are accounted for
-  mapping_df[col]  <- unlist(sapply(mapping_df[col],
-                                    function (key) mapping_list[key]))
-  return (mapping_df)
-}
-
-df_cols_key_map <- function(input_vec,
-                            mapping_df,
-                            input_col_name="input_col",
-                            target_col_name="target_col"){
-  mapping_non_na_df <- mapping_df[!is.na(mapping_df[[target_col_name]]),]
-  mapping_vector <- setNames(mapping_non_na_df[[target_col_name]],
-                             mapping_non_na_df[[input_col_name]])
-
-  updated_vec <- ifelse(input_vec %in% names(mapping_vector),
-                        mapping_vector[input_vec],
-                        input_vec)
-
-  names_not_updated <- updated_vec[input_vec %in% updated_vec]
-  n_no_updated <- length(names_not_updated)
-  if (n_no_updated > 0) {
-    cli_alert_info(paste("No mappings found for the following", n_no_updated,
-                         "columns: ", paste0(names_not_updated, collapse=", ")))
-  }
-
-  return (updated_vec)
-}
-
-generate_target_table <- function(input_df_list, mapping_df, target_table,
-                                  input_table_col_name="input_table",
-                                  target_table_col_name="target_table",
-                                  input_col_name = "input_col",
-                                  target_col_name = "target_col"){
-  cli_inform(paste("Generating table:", target_table))
-
-  mapping_non_na_df <- mapping_df[!is.na(mapping_df[target_table_col_name]), ]
-  filtered_mapping_df <- (mapping_non_na_df[
-    mapping_non_na_df[target_table_col_name] == target_table,])
-
-  input_table_names <- unlist(unique(filtered_mapping_df[input_table_col_name]))
-
-  tables_to_join <- list()
-
-  for (table_name in input_table_names){
-    table_filter <- filtered_mapping_df[[input_table_col_name]] == table_name
-    table_columns <- filtered_mapping_df[table_filter,][[input_col_name]]
-
-    # select relevant columns
-    input_df <- input_df_list[[table_name]]
-    input_df <- input_df[, names(input_df) %in% table_columns]
-    tables_to_join[[table_name]] <- input_df
-  }
-
-  target_df <- Reduce(function(x, y) merge(x, y, by = "record_id", all = TRUE),
-                      tables_to_join)
-
-  # record_id may be duplicated
-  dedup_mapping_df <- unique(filtered_mapping_df[, c(input_col_name,
-                                                     target_col_name)])
-  colnames(target_df) <- df_cols_key_map(input_vec=colnames(target_df),
-                                         mapping_df=dedup_mapping_df,
-                                         input_col_name=input_col_name,
-                                         target_col_name=target_col_name)
-
-  return (target_df)
-}
-
-
-# *------------------------- Target format functions --------------------------*
-add_article_cols <- function(input_df, article_df, cols_to_add, join_col){
-  cols_to_add <- c(cols_to_add, join_col)
-  updated_df <- merge(input_df, article_df[cols_to_add], by=join_col,
-                      all.x = TRUE)
-
-  return(updated_df)
 }
 
 get_not_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="pathogen"){
@@ -209,10 +109,152 @@ get_incomplete_rows <- function(df, col, name, redcap_repeat_instances,
       c(paste("The following", sub("s$", "", name),
               "rows are incomplete", alert_text, ": "),
         incomplete_combined_text)
-      )
+    )
   }
 
   return (incomplete_df)
+}
+
+# *------------------------------ Key functions -------------------------------*
+add_uuid_id <- function(input_df, uuid_col){
+  if (NROW(input_df) > 0) {
+    input_df[uuid_col] <- replicate(NROW(input_df), UUIDgenerate())
+  } else {
+    input_df[uuid_col] <- character(0)
+  }
+
+  return (input_df)
+}
+
+add_pks <- function(input_df, pk_col){
+  if (NROW(input_df) > 0) {
+    input_df[pk_col] <- 1:NROW(input_df)
+  } else {
+    input_df[pk_col] <- character(0)
+  }
+  return(input_df)
+}
+
+# *------------------------ Name-replacement functions ------------------------*
+col_list_key_map <- function(df, col, mapping_list){
+  # assumes all matches are accounted for
+  mapping_df[col]  <- unlist(sapply(mapping_df[col],
+                                    function (key) mapping_list[key]))
+  return (mapping_df)
+}
+
+df_cols_key_map <- function(input_vec,
+                            mapping_df,
+                            input_col_name="input_col",
+                            target_col_name="target_col"){
+  mapping_non_na_df <- mapping_df[!is.na(mapping_df[[target_col_name]]),]
+  mapping_vector <- setNames(mapping_non_na_df[[target_col_name]],
+                             mapping_non_na_df[[input_col_name]])
+
+  updated_vec <- ifelse(input_vec %in% names(mapping_vector),
+                        mapping_vector[input_vec],
+                        input_vec)
+
+  names_not_updated <- updated_vec[input_vec %in% updated_vec]
+  n_no_updated <- length(names_not_updated)
+  if (n_no_updated > 0) {
+    cli_alert_info(paste("No mappings found for the following", n_no_updated,
+                         "columns: ", paste0(names_not_updated, collapse=", ")))
+  }
+
+  return (updated_vec)
+}
+
+# *--------------- REDCap wide format transformation functions ----------------*
+subset_long_df <- function(input_df, mapping_df, table_name){
+  colnames_no_underscore <- gsub("_\\d+", "", colnames(input_df))
+
+  table_input_cols <- mapping_df[mapping_df[["input_table"]]==table_name,][["input_col"]]
+  subset_df <- input_df[colnames_no_underscore %in% table_input_cols]
+
+  return (subset_df)
+}
+
+stack_rows <- function(df, id_col = "record_id"){
+  colnames_table <- colnames(df)
+  colnames_table <- colnames_table[!(colnames_table == id_col)]
+  repeat_ids <- sub("^.*_(\\d+)$", "\\1", colnames_table)
+
+  split_colname_list <- split(colnames_table,
+                              sub("^.*_(\\d+)$", "\\1", colnames_table))
+
+  combined_df <- data.frame()
+
+  for (repeat_id in names(split_colname_list)){
+    split_colnames <- split_colname_list[[repeat_id]]
+    temp_df <- df[, c(id_col, split_colnames)]
+
+    # list sorts 1, 10, so next rather than break
+    # Only filter out completely blank blocks => this approach will create empty
+    # rows that will be filtered out later
+    if (all(is.na(temp_df[split_colnames]))) next
+
+    # get names time to make reduce dependency on column order
+    colnames(temp_df) <- gsub("_\\d+", "", colnames(temp_df))
+
+    repeat_id_vec <- rep(repeat_id, NROW(temp_df))
+
+    df_to_rbind <- cbind(temp_df[,1, drop=FALSE],
+                         "repeat_id"=repeat_id_vec,
+                         temp_df[-1])
+
+    combined_df <- rbind(combined_df, df_to_rbind)
+  }
+
+  return(combined_df)
+}
+
+# *----------------------- Target generation functions ------------------------*
+generate_target_table <- function(input_df_list, mapping_df, target_table,
+                                  input_table_col_name="input_table",
+                                  target_table_col_name="target_table",
+                                  input_col_name = "input_col",
+                                  target_col_name = "target_col"){
+  cli_inform(paste("Generating table:", target_table))
+
+  mapping_non_na_df <- mapping_df[!is.na(mapping_df[target_table_col_name]), ]
+  filtered_mapping_df <- (mapping_non_na_df[
+    mapping_non_na_df[target_table_col_name] == target_table,])
+
+  input_table_names <- unlist(unique(filtered_mapping_df[input_table_col_name]))
+
+  tables_to_join <- list()
+
+  for (table_name in input_table_names){
+    table_filter <- filtered_mapping_df[[input_table_col_name]] == table_name
+    table_columns <- filtered_mapping_df[table_filter,][[input_col_name]]
+
+    # select relevant columns
+    input_df <- input_df_list[[table_name]]
+    input_df <- input_df[, names(input_df) %in% table_columns]
+    tables_to_join[[table_name]] <- input_df
+  }
+
+  target_df <- Reduce(function(x, y) merge(x, y, by = "record_id", all = TRUE),
+                      tables_to_join)
+
+  # record_id may be duplicated
+  dedup_mapping_df <- unique(filtered_mapping_df[, c(input_col_name,
+                                                     target_col_name)])
+  colnames(target_df) <- df_cols_key_map(input_vec=colnames(target_df),
+                                         mapping_df=dedup_mapping_df,
+                                         input_col_name=input_col_name,
+                                         target_col_name=target_col_name)
+
+  return (target_df)
+}
+
+add_article_cols <- function(input_df, article_df, cols_to_add, join_col){
+  cols_to_add <- c(cols_to_add, join_col)
+  updated_df <- merge(input_df, article_df[cols_to_add], by=join_col,
+                      all.x = TRUE)
+
+  return(updated_df)
 }
 
 clean_dates <- function(date){
@@ -261,49 +303,6 @@ split_data_column <- function(input_df, date_col){
   return (updated_df)
 }
 
-# *------------------------- Transformation functions -------------------------*
-subset_long_df <- function(input_df, mapping_df, table_name){
-  colnames_no_underscore <- gsub("_\\d+", "", colnames(input_df))
-
-  table_input_cols <- mapping_df[mapping_df[["input_table"]]==table_name,][["input_col"]]
-  subset_df <- input_df[colnames_no_underscore %in% table_input_cols]
-
-  return (subset_df)
-}
-
-stack_rows <- function(df, id_col = "record_id"){
-  colnames_table <- colnames(df)
-  colnames_table <- colnames_table[!(colnames_table == id_col)]
-  repeat_ids <- sub("^.*_(\\d+)$", "\\1", colnames_table)
-
-  split_colname_list <- split(colnames_table,
-                              sub("^.*_(\\d+)$", "\\1", colnames_table))
-
-  combined_df <- data.frame()
-
-  for (repeat_id in names(split_colname_list)){
-    split_colnames <- split_colname_list[[repeat_id]]
-    temp_df <- df[, c(id_col, split_colnames)]
-
-    # list sorts 1, 10, so next rather than break
-    # Only filter out completely blank blocks => this approach will create empty
-    # rows that will be filtered out later
-    if (all(is.na(temp_df[split_colnames]))) next
-
-    # get names time to make reduce dependency on column order
-    colnames(temp_df) <- gsub("_\\d+", "", colnames(temp_df))
-
-    repeat_id_vec <- rep(repeat_id, NROW(temp_df))
-
-    df_to_rbind <- cbind(temp_df[,1, drop=FALSE],
-                         "repeat_id"=repeat_id_vec,
-                         temp_df[-1])
-
-    combined_df <- rbind(combined_df, df_to_rbind)
-  }
-
-  return(combined_df)
-}
 # *------------------------- Process report functions -------------------------*
 check_raw_cols_in_mapping <- function(raw_df_list,
                                       mapping_df,
