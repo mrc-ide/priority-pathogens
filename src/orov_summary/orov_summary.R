@@ -1,5 +1,9 @@
 ## analyse oropouche
 
+library(tidyverse)
+library(forcats)
+library(orderly2)
+
 orderly_strict_mode()
 orderly2::orderly_parameters(pathogen = "OROV")
 
@@ -26,15 +30,45 @@ covidence <- read.csv("covidence/orov_covidence.csv") %>%
 covidence$CovID %>% unique() %>% length()
 
 # do we have all the articles we are expecting?
-nrow(articles) == length(unique(covidence$CovID))
+testthat::expect_true(
+  nrow(articles) == length(unique(covidence$CovID)))
+#which(paste0("#",articles$covidence_id) %in% covidence$CovID)
+#articles[which(duplicated(articles$covidence_id)),]
+testthat::expect_length(
+  which(!(paste0("#",articles$covidence_id) %in% covidence$CovID)),
+  0)
+
+# what are we dealing with in terms of parameters 
+parameters %>% select(parameter_type) %>% group_by(parameter_type) %>%
+  summarise("total" = length(parameter_type))
+
+ggplot(parameters,
+       aes(x=fct_infreq(parameter_type_broad),
+           fill=parameter_context_human))+
+  geom_bar()+
+  theme_bw()+
+  scale_fill_manual(values= c("navyblue","royalblue","skyblue"))+
+  labs(x="Type of parameter",y="Number extracted",fill="")+
+  theme(axis.text.x = element_text(angle=90))
 
 
-## firstly find the article with a bogus covidence ID
-which(!(paste0("#",articles$covidence_id) %in% covidence$CovID))
+parameters %>% group_by(parameter_type_broad) %>%
+  summarise(length(parameter_type_broad))
+
+parameters %>% group_by(parameter_type_broad,parameter_context_human) %>%
+  summarise(length(parameter_type_broad))
+
+
+parameters %>% filter(parameter_context_human=="Not human") %>% 
+  select(population_sample_type) %>% unique()
+
+parameters %>% filter(parameter_context_human=="Not human") %>% 
+  select(population_group) %>% unique()
 
 
 
-## investigating what is duplicated
+
+## investigating what is duplicated - now sorted in cleaning 
 # articles[1,]
 # ## this is a dummy one that I've worked on - omit 
 # 
