@@ -396,6 +396,7 @@ if (pathogen == 'EBOLA') {
 
 if (pathogen=="OROV"){
   article_all <- article_all %>% orov_cleaning_articles()
+  parameter_all <- parameter_all %>% orov_cleaning_parameters()
 }
 
 print(class(article_all))
