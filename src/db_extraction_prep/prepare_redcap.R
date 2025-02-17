@@ -249,10 +249,16 @@ generate_target_table <- function(input_df_list, mapping_df, target_table,
   return (target_df)
 }
 
-add_article_cols <- function(input_df, article_df, cols_to_add, join_col){
+add_article_cols <- function(input_df, article_df, cols_to_add, join_col, start){
   cols_to_add <- c(cols_to_add, join_col)
-  updated_df <- merge(input_df, article_df[cols_to_add], by=join_col,
-                      all.x = TRUE)
+
+  if (start ==TRUE){
+    updated_df <- merge(article_df[cols_to_add], input_df, by=join_col,
+                        all.y = TRUE)
+  }else{
+    updated_df <- merge(input_df, article_df[cols_to_add], by=join_col,
+                        all.x = TRUE)
+  }
 
   return(updated_df)
 }
@@ -560,7 +566,8 @@ linked_rows_list <- config_list[["linked_row_col_names"]]
 uuid_col_names <- config_list[["uuid_col_names"]]
 pk_col_names <- config_list[["pk_col_names"]]
 date_cols_to_split <- config_list[["date_cols_to_split"]]
-article_cols_to_add <- config_list[["article_cols_to_add"]]
+article_cols_to_add_start <- config_list[["article_cols_to_add_start"]]
+article_cols_to_add_end <- config_list[["article_cols_to_add_end"]]
 
 # *------------------------------- Read in data -------------------------------*
 mapping_df <- read_csv(mapping_filename)
@@ -708,13 +715,26 @@ if (!is.null(uuid_col_names)){
 }
 
 # Add target article columns
-if (!is.null(article_cols_to_add)){
+if (!is.null(article_cols_to_add_start)){
   target_df_clean_list[data_table_names] <- lapply(
     data_table_names,
     function(name) add_article_cols(target_df_clean_list[[name]],
                                     target_df_clean_list[["articles"]],
-                                    cols_to_add=article_cols_to_add,
-                                    join_col="Article_ID"
+                                    cols_to_add=article_cols_to_add_start,
+                                    join_col="Article_ID",
+                                    start=TRUE
+    )
+  )
+}
+
+if (!is.null(article_cols_to_add_end)){
+  target_df_clean_list[data_table_names] <- lapply(
+    data_table_names,
+    function(name) add_article_cols(target_df_clean_list[[name]],
+                                    target_df_clean_list[["articles"]],
+                                    cols_to_add=article_cols_to_add_end,
+                                    join_col="Article_ID",
+                                    start=FALSE
     )
   )
 }
