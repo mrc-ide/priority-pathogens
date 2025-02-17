@@ -4,6 +4,7 @@ library(dplyr)
 library(janitor)
 library(orderly2)
 library(readr)
+library(epireview)
 
 
 orderly_strict_mode()

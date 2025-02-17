@@ -47,6 +47,8 @@ zika_clean_articles <- function(df, pathogen){
       first_author_first_name, first_author_surname
     )) %>%
     arrange(covidence_id) %>%
+    # Fix article with group name in first name column
+    mutate(first_author_surname = ifelse(covidence_id == 4427, "Singapore Zika Study Group", first_author_surname)) %>%
     # Make Names title case 
     mutate(first_author_surname = str_to_title(first_author_surname),
            first_author_first_name = str_to_title(first_author_first_name)) %>%
@@ -276,9 +278,11 @@ zika_clean_params <- function(df, pathogen){
                                  parameter_type == "Growth rate ®" ~"Growth rate (r)",
                                  parameter_type == "Reproduction number (Effective; Re)" ~ "Reproduction number (Effective, Re)",
                                  parameter_type %in% 
-                                   c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate") ~ "Mutations - substitution rate",
+                                   c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate", "Mutations – substitution rate") ~ "Mutations - substitution rate",
                                  parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
                                  TRUE ~ parameter_type)) %>%
+    # Change parameter value type central-unspecified to just Central 
+    mutate(parameter_value_type = ifelse(parameter_value_type == 'Central - unspecified', "Central", parameter_value_type)) %>%
     # Fix incorrect parameter types 
     mutate(parameter_type = case_when(
       parameter_type == "Seroprevalence - Unspecified" & covidence_id == 6072 ~ "Risk factors",
@@ -385,7 +389,7 @@ zika_clean_params <- function(df, pathogen){
         grepl('Other', population_group) ~ "Other",
         grepl('Fertile', population_group) ~ "Other",
         population_group %in% c("Pregnant women - mothers of cases","Pregnant women - mothers of controls","Pregnant women - Zika cases") ~ "Pregnant women",
-        population_group == c('Outdoor workers','Sex workers', 'Within 100m of index case households') ~ "Other",
+        population_group %in% c('Outdoor workers','Sex workers', 'Within 100m of index case households') ~ "Other",
         TRUE ~ population_group
       )) %>%
     mutate(
@@ -399,19 +403,23 @@ zika_clean_params <- function(df, pathogen){
         "São Paulo"
       ),
       population_location = str_replace(
-        population_location, "Laneri model",
-        ""
+        population_location, "Sao Paolo",
+        "São Paulo"
       ),
       population_location = str_replace(
         population_location, "; Laneri model",
         ""
       ),
       population_location = str_replace(
-        population_location, "SEIR-SEI model",
+        population_location, "Laneri model",
         ""
       ),
       population_location = str_replace(
         population_location, "; SEIR-SEI model",
+        ""
+      ),
+      population_location = str_replace(
+        population_location, "SEIR-SEI model",
         ""
       ),
       population_location = str_replace(
@@ -426,6 +434,18 @@ zika_clean_params <- function(df, pathogen){
         population_location, "Leon",
         "León"
       ),
+      population_location = str_replace(
+        population_location, "Juniai",
+        "Jundiai"
+      ),
+      population_location = str_replace(
+        population_location, "Hospital\r\n",
+        ""
+      ),
+      population_location = str_replace(
+        population_location, "\r\n",
+        " "
+      ),
       population_location = case_when(
         population_location %in% 
           c("Salvador; Bahia", "Salvador city in Bahia","Salvador") ~ "Salvador, Bahia",
@@ -436,7 +456,7 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% c("Puerto Rico: Ponce; San Juan; Guayama") ~ "Ponce; San Juan; Guayama",
         population_location %in% "3 states in Nigeria\r\nNigeria; Abia State in Southern Nigeria; and Kaduna\r\nState in Northern Nigeria" ~
           "Nasarawa state, Abia state, Kaduna state",
-        population_location %in% "Sao Paolo State" ~ "São Paulo state",
+        population_location %in% c("Sao Paolo State", "São Paulo State") ~ "São Paulo state",
         population_location %in% "San Andres" ~ "San Andrés",
         population_location %in% "risaralda" ~ "Risaralda",
         population_location %in% "Pernambuco" ~ "Pernambuco State",
@@ -448,6 +468,7 @@ zika_clean_params <- function(df, pathogen){
           "Hospital da Restauração, Recife, Pernambuco",
         population_location %in% "Hospital Universitari Vall d’Hebron\r\nBarcelona; Catalonia" ~
           "Hospital Universitari Vall d’Hebron, Barcelona, Catalonia",
+        population_location %in% "Guadeloupe,Martinique, French Guiana" ~ "Guadeloupe, Martinique, French Guiana",
         population_location %in% "Entire country" ~ NA,
         TRUE ~ population_location
       ),
@@ -606,16 +627,6 @@ zika_clean_params <- function(df, pathogen){
   
   # Clean attack rate 
   df <- zika_clean_ar(df)
-  
-  # Exponent
-  # exponent = 
-  #   case_when(
-  #     parameter_class %in% "Mutations" &
-  #       covidence_id %in% 6340 ~ -3,
-  #     parameter_class %in% "Attack rate" &
-  #       covidence_id %in% c(241, 2240, 2241, 6472, 7199) ~ 0,
-  #     TRUE ~ exponent
-  #   ),
   
   # Parameter_unit cleaning
   df <- df %>%
@@ -892,20 +903,26 @@ zika_clean_genomics <- function(df){
                                                       12, parameter_uncertainty_lower_value),
            parameter_uncertainty_upper_value = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
                                                       25, parameter_uncertainty_upper_value),
-           parameter_uncertainty_singe_type = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                               "Range", parameter_uncertainty_singe_type),
+           parameter_uncertainty_type = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+                                               "Range", parameter_uncertainty_type),
            parameter_2_lower_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
                                             NA, parameter_2_lower_bound),
            parameter_2_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
                                             NA, parameter_2_upper_bound)
-    )
+    ) %>%
+    # Correct incorrect way of entering exponents (because lower and upper intervals have diff exponents)
+    mutate(parameter_value = ifelse(covidence_id == 1663 & parameter_value == 1.15, 0.0015, parameter_value),
+           exponent = ifelse(covidence_id == 1663 & exponent == -3, 0, exponent))
   
   # Correct entries with missing variables 
   df <- df %>%
     mutate(parameter_statistical_approach = ifelse(covidence_id == 7717 & parameter_class == 'Mutations', 
                                                    "Estimated model parameter", parameter_statistical_approach),
-           parameter_value_type = ifelse(covidence_id == 7717 & is.na(parameter_value_type), 
-                                         "Mean", parameter_value_type),
+           parameter_value_type = case_when(
+             covidence_id == 7717 & is.na(parameter_value_type) ~ "Mean",
+             covidence_id == 4427 & parameter_type == "Human delay - serial interval" ~ 'Mean',
+             covidence_id == 2353 & parameter_type == "Human delay - infectious period" ~ "Median",
+             TRUE ~ parameter_value_type),
            parameter_uncertainty_type = ifelse(covidence_id == 7717 & parameter_uncertainty_type == 'CI95%', 
                                                "CRI95%", parameter_uncertainty_type)
     )
