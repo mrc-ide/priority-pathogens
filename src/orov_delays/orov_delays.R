@@ -18,6 +18,9 @@ orderly_dependency(
             "inputs/parameters.csv"="parameters.csv",
             "inputs/outbreaks.csv"="outbreaks.csv"))
 
+# forest plot code
+orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
+source("lassa_functions.R")
 
 # read in data
 articles <- read.csv("inputs/articles.csv")
@@ -56,9 +59,6 @@ delays <- delays %>% mutate(
 
 delays %>% group_by(delay_label) %>% summarise(length(delay_label))
 
-delays
-
-
-
+parameters$population_location
 
 
