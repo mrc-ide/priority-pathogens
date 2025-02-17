@@ -39,7 +39,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
     mutate_at(vars(all_of(var_select)),
               list(~ ifelse(inverse_param, 1/.x, .x))) %>%
     mutate_at(vars(all_of(var_select)),
-              list(~ .x * 10^exponent)) %>%
+              list(~ .x * 10^exponent)) %>% 
     mutate_at(vars(all_of(var_select)), #account for different units
               list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>% 
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
@@ -59,7 +59,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_upper_value)) %>%
     select(-c(no_unc)) %>%
-    mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
+    mutate(central = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator, 0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
   
   if (pathogen == 'ZIKA'){
     # Zika database has extra variables for the variability -- all of these have _2
@@ -126,12 +126,12 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   gg <- ggplot(df) +
         geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
                          y = urefs, yend = urefs, color = .data[[color_column]]),
-                     size = 3, alpha = 0.65) +
+                     linewidth = 3, alpha = 0.65) +
         geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                           y = urefs),
                       width = 0.15, lwd=0.5, color = "black", alpha = 1) +
         geom_point(aes(x = parameter_value, y = urefs, 
-                       shape = df$parameter_value_type, fill = .data[[color_column]]),
+                       shape = parameter_value_type, fill = .data[[color_column]]),
                    size = 3, stroke = 1,
                    color = "black", alpha = 1)
   
@@ -140,23 +140,27 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   if(sum(!is.na(custom_colours)))
   {
     gg <- gg + 
-      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_shape_manual(name = "Parameter Type",
+                         values = c(Mean = 21, Median = 22, Central = 25, Unspecified = 24, Other = 23),
+                         breaks = c("Mean", "Median", "Unspecified", "Central", "Other")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
       scale_color_manual(values = custom_colours) +
       scale_fill_manual(values = custom_colours) +
       theme_minimal() + 
-      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))
   } else {
     gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_shape_manual(name = "Parameter Type",
+                         values = c(Mean = 21, Median = 22, Central = 25, Unspecified = 24, Other = 23),
+                         breaks = c("Mean", "Median", "Unspecified", "Central", "Other")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
       theme_minimal() + 
-      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))  
   }
   
