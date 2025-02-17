@@ -327,7 +327,7 @@ generate_report <- function(df_list,
       incomplete_combined_text <- sapply(
         1:NROW(unique_incomplete_record_ids),
         function(i) paste(incomplete_combined_text[i],
-                          record_extractor_list[[unique_incomplete_record_ids[i]]],
+                        record_extractor_list[[unique_incomplete_record_ids[i]]],
                           sep =" | ")
              )
       incomplete_combined_text <- paste(incomplete_combined_text, collapse = "\n")
@@ -459,6 +459,7 @@ mapping_df <- col_list_key_map(df=mapping_df,
                                mapping_list=table_instrument_source_list)
 
 target_names_df <- read_csv(target_filename)
+
 
 # *------------------------- Clean & generate targets -------------------------*
 df_clean_list <- Map(filter_empty_rows,
