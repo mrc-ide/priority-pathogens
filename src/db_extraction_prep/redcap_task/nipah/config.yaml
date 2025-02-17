@@ -1,32 +1,17 @@
 ---
-"pathogen_filter_name": "Oropouche"
+"pathogen_filter_name": "Nipah virus"
+"tables_to_stack": ["parameters", "models", "outbreaks"]
 "target_filepath": "redcap_data/table_target.csv"
-"mapping_filepath": "redcap_data/orov/mapping_table.csv"
-orderly_download_depencency: true
+"mapping_filepath": "redcap_data/nipah/mapping_table.csv"
+orderly_download_depencency: false
 "table_filepaths":
-    "articles": "articles.csv"
-    "extractors": "extractors.csv"
-    "qas": "qas.csv"
-    "parameters": "parameters.csv"
-    "models": "models.csv"
-    "outbreaks": "outbreaks.csv"
-"instrument_source_table":
-    "Article Data": "articles"
-    "Record Id": "extractors"
-    "Quality Assessment": "qas"
-    "Parameter Data": "parameters"
-    "Outbreak Data": "outbreaks"
-    "Model Information": "models"
-"incomplete_col_names":
-    "articles": "article_data_complete"
-    "qas": "quality_assessment_complete"
-    "models": "model_information_complete"
-    "parameters": "parameter_data_complete"
-    "outbreaks": "outbreak_data_complete"
+    "all_data": "redcap_data/nipah/raw_data/nipah_raw_data.csv"
 "linked_row_col_names":
     "models": "model_linked"
     "outbreaks": "outbreak_linked"
     "parameters": "parameter_linked"
+"incomplete_col_names":
+    "articles": "pathogen_epidemiology_review_complete"
 "target_table_names": ["articles", "models", "outbreaks", "parameters"]
 "data_table_names": ["models", "outbreaks", "parameters"]
 "pk_col_names":
@@ -44,3 +29,4 @@ date_cols_to_split:
 article_cols_to_add_end: ["Pathogen", "ID"]
 article_cols_to_add_start: [ "Covidence_ID", "Name_data_entry"]
 ---
+
