@@ -107,7 +107,7 @@ Outbreak_start_month,outbreaks
 Outbreak_start_year,outbreaks
 Outbreak_end_day,outbreaks
 Outbreak_end_month,outbreaks
-Outbreak_date_year,outbreaks
+Outbreak_end_year,outbreaks
 Outbreak_duration_months,outbreaks
 Asymptomatic_transmission,outbreaks
 Outbreak_country,outbreaks
