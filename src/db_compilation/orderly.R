@@ -16,8 +16,8 @@ orderly_parameters(pathogen = NULL)
 
 if(pathogen!="OROV"){
   orderly_artefact(
-    "Merged single and double extracted data as csv",
-    c(
+    description = "Merged single and double extracted data as csv",
+    files = c(
       "articles.csv",
       "models.csv",
       "parameters.csv",
@@ -25,8 +25,8 @@ if(pathogen!="OROV"){
     ))
 } else if(pathogen=="OROV"){
   orderly_artefact(
-    "Merged single and double extracted data as csv",
-    c(
+    description = "Merged single and double extracted data as csv",
+    files = c(
       "articles.csv",
       "parameters.csv",
       "outbreaks.csv"
@@ -182,14 +182,16 @@ model_matching <- model_matching %>% clean_names()
 outbreak_matching <- outbreak_matching %>% clean_names()
 
 qa_matching <- qa_matching %>% select(-c("num_rows", "matching")) 
-  parameter_matching <- parameter_matching %>% select(-c("num_rows", "matching")) %>%
-                  mutate(covidence_id=as.numeric(covidence_id),
-                         article_id=as.numeric(article_id),
-                         access_param_id=as.numeric(access_param_id))
-model_matching <- model_matching %>% select(-c("num_rows", "matching")) %>%
-                  mutate(covidence_id=as.numeric(covidence_id),
-                         article_id=as.numeric(article_id),
-                         access_model_id=as.numeric(access_model_id))
+parameter_matching <- parameter_matching %>% 
+  select(-c("num_rows", "matching")) %>%
+  mutate(covidence_id=as.numeric(covidence_id),
+         article_id=as.numeric(article_id),
+         access_param_id=as.numeric(access_param_id))
+model_matching <- model_matching %>% 
+  select(-c("num_rows", "matching")) %>%
+  mutate(covidence_id=as.numeric(covidence_id),
+         article_id=as.numeric(article_id),
+         access_model_id=as.numeric(access_model_id))
 if (pathogen == "LASSA") {
 outbreak_matching <- outbreak_matching %>% select(-c("num_rows", "matching")) %>%
                   mutate(covidence_id=as.numeric(covidence_id),
@@ -236,7 +238,7 @@ outbreak_fixed <- outbreak_fixed %>%
 }
 
 
-qa_fixed        <- qa_fixed %>% clean_names()
+qa_fixed <- qa_fixed %>% clean_names()
 
 if(pathogen!="OROV"){
   model_fixed     <- model_fixed %>% clean_names()
