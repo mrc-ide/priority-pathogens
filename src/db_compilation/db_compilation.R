@@ -278,7 +278,8 @@ if (pathogen %in% c("EBOLA", "SARS", "OROV")) {
 # join article data to qa files
 article_double_details <- article_double %>% select(-c(starts_with("qa")))
 
-article_matching <- qa_matching %>%
+article_matching <- qa_matching %>% 
+  mutate(covidence_id = as.numeric(covidence_id)) %>%
   left_join(article_double_details,
     by = c("id", "covidence_id", "name_data_entry")
   ) %>%
@@ -399,6 +400,7 @@ if (pathogen == 'EBOLA') {
 if (pathogen=="OROV"){
   article_all <- article_all %>% orov_cleaning_articles()
   parameter_all <- parameter_all %>% orov_cleaning_parameters()
+  article_all <- add_qa_scores(article_all, parameter_all)
 }
 
 print(class(article_all))
