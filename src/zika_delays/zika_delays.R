@@ -70,6 +70,10 @@ d6 <- parameters %>% filter(parameter_type == 'Human delay - infectious period' 
 d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
 d8 <- parameters %>% filter(parameter_type == "Human delay - symptom onset to admission to care")
 
+m1 <- parameters %>% filter(grepl("Mosquito delay", parameter_type)) %>%
+  filter(parameter_type != "Mosquito delay - extrinsic incubation period (EIP10)") %>%
+  mutate(parameter_type = "Mosquito delay - extrinsic incubation period") %>%
+  filter(parameter_unit == 'Days')
 
 # Symptom onset to recovery
 onset_recovery_forest <- forest_plot(d4 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),
@@ -83,24 +87,48 @@ SI_forest_noqa <- forest_plot(d5|> arrange(desc(parameter_value)), 'Serial Inter
 
 # Infectious period 
 IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),'Infectious Period (days)',"parameter_value_type",c(-22,52),text_size = TEXT_SIZE)
-IP_forest_noqa <- forest_plot(d6|> arrange(desc(parameter_value)), 'Infectious Period (days)',"parameter_type",c(-22,52),text_size = TEXT_SIZE)
+IP_forest_noqa <- forest_plot(d6|> arrange(desc(parameter_value)), 'Infectious Period (days)',"parameter_type",c(0,52),text_size = TEXT_SIZE)
 
 ip_forest_mmv <- forest_plot(d6 |> arrange(method_moment_value,desc(parameter_value)),
-                             'Infectious Period (days)','method_moment_value',c(-22,52),text_size = TEXT_SIZE)
+                             'Infectious Period (days)','method_moment_value',c(0,52),text_size = TEXT_SIZE)
 
 ip_forest_pc <- forest_plot(d6 |> arrange(population_country,desc(parameter_value)),
-                            'Infectious Period (days)','population_country',c(-22,52),text_size = TEXT_SIZE)
+                            'Infectious Period (days)','population_country',c(0,52),text_size = TEXT_SIZE)
 
 ip_forest_pg <- forest_plot(d6 |> arrange(population_group,desc(parameter_value)),
-                            'Infectious Period (days)','population_group',c(-22,52),text_size = TEXT_SIZE)
+                            'Infectious Period (days)','population_group',c(0,52),text_size = TEXT_SIZE)
 
 ip_forest_pst <- forest_plot(d6 |> arrange(population_sample_type,desc(parameter_value)),
-                             'Infectious Period (days)','population_sample_type',c(-22,52),text_size = TEXT_SIZE)
+                             'Infectious Period (days)','population_sample_type',c(0,52),text_size = TEXT_SIZE)
 
 ip <- (ip_forest_mmv + ip_forest_pc) / (ip_forest_pg + ip_forest_pst ) + 
   theme(text = element_text(size = TEXT_SIZE)) + 
   plot_annotation(tag_levels = 'A') 
 ggsave("infectious_period.png", plot =ip, width = 39, height = 22)
+
+# most papers don't have a sample size which is why these don't work (should double check the ns)
+# set.seed(42)
+# d6 <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+#   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
+#   filter(qa_score>0.5) %>%
+#   mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
+#          population_group    = replace_na(population_group,'Unspecified'),
+#          population_sample_type = replace_na(population_sample_type,'Unspecified'),
+#          parameter_type = 'Human delay - infectious period')
+# 
+# meta6 <- metamean_wrap(dataframe = d6, estmeansd_method = "Cai",
+#                        plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", 
+#                        label = "Mean infectious period (days)",
+#                        width = 9500, height = 4200, resolution = 1000)
+
+# set.seed(42)
+# d6_noqa <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+#   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) )
+# meta6_noqa <- metamean_wrap(dataframe = d2_noqa, estmeansd_method = "Cai",
+#                             plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", 
+#                             label = "Mean infectious period (days)",
+#                             width = 9500, height = 4200, resolution = 1000)
+
 
 # Generation time 
 GT_forest <- forest_plot(d7 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),'Generation Time (days)',"parameter_value_type",c(0,20),text_size = TEXT_SIZE)
@@ -108,19 +136,19 @@ GT_forest_noqa <- forest_plot(d7|> arrange(desc(parameter_value)), 'Generation T
 ggsave("generation_time.png", plot = GT_forest, width = 8, height = 6)
 
 # Incubation period
-p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(-30,30))
+p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
 
 incp_forest_mmv <- forest_plot(d1 |> arrange(method_moment_value,desc(parameter_value)),
-                             'Incubation Period (days)','method_moment_value',c(-30,30),text_size = TEXT_SIZE)
+                             'Incubation Period (days)','method_moment_value',c(0,30),text_size = TEXT_SIZE)
 
 incp_forest_pc <- forest_plot(d1 |> arrange(population_country,desc(parameter_value)),
-                            'Incubation Period (days)','population_country',c(-30,30),text_size = TEXT_SIZE)
+                            'Incubation Period (days)','population_country',c(0,30),text_size = TEXT_SIZE)
 
 incp_forest_pg <- forest_plot(d1 |> arrange(population_group,desc(parameter_value)),
-                            'Incubation Period (days)','population_group',c(-30,30),text_size = TEXT_SIZE)
+                            'Incubation Period (days)','population_group',c(0,30),text_size = TEXT_SIZE)
 
 incp_forest_pst <- forest_plot(d1 |> arrange(population_sample_type,desc(parameter_value)),
-                             'Incubation Period (days)','population_sample_type',c(-30,30),text_size = TEXT_SIZE)
+                             'Incubation Period (days)','population_sample_type',c(0,30),text_size = TEXT_SIZE)
 
 incp <- (incp_forest_mmv + incp_forest_pc) / (incp_forest_pg + incp_forest_pst ) + theme(text = element_text(size = TEXT_SIZE)) +
   plot_annotation(tag_levels = 'A')
@@ -153,40 +181,7 @@ ggsave("incubation_period.png", plot = incp, width = 39, height = 22)
 p2 <- forest_plot(d2 %>% mutate(parameter_unit = 'Days'),'Latent Period (days)',"parameter_type",c(0,51))
 ggsave("latent_period.png", plot = p2, width = 8, height = 6)
 
-# set.seed(42)
-# d2 <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
-#   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
-#   filter(qa_score>0.5) %>%
-#   mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
-#          population_group    = replace_na(population_group,'Unspecified'),
-#          population_sample_type = replace_na(population_sample_type,'Unspecified'))
 
-# oa_forest_mmv <- forest_plot(d2 |> arrange(method_moment_value,desc(parameter_value)),
-#                              'Onset-Admission Delay (days)','method_moment_value',c(0,20),text_size = TEXT_SIZE)
-# 
-# oa_forest_pc <- forest_plot(d2 |> arrange(population_country,desc(parameter_value)),
-#                             'Onset-Admission Delay (days)','population_country',c(0,20),text_size = TEXT_SIZE)
-# 
-# oa_forest_pg <- forest_plot(d2 |> arrange(population_group,desc(parameter_value)),
-#                             'Mean Onset-Admission Delay (days)','population_group',c(0,20),text_size = TEXT_SIZE)
-# 
-# oa_forest_pst <- forest_plot(d2 |> arrange(population_sample_type,desc(parameter_value)),
-#                              'Onset-Admission Delay (days)','population_sample_type',c(0,20),text_size = TEXT_SIZE)
-
-# oa <- (oa_forest_mmv + oa_forest_pc) / (oa_forest_pg + oa_forest_pst ) + theme(text = element_text(size = TEXT_SIZE)) + 
-#   plot_annotation(tag_levels = 'A') 
-# ggsave("figure_5SI_onset_to_admission.png", plot = oa, width = 39, height = 22)
-
-# m2 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
-#                     plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
-#                     width = 9500, height = 4200, resolution = 1000)
-
-# set.seed(42)
-# d2_noqa <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
-#   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) 
-# m2_noqa <- metamean_wrap(dataframe = d2_noqa, estmeansd_method = "Cai",
-#                          plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
-#                          width = 9500, height = 4200, resolution = 1000)
 
 # admission to outcome... 
 outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) |> arrange(parameter_type,desc(parameter_value)) %>%
@@ -194,8 +189,24 @@ outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) |> arrange(parameter_t
                               'Admission to outcome (days)',"parameter_type",c(0,40),text_size = 22)
 outcome_forest_noqa <- forest_plot(d3 |> arrange(parameter_type,desc(parameter_value))  %>% 
                                      mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
-                                   'Admission to outcome (days)',"parameter_type",c(0,40),text_size = 22)
+                                   'Admission to outcome (days)',"parameter_type",c(0,),text_size = 22)
 ggsave("admission_to_outcome.png", plot = outcome_forest, width = 12, height = 6)
+
+
+# Mosquito delay - EIP
+eip_forest <- forest_plot(m1 |> arrange(population_sample_type,desc(parameter_value)),
+                             'Extrinsic incubation period (days)','parameter_type',c(0,25),text_size = TEXT_SIZE)
+eip_forest_pc <- forest_plot(m1 |> arrange(population_country,desc(parameter_value)),
+                              'Extrinsic incubation period (days)','population_country',c(0,25),text_size = TEXT_SIZE,
+                             custom_colours = c( "#00468B","#ED0000", "#42B540","#0099B4", "#925E9F", "#FDAF91","#DF8F44",
+                                                "#6A6599","#CD534C","#A20056","#1B1919"))
+eip_forest_ploc <- forest_plot(m1 |> arrange(population_country,desc(parameter_value)),
+                             'Extrinsic incubation period (days)','population_location',c(0,25),text_size = TEXT_SIZE,
+                             custom_colours = c( "#00468B","#ED0000", "#42B540","#0099B4", "#925E9F", "#FDAF91","#DF8F44",
+                                                "#6A6599","#CD534C","#A20056","#1B1919"))
+eip <- (eip_forest + eip_forest_pc) / (eip_forest_ploc) + theme(text = element_text(size = TEXT_SIZE)) +
+  plot_annotation(tag_levels = 'A')
+ggsave("extrinsic_incubation_period.png", plot = incp, width = 39, height = 22)
 
 ### Create plots!
 # 
