@@ -72,11 +72,11 @@ parameter_cfr_method,Parameter Data,CFR_IFR_Method,parameters
 parameter_r_method,Parameter Data,Method_R,parameters
 parameter_disaggregated_only,Parameter Data,Method_disaggregated_by,parameters
 parameter_disaggregated,Parameter Data,Method_disaggregated,parameters
-parameter_disaggregated_only,Parameter Data,Method_disaggregated_only,parameters
+parameter_disaggregated_by,Parameter Data,Method_disaggregated_only,parameters
 parameter_rf_outcome,Parameter Data,Riskfactor_outcome,parameters
 parameter_rf_name,Parameter Data,Riskfactor_name,parameters
 parameter_rf_occupation,Parameter Data,Riskfactor_occupation,parameters
-parameter_rf_occupation,Parameter Data,Riskfactor_significant,parameters
+parameter_rf_significant,Parameter Data,Riskfactor_significant,parameters
 parameter_rf_adjusted,Parameter Data,Riskfactor_adjusted,parameters
 parameter_context_sex,Parameter Data,Population_sex,parameters
 parameter_context_setting,Parameter Data,Population_sample_type,parameters
@@ -140,3 +140,9 @@ parameter_context_zika,Parameter Data,,parameters
 parameter_context_urban,Parameter Data,,parameters
 parameter_context_data,Parameter Data,,parameters
 parameter_context_sample_type,Parameter Data,,parameters
+parameter_exponent,Parameter Data,Exponent,parameters
+parameter_notes,Parameter Data,,parameters
+outbreak_notes,Outbreak Data,,outbreaks
+model_notes,Model Information,,models
+qa_notes,Quality Assessment,,articles
+parameter_context_unchanged,Parameter Data,,parameters
