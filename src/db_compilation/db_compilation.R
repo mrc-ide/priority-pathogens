@@ -192,12 +192,13 @@ model_matching <- model_matching %>%
   mutate(covidence_id=as.numeric(covidence_id),
          article_id=as.numeric(article_id),
          access_model_id=as.numeric(access_model_id))
-if (pathogen == "LASSA") {
+
+if (pathogen %in% c("LASSA","OROV")) {
 outbreak_matching <- outbreak_matching %>% select(-c("num_rows", "matching")) %>%
                   mutate(covidence_id=as.numeric(covidence_id),
                          article_id=as.numeric(article_id),
                          access_outbreak_id=as.numeric(access_outbreak_id))
-} else outbreak_matching <-  outbreak_single
+} else {outbreak_matching <-  outbreak_single}
 
 
 # Double extractions - needed to be resolved between extractors
