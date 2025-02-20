@@ -1,6 +1,15 @@
 library(orderly2)
 
-# load data
+# tidy up the junk that is already in there
+
+orderly_cleanup("db_redcap_download")
+orderly_cleanup("db_extraction_prep")
+orderly_cleanup("db_extraction")
+orderly_cleanup("db_double")
+orderly_cleanup("db_compilation")
+
+# workflow
+# sorting the data
 
 # call Redcap API
 orderly_run("db_redcap_download",list(pathogen="OROV"))
