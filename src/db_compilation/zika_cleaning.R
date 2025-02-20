@@ -471,6 +471,7 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Hospital Universitari Vall d’Hebron\r\nBarcelona; Catalonia" ~
           "Hospital Universitari Vall d’Hebron, Barcelona, Catalonia",
         population_location %in% "Guadeloupe,Martinique, French Guiana" ~ "Guadeloupe, Martinique, French Guiana",
+        covidence_id == 5907 & population_location == "Asia & Americas" ~ "Americas and Oceania",
         population_location %in% "Entire country" ~ NA,
         TRUE ~ population_location
       ),
@@ -520,6 +521,7 @@ zika_clean_params <- function(df, pathogen){
       population_country =
         case_when(
           #Specify country in locations defined as "Unspecified"
+          covidence_id == 4438 & population_location == 'Florida' ~ "United States",
           covidence_id == 5971 & population_location == "22 municipalities of French Guiana" ~ "France" , 
           covidence_id == 5951 & population_location ==  "Recife" ~ "Brazil", 
           covidence_id == 10999 & population_location ==  "Adamawa state" ~ "Nigeria", 
@@ -901,6 +903,16 @@ zika_clean_r <- function(params_df){
 
 zika_clean_genomics <- function(df){
   
+  # Add new column for lineage if specified 
+  df <- df %>%
+    mutate(genomic_lineage = case_when(
+      covidence_id == 3152 & parameter_class == 'Mutations' ~ "Asian; AmZIKV lineage",
+      covidence_id %in% c(3154, 5907, 6571) & parameter_class == 'Mutations' ~ "Asian lineage",
+      covidence_id == 6717 & parameter_class == 'Mutations' ~ "Manaus clade",
+      covidence_id == 10526 & parameter_class == 'Mutations' ~ "Asian lineage (Thai strains)",
+      TRUE ~ NA
+     ))
+  
   df <- df %>%
     mutate(
       # Edit name of genome sites 
@@ -943,7 +955,11 @@ zika_clean_genomics <- function(df){
     # Remove empty row 
     filter(!(covidence_id == 4438 & parameter_type == "Mutations - mutation rate" & is.na(parameter_value))) %>%
     # Remove incorrectly extracted row 
-    filter(!(covidence_id == 506 & parameter_type == 'Mutations - mutation rate' & parameter_lower_bound == 0.2))
+    filter(!(covidence_id == 506 & parameter_type == 'Mutations - mutation rate' & parameter_lower_bound == 0.2)) %>%
+    # Remove paper extracted twice
+    filter(!(covidence_id == 1663 & parameter_type == "Mutations â€“ substitution rate" & access_param_id == 5)) %>%
+    # Remove research letter 
+    filter(!(covidence_id == 7033))
   
   # Correct specific genomic entries that had incorrect unit and values in incorrect variables 
   df <- df %>% 
@@ -987,7 +1003,52 @@ zika_clean_genomics <- function(df){
              covidence_id == 2353 & parameter_type == "Human delay - infectious period" ~ "Median",
              TRUE ~ parameter_value_type),
            parameter_uncertainty_type = ifelse(covidence_id == 7717 & parameter_uncertainty_type == 'CI95%', 
-                                               "CRI95%", parameter_uncertainty_type)
+                                               "CRI95%", parameter_uncertainty_type),
+           data_available = case_when(
+             covidence_id == 1663 & is.na(data_available) ~ 'Yes - as an attachment',
+             TRUE ~ data_available
+           )
+    )
+  
+  # Correct sampling dates
+  df <- df %>%
+    mutate(
+      population_study_end_day = case_when(
+        covidence_id == 3152 & parameter_class == 'Mutations' ~ 1,
+        covidence_id == 4438 & parameter_class == 'Mutations' & population_location == "Florida" ~ 11,
+        TRUE ~ population_study_end_day),
+      population_study_end_month = case_when(
+        covidence_id %in% c(3152, 6717) & parameter_class == 'Mutations' ~ "Mar",
+        covidence_id == 4438 & parameter_class == 'Mutations' & population_location == "Florida" ~ "Oct",
+        covidence_id == 4438 & parameter_class == 'Mutations' & population_location != "Florida" ~ "Nov",
+        covidence_id == 3490 & parameter_class == 'Mutations' ~ "Aug",
+        TRUE ~ population_study_end_month
+      ),
+      population_study_end_year = case_when(
+        covidence_id %in% c(3490, 6717) & parameter_class == 'Mutations' ~ 2017,
+        covidence_id == 4438 & parameter_class == 'Mutations' ~ 2016,
+        TRUE ~ population_study_end_year
+      ),
+      population_study_start_year = case_when(
+        covidence_id %in% c(3152, 3490) & parameter_class == "Mutations" ~ 1966,
+        covidence_id == 4438 & parameter_class == 'Mutations' & population_location == "Florida" ~ 2016,
+        covidence_id == 4438 & parameter_class == 'Mutations' & population_location != "Florida" ~ 2015,
+        covidence_id == 6717 & parameter_class == 'Mutations' ~ 2015,
+        covidence_id == 12777 & parameter_class == 'Mutations' ~ 1947,
+        TRUE ~ population_study_start_year
+      ),
+      population_study_start_month = case_when(
+        covidence_id == 4438 & parameter_class == 'Mutations' & population_location == "Florida" ~ 'Jun',
+        covidence_id == 6717 & parameter_class == 'Mutations' ~ 'Dec',
+        TRUE ~ population_study_start_month
+      ),
+      population_study_start_day = case_when(
+        covidence_id == 6717 & parameter_class == 'Mutations' ~ 15,
+        TRUE ~ population_study_start_day
+      )
+      
+      
+    
     )
   
   
