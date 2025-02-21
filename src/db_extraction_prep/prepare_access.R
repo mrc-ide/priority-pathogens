@@ -27,7 +27,8 @@ orderly_parameters(pathogen = NULL)
 ## When running as an orderly task leave line 13 as it is
 orderly_resource(file.path("access_task", "pathogen_cleaning.R"))
 orderly_shared_resource("utils.R" = "utils.R")
-
+orderly_shared_resource("validation.R" = "validation.R")
+source("validation.R")
 source("utils.R")
 source(file.path("access_task", "pathogen_cleaning.R"))
 ## First get the pathogen-specific nested list from the function

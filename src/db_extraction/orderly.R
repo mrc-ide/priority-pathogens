@@ -19,8 +19,7 @@ orderly_dependency("db_extraction_prep",
                    "extracted_tables.rds"
 )
 
-orderly_resource("validation.R")
-
+orderly_shared_resource("validation.R" = "validation.R")
 source("validation.R")
 
 extracted_tables_list <- readRDS("extracted_tables.rds")
