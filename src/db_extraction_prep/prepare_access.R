@@ -29,7 +29,7 @@ orderly_resource(file.path("access_task", "pathogen_cleaning.R"))
 orderly_shared_resource("utils.R" = "utils.R")
 
 source("utils.R")
-source("pathogen_cleaning.R")
+source(file.path("access_task", "pathogen_cleaning.R"))
 ## First get the pathogen-specific nested list from the function
 ## database_files and then plonk them into the function
 ## sharedfile_path one by one. Careful as there may be one or more
