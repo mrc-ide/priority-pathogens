@@ -1,8 +1,9 @@
 library(cli)
+library(orderly2)
 library(readr)
 library(uuid)
 library(yaml)
-library(orderly2)
+
 
 # *============================= Helper functions =============================*
 # *----------------------------- Filter functions -----------------------------*
@@ -528,7 +529,7 @@ if (orderly_download_depencency==TRUE){
     "db_redcap_download", "latest(parameter:pathogen == this:pathogen)",
     unname(table_filenames_vec)
   )
-}else{
+} else{
   table_filenames_vec <- sapply(config_list[["table_filepaths"]], basename)
   table_filepath_list <- setNames(config_list[["table_filepaths"]],
                                   table_filenames_vec)
