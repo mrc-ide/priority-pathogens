@@ -1,7 +1,7 @@
 library(cli)
+library(ids)
 library(orderly2)
 library(readr)
-library(uuid)
 library(yaml)
 
 
@@ -119,7 +119,7 @@ get_incomplete_rows <- function(df, col, name, redcap_repeat_instances,
 # *------------------------------ Key functions -------------------------------*
 add_uuid_id <- function(input_df, uuid_col){
   if (NROW(input_df) > 0) {
-    input_df[uuid_col] <- replicate(NROW(input_df), UUIDgenerate())
+    input_df[uuid_col] <- random_id(n = NROW(input_df), use_openssl = FALSE)
   } else {
     input_df[uuid_col] <- character(0)
   }
