@@ -13,8 +13,10 @@ orderly_resource(config_filepath)
 
 # *---------------------------- REDCap Parameters -----------------------------*
 config_list <- yaml.load_file(config_filepath)
+report_id_list <- config_list[["report_ids"]]
+toked_name <- config_list[["api_token_env_var"]]
 
-token <- Sys.getenv("REDCAP_TOKEN")
+token <- Sys.getenv(toked_name)
 
 endpoint_url <- "https://redcap.imperial.ac.uk/api/"
 
@@ -32,16 +34,16 @@ create_record_list <- function(token, record_id){
 }
 
 # *--------------------------- Downloading the data ---------------------------*
-for (report_id in names(config_list)){
+for (report_id in names(report_id_list)){
   post_body_list <- create_record_list(token, report_id)
 
   response <- POST(endpoint_url, body = post_body_list, encode = "form")
   result_df <- content(response)
 
-  write.csv(result_df, file=config_list[[report_id]], row.names=FALSE)
+  write.csv(result_df, file=report_id_list[[report_id]], row.names=FALSE)
 }
 
 orderly_artefact(description="csv files downloaded from redcap reports",
-                 unlist(config_list))
+                 unlist(report_id_list))
 # *============================================================================*
 
