@@ -3,9 +3,9 @@
 "tables_to_stack": ["parameters", "models", "outbreaks"]
 "target_filepath": "redcap_data/table_target.csv"
 "mapping_filepath": "redcap_data/nipah/mapping_table.csv"
-orderly_download_depencency: false
+orderly_download_depencency: true
 "table_filepaths":
-    "all_data": "redcap_data/nipah/raw_data/nipah_raw_data.csv"
+    "all_data": "nipah_raw_data.csv"
 "linked_row_col_names":
     "models": "model_linked"
     "outbreaks": "outbreak_linked"
