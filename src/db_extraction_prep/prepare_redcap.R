@@ -210,6 +210,63 @@ stack_rows <- function(df, id_col = "record_id"){
   return(combined_df)
 }
 
+get_overflow_mapping_table <- function(df,
+                                       id_col,
+                                       cov_id_col,
+                                       continuation_col,
+                                       extractor_col,
+                                       incomplete_col,
+                                       incomplete_key="Incomplete"){
+  non_na_df <- df[!is.na(df[[extractor_col]]) & !is.na(df[[cov_id_col]]), ]
+  continuations_df <- non_na_df[!is.na(non_na_df[[continuation_col]]),
+                                c(cov_id_col, extractor_col)]
+
+  id_mapping_list <- list()
+
+  for (i in 1:nrow(continuations_df)){
+    extractor <- continuations_df[[extractor_col]][i]
+    cov_id <- continuations_df[[cov_id_col]][i]
+    extractor_filter <- non_na_df[[extractor_col]]==extractor
+    cov_id_filter <- non_na_df[[cov_id_col]]==cov_id
+
+    temp_df <- non_na_df[cov_id_filter & extractor_filter, ]
+
+    if (NROW(temp_df) == 1){
+      cli_alert_warning(
+        paste(extractor, "has indicated that", cov_id,
+              "is a continuation, but it only has 1 REDCap entry")
+      )
+      next
+    }
+
+    # We map to the latest complete row
+    id_vec <- temp_df[[id_col]]
+    id_to_map_to <- max(id_vec[!(temp_df[[incomplete_col]]==incomplete_key)])
+
+    id_update_vec <- id_vec[id_vec!=id_to_map_to]
+    id_mapping_list[[as.character(id_to_map_to)]] <- id_update_vec
+
+    cli_alert_info(
+      paste0(extractor, " has indicated that Covidence ID:", cov_id,
+            " is a continuation. There are ", NROW(temp_df), " REDCap entries with this ID.\n",
+            "The following ", id_col, " will be mapped to ", id_to_map_to, ": ",
+            paste(id_update_vec, collapse=","))
+    )
+
+  }
+
+  return (id_mapping_list)
+}
+
+update_records <- function(df, id_mapping_list, id_col){
+  id_vec <- df[[id_col]]
+
+  for(name in names(id_mapping_list)){
+    df[id_vec %in% id_mapping_list[[name]], id_col] <- as.numeric(name)
+  }
+
+  return (df)
+}
 # *----------------------- Target generation functions ------------------------*
 generate_target_table <- function(input_df_list, mapping_df, target_table,
                                   input_table_col_name="input_table",
@@ -556,6 +613,13 @@ pathogen_filter_name <- config_list[["pathogen_filter_name"]]
 table_instrument_source_list <- config_list[["instrument_source_table"]]
 tables_to_stack <- config_list[["tables_to_stack"]]
 
+continuation_table <- config_list[["continuation_config"]][["continuation_table"]]
+id_col <- config_list[["continuation_config"]][["id_col"]]
+cov_id_col <- config_list[["continuation_config"]][["cov_id_col"]]
+continuation_col <- config_list[["continuation_config"]][["continuation_col"]]
+extractor_col <- config_list[["continuation_config"]][["extractor_col"]]
+incomplete_col  <- config_list[["continuation_config"]][["incomplete_col"]]
+
 # Assumes if there are not tables to stack then data is in a REDCap repeat
 # instance format
 redcap_repeat_instances <- is.null(tables_to_stack)
@@ -593,6 +657,30 @@ if (!is.null(tables_to_stack)){
     distinct_input_tables,
     function(table_name) subset_long_df(df_raw_list[[1]], mapping_df, table_name)
     ), distinct_input_tables)
+
+  id_mapping_list <- get_overflow_mapping_table(
+    df=df_raw_list[[continuation_table]],
+    id_col=id_col,
+    cov_id_col=cov_id_col,
+    continuation_col=continuation_col,
+    extractor_col=extractor_col,
+    incomplete_col=incomplete_col,
+    incomplete_key="Incomplete")
+
+  if(NROW(id_mapping_list)>0){
+    ids_to_keep_filter <- !(
+      df_raw_list[[continuation_table]][[id_col]] %in%
+          unlist(id_mapping_list)
+      )
+
+    df_raw_list[[continuation_table]] <- (
+      df_raw_list[[continuation_table]][ids_to_keep_filter,])
+    df_raw_list[tables_to_stack] <- lapply(
+      df_raw_list[tables_to_stack],
+      function(df) update_records(df=df,
+                                  id_mapping_lis=id_mapping_list,
+                                  id_col=id_col))
+  }
 
   df_raw_list[tables_to_stack] <- lapply(df_raw_list[tables_to_stack], stack_rows)
 

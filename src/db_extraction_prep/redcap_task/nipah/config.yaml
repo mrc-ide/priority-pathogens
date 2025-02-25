@@ -1,6 +1,13 @@
 ---
 "pathogen_filter_name": "Nipah virus"
 "tables_to_stack": ["parameters", "models", "outbreaks"]
+"continuation_config":
+    "continuation_table": "articles"
+    "id_col": "record_id"
+    "cov_id_col": "article_covidenceid"
+    "continuation_col": "article_continuation"
+    "extractor_col": "extractor_name"
+    "incomplete_col": "pathogen_epidemiology_review_complete"
 "target_filepath": "redcap_data/table_target.csv"
 "mapping_filepath": "redcap_data/nipah/mapping_table.csv"
 orderly_download_depencency: true
