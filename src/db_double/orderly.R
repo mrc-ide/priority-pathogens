@@ -44,6 +44,20 @@ if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')) {
 
 source("sorting.R")
 
+qa_exlcude_cols <- c("Name_data_entry", "ID")
+param_exclude_cols <- c("Name_data_entry",
+                        "ID",
+                        "Parameter_data_ID",
+                        "Article_ID")
+outbreak_exclude_cols <- c("Name_data_entry",
+                           "ID",
+                           "Outbreak_ID",
+                           "Article_ID")
+model_exclude_cols <- c("Name_data_entry",
+                        "ID",
+                        "Model_data_ID",
+                        "Article_ID")
+
 # Quality assessment
 qa_only <- articles %>% select(
   Covidence_ID, ID,
@@ -52,63 +66,45 @@ qa_only <- articles %>% select(
 
 qa_match <- filter_qa(qa_only,
   matching = TRUE,
-  id_name1 = "Name_data_entry", id_name2 = "ID"
-)
+  exlcude_cols = qa_exlcude_cols)
 
 qa_discordant <- filter_qa(qa_only,
   matching = FALSE,
-  id_name1 = "Name_data_entry", id_name2 = "ID"
+  exlcude_cols = qa_exlcude_cols
 )
 
 # Parameters
+# parameters <- replace("No")
 param_match <- filter_extracted(parameters,
   matching = TRUE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Parameter_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols=param_exclude_cols
 )
 
 param_discordant <- filter_extracted(parameters,
   matching = FALSE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Parameter_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols=param_exclude_cols
 )
 
 # Models
 model_match <- filter_extracted(models,
   matching = TRUE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Model_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols=model_exclude_cols
 )
 
 model_discordant <- filter_extracted(models,
   matching = FALSE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Model_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols=model_exclude_cols
 )
 
 if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
   outbreak_match <- filter_extracted(outbreaks,
                                   matching = TRUE,
-                                  id_name1 = "Name_data_entry",
-                                  id_name2 = "ID",
-                                  id_name3 = "Outbreak_ID",
-                                  id_name4 = "Article_ID"
+                                  exlcude_cols=outbreak_exclude_cols
   )
   
   outbreak_discordant <- filter_extracted(outbreaks,
                                        matching = FALSE,
-                                       id_name1 = "Name_data_entry",
-                                       id_name2 = "ID",
-                                       id_name3 = "Outbreak_ID",
-                                       id_name4 = "Article_ID"
+                                       exlcude_cols=outbreak_exclude_cols
   )
 }
 
