@@ -4,10 +4,10 @@
 library(dplyr)
 
 filter_qa <- function(df, matching = FALSE,
-                      id_name1 = "NA", id_name2 = "NA") {
+                      exlcude_cols = "NA") {
   df <- df %>%
     group_by(Covidence_ID) %>%
-    group_by(across(-c(all_of(id_name1), all_of(id_name2)))) %>%
+    group_by(across(-c(all_of(exlcude_cols)))) %>%
     mutate(num_rows = sum(n())) %>%
     ungroup() %>%
     mutate(matching = ifelse(num_rows == 2, 1, 0))
@@ -25,16 +25,14 @@ filter_qa <- function(df, matching = FALSE,
 }
 
 filter_extracted <- function(df, matching = FALSE,
-                             id_name1 = "NA", id_name2 = "NA",
-                             id_name3 = "NA", id_name4 = "NA") {
+                             exlcude_cols = "NA") {
   #' input: data frame
   #' process: matching determines whether it'll give matches (w/0 duplicates) 
   #' or disconcordant dfs
   #' output: desired data frame based on the parameters
   df <- df %>%
     group_by(Covidence_ID) %>%
-    group_by(across(-c(all_of(id_name1), all_of(id_name2),
-                              all_of(id_name3), all_of(id_name4)))) %>%
+    group_by(across(-c(all_of(exlcude_cols)))) %>%
     mutate(num_rows = sum(n())) %>%
     ungroup() %>%
     mutate(matching = ifelse(num_rows == 2, 1, 0))
