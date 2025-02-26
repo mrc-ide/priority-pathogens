@@ -883,7 +883,15 @@ zika_clean_delays <- function(params_df){
              )
            )
   
-  # Remove delays that aren't estimated 
+  # Add in sample sizes 
+  df <- df %>%
+    mutate(population_sample_size = case_when(
+      covidence_id == 588 & parameter_type == "Human delay - incubation period" & population_country == 'El Salvador' ~ 11825,
+      covidence_id == 588 & parameter_type == "Human delay - incubation period" & population_country == 'Suriname' ~ 3042,
+      TRUE ~ population_sample_size
+    ))
+  
+  # Remove delays that aren't estimated (fixed in model and incorrectly extracted)
   df <- df %>%
     filter(!(covidence_id == 6765 & parameter_type == 'Human delay - incubation period' & population_location %in% c("Sous-le-vent Islands", "Marquesas Islands", "Yap")),
            !(covidence_id == 6765 & parameter_type == 'Human delay - infectious period' & population_location %in% c('Tahiti', 'Tuamotu-Gambier','Australes','Yap')))
