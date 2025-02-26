@@ -45,18 +45,44 @@ if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')) {
 source("sorting.R")
 
 qa_exlcude_cols <- c("Name_data_entry", "ID")
+qa_notes_col <- NULL
+qa_id_col <- NULL
+
 param_exclude_cols <- c("Name_data_entry",
                         "ID",
                         "Parameter_data_ID",
                         "Article_ID")
+param_notes_col <- NULL
+param_id_col <- NULL
+
 outbreak_exclude_cols <- c("Name_data_entry",
                            "ID",
                            "Outbreak_ID",
                            "Article_ID")
+outbreak_notes_col <- NULL
+outbreak_id_col <- NULL
+
 model_exclude_cols <- c("Name_data_entry",
                         "ID",
                         "Model_data_ID",
                         "Article_ID")
+
+model_notes_col <- NULL
+model_id_col <- NULL
+
+if (pathogen %in% c("NIPAH")){
+  outbreak_exclude_cols <- c(outbreak_exclude_cols, "Outbreak_data_ID")
+
+  qa_notes_col <- "qa_notes"
+  qa_id_col <- "ID"
+  param_notes_col <- "parameter_notes"
+  param_id_col <- "Parameter_data_ID"
+  outbreak_notes_col <- "outbreak_notes"
+  outbreak_id_col <- "Outbreak_data_ID"
+  model_notes_col <- "model_notes"
+  model_id_col <- "Model_data_ID"
+}
+
 
 # Quality assessment
 qa_only <- articles %>% select(
@@ -64,47 +90,55 @@ qa_only <- articles %>% select(
   Name_data_entry, starts_with("QA")
 )
 
-qa_match <- filter_qa(qa_only,
+qa_match <- filter_table(qa_only,
   matching = TRUE,
   exlcude_cols = qa_exlcude_cols)
 
-qa_discordant <- filter_qa(qa_only,
+qa_discordant <- filter_table(qa_only,
   matching = FALSE,
-  exlcude_cols = qa_exlcude_cols
+  exlcude_cols = qa_exlcude_cols,
+  notes_col = qa_notes_col,
+  id_col = qa_id_col
 )
 
 # Parameters
 # parameters <- replace("No")
-param_match <- filter_extracted(parameters,
+param_match <- filter_table(parameters,
   matching = TRUE,
-  exlcude_cols=param_exclude_cols
+  exlcude_cols = param_exclude_cols
 )
 
-param_discordant <- filter_extracted(parameters,
+param_discordant <- filter_table(parameters,
   matching = FALSE,
-  exlcude_cols=param_exclude_cols
+  exlcude_cols = param_exclude_cols,
+  notes_col = param_notes_col,
+  id_col = param_id_col
 )
 
 # Models
-model_match <- filter_extracted(models,
+model_match <- filter_table(models,
   matching = TRUE,
   exlcude_cols=model_exclude_cols
 )
 
-model_discordant <- filter_extracted(models,
+model_discordant <- filter_table(models,
   matching = FALSE,
-  exlcude_cols=model_exclude_cols
+  exlcude_cols=model_exclude_cols,
+  notes_col = model_notes_col,
+  id_col = model_id_col
 )
 
 if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
-  outbreak_match <- filter_extracted(outbreaks,
+  outbreak_match <- filter_table(outbreaks,
                                   matching = TRUE,
                                   exlcude_cols=outbreak_exclude_cols
   )
-  
-  outbreak_discordant <- filter_extracted(outbreaks,
-                                       matching = FALSE,
-                                       exlcude_cols=outbreak_exclude_cols
+
+  outbreak_discordant <- filter_table(outbreaks,
+                                      matching = FALSE,
+                                      exlcude_cols=outbreak_exclude_cols,
+                                      notes_col = outbreak_notes_col,
+                                      id_col = outbreak_id_col
   )
 }
 
