@@ -19,7 +19,7 @@ library(orderly2)
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen)",
+orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
@@ -44,7 +44,7 @@ parameters <- read_csv("parameters.csv")
 dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
 
 articles   <- dfs$articles
-articles   <- epireview::assign_qa_score(articles = articles)$articles
+# articles   <- epireview::assign_qa_score(articles = articles)$articles
 qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
 
 models     <- dfs$models
@@ -107,19 +107,19 @@ ip <- (ip_forest_mmv + ip_forest_pc) / (ip_forest_pg + ip_forest_pst ) +
 ggsave("infectious_period.png", plot =ip, width = 39, height = 22)
 
 # most papers don't have a sample size which is why these don't work (should double check the ns)
-# set.seed(42)
-# d6 <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
-#   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
-#   filter(qa_score>0.5) %>%
-#   mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
-#          population_group    = replace_na(population_group,'Unspecified'),
-#          population_sample_type = replace_na(population_sample_type,'Unspecified'),
-#          parameter_type = 'Human delay - infectious period')
-# 
-# meta6 <- metamean_wrap(dataframe = d6, estmeansd_method = "Cai",
-#                        plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", 
-#                        label = "Mean infectious period (days)",
-#                        width = 9500, height = 4200, resolution = 1000)
+set.seed(42)
+d6 <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+  filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
+  filter(qa_score>0.5) %>%
+  mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
+         population_group    = replace_na(population_group,'Unspecified'),
+         population_sample_type = replace_na(population_sample_type,'Unspecified'),
+         parameter_type = 'Human delay - infectious period')
+
+meta6 <- metamean_wrap(dataframe = d6, estmeansd_method = "Cai",
+                       plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3",
+                       label = "Mean infectious period (days)",
+                       width = 9500, height = 4200, resolution = 1000)
 
 # set.seed(42)
 # d6_noqa <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%

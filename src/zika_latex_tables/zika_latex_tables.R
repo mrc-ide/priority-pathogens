@@ -9,7 +9,7 @@ library(readr)
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen)",
+orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
 # orderly_shared_resource("zika_functions.R" = "zika_functions.R")
 # source("zika_functions.R")
@@ -263,7 +263,7 @@ write.table(trns_params, file = "latex_transmission.csv", sep = ",",
 
 #parameters - human delays ----
 hdel_params <- parameters %>%
-  filter(grepl("Human delay", parameter_type, ignore.case = TRUE)) %>%
+  filter(grepl("delay", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_type, other_delay_start, other_delay_end,
          parameter_value, parameter_value_type, unc_type,
          method_disaggregated_by, 
@@ -339,7 +339,7 @@ sero_params$parameter_type <- sub("^.* - ", "", sero_params$parameter_type)
 sero_params$population_country <- gsub(";", "\\, ", sero_params$population_country)
 sero_params$population_country[sero_params$population_country==""] <- "Unspecified" 
 sero_params <- sero_params %>% arrange(tolower(population_country), parameter_type, as.numeric(central))
-sero_params <- sero_params %>% select(-central)
+sero_params <- sero_params %>% select(-central, -covidence_id)
 sero_params <- insert_blank_rows(sero_params,"population_country")
 write.table(sero_params, file = "latex_seroprevalence.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
