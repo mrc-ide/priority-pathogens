@@ -36,7 +36,7 @@ library(readr)
 articles <- read_csv("double_extraction_articles.csv")
 parameters <- read_csv("double_extraction_params.csv")
 models <- read_csv("double_extraction_models.csv")
-if (pathogen %in% c('LASSA', 'OROV')) {
+if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')) {
   outbreaks <- read_csv("double_extraction_outbreaks.csv")
 } else {
   outbreaks <- NULL
@@ -94,7 +94,7 @@ model_discordant <- filter_extracted(models,
   id_name4 = "Article_ID"
 )
 
-if (pathogen %in% c('LASSA', 'OROV')){
+if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
   outbreak_match <- filter_extracted(outbreaks,
                                   matching = TRUE,
                                   id_name1 = "Name_data_entry",
@@ -136,7 +136,7 @@ if (pathogen %in% c('EBOLA','SARS')) {
   file.create("outbreaks_fixing.csv")
 }
 
-if (pathogen %in% c('LASSA', 'OROV')){
+if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
   write_csv(outbreak_match, "outbreaks_matching.csv")
   write_csv(outbreak_discordant, "outbreaks_fixing.csv")
 }
