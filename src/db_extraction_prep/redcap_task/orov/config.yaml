@@ -1,0 +1,46 @@
+---
+"pathogen_filter_name": "Oropouche"
+"target_filepath": "redcap_data/table_target.csv"
+"mapping_filepath": "redcap_data/orov/mapping_table.csv"
+orderly_download_depencency: true
+"table_filepaths":
+    "articles": "articles.csv"
+    "extractors": "extractors.csv"
+    "qas": "qas.csv"
+    "parameters": "parameters.csv"
+    "models": "models.csv"
+    "outbreaks": "outbreaks.csv"
+"instrument_source_table":
+    "Article Data": "articles"
+    "Record Id": "extractors"
+    "Quality Assessment": "qas"
+    "Parameter Data": "parameters"
+    "Outbreak Data": "outbreaks"
+    "Model Information": "models"
+"incomplete_col_names":
+    "articles": "article_data_complete"
+    "qas": "quality_assessment_complete"
+    "models": "model_information_complete"
+    "parameters": "parameter_data_complete"
+    "outbreaks": "outbreak_data_complete"
+"linked_row_col_names":
+    "models": "model_linked"
+    "outbreaks": "outbreak_linked"
+    "parameters": "parameter_linked"
+"target_table_names": ["articles", "models", "outbreaks", "parameters"]
+"data_table_names": ["models", "outbreaks", "parameters"]
+"pk_col_names":
+    "outbreaks": ["access_outbreak_id", "Outbreak_ID"]
+    "models": "access_model_id"
+    "parameters": "access_param_id"
+date_cols_to_split:
+    "outbreaks": ["Outbreak_start", "Outbreak_end"]
+    "parameters": ["Population_study_start", "Population_study_end"]
+"uuid_col_names":
+    "articles": "ID"
+    "outbreaks": "Outbreak_data_ID"
+    "parameters": "Parameter_data_ID"
+    "models": "Model_data_ID"
+article_cols_to_add_end: ["Pathogen", "ID"]
+article_cols_to_add_start: [ "Covidence_ID", "Name_data_entry"]
+---

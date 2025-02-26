@@ -1,0 +1,8 @@
+report_ids:
+    996: "parameters.csv"
+    997: "articles.csv"
+    998: "qas.csv"
+    999: "extractors.csv"
+    1004: "models.csv"
+    1007: "outbreaks.csv"
+"api_token_env_var": "PERG_284_REDCAP_TOKEN"
