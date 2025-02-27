@@ -116,10 +116,10 @@ d6 <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arr
          population_sample_type = replace_na(population_sample_type,'Unspecified'),
          parameter_type = 'Human delay - infectious period')
 
-meta6 <- metamean_wrap(dataframe = d6, estmeansd_method = "Cai",
-                       plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3",
-                       label = "Mean infectious period (days)",
-                       width = 9500, height = 4200, resolution = 1000)
+# meta6 <- metamean_wrap(dataframe = d6, estmeansd_method = "Cai",
+#                        plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3",
+#                        label = "Mean infectious period (days)",
+#                        width = 9500, height = 4200, resolution = 1000)
 
 # set.seed(42)
 # d6_noqa <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
@@ -189,7 +189,7 @@ outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) |> arrange(parameter_t
                               'Admission to outcome (days)',"parameter_type",c(0,40),text_size = 22)
 outcome_forest_noqa <- forest_plot(d3 |> arrange(parameter_type,desc(parameter_value))  %>% 
                                      mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
-                                   'Admission to outcome (days)',"parameter_type",c(0,),text_size = 22)
+                                   'Admission to outcome (days)',"parameter_type",c(0,40),text_size = 22)
 ggsave("admission_to_outcome.png", plot = outcome_forest, width = 12, height = 6)
 
 
@@ -206,7 +206,7 @@ eip_forest_ploc <- forest_plot(m1 |> arrange(population_country,desc(parameter_v
                                                 "#6A6599","#CD534C","#A20056","#1B1919"))
 eip <- (eip_forest + eip_forest_pc) / (eip_forest_ploc) + theme(text = element_text(size = TEXT_SIZE)) +
   plot_annotation(tag_levels = 'A')
-ggsave("extrinsic_incubation_period.png", plot = incp, width = 39, height = 22)
+ggsave("extrinsic_incubation_period.png", plot = eip, width = 39, height = 22)
 
 ### Create plots!
 # 
