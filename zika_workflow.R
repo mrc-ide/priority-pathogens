@@ -81,9 +81,6 @@ orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
 ## ANALYSIS ##
 ##############
 
-# map figure
-# orderly_run("sars_world_map", parameters = list(pathogen = "SARS"))
-# 
 # Delay figures
 orderly_run("zika_delays", parameters = list(pathogen = "ZIKA"))
 

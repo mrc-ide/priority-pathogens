@@ -13,7 +13,7 @@ library(readxl)
 ## use capital case; see code below where this pathogen
 ################### README ###################
 ## IMPORTANT WHEN RUNNING INTERACTIVELY, FIRST COMMENT OUT THIS LINE:
- orderly_parameters(pathogen = NULL)
+orderly_parameters(pathogen = NULL)
 ## orderly will scan orderly.R in the interactive mode, so that
 ## even if the above line is not run, you WILL get an error
 ## It is therefore important that the line is commented out *BEFORE*
@@ -70,7 +70,7 @@ all_conns <- map(
     con <- dbConnect(
       drv = odbc(), .connection_string =
         paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=[", infile, "];"))
-
+    
     if (is.null(con)) {
       message("Error in reading ", infile)
       return()
@@ -84,11 +84,11 @@ all_articles <- map(
     res <- dbSendQuery(con, "SELECT * FROM [Article data - Table]")
     articles <- dbFetch(res)
     narticles <- nrow(articles)
-
+    
     if (narticles == 0) {
       return()
     }
-
+    
     ## If Covidence IDs are missing/typos, they should be added in here before joining
     articles <- fix_cov_ids(articles)
     
@@ -99,7 +99,7 @@ all_articles <- map(
     articles$Covidence_ID_text <- articles$Covidence_ID
     articles$Covidence_ID <- gsub(" ", "", articles$Covidence_ID)
     articles$Covidence_ID <- as.integer(articles$Covidence_ID)
-
+    
     articles$ID <- random_id(
       n = narticles, use_openssl = FALSE
     )
