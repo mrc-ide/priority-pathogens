@@ -2,7 +2,7 @@
 # based on SARS workflow
 
 # install.packages("orderly2", repos = c("https://mrc-ide.r-universe.dev", "https://cloud.r-project.org"))
-#remotes::install_github("mrc-ide/orderly.sharedfile")
+# remotes::install_github("mrc-ide/orderly.sharedfile")
 #orderly2::orderly_init(".")
 library(orderly2)
 library(optparse)
@@ -57,8 +57,8 @@ orderly_run("db_extraction", parameters = list(pathogen = "ZIKA"))
 orderly_run("db_double", parameters = list(pathogen = "ZIKA"))
 
 # Bring single, matching double, and fixed double together
-# orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
-orderly_run("db_compilation", parameters = list(pathogen = "ZIKA"))
+orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
+# orderly_run("db_compilation", parameters = list(pathogen = "ZIKA"))
 
 ## The above tasks use the Access databases that have not been uploaded as part 
 ## of the repository. 
@@ -84,12 +84,15 @@ orderly_run("db_compilation", parameters = list(pathogen = "ZIKA"))
 # map figure
 # orderly_run("sars_world_map", parameters = list(pathogen = "SARS"))
 # 
-# # Delay figures
-# orderly_run("sars_delays", parameters = list(pathogen = "SARS"))
-# 
-# # Transmission figures
-# orderly_run("sars_transmission", parameters = list(pathogen = "SARS"))
-# 
+# Delay figures
+orderly_run("zika_delays", parameters = list(pathogen = "ZIKA"))
+
+# Risk factors 
+orderly_run("zika_risk_factors", parameters = list(pathogen = 'ZIKA'))
+
+# Reproduction numbers
+orderly_run("zika_reproduction_numbers", parameters = list(pathogen = "ZIKA"))
+ 
 # # Summary figures
 # orderly_run("sars_summary", parameters = list(pathogen = "SARS"))
 # 

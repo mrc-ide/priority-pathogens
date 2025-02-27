@@ -15,7 +15,9 @@ fix_cov_ids <- function(df, pathogen){
         covidence_id == 6238 ~ 6246, 
         TRUE ~ covidence_id)
     ) %>%
-    filter(covidence_id != 3491) # this is a Research Letter
+    filter(covidence_id != 3491) %>% # this is a Research Letter
+    # Remove research letter 
+    filter(!(covidence_id == 7033))
   
   
   return(df)
@@ -964,10 +966,8 @@ zika_clean_genomics <- function(df){
     filter(!(covidence_id == 4438 & parameter_type == "Mutations - mutation rate" & is.na(parameter_value))) %>%
     # Remove incorrectly extracted row 
     filter(!(covidence_id == 506 & parameter_type == 'Mutations - mutation rate' & parameter_lower_bound == 0.2)) %>%
-    # Remove paper extracted twice
-    filter(!(covidence_id == 1663 & parameter_type == "Mutations â€“ substitution rate" & access_param_id == 5)) %>%
-    # Remove research letter 
-    filter(!(covidence_id == 7033))
+    # Remove paper extracted twice (both Tristan and Sangeeta extracted the same parameter it seems)
+    filter(!(covidence_id == 1663 & parameter_type == "Mutations â€“ substitution rate" & access_param_id == 5)) 
   
   # Correct specific genomic entries that had incorrect unit and values in incorrect variables 
   df <- df %>% 
@@ -1061,6 +1061,7 @@ zika_clean_genomics <- function(df){
   
   
 }
+
 
 zika_clean_serop <- function(params_df){
   
