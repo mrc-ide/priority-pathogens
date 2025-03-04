@@ -20,7 +20,9 @@ orderly_artefact(description = "zika-specific tables", files = c("latex_outbreak
                                            "latex_models.csv",
                                            "latex_transmission.csv","latex_delays.csv",
                                            "latex_severity.csv","latex_seroprevalence.csv",
-                                           "latex_riskfactors.csv"))
+                                           "latex_riskfactors.csv",
+                                           "latex_miscarriage_zcs.csv",
+                                           'latex_relative_contribution.csv'))
 
 ###################
 ## DATA CURATION ##
@@ -128,6 +130,7 @@ write.table(mods, file = "latex_models.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #parameters ----
+# Prep par data for tables ----
 parameters <- mutate_at(parameters, 
                         vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
@@ -143,15 +146,17 @@ parameters <- mutate_at(parameters,
 ##
 parameters <- parameters %>%
   mutate(parameter_value=
-           ifelse(parameter_value!="NA", 
+           ifelse(parameter_value!="NA" & parameter_value != ' NA', 
                   parameter_value,
-                  ifelse(parameter_lower_bound!="NA" & parameter_upper_bound!="NA",
+                  ifelse((parameter_lower_bound!="NA" & parameter_value != ' NA') & 
+                           parameter_upper_bound!="NA",
                          paste(parameter_lower_bound, parameter_upper_bound, sep = " - "), "")))
 #
 parameters$parameter_unit <- gsub("Substitutions/site/year", "s/s/y", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("No units", "", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Per", "per", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Percentage \\(%\\)", "\\\\%", parameters$parameter_unit)
+parameters$parameter_unit <- gsub("percentage \\(%\\)", "\\\\%", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Days", "days", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Weeks", "weeks", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("per 100;000 population", "per 100k", parameters$parameter_unit)
@@ -169,7 +174,7 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
   TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")))
 # new bit
 parameters <- parameters %>% mutate(parameter_value = case_when(
-  (parameter_class %in% c("Severity","Seroprevalence") | parameter_unit == "") ~ parameter_value,
+  ( parameter_unit == "") ~ parameter_value,#parameter_class %in% c("Severity","Seroprevalence") |
   TRUE ~ paste(parameter_value, parameter_unit, sep = " ")))
 parameters <- parameters %>%
   mutate(unc_type=
@@ -183,7 +188,7 @@ parameters$unc_type <- gsub("Inter Quartile Range \\(IQR\\)", "IQR", parameters$
 parameters$unc_type <- gsub("Standard Error", "SE", parameters$unc_type)
 parameters$unc_type <- gsub("Gamma Standard deviation", "Gamma SD", parameters$unc_type)
 parameters$unc_type <- gsub("Standard Deviation", "SD", parameters$unc_type)
-parameters$unc_type <- gsub("Highest Posterior Density Interval 95%", "CrI95%", parameters$unc_type)
+parameters$unc_type <- gsub("Highest Posterior Density Interval 95%", "HPDI95%", parameters$unc_type)
 parameters$unc_type <- gsub("CRI95%", "CrI95%", parameters$unc_type)
 parameters$unc_type <- gsub("%", "\\\\%", parameters$unc_type)
 #
@@ -234,6 +239,7 @@ parameters <- parameters %>% mutate_all(~ ifelse(is.na(.), "", .))
 parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
                                     population_country = gsub(", ", ";", population_country))
 
+
 #parameters - transmission ----
 trns_params <- parameters %>%
   filter(grepl("Mutations|Attack|Relative contribution|Growth rate|Reproduction", parameter_type, ignore.case = TRUE)) %>%
@@ -249,6 +255,8 @@ trns_params$parameter_type  <- gsub("Mutations – ", "", trns_params$parameter_
 trns_params$parameter_type  <- gsub("Mutations - ", "", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Mutations â€“ ", "", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Attack rate (inverse parameter)", "Attack rate", trns_params$parameter_type)
+trns_params$parameter_type <- gsub("Reproduction number \\(Basic R0\\)", "Reproduction Number", trns_params$parameter_type)
+trns_params$parameter_type <- gsub("Reproduction number \\(Effective; Re\\)", "Effective Reproduction Number", trns_params$parameter_type)
 # trns_params$parameter_type  <- gsub("\\(.*?\\)", "", trns_params$parameter_type)
 trns_params$parameter_type  <- str_to_title(trns_params$parameter_type)
 # trns_params$parameter_type <- factor(trns_params$parameter_type, 
@@ -281,6 +289,7 @@ hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgm\\b"
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgg\\b", "IgG")
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bPcr\\b", "PCR")
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bZikv\\b", "ZIKV")
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bEip\\b", "EIP")
 hdel_params <- hdel_params %>% mutate(parameter_type = case_when(
   (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Symptom Resolution") ~ "Symptomatic Period",   
   (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Specimen Collection") ~ "Onset - Testing",   
@@ -315,6 +324,9 @@ write.table(hdel_params, file = "latex_delays.csv", sep = ",",
 #parameters - CFRs ----
 cfrs_params <- parameters %>%
   filter(grepl("Severity", parameter_type, ignore.case = TRUE)) %>%
+  mutate(parameter_type = ifelse(parameter_type == 'Severity - case fatality rate (CFR)', 'Case fatality ratio',
+                                 ifelse(parameter_type == 'Severity - proportion of symptomatic cases', 
+                                        "Proportion of symptomatic cases", parameter_type))) %>%
   select(parameter_type, parameter_value, unc_type,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
@@ -332,10 +344,12 @@ sero_params <- parameters %>%
   filter(grepl("Seroprevalence", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_value, unc_type,
          method_disaggregated_by, 
-         parameter_type,cfr_ifr_numerator,cfr_ifr_denominator,
-         population_country, dates,
+         parameter_type,cfr_ifr_numerator,cfr_ifr_denominator,population_sample_size,
+         prnt_on_elisa, population_country, dates,
          population_sample_type, population_group, refs, central, 
-         population_sample_size, covidence_id)
+         covidence_id)
+sero_params$prnt_on_elisa <- ifelse(sero_params$prnt_on_elisa == 'F', '', 
+                                    ifelse(sero_params$prnt_on_elisa == 'V', 'TRUE', sero_params$prnt_on_elisa))
 sero_params$parameter_type <- sub("^.* - ", "", sero_params$parameter_type)
 sero_params$population_country <- gsub(";", "\\, ", sero_params$population_country)
 sero_params$population_country[sero_params$population_country==""] <- "Unspecified" 
@@ -375,4 +389,30 @@ risk_params <- risk_params[order(risk_params$riskfactor_outcome,risk_params$risk
 risk_params$riskfactor_significant <- as.character(risk_params$riskfactor_significant)
 risk_params <- insert_blank_rows(risk_params,"riskfactor_outcome")
 write.table(risk_params, file = "latex_riskfactors.csv", sep = ",", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+
+# parameters -- miscarriage rate/microcephaly risk ----
+infants <- parameters %>% 
+  filter(parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk")) %>%
+  select(parameter_type, parameter_value, unc_type,
+         cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
+         population_country, dates,
+         population_sample_type, population_group, refs, central)
+infants <- infants %>% arrange(tolower(population_country),as.numeric(central))
+infants <- infants %>% select(-central)
+infants <- insert_blank_rows(infants,"parameter_type")
+write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+# parameters -- relative contributions ----
+relative <- parameters %>%
+  filter(grepl("Relative contribution", parameter_type)) %>%
+  select(parameter_type, parameter_value, unc_type,
+         population_country, dates,
+         population_sample_type, population_group, refs, central)
+relative <- relative %>% arrange(tolower(population_country),as.numeric(central))
+relative <- relative %>% select(-central)
+relative <- insert_blank_rows(relative,"parameter_type")
+write.table(relative, file = "latex_relative_contribution.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
