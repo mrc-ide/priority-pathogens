@@ -5,7 +5,9 @@
 priority-pathogens.Rproj
 src/*.csv
 src/*/*.csv
+src/*/*.xlsx
 src/*/*/*.csv
+src/*/*/*.xlsx
 src/*/*.png
 src/*/lassa_functions.R
 pathway
