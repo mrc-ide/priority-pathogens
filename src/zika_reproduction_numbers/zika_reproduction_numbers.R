@@ -19,8 +19,12 @@ library(orderly2)
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
-                   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
+
+# orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
+#                    c("articles.rds", "outbreaks.rds", "models.rds", "parameters.rds"))
+orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen &&
+                   parameter:pathogen == TRUE)",
+                   c("articles_curated.rds", "outbreaks_curated.rds", "models_curated.rds", "parameters_curated.rds"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 
@@ -29,19 +33,19 @@ source("lassa_functions.R")
 ###################
 TEXT_SIZE <- 28
 
-articles   <- read_csv("articles.csv")
-models     <- read_csv("models.csv")
-parameters <- read_csv("parameters.csv")
-
-dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
-
-articles   <- dfs$articles
-qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
-
-models     <- dfs$models
-parameters <- dfs$parameters %>% left_join(qa_scores) %>%
-  mutate(article_label = make.unique(refs)) %>%
-  mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
+articles   <- readRDS("articles_curated.rds")
+models     <- readRDS("models_curated.rds")
+parameters <- readRDS("parameters_curated.rds")
+# 
+# dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
+# 
+# articles   <- dfs$articles
+# qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
+# 
+# models     <- dfs$models
+# parameters <- dfs$parameters %>% left_join(qa_scores) %>%
+#   mutate(article_label = make.unique(refs)) %>%
+#   mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
 
 c25 <- c(
   "dodgerblue2", "#E31A1C", # red
@@ -113,3 +117,10 @@ ggsave("re.pdf", r0, height = 15, width = 12)
 ggsave("re_human.pdf", r0_human, height = 15, width = 12)
 ggsave("re_mosquito.pdf", r0_mosquito, height = 15, width = 12)
 
+ggsave("r0_pc.png", r0_pc, height = 15, width = 12)
+ggsave("r0_sampletype.png", r0_sampletype, height = 15, width = 12)
+ggsave("r0_human.png", r0_human, height = 15, width = 12)
+ggsave("r0_mosquito.png", r0_mosquito, height = 15, width = 12)
+ggsave("re.png", r0, height = 15, width = 12)
+ggsave("re_human.png", r0_human, height = 15, width = 12)
+ggsave("re_mosquito.png", r0_mosquito, height = 15, width = 12)

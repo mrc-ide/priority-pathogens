@@ -9,10 +9,11 @@ library(readr)
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
-  c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
-# orderly_shared_resource("zika_functions.R" = "zika_functions.R")
-# source("zika_functions.R")
+# orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
+#                    c("articles.rds", "outbreaks.rds", "models.rds", "parameters.rds"))
+orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen &&
+                   parameter:plotting == FALSE)",
+                   c("articles_curated.rds", "outbreaks_curated.rds", "models_curated.rds", "parameters_curated.rds"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 orderly_artefact(description = "zika-specific tables", files = c("latex_outbreaks.csv",
@@ -25,19 +26,19 @@ orderly_artefact(description = "zika-specific tables", files = c("latex_outbreak
 ## DATA CURATION ##
 ###################
 
-articles   <- read_csv("articles.csv")
-outbreaks  <- read_csv("outbreaks.csv")
-models     <- read_csv("models.csv")
-parameters <- read_csv("parameters.csv") %>%
+articles   <- readRDS("articles_curated.rds")
+outbreaks  <- readRDS("outbreaks_curated.rds")
+models     <- readRDS("models_curated.rds")
+parameters <- readRDS("parameters_curated.rds")  %>%
   ########################### to remove once this is sorted
   filter(!is.na(parameter_data_id))
 
-dfs <- curation(articles,outbreaks,models,parameters, plotting = FALSE)
-
-articles   <- dfs$articles
-outbreaks  <- dfs$outbreaks
-models     <- dfs$models
-parameters <- dfs$parameters
+# dfs <- curation(articles,outbreaks,models,parameters, plotting = FALSE)
+# 
+# articles   <- dfs$articles
+# outbreaks  <- dfs$outbreaks
+# models     <- dfs$models
+# parameters <- dfs$parameters
 
 ###############
 ## OUTBREAKS ## ----
@@ -82,20 +83,23 @@ write.table(outs, file = "latex_outbreaks.csv", sep = ",",
 mods <- models %>%
   select(model_type,stoch_deter,transmission_route,assumptions,
          compartmental_type,theoretical_model,interventions_type,refs,covidence_id)
+mods$model_type <- gsub("Agent / Individual based", 'Individual based', mods$model_type)
 mods$stoch_deter <- gsub("Deterministic;Stochastic", "Stochastic",mods$stoch_deter)
 mods$model_type  <- paste(mods$model_type, mods$stoch_deter, sep = " - ")
+mods$model_type <- gsub("NA - Unspecified", "Unspecified", mods$model_type)
 mods$stoch_deter <- NULL
 mods$model_type  <- gsub("Branching process - Stochastic", "Branching Process", mods$model_type)
 mods$transmission_route <- gsub("Vector/Animal to human", "Mosquito-Human", mods$transmission_route)
 mods$transmission_route <- gsub("Human to human \\(direct contact\\)", "Human-Human", mods$transmission_route)
 mods$transmission_route <- gsub("Airborne or close contact", "Airborne", mods$transmission_route)
-mods$transmission_route <- gsub("Sexual", "Human-Human (Sexual)", mods$transmission_route)
+mods$transmission_route <- gsub("Human-Human \\(Sexual\\)","Sexual", mods$transmission_route)
 mods$transmission_route <- gsub("Unspecified;Mosquito-Human","Mosquito-Human;Unspecified",mods$transmission_route)
 mods$transmission_route <- ifelse(is.na(mods$transmission_route), 'Missing', mods$transmission_route)
-mods$assumptions        <- gsub("Homogeneous mixing", "", mods$assumptions)
-mods$assumptions        <- gsub("Latent period is same as incubation period", "", mods$assumptions)
-mods$assumptions        <- gsub("Heterogenity in transmission rates - over time", "Time", mods$assumptions)
-mods$assumptions        <- gsub("Heterogenity in transmission rates - between groups", "Groups", mods$assumptions)
+mods$assumptions        <- gsub("Latent period is same as incubation period", "Latent and incubation periods are same", mods$assumptions)
+mods$assumptions        <- gsub("Heterogenity in transmission rates - over time", "Heterogenity in transmission over time", mods$assumptions)
+mods$assumptions        <- gsub("Heterogenity in transmission rates - between human groups", "Heterogenity in transmission between human groups", mods$assumptions)
+mods$assumptions        <- gsub("Heterogenity in transmission rates - between human and vector", "Heterogenity in transmission between human and vector", mods$assumptions)
+mods$assumptions        <- gsub("Cross-immunity between Zika and dengue", "Cross-immunity", mods$assumptions)
 mods$assumptions        <- gsub("Age dependent susceptibility", "Age", mods$assumptions)
 mods$assumptions        <- gsub("^;|;$", "", mods$assumptions)
 mods$compartmental_type <- gsub("Not compartmental", "", mods$compartmental_type)
@@ -106,21 +110,15 @@ mods$interventions_type <- gsub("Vector/Animal control", "Mosquito Control", mod
 mods$interventions_type <- gsub("changes", "Changes", mods$interventions_type)
 mods$interventions_type <- gsub("tracing", "Tracing", mods$interventions_type)
 mods$interventions_type <- gsub("Unspecified", "", mods$interventions_type)
-# mods                    <- mods %>% mutate(assumptions = case_when(
-#   covidence_id %in% c(285,2617,2620,5511) ~ gsub("Groups","Spatial",assumptions),
-#   covidence_id %in% c(4120,4371) ~ gsub("Groups","Community Hygiene",assumptions),
-#   covidence_id %in% c(4136,4251) ~ gsub("Groups","Socio-Economic Status",assumptions),
-#   covidence_id %in% c(4343) ~ gsub("Groups","Protective Behaviour",assumptions),
-#   covidence_id %in% c(3735) ~ gsub("Groups","Quarantine Status",assumptions),
-#   covidence_id %in% c(5513) ~ gsub("Groups","Sex",assumptions),
-#   TRUE ~ assumptions))
 mods <- mods %>% select(-c("covidence_id"))
 mods$transmission_route <- factor(mods$transmission_route,
-                                  levels = c("Mosquito-Human","Human-Human","Human-Human (Sexual)","Human-Human (Sexual);Mosquito-Human",
-                                             "Human-Human;Human-Human (Sexual);Mosquito-Human", "Human-Human;Mosquito-Human",
-                                             "Rodent-Human;Human-Human;Airborne","Mosquito-Human;Unspecified", "Unspecified", 'Missing'))
+                                  levels = c("Mosquito-Human","Human-Human","Sexual","Sexual;Mosquito-Human",
+                                             "Human-Human;Sexual;Mosquito-Human", "Human-Human;Mosquito-Human",
+                                             "Mosquito-Human;Unspecified", "Unspecified", 'Missing'))
 mods$compartmental_type <- factor(mods$compartmental_type,
-                                  levels = c("","SIR","SEIR","Other","Other;SIR"))
+                                  levels = c("","SEIR-SEI","SIER-SI","SEI-SI","SEIR;SIR","SI-SI","SIR-SEI","SIR-SI","SIRS-SI", 'SLIR-SLI',
+                                             "SIR","SEIR","Other SEIR-SEI","SAIR-SEI","Not compartmental","Not compartmental;SEIR-SEI",
+                                             "Other","Other compartmental;SIR","Other compartmental;SEIR:SEI"))
 mods <- mods[order(mods$model_type,mods$transmission_route,mods$assumptions,
                    mods$compartmental_type),]
 mods$transmission_route <- as.character(mods$transmission_route)
@@ -134,12 +132,13 @@ parameters <- mutate_at(parameters,
                         vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
                              parameter_uncertainty_single_value, distribution_par1_value, distribution_par2_value,
-                             distribution_par1_uncertainty, distribution_par2_uncertainty, 
+                             # distribution_par1_uncertainty, distribution_par2_uncertainty, 
                              
                              parameter_value, parameter_2_lower_bound, parameter_2_upper_bound,
                              parameter_2_uncertainty_lower_value, parameter_2_uncertainty_upper_value,
-                             parameter_2_uncertainty_single_value, distribution_2_par1_value, distribution_2_par2_value,
-                             distribution_2_par1_uncertainty, distribution_2_par2_uncertainty),
+                             parameter_2_uncertainty_single_value, distribution_2_par1_value, distribution_2_par2_value
+                             # distribution_2_par1_uncertainty, distribution_2_par2_uncertainty
+                             ),
                         ~sub("\\.?0+$", "", sprintf("%.10f", round(., 10))))
 ##
 parameters <- parameters %>%
@@ -151,11 +150,15 @@ parameters <- parameters %>%
 #
 parameters$parameter_unit <- gsub("Substitutions/site/year", "s/s/y", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("No units", "", parameters$parameter_unit)
-parameters$parameter_unit <- gsub("Per day", "per day", parameters$parameter_unit)
+parameters$parameter_unit <- gsub("Per", "per", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Percentage \\(%\\)", "\\\\%", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Days", "days", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("Weeks", "weeks", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("per 100;000 population", "per 100k", parameters$parameter_unit)
+parameters$parameter_unit <- gsub("per 100,000 population", "per 100k", parameters$parameter_unit)
+parameters$parameter_unit <- gsub("per 10,000 population", "per 10k", parameters$parameter_unit)
+parameters$parameter_unit <- gsub("per 1,000 births", "per 1k births", parameters$parameter_unit)
+
 
 parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == 0 ~ parameter_unit,
@@ -168,9 +171,6 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
 parameters <- parameters %>% mutate(parameter_value = case_when(
   (parameter_class %in% c("Severity","Seroprevalence") | parameter_unit == "") ~ parameter_value,
   TRUE ~ paste(parameter_value, parameter_unit, sep = " ")))
-# parameters <- parameters %>%
-#               mutate(parameter_unit = ifelse(parameter_unit == "Percentage (%)", "%", parameter_unit),
-#                      values = paste0(values, parameter_unit, sep = " "))
 parameters <- parameters %>%
   mutate(unc_type=
            ifelse(!is.na(distribution_par2_type), 
@@ -280,6 +280,7 @@ hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bRna\\b"
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgm\\b", "IgM")
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgg\\b", "IgG")
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bPcr\\b", "PCR")
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bZikv\\b", "ZIKV")
 hdel_params <- hdel_params %>% mutate(parameter_type = case_when(
   (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Symptom Resolution") ~ "Symptomatic Period",   
   (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Specimen Collection") ~ "Onset - Testing",   
@@ -313,8 +314,8 @@ write.table(hdel_params, file = "latex_delays.csv", sep = ",",
 
 #parameters - CFRs ----
 cfrs_params <- parameters %>%
-  filter(grepl("Severity - case fatality rate", parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_value, unc_type,
+  filter(grepl("Severity", parameter_type, ignore.case = TRUE)) %>%
+  select(parameter_type, parameter_value, unc_type,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
@@ -322,7 +323,7 @@ cfrs_params <- parameters %>%
 cfrs_params$population_country <- gsub(";", "\\, ", cfrs_params$population_country)
 cfrs_params <- cfrs_params %>% arrange(tolower(population_country),as.numeric(central))
 cfrs_params <- cfrs_params %>% select(-central)
-cfrs_params <- insert_blank_rows(cfrs_params,"population_country")
+cfrs_params <- insert_blank_rows(cfrs_params,"parameter_type")
 write.table(cfrs_params, file = "latex_severity.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 

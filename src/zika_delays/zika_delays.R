@@ -19,8 +19,11 @@ library(orderly2)
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
-                   c("articles.csv", "outbreaks.csv", "models.csv", "parameters.csv"))
+# orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
+#                    c("articles.rds", "outbreaks.rds", "models.rds", "parameters.rds"))
+orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen &&
+                   parameter:plotting == TRUE)",
+                   c("articles_curated.rds", "outbreaks_curated.rds", "models_curated.rds", "parameters_curated.rds"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 # orderly_artefact(description = "zika-specific tables",
@@ -36,21 +39,21 @@ source("lassa_functions.R")
 ###################
 TEXT_SIZE <- 28
 
-articles   <- read_csv("articles.csv")
-models     <- read_csv("models.csv")
-parameters <- read_csv("parameters.csv")
+articles   <- readRDS("articles_curated.rds")
+models     <- readRDS("models_curated.rds")
+parameters <- readRDS("parameters_curated.rds") 
 
 #dfs <- curation(articles,tibble(),models,parameters, adjust_for_exponents = FALSE )
-dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
-
-articles   <- dfs$articles
-# articles   <- epireview::assign_qa_score(articles = articles)$articles
-qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
-
-models     <- dfs$models
-parameters <- dfs$parameters %>% left_join(qa_scores) %>%
-  mutate(article_label = make.unique(refs)) %>%
-  mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
+# dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
+# 
+# articles   <- dfs$articles
+# # articles   <- epireview::assign_qa_score(articles = articles)$articles
+# qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
+# 
+# models     <- dfs$models
+# parameters <- dfs$parameters %>% left_join(qa_scores) %>%
+#   mutate(article_label = make.unique(refs)) %>%
+#   mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
 
 # sample sd is the same as sd, so need to make this clear somehow / change param field to work for meta analysis
 
