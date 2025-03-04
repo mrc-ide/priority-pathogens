@@ -113,8 +113,14 @@ zika_clean_models <- function(df, pathogen){
       # need to check compartmental type for  1405, 2012, 3738, 5553, 5540 (other + SEIR-SEI?)
       TRUE ~ compartmental_type
     ))
-  # one model with missing name, ids, etc -- look into this? model_data_id = ccc0683c9eebf812a071f334fe2c8611
   
+  # Fix stochastic/deterministic determination 
+  df <- df %>%
+    mutate(stoch_deter = case_when(
+      covidence_id == 3403 & model_type == 'Branching process' ~ "Stochastic",
+      is.na(stoch_deter) ~ "Unspecified",
+      TRUE ~ stoch_deter
+    ))
   
   
   df <- df %>% select(-c("access_model_id"))
@@ -637,14 +643,17 @@ zika_clean_params <- function(df, pathogen){
   # Clean attack rate 
   df <- zika_clean_ar(df)
   
+  # Clean microcephaly risk 
+  df <- zika_clean_zcs_microcephaly(df)
+  
   # Parameter_unit cleaning
   df <- df %>%
     mutate(parameter_unit =
              case_when(
                # delays
-               parameter_class %in% "Human delay" &
+               parameter_class %in% c("Human delay","Mosquito") &
                  parameter_unit %in% "Per day" ~ "Days",
-               parameter_class %in% "Human delay" &
+               parameter_class %in% c("Human delay","Mosquito") &
                  parameter_unit %in% "Per week" ~ "Weeks",
                # others
                covidence_id == 5535 & parameter_type == "Mosquito delay - extrinsic incubation period" ~ "Days",
@@ -653,6 +662,8 @@ zika_clean_params <- function(df, pathogen){
                covidence_id == 1679 & parameter_unit == "per 100;000 population" ~ "Per 100,000 population",
                covidence_id == 4032 & parameter_unit == "Per 10000 population" ~ "Per 10,000 population",
                covidence_id == 4268 & parameter_unit == "Per 100000" ~ "Per 100,000 population",
+               parameter_unit == 'Per 1000 births' ~ "Per 1,000 births",
+               covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ NA, # this has been changed to be num/denomi
                TRUE ~ parameter_unit
              )
     ) %>%
@@ -909,6 +920,23 @@ zika_clean_r <- function(params_df){
     ))
   
   return(params_df)
+}
+
+zika_clean_zcs_microcephaly <- function(df){
+  df <- df %>%
+    # Change 6521 to report without units and in num/denominator columns instead
+    mutate(parameter_value = case_when(
+      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ NA,
+      TRUE ~ parameter_value
+    ),
+    cfr_ifr_denominator = case_when(
+      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 11,
+      TRUE ~ cfr_ifr_denominator
+    ),
+    cfr_ifr_numerator = case_when(
+      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 2,
+      TRUE ~ cfr_ifr_numerator
+    ))
 }
 
 zika_clean_genomics <- function(df){
