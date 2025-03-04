@@ -655,6 +655,8 @@ zika_clean_params <- function(df, pathogen){
                  parameter_unit %in% "Per day" ~ "Days",
                parameter_class %in% c("Human delay","Mosquito") &
                  parameter_unit %in% "Per week" ~ "Weeks",
+               # Reproduction numbers
+               grepl("Reproduction", parameter_type) & is.na(parameter_unit) ~ "No units", 
                # others
                covidence_id == 5535 & parameter_type == "Mosquito delay - extrinsic incubation period" ~ "Days",
                covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ "Per 100,000 population",
