@@ -67,6 +67,10 @@ loc_name <- adjective_animal()
  orderly_location_pull_packet()
 # 
 # # Sort into double extracted matching and fixing
+ 
+#orderly_run("db_extraction_prep", parameters = list(pathogen = "SARS"))
+#orderly_run("db_extraction", parameters = list(pathogen = "SARS")) 
+ 
 orderly_run("db_double", parameters = list(pathogen = "SARS"))
 # 
 # # Bring single, matching double, and fixed double together
