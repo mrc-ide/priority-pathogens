@@ -116,7 +116,7 @@ sars_cleaning <- function(df) {
       #   covidence_id == 2585 ~ 'Dalhat',
       #   covidence_id == 1033 ~ 'Ehichioya',
          covidence_id == 6909 ~ 'MEC', #The Chinese SARS Molecular Epidemiology Consortium
-         TRUE ~ first_author_first_name))     
+         TRUE ~ first_author_first_name))
     df
 }
 
@@ -124,6 +124,10 @@ sars_params_cleaning <- function(df) {
   df <- df %>% mutate(parameter_type = case_when(parameter_type=="secondary attack rate" ~ "Secondary attack rate",
                                                  TRUE ~ parameter_type),
                       riskfactor_name = case_when(str_detect(riskfactor_name,'Ocupation')~str_replace(riskfactor_name,'Ocupation','Occupation'),
-                                                  TRUE ~ riskfactor_name))
+                                                  TRUE ~ riskfactor_name),
+                      parameter_unit = case_when(
+                        covidence_id %in% 4334 & parameter_type == 'Severity - case fatality rate (CFR)' ~ "Percentage (%)",
+                        TRUE ~ parameter_unit
+                      ))
   
 }
