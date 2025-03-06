@@ -22,7 +22,8 @@ orderly_artefact(description = "zika-specific tables", files = c("latex_outbreak
                                            "latex_severity.csv","latex_seroprevalence.csv",
                                            "latex_riskfactors.csv",
                                            "latex_miscarriage_zcs.csv",
-                                           'latex_relative_contribution.csv'))
+                                           'latex_relative_contribution.csv',
+                                           'latex_genomic.csv'))
 
 ###################
 ## DATA CURATION ##
@@ -242,7 +243,7 @@ parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", me
 
 #parameters - transmission ----
 trns_params <- parameters %>%
-  filter(grepl("Mutations|Attack|Relative contribution|Growth rate|Reproduction", parameter_type, ignore.case = TRUE)) %>%
+  filter(grepl("Attack|Relative contribution|Growth rate|Reproduction", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_type, parameter_value, unc_type,
          method_disaggregated_by, 
          genome_site, method_r,
@@ -251,9 +252,6 @@ trns_params <- parameters %>%
          population_sample_type, population_group, refs, central)
 trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Human-Human Transmission Contribution", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Relative contribution - zoonotic to human", "Human-Vector Transmission Contribution", trns_params$parameter_type)
-trns_params$parameter_type  <- gsub("Mutations – ", "", trns_params$parameter_type)
-trns_params$parameter_type  <- gsub("Mutations - ", "", trns_params$parameter_type)
-trns_params$parameter_type  <- gsub("Mutations â€“ ", "", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Attack rate (inverse parameter)", "Attack rate", trns_params$parameter_type)
 trns_params$parameter_type <- gsub("Reproduction number \\(Basic R0\\)", "Reproduction Number", trns_params$parameter_type)
 trns_params$parameter_type <- gsub("Reproduction number \\(Effective; Re\\)", "Effective Reproduction Number", trns_params$parameter_type)
@@ -268,6 +266,25 @@ trns_params <- trns_params %>% select(-central)
 trns_params <- insert_blank_rows(trns_params,"parameter_type")
 write.table(trns_params, file = "latex_transmission.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+# parameters - genomic 
+genomic_params <- parameters %>%
+  filter(grepl('Mutations', parameter_type, ignore.case = TRUE)) %>%
+  select(parameter_type, parameter_value, unc_type,
+         genome_site, 
+         population_sample_size,
+         dates,
+         population_sample_type, population_group, refs, central)
+genomic_params$parameter_type  <- gsub("Mutations – ", "", genomic_params$parameter_type)
+genomic_params$parameter_type  <- gsub("Mutations - ", "", genomic_params$parameter_type)
+genomic_params$parameter_type  <- gsub("Mutations â€“ ", "", genomic_params$parameter_type)
+genomic_params$parameter_type  <- str_to_title(genomic_params$parameter_type)
+genomic_params <- genomic_params[order(genomic_params$parameter_type,genomic_params$genome_site,as.numeric(genomic_params$central)),]
+genomic_params <- genomic_params %>% select(-central)
+genomic_params <- insert_blank_rows(genomic_params,"parameter_type")
+write.table(genomic_params, file = "latex_genomic.csv", sep = ",", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
 
 #parameters - human delays ----
 hdel_params <- parameters %>%
