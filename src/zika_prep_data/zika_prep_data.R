@@ -15,10 +15,11 @@ orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathog
 orderly_artefact(
   description = "Curated and ready to plot or tabulate data as rds and csv",
   files = c(
-    "articles.rds",
-    "models.rds",
-    "parameters.rds",
-    "outbreaks.rds"
+    "articles_curated.rds",
+    "models_curated.rds",
+    "parameters_curated.rds",
+    "outbreaks_curated.rds",
+    "zika_genomic.rds"
   )
 )
 
@@ -51,6 +52,19 @@ parameters <- dfs$parameters %>% left_join(qa_scores) %>%
 
 # once i add in the extra cleaning in each task, then can remove that from the analsysi tasks as well 
 # (Especially the latex tables one)
+
+# Save genomic data 
+genomic <- parameters %>%
+  filter(parameter_class == 'Mutations') %>%
+  left_join(articles_clean %>% select(-name_data_entry), by = c('covidence_id', 'pathogen'))  %>%
+  select( -c(starts_with('riskfactor'), r_pathway, seroprevalence_adjusted, third_sample_param_yn,
+             contains('delay'), method_2_from_supplement, starts_with('cfr'), 
+             starts_with('distribution'), case_definition, exponent_2,
+             inverse_param, inverse_param_2, name_data_entry, trimester_exposed, starts_with('parameter_2')))
+
+saveRDS(genomic, "zika_genomic.rds")
+write_csv(genomic, "zika_genomic.csv")
+
 
 # save cleaned dfs
 saveRDS(articles, 'articles_curated.rds')

@@ -694,6 +694,11 @@ zika_clean_params <- function(df, pathogen){
         TRUE ~ exponent_2
       ),
       
+      # Format start/stop months for parameters
+      population_study_start_month = str_sub(population_study_start_month, 1, 3),
+      population_study_end_month = str_sub(population_study_end_month, 1, 3),
+      
+      
       # create combined variable for survey date
       survey_start_date =
         case_when(
