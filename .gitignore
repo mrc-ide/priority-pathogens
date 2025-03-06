@@ -14,6 +14,7 @@ pathway
 src/db_extraction/utils.R
 .Renviron
 Renviron
+src/*/*.rds
 
 # ---VVV--- added by orderly ---VVV----------------
 # Don't manually edit content between these markers
