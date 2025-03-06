@@ -1,4 +1,4 @@
-#task to create sars latex tables
+#task to create zika risk factor plots
 
 library(dplyr) 
 library(stringr)

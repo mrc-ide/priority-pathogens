@@ -124,7 +124,7 @@ db2_double_articles <- read_csv("db2_double_extraction_articles.csv") %>%
       TRUE ~ Covidence_ID_text)
   )
 db2_double_params <- read_csv("db2_double_extraction_params.csv") %>%
-  select(sort(names(.)))
+  select(sort(names(.))) 
 db2_double_models <- read_csv("db2_double_extraction_models.csv") %>%
   select(sort(names(.)))
 db2_double_outbreaks <- read_csv("db2_double_extraction_outbreaks.csv") %>%
@@ -219,17 +219,6 @@ articles_qa <- assign_qa_score(articles_clean, ignore_errors = TRUE)#add_qa_scor
 articles_qa <- as.data.frame(articles_qa$articles)
 
 
-# Save genomic data 
-genomic <- params_clean %>%
-  filter(parameter_class == 'Mutations') %>%
-  left_join(articles_clean %>% select(-name_data_entry), by = c('covidence_id', 'pathogen'))  %>%
-  select( -c(starts_with('riskfactor'), r_pathway, seroprevalence_adjusted, third_sample_param_yn,
-             contains('delay'), method_2_from_supplement, starts_with('cfr'), 
-             starts_with('distribution'), case_definition, exponent_2,
-             inverse_param, inverse_param_2, name_data_entry, trimester_exposed, starts_with('parameter_2')))
-
-saveRDS(genomic, "zika_genomic.rds")
-write_csv(genomic, "zika_genomic.csv")
 
 # save cleaned dfs
 saveRDS(articles_qa, 'articles.rds')
