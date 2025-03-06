@@ -1033,7 +1033,7 @@ zika_clean_genomics <- function(df){
       TRUE ~ parameter_uncertainty_upper_value
     )) %>%
     # Correct incorrect way of entering exponents (because lower and upper intervals have diff exponents)
-    mutate(parameter_value = ifelse(covidence_id == 1663 & parameter_value == 1.15, 0.0015, parameter_value),
+    mutate(parameter_value = ifelse(covidence_id == 1663 & parameter_value == 1.15, 0.00115, parameter_value),
            exponent = ifelse(covidence_id == 1663 & exponent == -3, 0, exponent))
   
   # Correct entries with missing variables 
