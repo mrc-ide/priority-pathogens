@@ -79,10 +79,10 @@ orderly_resource(
     "sars_params_fixing.csv",
     "sars_models_fixing.csv",
     ## OROV FIXING FILES
-    "orov_qa_fixing.csv",
-    "orov_params_fixing.csv",
+    #"orov_qa_fixing.csv",
+    #"orov_params_fixing.csv",
     #"orov_models_fixing.csv",
-    "orov_outbreaks_fixing.csv",
+    #"orov_outbreaks_fixing.csv",
     ## NIPAH FIXING FILES
     "cleaning.R",
     "sars_cleaning.R",
