@@ -128,6 +128,11 @@ sars_params_cleaning <- function(df) {
                       parameter_unit = case_when(
                         covidence_id %in% 4334 & parameter_type == 'Severity - case fatality rate (CFR)' ~ "Percentage (%)",
                         TRUE ~ parameter_unit
-                      ))
+                      ),
+                      parameter_value_type = case_when(
+                        covidence_id %in% 5269 & parameter_type == 'Human delay - infectious period' ~ "Unspecified",
+                        TRUE ~ parameter_value_type
+                      )
+                      )
   
 }
