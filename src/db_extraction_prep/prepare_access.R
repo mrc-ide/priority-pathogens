@@ -333,7 +333,6 @@ if (pathogen == "EBOLA") {
   params$Parameter_type[params$Covidence_ID==2684&params$access_param_id==37] <- 'Risk factors'
 }  else if( pathogen == 'SARS') {
   articles <- articles %>%
-    filter(Article_ID != 14 | Name_data_entry != "Christian") %>%
     # For some reason surname and first name are the wrong way around
     rename(
       temp_col = FirstAuthor_FirstName,
