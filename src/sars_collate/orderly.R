@@ -8,6 +8,8 @@ orderly_dependency("sars_world_map", "latest(parameter:pathogen == this:pathogen
                              'sars_articles.csv','sars_models.csv','sars_parameters.csv'))
 orderly_dependency("sars_delays", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png",
+                             "figure_5full_delays.png",
+                             "figure_5full_delays.pdf","figure_S5_funnel.png",
                              "figure_5SI_delays.png","figure_5SI_onset_to_admission.png"))
 orderly_dependency("sars_transmission", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_3_r_plot.png",
@@ -28,18 +30,19 @@ orderly_dependency("sars_latex_tables", "latest(parameter:pathogen == this:patho
                              "latex_severity.csv","latex_seroprevalence.csv",
                              "latex_riskfactors.csv"))
 orderly_artefact("sars-specific outputs",
-                 c('sars_articles.csv','sars_models.csv','sars_parameters.csv',
+                 c(#'sars_articles.csv','sars_models.csv','sars_parameters.csv',
                    "main/figure_2_world_map.png","main/figure_2_world_map.pdf",
                    "main/figure_3_r_plot.png","main/figure_3_r_plot.pdf",
                    "main/figure_4_r_other.png","main/figure_4_r_other.pdf",
                    "main/figure_5_delays.png","main/figure_5_delays.pdf",
                    
+                   "supp/figure_5full_delays.png", "supp/figure_5full_delays.pdf",
                    "supp/figure_S1.png","supp/figure_S2.png","supp/figure_S3.png",
                    "supp/figure_3SI_r_plot.png", "supp/figure_3SI_r_plot_cnt.png",
                    "supp/figure_3SI_r_plot_method.png","supp/figure_4SI_r_other.png",
                    "supp/figure_5SI_subgroup_meta.png","supp/figure_5SI_delays.png",
                    "supp/figure_SI_risk_panel.png","supp/figure_SI_risk_other.png",
-                   "supp/figure_5SI_onset_to_admission.png",
+                   "supp/figure_5SI_onset_to_admission.png","supp/figure_S5_funnel.png",
                    
                    "supp/latex_models.csv", "supp/latex_seroprevalence.csv","supp/latex_riskfactors.csv",
                    "supp/latex_transmission.csv","supp/latex_delays.csv","supp/latex_severity.csv"))
@@ -81,7 +84,9 @@ file.copy(from = "figure_5SI_delays.png",        to = "supp/figure_5SI_delays.pn
 file.copy(from = "figure_SI_risk_panel.png",     to = "supp/figure_SI_risk_panel.png")
 file.copy(from = "figure_SI_risk_other.png",     to = "supp/figure_SI_risk_other.png")
 file.copy(from = "figure_5SI_onset_to_admission.png",     to = "supp/figure_5SI_onset_to_admission.png")
-
+file.copy(from = "figure_5full_delays.png", to = "supp/figure_5full_delays.png" )
+file.copy(from = "figure_5full_delays.pdf", to = "supp/figure_5full_delays.pdf" )
+file.copy(from = "figure_S5_funnel.png",    to = "supp/figure_S5_funnel.png")
 
 file.copy(from = "latex_models.csv",         to = "supp/latex_models.csv")
 file.copy(from = "latex_transmission.csv",   to = "supp/latex_transmission.csv")
