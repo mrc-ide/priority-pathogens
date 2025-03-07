@@ -198,17 +198,17 @@ d3_without_qa <- d3_tmp
 
 # Evolutionary mutation rates
 p1 <- forest_plot(d1 |> filter(qa_score>0.5),expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,50),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 p2 <- forest_plot(d2 |> filter(qa_score>0.5),expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,100),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 
 p1_noqa <- forest_plot(d1|>mutate(parameter_unit='Unspecified'), expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(-5,200),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 p2_noqa <- forest_plot(d2, expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,100),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 
 #Overdispersion
