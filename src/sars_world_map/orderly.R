@@ -26,7 +26,8 @@ source("lassa_functions.R")
 
 orderly_artefact("sars-specific tables",c("figure_2_world_map.png","figure_2_world_map.pdf","sgp_info.png",
                                           "hkg_info.png","twn_info.png","can_info.png","chn_info.png","vnm_info.png",
-                                          "sars_articles.csv", "sars_models.csv", "sars_parameters.csv"))
+                                          'article_ref_file.csv'
+                                          ))
 
 ###################
 ## DATA CURATION ##
@@ -36,22 +37,16 @@ articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-# to save down for epireview use plotting = FALSE
-dfs <- data_curation(articles,tibble(),models,parameters, plotting =  FALSE )
-
-articles   <- dfs$articles
-models     <- dfs$models
-parameters <- dfs$parameters
-
-write_csv(articles,'sars_articles.csv')
-write_csv(models,'sars_models.csv')
-write_csv(parameters,'sars_parameters.csv')
-
 dfs <- data_curation(articles,tibble(),models,parameters, plotting =  TRUE )
 
 articles   <- dfs$articles
 models     <- dfs$models
 parameters <- dfs$parameters
+
+article_refs_file <- articles %>% 
+  #mutate(cov_id_text = paste0('#',covidence_id)) %>%
+  dplyr::select(refs,first_author_first_name,first_author_surname,article_title,doi,journal,year_publication,volume,issue)
+write_csv(article_refs_file,'article_ref_file.csv')
 
 create_inset_png <- function(data=non_imported_cnts_short,location='SGP')
 {
