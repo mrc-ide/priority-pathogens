@@ -24,7 +24,9 @@ orderly_shared_resource("world_cases_table.xlsx" = "world_cases_table.xlsx")
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 
-orderly_artefact("sars-specific tables",c("figure_2_world_map.png","figure_2_world_map.pdf","sgp_info.png",
+orderly_artefact("sars-specific tables",c("figure_2_world_map.png","figure_2_world_map.pdf",
+                                          "figure_SI2_world_map.png","figure_SI2_world_map.pdf",
+                                          "sgp_info.png",
                                           "hkg_info.png","twn_info.png","can_info.png","chn_info.png","vnm_info.png",
                                           'article_ref_file.csv'
                                           ))
@@ -135,6 +137,33 @@ m1 <- metaprop_wrap(non_imported_cnts, subgroup = NA,
                     width = 4000, height = 1650, resolution = 500,
                     at = seq(0,0.3,by=0.05), xlim = c(0,0.35))
 
+
+mtan <- metaprop(data = non_imported_cnts,
+                 studlab = refs, 
+                 event = cfr_ifr_numerator, 
+                 n = cfr_ifr_denominator, 
+                 sm = "PLOGIT", 
+                 method="GLMM", 
+                 method.tau = "ML")
+
+png(file = "temp_simple.png", width = 4000, height = 1650, res = 500)
+meta::forest(mtan, random = FALSE, common = TRUE,
+       overall = TRUE, pooled.events = TRUE, test.overall = FALSE,
+       print.stat = FALSE, print.I2 = FALSE, print.tau2 = FALSE, print.pval.Q =  FALSE,
+       study.results = TRUE, text.common = 'Weighted Average CFR (95% CI)',
+       digits = 3, 
+       col.diamond.lines = "black",col.diamond.common = 'red', col.diamond.random = 'red',
+       col.subgroup = "black", col.inside = "black",
+       weight.study = "same",
+       at = seq(0,0.3,by=0.05), xlim = c(0,0.35), xlab="Case Fatality Ratio", fontsize=11)
+dev.off()
+
+pg_simple <- png::readPNG("temp_simple.png", native = TRUE)
+file.remove("temp_simple.png")
+gg_simple <- wrap_elements(plot = rasterGrob(pg_simple, interpolate = TRUE))
+
+
+
 inset_width <- 0.05*2.2
 inset_hight <- 0.125*1.75
 test <- world_map + patchwork::inset_element(grid::rasterGrob(png::readPNG("sgp_info.png")), 0.725,0.15,0.725+inset_width,.15+inset_hight) +
@@ -145,5 +174,18 @@ test <- world_map + patchwork::inset_element(grid::rasterGrob(png::readPNG("sgp_
   patchwork::inset_element(grid::rasterGrob(png::readPNG("vnm_info.png")), 0.6,0.225,0.6+inset_width,.225+inset_hight) + 
   patchwork::inset_element(m1$plot, 0.01,0.01,0.425,0.375) 
 
-ggsave("figure_2_world_map.png", plot = test, width = 18, height = 12)
-ggsave("figure_2_world_map.pdf", plot = test, width = 18, height = 12)
+ggsave("figure_SI2_world_map.png", plot = test, width = 18, height = 12)
+ggsave("figure_SI2_world_map.pdf", plot = test, width = 18, height = 12)
+
+inset_width <- 0.05*2.2
+inset_hight <- 0.125*1.75
+test_simple <- world_map + patchwork::inset_element(grid::rasterGrob(png::readPNG("sgp_info.png")), 0.725,0.15,0.725+inset_width,.15+inset_hight) +
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("hkg_info.png")), 0.85,0.275,0.85+inset_width,.275+inset_hight) +
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("twn_info.png")), 0.85,0.5,0.85+inset_width,.5+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("chn_info.png")), 0.75,0.725,0.75+inset_width,0.725+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("can_info.png")), 0.075,0.5,0.075+inset_width,.5+inset_hight) + 
+  patchwork::inset_element(grid::rasterGrob(png::readPNG("vnm_info.png")), 0.6,0.225,0.6+inset_width,.225+inset_hight) + 
+  patchwork::inset_element(gg_simple, 0.01,0.01,0.4,0.35) 
+
+ggsave("figure_2_world_map.png", plot = test_simple, width = 18, height = 12)
+ggsave("figure_2_world_map.pdf", plot = test_simple, width = 18, height = 12)
