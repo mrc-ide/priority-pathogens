@@ -231,10 +231,13 @@ p4_secondary_noqa <- forest_plot(d4 |> filter(arate=='Secondary'),'Secondary Att
                             text_size = 16)
 
 
-# Growth rate
+# Growth rate -- display in percentage terms as requested
 d5$parameter_unit <- 'Per day'
-p5 <- forest_plot(d5|> filter(qa_score>0.5) ,'Growth rate (r per day)',"pathogen",c(0,.25),text_size = 16)
-p5_noqa <- forest_plot(d5, 'Growth rate (r per day)',"pathogen",c(0,.25),text_size = 16)
+d5$parameter_value <- d5$parameter_value *100
+d5$parameter_lower_bound <- d5$parameter_lower_bound *100
+d5$parameter_upper_bound <- d5$parameter_upper_bound *100
+p5 <- forest_plot(d5|> filter(qa_score>0.5) ,'Growth rate (r per day in %)',"pathogen",c(0,25),text_size = 16)
+p5_noqa <- forest_plot(d5, 'Growth rate (r per day in %)',"pathogen",c(0,25),text_size = 16)
 
 
 # make colours across plots the same to simplify legend!!! + add in consideration for setting
