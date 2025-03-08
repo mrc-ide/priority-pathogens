@@ -5,6 +5,7 @@ orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_dependency("sars_world_map", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_2_world_map.png","figure_2_world_map.pdf",
+                             "figure_SI2_world_map.png","figure_SI2_world_map.pdf",
                              'article_ref_file.csv'))
 orderly_dependency("sars_delays", "latest(parameter:pathogen == this:pathogen)",
                    files = c("figure_5_delays.png","figure_5_delays.pdf","figure_5SI_subgroup_meta.png",
@@ -74,6 +75,9 @@ dir.create("supp")
 file.copy(from = "figure_S1.png", to = "supp/figure_S1.png")
 file.copy(from = "figure_S2.png", to = "supp/figure_S2.png")
 file.copy(from = "figure_S3.png", to = "supp/figure_S3.png")
+
+file.copy(from = "figure_SI2_world_map.png", to = "supp/figure_SI2_world_map.png")
+file.copy(from = "figure_SI2_world_map.pdf", to = "supp/figure_SI2_world_map.pdf")
 
 file.copy(from = "figure_3SI_r_plot.png",        to = "supp/figure_3SI_r_plot.png")
 file.copy(from = "figure_3SI_r_plot_cnt.png",    to = "supp/figure_3SI_r_plot_cnt.png")
