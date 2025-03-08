@@ -25,7 +25,7 @@ articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("parameters.csv")
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE, switch_first_surname = TRUE )
+dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE )
 
 articles   <- dfs$articles
 models     <- dfs$models
