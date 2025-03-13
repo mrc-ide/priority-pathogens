@@ -130,7 +130,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
         geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                           y = urefs),
                       width = 0.15, lwd=0.5, color = "black", alpha = 1) +
-        geom_point(aes(x = parameter_value, y = urefs, 
+        geom_point(aes(x = central, y = urefs, 
                        shape = parameter_value_type, fill = .data[[color_column]]),
                    size = 3, stroke = 1,
                    color = "black", alpha = 1)
