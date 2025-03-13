@@ -122,15 +122,14 @@ mods$compartmental_type <- factor(mods$compartmental_type,
                                   levels = c("","SEIR-SEI","SIER-SI","SEI-SI","SEIR;SIR","SI-SI","SIR-SEI","SIR-SI","SIRS-SI", 'SLIR-SLI',
                                              "SIR","SEIR","Other SEIR-SEI","SAIR-SEI","Not compartmental","Not compartmental;SEIR-SEI",
                                              "Other","Other compartmental;SIR","Other compartmental;SEIR:SEI"))
-mods <- mods[order(mods$model_type,mods$transmission_route,mods$assumptions,
-                   mods$compartmental_type),]
+mods <- mods[order(mods$model_type,mods$compartmental_type,mods$transmission_route,mods$assumptions),]
 mods$transmission_route <- as.character(mods$transmission_route)
 mods$compartmental_type <- as.character(mods$compartmental_type)
 mods <- insert_blank_rows(mods,"model_type")
 write.table(mods, file = "latex_models.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-#parameters ----
+
 # Prep par data for tables ----
 parameters <- mutate_at(parameters, 
                         vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
@@ -174,9 +173,10 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == -5 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 100k",
   TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")))
 # new bit
-parameters <- parameters %>% mutate(parameter_value = case_when(
-  ( parameter_unit == "") ~ parameter_value,#parameter_class %in% c("Severity","Seroprevalence") |
-  TRUE ~ paste(parameter_value, parameter_unit, sep = " ")))
+parameters <- parameters %>% 
+  mutate(parameter_value = case_when(
+    ( parameter_unit == "" | is.na(parameter_unit)) ~ parameter_value,#parameter_class %in% c("Severity","Seroprevalence") |
+    TRUE ~ paste(parameter_value, parameter_unit, sep = " ")))
 parameters <- parameters %>%
   mutate(unc_type=
            ifelse(!is.na(distribution_par2_type), 
@@ -206,9 +206,9 @@ parameters <- parameters %>%
 parameters <- parameters %>% mutate(unc_type = case_when(
   unc_type %in% c("Unspecified","") ~ "",
   TRUE ~  paste(unc_type, ": ", uncertainty, sep = "")))
-##                     
-#parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <- 
-#                                     parameters$population_sample_size[is.na(parameters$cfr_ifr_denominator)]        
+#
+parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <-
+                                    parameters$population_sample_size[is.na(parameters$cfr_ifr_denominator)]
 #parameters$population_country <- gsub(",", "", parameters$population_country)
 #new as well
 parameters <- parameters %>%
@@ -287,6 +287,10 @@ write.table(genomic_params, file = "latex_genomic.csv", sep = ",",
 
 
 #parameters - human delays ----
+var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 
+                "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
+                "parameter_2_value", "parameter_2_lower_bound", "parameter_2_upper_bound", 
+                "parameter_2_uncertainty_lower_value", "parameter_2_uncertainty_upper_value")
 hdel_params <- parameters %>%
   filter(grepl("delay", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_type, other_delay_start, other_delay_end,
@@ -294,7 +298,7 @@ hdel_params <- parameters %>%
          method_disaggregated_by, 
          population_sample_size,
          population_country, dates,
-         population_sample_type, population_group, refs, central)
+         population_sample_type, population_group, refs, central) 
 hdel_params$parameter_type <- sub("^.* - ", "", hdel_params$parameter_type)
 hdel_params$parameter_type <- sub(">", " - ", hdel_params$parameter_type)
 hdel_params$parameter_type <- str_to_title(hdel_params$parameter_type)
