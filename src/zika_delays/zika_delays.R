@@ -26,13 +26,13 @@ orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen
                    c("articles_curated.rds", "outbreaks_curated.rds", "models_curated.rds", "parameters_curated.rds"))
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
-# orderly_artefact(description = "zika-specific tables",
-#                  files = c("figure_5_delays.png",
-#                                           "figure_5_delays.pdf",
-#                                           "figure_5SI_subgroup_meta.png",
-#                                           "figure_5SI_delays.png",
-#                                           "figure_5SI_delays.pdf",
-#                                           "figure_5SI_onset_to_admission.png"))
+orderly_artefact(description = "zika-specific tables",
+                 files = c("onset_recovery.png",
+                           "infectious_period.png",
+                           "generation_time.png",
+                           "incubation_period.png",
+                           "latent_period.png",
+                           "admission_to_outcome.png", "extrinsic_incubation_period.png"))
 
 ###################
 ## DATA CURATION ##
@@ -57,10 +57,27 @@ parameters <- readRDS("parameters_curated.rds")
 
 # sample sd is the same as sd, so need to make this clear somehow / change param field to work for meta analysis
 
+
 d1 <- parameters %>% filter(parameter_type == 'Human delay - incubation period' |
                               parameter_type == 'Human delay - incubation period (inverse parameter)') %>%
-  mutate(parameter_type = 'Human delay - incubation period') %>%
-  filter(parameter_value_type != 'Shape') # There are two entries with shape (in param 1) and scale (in param 2)
+  mutate(parameter_type = 'Human delay - incubation period')# %>%
+  # filter(parameter_value_type != 'Shape') # There are two entries with shape (in param 1) and scale (in param 2)
+# Deal with the parameter 2s (shape ans cale for Weibull distributions)
+mean1 = round(mean(rweibull(n = 10000, shape = 2.39, scale = 7.19)),2)
+mean2 <- round(mean(rweibull(n = 10000, shape = 2.69, scale = 6.70)),2)
+d1 <- d1 %>%
+  # Update all the other variables for 2362
+   mutate(estmean = ifelse(covidence_id == 2362& parameter_value == 2.39, mean1,  
+                           ifelse(covidence_id == 2362& parameter_value == 2.69, mean2, NA)),
+          parameter_value = ifelse(parameter_value_type == 'Shape', estmean, parameter_value),
+          parameter_value_type = ifelse(parameter_value_type == 'Shape','Mean',parameter_value_type),
+          central = ifelse(parameter_value_type == 'Shape', estmean, central),
+          parameter_uncertainty_lower_value = ifelse(covidence_id == 2362, NA, parameter_uncertainty_lower_value),
+          parameter_uncertainty_upper_value = ifelse(covidence_id == 2362, NA, parameter_uncertainty_upper_value),
+          parameter_2_uncertainty_lower_value = ifelse(covidence_id == 2362, NA, parameter_2_uncertainty_lower_value),
+          parameter_2_uncertainty_upper_value = ifelse(covidence_id == 2362, NA, parameter_2_uncertainty_upper_value),
+          parameter_unit = ifelse(covidence_id == 2362, "Days", parameter_unit))
+
 d2 <- parameters %>% filter(parameter_type == 'Human delay - latent period (inverse parameter)')
 d3 <- parameters %>% filter(parameter_type == 'Human delay - time in care (length of stay)' |
                               parameter_type == 'Human delay - admission to care to discharge/recovery' |
@@ -78,6 +95,15 @@ m1 <- parameters %>% filter(grepl("Mosquito delay", parameter_type)) %>%
   mutate(parameter_type = "Mosquito delay - extrinsic incubation period") %>%
   filter(parameter_unit == 'Days')
 
+
+# Sample sizes for all datasets
+# delays <- rbind(d1, d2,d3,d4,d5,d6,d7,d8,m1)
+# dnon <- delays %>% filter(is.na(population_sample_size))# 3738 -- no sample size 
+# table(dnon$name_data_entry, dnon$covidence_id)
+# 390 - unclear sample size, 4444 cases in FL but with dates that fall outside of stated data used for fitting
+# 430, 588, 946, 947, 1373 - no sample size reported 
+# didn't look at rest
+
 # Symptom onset to recovery
 onset_recovery_forest <- forest_plot(d4 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),
                                      'Symptom onset to recovery (days)',"parameter_type",c(0,8),text_size = TEXT_SIZE)
@@ -92,16 +118,16 @@ SI_forest_noqa <- forest_plot(d5|> arrange(desc(parameter_value)), 'Serial Inter
 IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),'Infectious Period (days)',"parameter_value_type",c(-22,52),text_size = TEXT_SIZE)
 IP_forest_noqa <- forest_plot(d6|> arrange(desc(parameter_value)), 'Infectious Period (days)',"parameter_type",c(0,52),text_size = TEXT_SIZE)
 
-ip_forest_mmv <- forest_plot(d6 |> arrange(method_moment_value,desc(parameter_value)),
+ip_forest_mmv <- forest_plot(d6 |> arrange(parameter_value,desc(parameter_value)),
                              'Infectious Period (days)','method_moment_value',c(0,52),text_size = TEXT_SIZE)
 
-ip_forest_pc <- forest_plot(d6 |> arrange(population_country,desc(parameter_value)),
+ip_forest_pc <- forest_plot(d6 |> arrange(parameter_value,desc(parameter_value)),
                             'Infectious Period (days)','population_country',c(0,52),text_size = TEXT_SIZE)
 
-ip_forest_pg <- forest_plot(d6 |> arrange(population_group,desc(parameter_value)),
+ip_forest_pg <- forest_plot(d6 |> arrange(parameter_value,desc(parameter_value)),
                             'Infectious Period (days)','population_group',c(0,52),text_size = TEXT_SIZE)
 
-ip_forest_pst <- forest_plot(d6 |> arrange(population_sample_type,desc(parameter_value)),
+ip_forest_pst <- forest_plot(d6 |> arrange(parameter_value,desc(parameter_value)),
                              'Infectious Period (days)','population_sample_type',c(0,52),text_size = TEXT_SIZE)
 
 ip <- (ip_forest_mmv + ip_forest_pc) / (ip_forest_pg + ip_forest_pst ) + 
@@ -139,18 +165,18 @@ GT_forest_noqa <- forest_plot(d7|> arrange(desc(parameter_value)), 'Generation T
 ggsave("generation_time.png", plot = GT_forest, width = 8, height = 6)
 
 # Incubation period
-p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type",c(0,30))
+p1 <- forest_plot(d1,'Incubation Period (days)',"parameter_type", c(0,30))
 
-incp_forest_mmv <- forest_plot(d1 |> arrange(method_moment_value,desc(parameter_value)),
+incp_forest_mmv <- forest_plot(d1 |> arrange(parameter_value,desc(parameter_value)),
                              'Incubation Period (days)','method_moment_value',c(0,30),text_size = TEXT_SIZE)
 
-incp_forest_pc <- forest_plot(d1 |> arrange(population_country,desc(parameter_value)),
+incp_forest_pc <- forest_plot(d1 |> arrange(parameter_value,desc(parameter_value)),
                             'Incubation Period (days)','population_country',c(0,30),text_size = TEXT_SIZE)
 
-incp_forest_pg <- forest_plot(d1 |> arrange(population_group,desc(parameter_value)),
+incp_forest_pg <- forest_plot(d1 |> arrange(parameter_value,desc(parameter_value)),
                             'Incubation Period (days)','population_group',c(0,30),text_size = TEXT_SIZE)
 
-incp_forest_pst <- forest_plot(d1 |> arrange(population_sample_type,desc(parameter_value)),
+incp_forest_pst <- forest_plot(d1 |> arrange(parameter_value,desc(parameter_value)),
                              'Incubation Period (days)','population_sample_type',c(0,30),text_size = TEXT_SIZE)
 
 incp <- (incp_forest_mmv + incp_forest_pc) / (incp_forest_pg + incp_forest_pst ) + theme(text = element_text(size = TEXT_SIZE)) +
@@ -180,7 +206,7 @@ ggsave("incubation_period.png", plot = incp, width = 39, height = 22)
 #                             width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
 
 
-#meta-analysis of latent period
+# latent period
 p2 <- forest_plot(d2 %>% mutate(parameter_unit = 'Days'),'Latent Period (days)',"parameter_type",c(0,51))
 ggsave("latent_period.png", plot = p2, width = 8, height = 6)
 
@@ -211,24 +237,26 @@ eip <- (eip_forest + eip_forest_pc) / (eip_forest_ploc) + theme(text = element_t
   plot_annotation(tag_levels = 'A')
 ggsave("extrinsic_incubation_period.png", plot = eip, width = 39, height = 22)
 
-### Create plots!
-# 
-# layout <- "
-# AAABBB
-# CCCDDD
-# EEEFFF
-# "
-# delays_plot <-  SI_forest + ip + GT_forest + incp + outcome_forest + p2 +
-#   plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
-# ggsave("delays.png", plot = delays_plot, width = 39, height = 22)
-# ggsave("delays.pdf", plot = delays_plot, width = 39, height = 22)
-# 
-# delays_plotSI <-  SI_forest_noqa + IP_forest_noqa + outcome_forest_noqa + m1_SI_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + m2_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + 
-#   plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
+## Create plots!
+
+layout <- "
+AABBBB
+CCCCDD
+EEEEFF
+"
+delays_plot <-  SI_forest + ip_forest_pc + eip_forest_pc + outcome_forest+ incp_forest_pc + p2 +
+  plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
+ggsave("delays.png", plot = delays_plot, width = 25, height = 35)
+ggsave("delays.pdf", plot = delays_plot, width = 25, height = 35)
+
+# delays_plotSI <-  SI_forest_noqa + IP_forest_noqa + outcome_forest_noqa + m1_SI_noqa$plot + 
+#   theme(text = element_text(size = TEXT_SIZE)) + m2_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) +
+#   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
 # ggsave("SI_delays.png", plot = delays_plotSI, width = 39, height = 22)
 # ggsave("SI_delays.pdf", plot = delays_plotSI, width = 39, height = 22)
 
 # SI figures
 # ggsave("figure_5SI_subgroup_meta.png", plot = m1_SI$plot, width = 22, height = 22) # note that qa & noqa lets through sames papers
 
+# Meta- analysis 
 
