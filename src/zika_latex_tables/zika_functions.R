@@ -1,11 +1,6 @@
 #function to tidy-up all dataframes
 
-data_curation <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
-  
-  if(switch_first_surname)   # this is due to legacy access database issue
-  {
-    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
-  }
+data_curation <- function(articles, outbreaks, models, parameters, plotting) {
   
   articles   <- articles %>%
     mutate(refs = paste(first_author_surname," (",year_publication,")",sep="")) %>% #define references
@@ -23,24 +18,22 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
   
   parameters <- parameters %>% 
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-    filter(!as.logical(parameter_from_figure)) # ensure that parameter_from_figure is logical not character
+    filter(!parameter_from_figure) 
   
-  if (pathogen == 'ZIKA'){
-    var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 
-                    "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
-                    "parameter_2_value", "parameter_2_lower_bound", "parameter_2_upper_bound", 
-                    "parameter_2_uncertainty_lower_value", "parameter_2_uncertainty_upper_value")
-  } else {
-    var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 
-                    "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value")
-  }
+  if ('parameter_uncertainty_single_type' %in% colnames(parameters)) {
+    colnames(parameters)[colnames(parameters) == 'parameter_uncertainty_single_type'] <- 'parameter_uncertainty_singe_type' 
+    flag <- TRUE
+  } else flag = FALSE
   
   param4plot <- parameters %>%
-    mutate_at(vars(all_of(var_select)),
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
               list(~ ifelse(inverse_param, 1/.x, .x))) %>%
-    mutate_at(vars(all_of(var_select)),
-              list(~ .x * 10^exponent)) %>% 
-    mutate_at(vars(all_of(var_select)), #account for different units
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+              list(~ .x * 10^exponent)) %>%
+    mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
+                   parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
               list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>% 
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
@@ -59,34 +52,13 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_upper_value)) %>%
     select(-c(no_unc)) %>%
-    mutate(central = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator, 0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
-  
-  if (pathogen == 'ZIKA'){
-    # Zika database has extra variables for the variability -- all of these have _2
-
-    param4plot <- param4plot %>%
-      mutate(no_unc = is.na(parameter_2_uncertainty_lower_value) & is.na(parameter_2_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
-             parameter_2_uncertainty_lower_value = case_when(
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value - sqrt(parameter_2_uncertainty_single_value),
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value / distribution_2_par2_value)^2, rate = distribution_2_par1_value / distribution_2_par2_value^2),
-             TRUE ~ parameter_2_uncertainty_lower_value),
-           parameter_2_uncertainty_upper_value = case_when(
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value+sqrt(parameter_2_uncertainty_single_value),
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2),
-             TRUE ~ parameter_2_uncertainty_upper_value))
-  }
+    mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
   
   if (plotting) {
     parameters <- param4plot    
   } else {
     check_param_id <- (parameters$parameter_data_id == param4plot$parameter_data_id )    # check that parameter data ids didn't get scrambled 
-    if(sum(check_param_id, na.rm = TRUE)==dim(parameters)[1]) {
+    if(sum(check_param_id)==dim(parameters)[1]) {
       parameters$central <- param4plot$central 
     } else {
       errorCondition('parameters not in right order to match')
@@ -115,7 +87,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -126,52 +98,32 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   gg <- ggplot(df) +
         geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
                          y = urefs, yend = urefs, color = .data[[color_column]]),
-                     linewidth = 3, alpha = 0.65) +
+                     size = 3, alpha = 0.65) +
         geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                           y = urefs),
                       width = 0.15, lwd=0.5, color = "black", alpha = 1) +
-        geom_point(aes(x = central, y = urefs, 
-                       shape = parameter_value_type, fill = .data[[color_column]]),
+        geom_point(aes(x = parameter_value, y = urefs, 
+                       shape = df$parameter_value_type, fill = .data[[color_column]]),
                    size = 3, stroke = 1,
                    color = "black", alpha = 1)
   
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
   
-  if(sum(!is.na(custom_colours)))
-  {
-    gg <- gg + 
-      scale_shape_manual(name = "Parameter Type",
-                         values = c(Mean = 21, Median = 22, Central = 25, Unspecified = 24, Other = 23),
-                         breaks = c("Mean", "Median", "Unspecified", "Central", "Other")) +
-      scale_x_continuous(limits = lims, expand = c(0, 0)) +
-      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
-      labs(x = label, y = NULL) +
-      scale_color_manual(values = custom_colours) +
-      scale_fill_manual(values = custom_colours) +
-      theme_minimal() + 
-      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
-            text = element_text(size = text_size))
-  } else {
-    gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-      scale_shape_manual(name = "Parameter Type",
-                         values = c(Mean = 21, Median = 22, Central = 25, Unspecified = 24, Other = 23),
-                         breaks = c("Mean", "Median", "Unspecified", "Central", "Other")) +
-      scale_x_continuous(limits = lims, expand = c(0, 0)) +
-      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
-      labs(x = label, y = NULL) +
-      theme_minimal() + 
-      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
-            text = element_text(size = text_size))  
-  }
-  
+  gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+        scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+        scale_x_continuous(limits = lims, expand = c(0, 0)) +
+        scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+        labs(x = label, y = NULL) +
+        theme_minimal() + 
+        theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+              text = element_text(size = text_size))
   if (cats == 1) {
     gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
   } else {
     gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
   
   if(show_label)
-    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" ) 
-    #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" ) 
+    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = df$population_country_v2), nudge_x = 1.5, segment.color = "grey90" ) 
 
   return(gg)
 }
@@ -271,10 +223,10 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
 
 metamean_wrap <- function(dataframe, estmeansd_method, 
                              plot_study, digits, lims, colour, label,
-                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
+                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
   
   dataframe <- epireview::filter_df_for_metamean(dataframe)
-  dataframe <- dataframe[!is.na(dataframe$id),]
+    
   if(!is.na(subgroup))
   {
     mtan <- metamean(data = dataframe,
@@ -301,7 +253,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits, 
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10, colgap.forest.left = paste0( colgap_shift,"cm"))
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
     dev.off() 
   } else {
     mtan <- metamean(data = dataframe,
