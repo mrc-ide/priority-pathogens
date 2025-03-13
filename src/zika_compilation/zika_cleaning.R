@@ -529,6 +529,7 @@ zika_clean_params <- function(df, pathogen){
       population_country =
         case_when(
           #Specify country in locations defined as "Unspecified"
+          covidence_id == 10741 & population_location == 'Ponce' ~ 'Puerto Rico',
           covidence_id == 4438 & population_location == 'Florida' ~ "United States",
           covidence_id == 5971 & population_location == "22 municipalities of French Guiana" ~ "France" , 
           covidence_id == 5951 & population_location ==  "Recife" ~ "Brazil", 
@@ -911,10 +912,10 @@ zika_clean_delays <- function(params_df){
       TRUE ~ population_sample_size
     ))
   
-  # Remove delays that aren't estimated (fixed in model and incorrectly extracted)
+  # Remove delays that aren't estimated (parameters were fixed in model and originally were extracted but should not have been)
   df <- df %>%
     filter(!(covidence_id == 6765 & parameter_type == 'Human delay - incubation period' & population_location %in% c("Sous-le-vent Islands", "Marquesas Islands", "Yap")),
-           !(covidence_id == 6765 & parameter_type == 'Human delay - infectious period' & population_location %in% c('Tahiti', 'Tuamotu-Gambier','Australes','Yap')))
+           !(covidence_id == 6765 & parameter_type == 'Human delay - infectious period' & population_location %in% c('Tahiti', 'Tuamotu-Gambier','Australes','Yap',"Mo'orea")))
   
   return(df)
 }
@@ -938,10 +939,12 @@ zika_clean_zcs_microcephaly <- function(df){
     ),
     cfr_ifr_denominator = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 11,
+      covidence_id == 4014 & parameter_type == 'Miscarriage rate' ~ cfr_ifr_numerator, # mixed up num and denom
       TRUE ~ cfr_ifr_denominator
     ),
     cfr_ifr_numerator = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 2,
+      covidence_id == 4014 & parameter_type == 'Miscarriage rate' ~ cfr_ifr_denominator, # mixed up num and denom
       TRUE ~ cfr_ifr_numerator
     ))
 }
@@ -984,6 +987,7 @@ zika_clean_genomics <- function(df){
       ),
       method_moment_value = case_when(
         covidence_id == 1954 & parameter_class == 'Mutations' ~ 'Mid-outbreak',
+        is.na(method_moment_value) ~ "Unspecified",
         TRUE ~ method_moment_value
       ),
       population_sample_size = case_when(
