@@ -67,60 +67,60 @@ c25 <- c(
 # epireview::forest_plot_r0(parameters, shape_by = 'parameter_value_type', col_by = 'r_pathway')
 
 r0_pc <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'), 
-            label = "Basic reproduction number",
-            color_column = 'population_country',
-            lims = c(0,17),
-            custom_colours = c25)
+                     label = "Basic reproduction number",
+                     color_column = 'population_country',
+                     lims = c(0,17),
+                     custom_colours = c25)
 
 r0_sampletype <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'), 
-                        label = "Basic reproduction number",
-                        color_column = 'population_sample_type',
+                             label = "Basic reproduction number",
+                             color_column = 'population_sample_type',
+                             lims = c(0,17),
+                             custom_colours = c25)
+
+r0_human <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
+                        label = "Basic reproduction number - human",
+                        color_column = 'population_country',
                         lims = c(0,17),
                         custom_colours = c25)
 
-r0_human <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
-            label = "Basic reproduction number - human",
-            color_column = 'population_country',
-            lims = c(0,17),
-            custom_colours = c25)
-
 r0_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Mosquito'), 
-            label = "Basic reproduction number - mosquito",
-            color_column = 'population_country',
-            lims = c(0,17),
-            custom_colours = c25)
+                           label = "Basic reproduction number - mosquito",
+                           color_column = 'population_country',
+                           lims = c(0,17),
+                           custom_colours = c25)
 
 
 re <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective, Re)'), 
-            label = "Effective reproduction number",
-            color_column = 'population_country',
-            lims = c(0,4),
-            custom_colours = c25)
+                  label = "Effective reproduction number",
+                  color_column = 'population_country',
+                  lims = c(0,4),
+                  custom_colours = c25)
 
 re_human <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Human'),
-            label = "Effective reproduction number - human",
-            color_column = 'population_country',
-            lims = c(0,17),
-            custom_colours = c25)
+                        label = "Effective reproduction number - human",
+                        color_column = 'population_country',
+                        lims = c(0,17),
+                        custom_colours = c25)
 
 re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Mosquito'),
-            label = "Effective reproduction number - mosquito",
-            color_column = 'population_country',
-            lims = c(0,17),
-            custom_colours = c25)
+                           label = "Effective reproduction number - mosquito",
+                           color_column = 'population_country',
+                           lims = c(0,17),
+                           custom_colours = c25)
 
 ggsave("r0_pc.pdf", r0_pc, height = 15, width = 12)
 ggsave("r0_sampletype.pdf", r0_sampletype, height = 15, width = 12)
 ggsave("r0_human.pdf", r0_human, height = 15, width = 12)
 ggsave("r0_mosquito.pdf", r0_mosquito, height = 15, width = 12)
-ggsave("re.pdf", r0, height = 15, width = 12)
-ggsave("re_human.pdf", r0_human, height = 15, width = 12)
-ggsave("re_mosquito.pdf", r0_mosquito, height = 15, width = 12)
+ggsave("re.pdf", re, height = 15, width = 12)
+ggsave("re_human.pdf", re_human, height = 15, width = 12)
+ggsave("re_mosquito.pdf", re_mosquito, height = 15, width = 12)
 
 ggsave("r0_pc.png", r0_pc, height = 15, width = 12)
 ggsave("r0_sampletype.png", r0_sampletype, height = 15, width = 12)
 ggsave("r0_human.png", r0_human, height = 15, width = 12)
 ggsave("r0_mosquito.png", r0_mosquito, height = 15, width = 12)
-ggsave("re.png", r0, height = 15, width = 12)
-ggsave("re_human.png", r0_human, height = 15, width = 12)
-ggsave("re_mosquito.png", r0_mosquito, height = 15, width = 12)
+ggsave("re.png", re, height = 15, width = 12)
+ggsave("re_human.png", re_human, height = 15, width = 12)
+ggsave("re_mosquito.png", re_mosquito, height = 15, width = 12)
