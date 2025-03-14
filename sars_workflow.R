@@ -31,7 +31,7 @@ location <- normalizePath(location)
 #}
 
 ## Download the zipped outputs from the database tasks
-url <- "https://github.com/mrc-ide/priority-pathogens/releases/download/sars/sars-outputs.zip"
+url <- "https://github.com/mrc-ide/priority-pathogens/releases/download/sars2/sars-outputs.zip"
 ## Download
 download.file(url, destfile = file.path(location, "sars-outputs.zip"), mode = "wb")
 ## unzip
