@@ -1,0 +1,92 @@
+on:
+  - push
+  - pull_request
+
+jobs:
+  lassa:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+          extra-repositories: |
+            https://mrc-ide.r-universe.dev
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: NA
+          packages: |
+            mrc-ide/epireview
+            orderly.sharedfile
+            cowplot
+            doconv
+            dplyr
+            epitrix
+            estmeansd
+            flextable
+            ftExtra
+            ggbreak
+            ggforce
+            ggplot2
+            ggrepel
+            ggsci
+            ggspatial
+            grid
+            gridExtra
+            gt
+            harrypotter
+            ids
+            janitor
+            meta
+            metafor
+            mixdist
+            odbc
+            officer
+            optparse
+            patchwork
+            png
+            purrr
+            ragg
+            readr
+            readxl
+            rio
+            rnaturalearth
+            rnaturalearthdata
+            scales
+            sf
+            snakecase
+            splitstackshape
+            stringr
+            tibble
+            tidyr
+            tidyverse
+            tm
+            writexl
+            zip
+
+      - uses: mrc-ide/orderly-action@main
+        with:
+          packit-url: https://packit.dide.ic.ac.uk/priority-pathogens
+
+      - shell: Rscript {0}
+        run: |
+          library(orderly2)
+          orderly_location_pull_packet("latest(name == 'db_extraction' && parameter:pathogen == 'LASSA')",
+                                       options = list(location="packit"))
+
+          ids <- c(
+            orderly_run("db_double", parameters = list(pathogen = "LASSA")),
+            orderly_run("db_compilation", parameters = list(pathogen = "LASSA")),
+            orderly_run("lassa_serology", parameters = list(pathogen = "LASSA")),
+            orderly_run("lassa_severity", parameters = list(pathogen = "LASSA")),
+            orderly_run("lassa_delays", parameters = list(pathogen = "LASSA")),
+            orderly_run("lassa_transmission", parameters = list(pathogen = "LASSA")),
+            orderly_run("lassa_summary", parameters = list(pathogen = "LASSA")),
+            orderly_run("lassa_latex_tables", parameters = list(pathogen = "LASSA")),
+            orderly_run("lassa_collate", parameters = list(pathogen = "LASSA")))
+
+          orderly_location_push(ids, "packit")
