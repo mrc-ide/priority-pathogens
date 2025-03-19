@@ -1,4 +1,5 @@
 # *============================================================================*
+library(cli)
 library(httr)
 library(orderly2)
 library(yaml)
@@ -34,10 +35,25 @@ create_record_list <- function(token, record_id){
 }
 
 # *--------------------------- Downloading the data ---------------------------*
+exit_text <- "No output generated - the system will exit"
+
 for (report_id in names(report_id_list)){
   post_body_list <- create_record_list(token, report_id)
 
-  response <- POST(endpoint_url, body = post_body_list, encode = "form")
+  response <-
+    tryCatch(stop_for_status(POST(endpoint_url, body = post_body_list, encode = "form")),
+           http_404 = function(e) cli_abort(
+             c("404 Not Found", exit_text)),
+           http_403 = function(e) cli_abort(
+             c("403 Forbidden - check your auth token!", exit_text)),
+           http_400 = function(e) cli_abort(
+             c("400 Bad Request", exit_text)),
+           http_500 = function(e) cli_abort(
+             c("500 Internal Server Error", exit_text)),
+           error = function(e) cli_abort(
+             c(e$message, exit_text), call = e$call)
+  )
+
   result_df <- content(response)
 
   write.csv(result_df, file=report_id_list[[report_id]], row.names=FALSE)
