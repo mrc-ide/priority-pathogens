@@ -576,7 +576,7 @@ orderly_resource(c(config_file_path))
 # Shared resources are assigned dynamically based on config file, so it is
 # loaded in the orderly config section
 config_list <- yaml.load_file(config_file_path)
-orderly_download_depencency <- config_list[["orderly_download_depencency"]]
+
 # Note: table_filenames_vec needs to be a named vector, with names corresponding
 # to config_list[["table_filepaths"]] names
 if (orderly_download_depencency==TRUE){
