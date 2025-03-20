@@ -579,7 +579,7 @@ config_list <- yaml.load_file(config_file_path)
 
 # Note: table_filenames_vec needs to be a named vector, with names corresponding
 # to config_list[["table_filepaths"]] names
-if (orderly_download_depencency==TRUE){
+if (orderly_download_dependency==TRUE){
   table_filenames_vec <- unlist(config_list[["table_filepaths"]])
 
   orderly_dependency(
