@@ -43,13 +43,17 @@ for (report_id in names(report_id_list)){
   response <-
     tryCatch(stop_for_status(POST(endpoint_url, body = post_body_list, encode = "form")),
            http_404 = function(e) cli_abort(
-             c("404 Not Found", exit_text)),
+             c("404 Not Found", exit_text),
+             call=NULL),
            http_403 = function(e) cli_abort(
-             c("403 Forbidden - check your auth token!", exit_text)),
+             c("403 Forbidden - check your auth token!", exit_text),
+             call=NULL),
            http_400 = function(e) cli_abort(
-             c("400 Bad Request", exit_text)),
+             c("400 Bad Request", exit_text),
+             call=NULL),
            http_500 = function(e) cli_abort(
-             c("500 Internal Server Error", exit_text)),
+             c("500 Internal Server Error", exit_text),
+             call=NULL),
            error = function(e) cli_abort(
              c(e$message, exit_text), call = e$call)
   )
