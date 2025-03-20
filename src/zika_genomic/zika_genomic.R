@@ -34,16 +34,23 @@ genomic <- genomic %>%
          sampling_interval = ifelse(sampling_interval == 0, 1, sampling_interval))
 
 # make plot for only sub/site/year
+jitterer <- position_jitter(seed = 123, width = 2)
 
 ggplot(genomic) +
   geom_segment(aes(y = parameter_lower_bound, yend = parameter_upper_bound,
                    x = sampling_interval, yend = sampling_interval),
+               # position = jitterer,
                linewidth = 3, alpha = 0.65, color = 'lightblue') +
-  geom_errorbar(data =genomic %>% drop_na(parameter_uncertainty_type), aes(ymin=parameter_uncertainty_lower_value, ymax=parameter_uncertainty_upper_value,
-                    x = sampling_interval, color = parameter_uncertainty_type),
+  geom_errorbar(data =genomic , 
+                aes(ymin=parameter_uncertainty_lower_value, ymax=parameter_uncertainty_upper_value,
+                    y = central,x = sampling_interval, color = parameter_uncertainty_type),
+                # position = jitterer,
                 width = 1.3, lwd=0.75, alpha = 1) +
-  geom_point(aes(x = sampling_interval, y = central, shape = parameter_value_type), size = 2) + 
+  geom_point(aes(x = sampling_interval, y = central, shape = parameter_value_type), 
+             # position = jitterer, 
+             size = 2) + 
   scale_y_log10()+
+  scale_color_discrete(na.translate = F) +
   theme_bw(base_size = 14) + 
   facet_wrap(~parameter_type, scales = 'free_y') +
   labs(x = 'Sampling interval (years)',

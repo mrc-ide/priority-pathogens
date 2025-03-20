@@ -21,9 +21,9 @@ orderly_artefact(files = c("figure_SI_risk_other.pdf",
 ## DATA CURATION ##
 ###################
 
-articles   <- read_csv("articles.csv")
-models     <- read_csv("models.csv")
-parameters <- read_csv("parameters.csv")
+articles   <- readRDS("articles_curated.rds")
+models     <- readRDS("models_curated.rds")
+parameters <- readRDS("parameters_curated.rds")
 
 dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE )
 

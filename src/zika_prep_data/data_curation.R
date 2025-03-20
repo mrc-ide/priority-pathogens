@@ -60,7 +60,10 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
              TRUE ~ parameter_uncertainty_upper_value)) %>%
     select(-c(no_unc)) %>%
-    mutate(central = coalesce(parameter_value, round(100*cfr_ifr_numerator/cfr_ifr_denominator, 3), round(0.5*(parameter_lower_bound+parameter_upper_bound),3))) #central value for plotting
+    mutate(central = coalesce(parameter_value, round(100*cfr_ifr_numerator/cfr_ifr_denominator, 3)), #central value for plotting, rmeoved this: , round(0.5*(parameter_lower_bound+parameter_upper_bound),3))
+           central = ifelse(grepl('Seroprevalence', parameter_type) | grepl('Miscarriage',parameter_type) | grepl('microcephaly',parameter_type), 
+                            coalesce(central, round(0.5*(parameter_lower_bound+parameter_upper_bound),3)), 
+                            central))
   
   if (pathogen == 'ZIKA'){
     # Zika database has extra variables for the variability -- all of these have _2
