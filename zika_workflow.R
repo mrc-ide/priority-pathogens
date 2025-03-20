@@ -102,6 +102,8 @@ orderly_run("zika_reproduction_numbers", parameters = list(pathogen = "ZIKA"))
 # Genomic data 
 orderly_run('zika_genomic', parameters = list(pathogen = 'ZIKA'))
  
+# Miscarriage/microcephaly 
+orderly_run('zika_zcs_microcephaly', parameters = list(pathogen = 'ZIKA'))
 # # Summary figures
 # orderly_run("sars_summary", parameters = list(pathogen = "SARS"))
 # 
