@@ -6,6 +6,7 @@ library(tidyr)
 library(stringr)
 library(ids)
 
+
 # Covidence ID and filtering out papers that should be removed fixing function 
 fix_cov_ids <- function(df, pathogen){
   
@@ -15,9 +16,7 @@ fix_cov_ids <- function(df, pathogen){
         covidence_id == 6238 ~ 6246, 
         TRUE ~ covidence_id)
     ) %>%
-    filter(covidence_id != 3491) %>% # this is a Research Letter
-    # Remove research letter 
-    filter(!(covidence_id == 7033))
+    filter(!covidence_id %in% c(7033, 3491,  1663, 66, 4338, 4340)) # this is a Research Letter, commeents and not pars 
   
   
   return(df)
@@ -746,6 +745,40 @@ zika_clean_params <- function(df, pathogen){
           survey_start_date == survey_end_date ~ paste(survey_start_date),
           TRUE ~ paste(survey_start_date, "-", survey_end_date)
         ))
+  
+  #Cleaning of attack rate unit (fixing units)
+  df <- df %>% 
+    filter(!covidence_id ==  6272 & parameter_type == "Attack rate") %>%   #no values extracted --> TO REMOVE!
+    mutate(parameter_value_type = ifelse(covidence_id %in% c(890, 1154, 1308, 1821, 3221, 3337, 5671, 6670, 7047, 7336, 10749, 11866) & is.na(parameter_value_type) & parameter_type == "Attack rate", 
+                                         "Unspecified", parameter_value_type),
+           parameter_unit = ifelse(covidence_id %in% c(1941, 6321, 6670) & parameter_unit == "No units" & parameter_type == "Attack rate", 
+                                   "Unspecified", parameter_unit),
+           parameter_unit = ifelse(covidence_id %in% c(890, 890, 1154, 1308, 1821, 3337,
+                                                       3221,  5671, 6670,  7047,
+                                                       7336, 10749, 11866) & is.na(parameter_unit) & parameter_type == "Attack rate", 
+                                   "Unspecified", parameter_unit))
+  
+  #cleaning of relative contributions (fixing units)
+  df <- df %>%
+    mutate(
+      parameter_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
+                                                                           "Relative contribution - zoonotic to human"), 23, parameter_value),
+      parameter_unit = ifelse(covidence_id == 422  & parameter_type %in% c("Relative contribution - human to human",
+                                                                        "Relative contribution - zoonotic to human"), "Percentage (%)", parameter_unit)
+    )
+  
+  #Cleaning of severity (fixing units)
+  df <- df %>%
+    filter(!covidence_id == 7437 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
+                                                       "Severity - proportion of symptomatic cases")) %>% #cov id 7437 does not  have cfr or symptomatic cases 
+    mutate(
+  
+      parameter_unit = ifelse(covidence_id == 12128 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
+                                                                            "Severity - proportion of symptomatic cases"), "Percentage (%)", parameter_unit),
+      parameter_value_type = ifelse(covidence_id == 12128 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
+                                                                                  "Severity - proportion of symptomatic cases"), "Unspecified", parameter_value_type),
+      parameter_value_type = ifelse(covidence_id == 3528 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
+                                                                                 "Severity - proportion of symptomatic cases"), "Unspecified", parameter_value_type)) 
   
   # Add article id and parameter ids for new parameters
   #     id =
