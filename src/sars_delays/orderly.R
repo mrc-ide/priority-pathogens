@@ -25,10 +25,13 @@ orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 orderly_artefact("sars-specific tables",c("figure_5_delays.png",
                                           "figure_5_delays.pdf",
+                                          "figure_5full_delays.png",
+                                          "figure_5full_delays.pdf",
                                           "figure_5SI_subgroup_meta.png",
                                           "figure_5SI_delays.png",
                                           "figure_5SI_delays.pdf",
-                                          "figure_5SI_onset_to_admission.png"))
+                                          "figure_5SI_onset_to_admission.png",
+                                          "figure_S5_funnel.png"))
 
 ###################
 ## DATA CURATION ##
@@ -82,6 +85,13 @@ d1_subgroups <- d1 %>% filter(population_group %in% c('General population','Mixe
   filter(qa_score>0.5) %>%
   mutate(parameter_value = coalesce(parameter_value,central))
 
+d1_forest <- d1 %>% mutate(population_group = replace_na(population_group,'Unspecified'),
+                           parameter_value_type = replace_na(parameter_value_type,'Other')) %>%
+  filter(qa_score>0.5) %>%
+  mutate(parameter_value = coalesce(parameter_value,central))
+
+IncP_forest <- forest_plot(d1_forest |> arrange(population_group,desc(parameter_value)),'Incubation period (days)',"population_group", c(0,21),text_size = TEXT_SIZE)
+
 d1_subgroups_noqa <- d1 %>% filter(population_group %in% c('General population','Mixed groups', 'Persons under investigation','Healthcare workers')) %>%
   mutate(parameter_value = coalesce(parameter_value,central))
 
@@ -100,9 +110,24 @@ m1_SI_noqa <- metamean_wrap(dataframe = d1_subgroups_noqa, estmeansd_method = "C
                        plot_study = FALSE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean incubation period (days)",
                        width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
 
+png(file = "temp.png", width = 9500, height = 6500, res = 1000)
+funnel(m1$result,common = FALSE,#only plots funnel for either common or random for some reason
+       pch = 22, bg = "dodgerblue3", level = 0.95, 
+       studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funnel_m1 <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
 
 #meta-analysis of onset-admission delay
 set.seed(42)
+
+d2_forest <- d2 %>% filter(qa_score>0.5) %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+                                          mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
+                                                 population_group    = replace_na(population_group,'Unspecified'),
+                                                 population_sample_type = replace_na(population_sample_type,'Unspecified'))
+
 d2 <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
   filter(qa_score>0.5) %>%
@@ -110,16 +135,16 @@ d2 <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arr
          population_group    = replace_na(population_group,'Unspecified'),
          population_sample_type = replace_na(population_sample_type,'Unspecified'))
 
-oa_forest_mmv <- forest_plot(d2 |> arrange(method_moment_value,desc(parameter_value)),
+oa_forest_mmv <- forest_plot(d2_forest |> arrange(method_moment_value,desc(parameter_value)),
                              'Onset-Admission Delay (days)','method_moment_value',c(0,20),text_size = TEXT_SIZE)
 
-oa_forest_pc <- forest_plot(d2 |> arrange(population_country,desc(parameter_value)),
+oa_forest_pc <- forest_plot(d2_forest |> arrange(population_country,desc(parameter_value)),
                              'Onset-Admission Delay (days)','population_country',c(0,20),text_size = TEXT_SIZE)
 
-oa_forest_pg <- forest_plot(d2 |> arrange(population_group,desc(parameter_value)),
-                            'Mean Onset-Admission Delay (days)','population_group',c(0,20),text_size = TEXT_SIZE)
+oa_forest_pg <- forest_plot(d2_forest |> arrange(population_group,desc(parameter_value)),
+                            'Onset-Admission Delay (days)','population_group',c(0,20),text_size = TEXT_SIZE)
 
-oa_forest_pst <- forest_plot(d2 |> arrange(population_sample_type,desc(parameter_value)),
+oa_forest_pst <- forest_plot(d2_forest |> arrange(population_sample_type,desc(parameter_value)),
                             'Onset-Admission Delay (days)','population_sample_type',c(0,20),text_size = TEXT_SIZE)
 
 oa <- (oa_forest_mmv + oa_forest_pc) / (oa_forest_pg + oa_forest_pst ) + theme(text = element_text(size = TEXT_SIZE)) + 
@@ -129,6 +154,19 @@ ggsave("figure_5SI_onset_to_admission.png", plot = oa, width = 39, height = 22)
 m2 <- metamean_wrap(dataframe = d2, estmeansd_method = "Cai",
                     plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
                     width = 9500, height = 4200, resolution = 1000)
+
+
+png(file = "temp.png", width = 9500, height = 6500, res = 1000)
+funnel(m2$result,common = FALSE,xlim=c(1.8,6),#only plots funnel for either common or random for some reason
+       pch = 22, bg = "dodgerblue3", level = 0.95, 
+       studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funnel_m2 <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+
+ggsave("figure_S5_funnel.png", plot = funnel_m1 + funnel_m2, width = 12, height = 8)
 
 set.seed(42)
 d2_noqa <- d2 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
@@ -152,10 +190,15 @@ AAABBBDDD
 EEEEFFFFF
 EEEEFFFFF
 "
+delays_plot <-  (SI_forest + IP_forest + outcome_forest)/(IncP_forest+oa_forest_pg) + plot_annotation(tag_levels = 'A') 
+ggsave("figure_5_delays.png", plot = delays_plot, width = 37, height = 25)
+ggsave("figure_5_delays.pdf", plot = delays_plot, width = 37, height = 25)
+
 delays_plot <-  SI_forest + IP_forest + outcome_forest + m1$plot + theme(text = element_text(size = TEXT_SIZE)) + m2$plot + theme(text = element_text(size = TEXT_SIZE)) + 
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 
-ggsave("figure_5_delays.png", plot = delays_plot, width = 39, height = 22)
-ggsave("figure_5_delays.pdf", plot = delays_plot, width = 39, height = 22)
+ggsave("figure_5full_delays.png", plot = delays_plot, width = 39, height = 22)
+ggsave("figure_5full_delays.pdf", plot = delays_plot, width = 39, height = 22)
+
 
 delays_plotSI <-  SI_forest_noqa + IP_forest_noqa + outcome_forest_noqa + m1_SI_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + m2_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) + 
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A') 

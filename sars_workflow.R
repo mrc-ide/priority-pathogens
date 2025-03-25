@@ -31,7 +31,7 @@ location <- normalizePath(location)
 #}
 
 ## Download the zipped outputs from the database tasks
-url <- "https://github.com/mrc-ide/priority-pathogens/releases/download/sars/sars-outputs.zip"
+url <- "https://github.com/mrc-ide/priority-pathogens/releases/download/sars2/sars-outputs.zip"
 ## Download
 download.file(url, destfile = file.path(location, "sars-outputs.zip"), mode = "wb")
 ## unzip
@@ -67,6 +67,10 @@ loc_name <- adjective_animal()
  orderly_location_pull_packet()
 # 
 # # Sort into double extracted matching and fixing
+ 
+#orderly_run("db_extraction_prep", parameters = list(pathogen = "SARS"))
+#orderly_run("db_extraction", parameters = list(pathogen = "SARS")) 
+ 
 orderly_run("db_double", parameters = list(pathogen = "SARS"))
 # 
 # # Bring single, matching double, and fixed double together
