@@ -63,23 +63,23 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
   
   if (pathogen == 'ZIKA'){
     # Zika database has extra variables for the variability -- all of these have _2
-
+    
     param4plot <- param4plot %>%
       mutate(no_unc = is.na(parameter_2_uncertainty_lower_value) & is.na(parameter_2_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
              parameter_2_uncertainty_lower_value = case_when(
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value - sqrt(parameter_2_uncertainty_single_value),
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value / distribution_2_par2_value)^2, rate = distribution_2_par1_value / distribution_2_par2_value^2),
-             TRUE ~ parameter_2_uncertainty_lower_value),
-           parameter_2_uncertainty_upper_value = case_when(
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value+sqrt(parameter_2_uncertainty_single_value),
-             str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
-             str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2),
-             TRUE ~ parameter_2_uncertainty_upper_value))
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_value,
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value - sqrt(parameter_2_uncertainty_single_value),
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
+               str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value / distribution_2_par2_value)^2, rate = distribution_2_par1_value / distribution_2_par2_value^2),
+               TRUE ~ parameter_2_uncertainty_lower_value),
+             parameter_2_uncertainty_upper_value = case_when(
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_uncertainty_single_value,
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value+sqrt(parameter_2_uncertainty_single_value),
+               str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
+               str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2),
+               TRUE ~ parameter_2_uncertainty_upper_value))
   }
   
   if (plotting) {
@@ -120,20 +120,20 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
   df   <- df %>% mutate(urefs = make.unique(refs)) %>%
-                 mutate(urefs = factor(urefs, levels = rev(unique(urefs))))
+    mutate(urefs = factor(urefs, levels = rev(unique(urefs))))
   cats <- length(unique(df[[color_column]]))
   
   gg <- ggplot(df) +
-        geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
-                         y = urefs, yend = urefs, color = .data[[color_column]]),
-                     linewidth = 3, alpha = 0.65) +
-        geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                          y = urefs),
-                      width = 0.15, lwd=0.5, color = "black", alpha = 1) +
-        geom_point(aes(x = central, y = urefs, 
-                       shape = parameter_value_type, fill = .data[[color_column]]),
-                   size = 3, stroke = 1,
-                   color = "black", alpha = 1)
+    geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
+                     y = urefs, yend = urefs, color = .data[[color_column]]),
+                 linewidth = 3, alpha = 0.65) +
+    geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
+                      y = urefs),
+                  width = 0.15, lwd=0.5, color = "black", alpha = 1) +
+    geom_point(aes(x = central, y = urefs, 
+                   shape = parameter_value_type, fill = .data[[color_column]]),
+               size = 3, stroke = 1,
+               color = "black", alpha = 1)
   
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
   
@@ -171,8 +171,8 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   
   if(show_label)
     gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" ) 
-    #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" ) 
-
+  #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" ) 
+  
   return(gg)
 }
 
@@ -241,39 +241,41 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
   shapes <- shapes %>% left_join(df,by=c('REG_CODE')) 
   
   gg <- ggplot() +
-        geom_sf(data = shapes, lwd = 0.3, col = "grey40", aes(fill = value)) +
-        geom_sf(data = l0, lwd = 0.7, col = "black",  fill = NA) +
-        scale_fill_viridis_c(option = color_opt, direction = -1, na.value = "grey80", 
-                             limits = col_lim) +
-        geom_point(data = f, aes(x = longitude, y = latitude, color = "Outbreak"), shape = 8, size = 2.5, stroke = 1.5) +
-        scale_color_manual(values = c("Outbreak" = "green1")) + 
-        geom_text(data = n, aes(x = longitude, y = latitude, label = c_name), size = 3.4, fontface = 'italic', color = "black") +
-        coord_sf(xlim = long_lim, ylim = lat_lim) +
-        theme_void() +
-        guides(fill = guide_colorbar(title = NULL,order = 1), color = guide_legend(title = NULL)) + 
-        theme(legend.key.size = unit(2, "lines"), legend.position = c(0.07, 0.5), legend.text = element_text(size = 12)) + 
-        annotation_scale(location = "bl", width_hint = 0.2) +
-        annotation_north_arrow(location = "bl", which_north = "true", pad_y = unit(0.4, "in"), style = north_arrow_fancy_orienteering) +
-        annotation_custom(grob = rectGrob(gp = gpar(col = "black", fill = NA, lwd = 3)), 
-                          xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-        ggtitle(title)
-        #geom_text(data = f %>% filter(type == "Treatment Centre"), aes(x = longitude, y = latitude, color = type), label = "T", size = 5, fontface='bold') +
-        #scale_color_manual(values = c(Outbreak = "green1", "Treatment Centre" = "blue")) +
-        #guides(fill = guide_colorbar(title = NULL), color = guide_legend(title = NULL, override.aes = list(shape = c(8,NA)))) + 
-        #scale_shape_manual(values = c(circle = 21, square = 22, triangle = 24)) +
-        #scale_color_manual(values = c(blue = "blue", green = "green")) +
-        #geom_emoji(data=f, aes(longitude,latitude), emoji = "", size=0.03) +
-        
+    geom_sf(data = shapes, lwd = 0.3, col = "grey40", aes(fill = value)) +
+    geom_sf(data = l0, lwd = 0.7, col = "black",  fill = NA) +
+    scale_fill_viridis_c(option = color_opt, direction = -1, na.value = "grey80", 
+                         limits = col_lim) +
+    geom_point(data = f, aes(x = longitude, y = latitude, color = "Outbreak"), shape = 8, size = 2.5, stroke = 1.5) +
+    scale_color_manual(values = c("Outbreak" = "green1")) + 
+    geom_text(data = n, aes(x = longitude, y = latitude, label = c_name), size = 3.4, fontface = 'italic', color = "black") +
+    coord_sf(xlim = long_lim, ylim = lat_lim) +
+    theme_void() +
+    guides(fill = guide_colorbar(title = NULL,order = 1), color = guide_legend(title = NULL)) + 
+    theme(legend.key.size = unit(2, "lines"), legend.position = c(0.07, 0.5), legend.text = element_text(size = 12)) + 
+    annotation_scale(location = "bl", width_hint = 0.2) +
+    annotation_north_arrow(location = "bl", which_north = "true", pad_y = unit(0.4, "in"), style = north_arrow_fancy_orienteering) +
+    annotation_custom(grob = rectGrob(gp = gpar(col = "black", fill = NA, lwd = 3)), 
+                      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+    ggtitle(title)
+  #geom_text(data = f %>% filter(type == "Treatment Centre"), aes(x = longitude, y = latitude, color = type), label = "T", size = 5, fontface='bold') +
+  #scale_color_manual(values = c(Outbreak = "green1", "Treatment Centre" = "blue")) +
+  #guides(fill = guide_colorbar(title = NULL), color = guide_legend(title = NULL, override.aes = list(shape = c(8,NA)))) + 
+  #scale_shape_manual(values = c(circle = 21, square = 22, triangle = 24)) +
+  #scale_color_manual(values = c(blue = "blue", green = "green")) +
+  #geom_emoji(data=f, aes(longitude,latitude), emoji = "", size=0.03) +
+  
   return(gg)
 }
 
 #wrapper function for metamean
 
+
+
 metamean_wrap <- function(dataframe, estmeansd_method, 
-                             plot_study, digits, lims, colour, label,
-                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
+                          plot_study, digits, lims, colour, label,
+                          width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
   
-  dataframe <- epireview::filter_df_for_metamean(dataframe)
+  dataframe <- filter_df_for_metamean(dataframe)
   dataframe <- dataframe[!is.na(dataframe$id),]
   if(!is.na(subgroup))
   {
@@ -338,8 +340,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
 
 ## THIS IS INITIAL VERSION ONLY -- WORK IN PROGRESS
 metagen_wrap <- function(dataframe, estmeansd_method, 
-                          plot_study, digits, lims, colour, label,
-                          width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
+                         plot_study, digits, lims, colour, label,
+                         width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
   
   #dataframe <- epireview::filter_df_for_metamean(dataframe)
   # must have the correct columns
@@ -485,7 +487,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
                     method.sd = estmeansd_method,
                     sm = "R0",
                     method.tau = "REML"
-                    )
+    )
     
     png(file = "temp.png", width = width, height = height, res = resolution)
     forest(mtan, layout = "RevMan5",
@@ -507,17 +509,17 @@ metagen_wrap <- function(dataframe, estmeansd_method,
 #wrapper function for metaprop
 
 metaprop_wrap <- function(dataframe, subgroup, 
-                             plot_pooled, sort_by_subg, plot_study, digits, colour, 
-                             width, height, resolution,
-                             at = seq(0,1,by=0.2), xlim = c(0,1)){
+                          plot_pooled, sort_by_subg, plot_study, digits, colour, 
+                          width, height, resolution,
+                          at = seq(0,1,by=0.2), xlim = c(0,1)){
   
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
   
   dataframe <- dataframe %>% filter(!is.na(cfr_ifr_denominator)) %>% 
-                             filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) %>%
-                             mutate(cfr_ifr_numerator = case_when(
-                                    is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
-                                    TRUE ~ cfr_ifr_numerator))
+    filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) %>%
+    mutate(cfr_ifr_numerator = case_when(
+      is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
+      TRUE ~ cfr_ifr_numerator))
   
   if(!is.na(subgroup))
   {

@@ -748,7 +748,7 @@ zika_clean_params <- function(df, pathogen){
   
   #Cleaning of attack rate unit (fixing units)
   df <- df %>% 
-    filter(!covidence_id ==  6272 & parameter_type == "Attack rate") %>%   #no values extracted --> TO REMOVE!
+    filter(!(covidence_id ==  6272 & parameter_type == "Attack rate")) %>%   #no values extracted --> TO REMOVE!
     mutate(parameter_value_type = ifelse(covidence_id %in% c(890, 1154, 1308, 1821, 3221, 3337, 5671, 6670, 7047, 7336, 10749, 11866) & is.na(parameter_value_type) & parameter_type == "Attack rate", 
                                          "Unspecified", parameter_value_type),
            parameter_unit = ifelse(covidence_id %in% c(1941, 6321, 6670) & parameter_unit == "No units" & parameter_type == "Attack rate", 
@@ -769,8 +769,8 @@ zika_clean_params <- function(df, pathogen){
   
   #Cleaning of severity (fixing units)
   df <- df %>%
-    filter(!covidence_id == 7437 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
-                                                       "Severity - proportion of symptomatic cases")) %>% #cov id 7437 does not  have cfr or symptomatic cases 
+    filter(!(covidence_id == 7437 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
+                                                       "Severity - proportion of symptomatic cases"))) %>% #cov id 7437 does not  have cfr or symptomatic cases 
     mutate(
   
       parameter_unit = ifelse(covidence_id == 12128 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
@@ -972,12 +972,14 @@ zika_clean_zcs_microcephaly <- function(df){
     ),
     cfr_ifr_denominator = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 11,
-      covidence_id == 4014 & parameter_type == 'Miscarriage rate' ~ cfr_ifr_numerator, # mixed up num and denom
+      covidence_id == 4014  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 117, # mixed up num and denom
+      covidence_id == 18620  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 77, # mixed up num and denom
       TRUE ~ cfr_ifr_denominator
     ),
     cfr_ifr_numerator = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 2,
-      covidence_id == 4014 & parameter_type == 'Miscarriage rate' ~ cfr_ifr_denominator, # mixed up num and denom
+      covidence_id == 4014 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 4, # mixed up num and denom
+      covidence_id == 18620 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 4, # mixed up num and denom
       TRUE ~ cfr_ifr_numerator
     ))
 }
