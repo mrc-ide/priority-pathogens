@@ -39,6 +39,10 @@ zika_clean_articles <- function(df, pathogen){
   # Fix any missing covidence IDs
   df <- fix_cov_ids(df, pathogen = "ZIKA")
   
+  df <- df  %>%
+    # Fix incorrect year
+    mutate(year_publication= ifelse(covidence_id == 10125, 2020, year_publication))
+  
   df <- df %>%
     mutate(across(.cols = where(is.character), .fns = ~dplyr::na_if(.x, "NA"))) %>%
     select(-c("article_id")) %>%#, "name_data_entry"
@@ -973,12 +977,14 @@ zika_clean_zcs_microcephaly <- function(df){
     cfr_ifr_denominator = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 11,
       covidence_id == 4014  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 117, # mixed up num and denom
+      covidence_id == 4014  & parameter_type == 'Miscarriage rate' ~ 134, # mixed up num and denom
       covidence_id == 18620  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 77, # mixed up num and denom
       TRUE ~ cfr_ifr_denominator
     ),
     cfr_ifr_numerator = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 2,
       covidence_id == 4014 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 4, # mixed up num and denom
+      covidence_id == 4014 & parameter_type == 'Miscarriage rate' ~ 9, # mixed up num and denom
       covidence_id == 18620 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 4, # mixed up num and denom
       TRUE ~ cfr_ifr_numerator
     ))

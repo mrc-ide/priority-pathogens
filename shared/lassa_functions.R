@@ -510,7 +510,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
 
 metaprop_wrap <- function(dataframe, subgroup, 
                           plot_pooled, sort_by_subg, plot_study, digits, colour, 
-                          width, height, resolution,
+                          width, height, resolution,xlabel,
                           at = seq(0,1,by=0.2), xlim = c(0,1)){
   
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
@@ -541,7 +541,7 @@ metaprop_wrap <- function(dataframe, subgroup,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            col.subgroup = "black", col.inside = "black",
            weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+           at = at, xlim = xlim, xlab=xlabel, fontsize=11)
     dev.off()  
   } else {
     mtan <- metaprop(data = dataframe,
@@ -560,7 +560,7 @@ metaprop_wrap <- function(dataframe, subgroup,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            col.subgroup = "black", col.inside = "black",
            weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+           at = at, xlim = xlim, xlab=xlabel, fontsize=11)
     dev.off()
   }
   

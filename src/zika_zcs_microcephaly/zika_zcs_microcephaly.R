@@ -43,7 +43,7 @@ cols<-c(
   "#FDBF6F", # lt orange
   "gray70", "khaki2",
   "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
-  "darkturquoise", "green1", "yellow4", "yellow3",
+  "green1","darkturquoise",  "yellow4", "yellow3",
   "darkorange4", "brown",
   "mediumpurple3", "darkgreen", "firebrick3", "royalblue3",
   "cyan3", "sienna3", "lightcoral", "chartreuse3",
@@ -90,30 +90,59 @@ ggsave(filename = 'zcs_plot_refs_country.png', zcsplot, height = 8, width = 7, b
 # large variability in brazil, uncertainty in honduras bc n?
 # comment about sample sizes -- mnay low estimates 
 
-# Meta-analysis 
-metaanalysis <- metamean_wrap(dataframe = zcs_rate, estmeansd_method = "Cai",
-                                                        plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3",
-                                                        label = "ZCS/microcephaly risk",
-                                                        width = 9500, height = 4200, resolution = 1000)
-# metaanalysis$plot                          
+# Meta-analysis  ZCS
+metaanalysis_zcs <- metaprop_wrap(dataframe = zcs_rate, plot_pooled = TRUE, subgroup = NA, 
+                              sort_by_subg = FALSE, xlabel = "Microcephaly risk given Zika-infected mother",
+                                                        plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                                        width = 9000, height = 16000, resolution = 1000)
+zcs_meta <- metaanalysis_zcs$plot
 
+ggsave("zcs_metaanalysis.png", plot = zcs_meta, width = 9, height = 16)
+
+
+
+# Miscarriage ----
 miscarriage <- parameters %>%
   filter(parameter_type == 'Miscarriage rate') %>%
   mutate(parameter_value_type = ifelse(is.na(parameter_value_type), "Unspecified",parameter_value_type))
 
-misc1<-forest_plot(miscarriage,
+misc1<-forest_plot(miscarriage %>% filter(qa_score > 0.5) %>% arrange(desc(central)),
                   label = "Forest plot of miscarriage rate", 
                   shape_column = "population_sample_type", 
                   color_column = "population_country", 
                   lims = c(0,100),
             custom_colours = cols)
-ggsave(filename = 'miscarriage1.png', misc1, height = 8, width = 6, bg = 'white')
-misc2<-forest_plot(miscarriage,
+misc1_noqa <-forest_plot(miscarriage  %>% arrange(desc(central)),
+                   label = "Forest plot of miscarriage rate", 
+                   shape_column = "population_sample_type", 
+                   color_column = "population_country", 
+                   lims = c(0,100),
+                   custom_colours = cols)
+ggsave(filename = 'miscarriage_refs_sample_country.png', misc1, height = 8, width = 6, bg = 'white')
+ggsave(filename = 'miscarriage_refs_sample_country_noqa.png', misc1_noqa, height = 8, width = 6, bg = 'white')
+
+misc2 <-forest_plot(miscarriage%>% filter(qa_score > 0.5),
                   ycol = 'label_group',
                   label = "Forest plot of miscarriage rate", 
                   shape_column = "parameter_value_type", 
                   color_column = "population_sample_type", 
                   lims = c(0,100),
                   custom_colours = cols)
-ggsave(filename = 'miscarriage2.png', misc2, height = 8, width = 6, bg = 'white')
+misc2_noqa <-forest_plot(miscarriage%>% arrange(desc(central)),
+                    ycol = 'label_group',
+                    label = "Forest plot of miscarriage rate", 
+                    shape_column = "parameter_value_type", 
+                    color_column = "population_sample_type", 
+                    lims = c(0,100),
+                    custom_colours = cols)
+ggsave(filename = 'miscarriage_loc_sample_type.png', misc2, height = 8, width = 6, bg = 'white')
+ggsave(filename = 'miscarriage_loc_sample_type_noqa.png', misc2_noqa, height = 8, width = 6, bg = 'white')
 
+# Meta-analysis  miscarriage
+metaanalysis_misc <- metaprop_wrap(dataframe = miscarriage, plot_pooled = TRUE, subgroup = NA, 
+                              sort_by_subg = FALSE, xlabel = "Miscarriage rate",
+                              plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                              width = 9000, height = 6000, resolution = 1000)
+misc_meta <- metaanalysis_misc$plot
+
+ggsave("misc_metaanalysis.png", plot = misc_meta, width = 9, height = 6)
