@@ -87,16 +87,17 @@ r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Repro
                              label = "Basic reproduction number",
                              ycol = 'label_group',
                              color_column = 'population_sample_type',
-                             lims = c(0,17),
+                             lims = c(0,9),
                              custom_colours = c25,
-                             text_size = TEXT_SIZE)
+                             text_size = 24)
+# NOTE: removed x values above 17 because 
 r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'), 
                              label = "Basic reproduction number",
                              ycol = 'label_group',
                              color_column = 'population_sample_type',
-                             lims = c(0,17),
+                             lims = c(0,9),
                              custom_colours = c25,
-                             text_size = TEXT_SIZE)
+                             text_size = 24)
 
 
 # r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
@@ -220,12 +221,12 @@ ggsave("re_mosquito_noqa.pdf", re_mosquito, height = 10, width = 12, bg = 'white
 
 # Combine the plots together 
 layout <- 
-"AAAAABBB
-AAAAABBB
-AAAAABBB
-AAAAACCC
-AAAAACCC
-AAAAACCC"
+"AAAAABBBB
+AAAAABBBB
+AAAAABBBB
+AAAAACCCC
+AAAAACCCC
+AAAAACCCC"
 
 r0_pl <- r0_sampletype + r0_human + r0_mosquito +
     plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
@@ -237,7 +238,7 @@ re_pl <- re + re_human + re_mosquito +
 re_plnoqa <- re_noqa + re_human_noqa + re_mosquito_noqa + 
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
 
-ggsave("r0_pl.pdf", r0_pl, height = 30, width = 32, bg = 'white')
-ggsave("r0__plnoqa.pdf", r0__plnoqa, height = 30, width = 32, bg = 'white')
-ggsave("re_pl.pdf", re_pl, height = 16, width = 20, bg = 'white')
-ggsave("re_plnoqa.pdf", re_plnoqa, height = 16, width = 20, bg = 'white')
+ggsave("r0_pl.pdf", r0_pl, height = 35, width = 35, bg = 'white')
+ggsave("r0__plnoqa.pdf", r0__plnoqa, height = 35, width = 35, bg = 'white')
+ggsave("re_pl.pdf", re_pl, height = 12, width = 20, bg = 'white')
+ggsave("re_plnoqa.pdf", re_plnoqa, height = 12, width = 20, bg = 'white')

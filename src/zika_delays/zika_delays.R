@@ -96,7 +96,7 @@ d8 <- parameters %>% filter(parameter_type == "Human delay - symptom onset to ad
 m1 <- parameters %>% filter(grepl("Mosquito delay", parameter_type)) %>%
   filter(parameter_type != "Mosquito delay - extrinsic incubation period (EIP10)") %>%
   mutate(parameter_type = "Mosquito delay - extrinsic incubation period") %>%
-  # filter(parameter_unit == 'Days') %>%
+  filter(parameter_unit == 'Days') %>%
   filter(!(covidence_id == 6106 & parameter_value == 14)) # this is for albopicture but isn't really EIP 
 # 5892 have gamma distribution information as well as the central estimate 
 
@@ -152,14 +152,14 @@ ggsave("infectious_period.png", plot =IP_forest, width = 14, height = 12, bg = '
 ggsave("infectious_period_noqa.png", plot =IP_forest_noqa, width = 14, height = 12, bg = 'white')
 
 # most papers don't have a sample size which is why these don't work (should double check the ns)
-set.seed(42)
-d6 <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
-  filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
-  filter(qa_score>0.5) %>%
-  mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
-         population_group    = replace_na(population_group,'Unspecified'),
-         population_sample_type = replace_na(population_sample_type,'Unspecified'),
-         parameter_type = 'Human delay - infectious period')
+# set.seed(42)
+# d6 <- d6 %>% mutate(parameter_value = coalesce(parameter_value,central)) %>% arrange(desc(parameter_value)) %>%
+#   filter(!is.na(parameter_uncertainty_single_value)|!is.na(parameter_uncertainty_type) ) %>%
+#   filter(qa_score>0.5) %>%
+#   mutate(method_moment_value = replace_na(method_moment_value,'Unspecified'),
+#          population_group    = replace_na(population_group,'Unspecified'),
+#          population_sample_type = replace_na(population_sample_type,'Unspecified'),
+#          parameter_type = 'Human delay - infectious period')
 
 # meta6 <- metamean_wrap(dataframe = d6, estmeansd_method = "Cai",
 #                        plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3",
@@ -252,21 +252,30 @@ lat_onset_serial <- rbind(d2, d5, d4) %>% mutate(parameter_unit = 'Days') %>%
     parameter_type == 'Human delay - Symptom Onset/Fever to Recovery/non-Infectiousness' ~ "Symptom onset to recovery",
     TRUE ~ parameter_type
   ))
-lat_onset_serialplt <- forest_plot(lat_onset_serial |> arrange(parameter_value,desc(parameter_value)),
+lat_onset_serialplt <- forest_plot(lat_onset_serial %>% filter(qa_score > 0.5) |> arrange(parameter_value,desc(parameter_value)),
             label = 'Delay in days',
             ycol = 'label_group',
             shape_column = "parameter_type",
             color_column = "population_sample_type", 
             lims = c(0,50),
             text_size = TEXT_SIZE)
+lat_onset_serialplt_noqa <- forest_plot(lat_onset_serial |> arrange(parameter_value,desc(parameter_value)),
+                                   label = 'Delay in days',
+                                   ycol = 'label_group',
+                                   shape_column = "parameter_type",
+                                   color_column = "population_sample_type", 
+                                   lims = c(0,50),
+                                   text_size = TEXT_SIZE)
 ggsave("latent_serial_onsetrecov.png", plot = lat_onset_serialplt, width= 14, height = 10, bg = 'white')
+ggsave("latent_serial_onsetrecov_noqa.png", plot = lat_onset_serialplt_noqa, width= 14, height = 10, bg = 'white')
 
 # latent period
 p2 <- forest_plot(d2 %>% mutate(parameter_unit = 'Days'),
                   label = 'Latent Period (days)',
                   color_column = "population_country",
                   shape_column = 'parameter_value_type',
-                  lims = c(0,51))
+                  lims = c(0,51),
+                  text_size = TEXT_SIZE)
 ggsave("latent_period.png", plot = p2, width = 6, height = 4, bg = 'white')
 
 
@@ -279,7 +288,7 @@ outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) |> arrange(parameter_t
                               color_column = 'population_group',
                               shape_column = "population_sample_type",
                               lims = c(0,215),
-                              text_size = 22) 
+                              text_size = TEXT_SIZE) 
 outcome_forest_noqa <- forest_plot(d3  |> arrange(parameter_type,desc(parameter_value)) %>%
                                      mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
                                    ycol = 'label_group',
@@ -287,7 +296,7 @@ outcome_forest_noqa <- forest_plot(d3  |> arrange(parameter_type,desc(parameter_
                                    color_column = 'population_group',
                                    shape_column = "population_sample_type",
                                    lims = c(0,215),
-                                   text_size = 22)
+                                   text_size = TEXT_SIZE)
 ggsave("admission_to_outcome.png", plot = outcome_forest, width = 12, height = 6, bg = 'white')
 ggsave("admission_to_outcome_noqa.png", plot = outcome_forest_noqa, width = 12, height = 6, bg = 'white')
 outcome_forest_noqa_type <- forest_plot(d3  |> arrange(parameter_type,desc(parameter_value)) %>%
@@ -297,12 +306,21 @@ outcome_forest_noqa_type <- forest_plot(d3  |> arrange(parameter_type,desc(param
                                    color_column = 'parameter_type',
                                    shape_column = "population_sample_type",
                                    lims = c(0,215),
-                                   text_size = 22)
+                                   text_size = TEXT_SIZE)
 ggsave("admission_to_outcome_partype.png", plot = outcome_forest_noqa_type, width = 12, height = 6, bg = 'white')
 
 # Mosquito delay - EIP
-eip_forest <- forest_plot(m1 |> arrange(population_sample_type,desc(parameter_value)),
+eip_forest <- forest_plot(m1 %>% filter(qa_score>0.5)|> arrange(population_sample_type,desc(parameter_value)),
                              label = 'Extrinsic incubation period (days)',
+                          ycol = 'label_group',
+                          # shape_column = 'popultio',
+                          color_column = 'refs',
+                          lims = c(0,25),
+                          text_size = TEXT_SIZE,
+                          custom_colours = c( "#00468B","#ED0000", "#42B540","#0099B4", "#925E9F", "#FDAF91","#DF8F44",
+                                              "#6A6599","#CD534C","#A20056","#1B1919"))
+eip_forest_noqa <- forest_plot(m1 |> arrange(population_sample_type,desc(parameter_value)),
+                          label = 'Extrinsic incubation period (days)',
                           ycol = 'label_group',
                           # shape_column = 'popultio',
                           color_column = 'refs',
@@ -315,21 +333,20 @@ ggsave("extrinsic_incubation_period.png", plot = eip_forest, width = 16, height 
 
 ## Create plots!
 
-# layout <- "
-# AABBBB
-# CCCCDD
-# EEEEFF
-# "
-# delays_plot <-  SI_forest + ip_forest_pc + eip_forest_pc + outcome_forest+ incp_forest_pc + p2 +
-#   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-# ggsave("delays.png", plot = delays_plot, width = 25, height = 35, bg = 'white')
-# ggsave("delays.pdf", plot = delays_plot, width = 25, height = 35, bg = 'white')
+layout <- "
+AADD
+CCEE
+BBBB
+"
+delays_plot <-  IP_forest + eip_forest + incp2 +  outcome_forest+lat_onset_serialplt +
+  plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
+ggsave("delays.png", plot = delays_plot, width = 35, height = 30, bg = 'white')
+ggsave("delays.pdf", plot = delays_plot, width = 35, height = 30, bg = 'white')
 
-# delays_plotSI <-  SI_forest_noqa + IP_forest_noqa + outcome_forest_noqa + m1_SI_noqa$plot + 
-#   theme(text = element_text(size = TEXT_SIZE)) + m2_noqa$plot + theme(text = element_text(size = TEXT_SIZE)) +
-#   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-# ggsave("SI_delays.png", plot = delays_plotSI, width = 39, height = 22)
-# ggsave("SI_delays.pdf", plot = delays_plotSI, width = 39, height = 22)
+delays_plotSI <-  IP_forest_noqa + eip_forest_noqa + incp2_noqa +  outcome_forest_noqa + lat_onset_serialplt_noqa +
+  plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
+ggsave("SI_delays.png", plot = delays_plotSI, width = 35, height = 30)
+ggsave("SI_delays.pdf", plot = delays_plotSI, width = 35, height = 30)
 
 # SI figures
 # ggsave("figure_5SI_subgroup_meta.png", plot = m1_SI$plot, width = 22, height = 22) # note that qa & noqa lets through sames papers
