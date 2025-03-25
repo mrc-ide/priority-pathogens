@@ -25,40 +25,52 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
     mutate(n = n()) 
   
   gg <- ggplot(df) +
-    geom_segment(data = df %>% filter(n == 1),
-                 aes(x = parameter_lower_bound, xend = parameter_upper_bound,
-                     y = .data[[ycol]], yend = .data[[ycol]], color = .data[[color_column]]),
-                 linewidth = 4, alpha = 0.65) +
-    geom_errorbar(data = df %>% filter(n == 1),
-                  aes(x = central, xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      color = .data[[color_column]], group = .data[[ycol]],
-                      y = .data[[ycol]]),
-                  width = 0.2, lwd=0.7,  alpha = 1) +#color = "black",
-    geom_point(data = df %>% filter(n == 1),
-               aes(x = central, y = .data[[ycol]],
-                   shape = .data[[shape_column]], fill = .data[[color_column]],
-                   color = .data[[color_column]]),
-               size = 4, stroke = 1,
-               alpha = 1) +
-    
-    geom_segment(data = df %>% filter(n > 1),
+    geom_segment(data = df %>% filter(n > 1) %>% arrange(desc(parameter_value)) %>% 
+                   mutate(label_group = factor(label_group, levels=unique(label_group)),
+                          urefs = factor(urefs, levels = unique(urefs))),
                  aes(x = parameter_lower_bound, xend = parameter_upper_bound,
                      y = .data[[ycol]], yend = .data[[ycol]], color = .data[[color_column]]),
                  position = jitterer,
                  linewidth = 4, alpha = 0.65) +
-    geom_errorbar(data = df %>% filter(n > 1),
+    geom_errorbar(data = df %>% filter(n > 1) %>% arrange(desc(parameter_value)) %>% 
+                    mutate(label_group = factor(label_group, levels=unique(label_group)),
+                           urefs = factor(urefs, levels = unique(urefs))),
                   aes(x = central, xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       color = .data[[color_column]], group = .data[[ycol]],
                       y = .data[[ycol]]),
                   position = jitterer,
                   width = 0.2, lwd=0.5,  alpha = 1) +#color = "black",
-    geom_point(data = df %>% filter(n > 1),
+    geom_point(data = df %>% filter(n > 1) %>% arrange(desc(parameter_value)) %>% 
+                 mutate(label_group = factor(label_group, levels=unique(label_group)),
+                        urefs = factor(urefs, levels = unique(urefs))),
                aes(x = central, y = .data[[ycol]], 
                    shape = .data[[shape_column]], fill = .data[[color_column]], 
                    color = .data[[color_column]]),
                position = jitterer,
                size = 4, stroke = 1,
-               alpha = 1) 
+               alpha = 1) +
+    
+    geom_segment(data = df %>% filter(n == 1) %>% arrange(desc(parameter_value)) %>% 
+                   mutate(label_group = factor(label_group, levels=unique(label_group)),
+                          urefs = factor(urefs, levels = unique(urefs))),
+                 aes(x = parameter_lower_bound, xend = parameter_upper_bound,
+                     y = .data[[ycol]], yend = .data[[ycol]], color = .data[[color_column]]),
+                 linewidth = 4, alpha = 0.65) +
+    geom_errorbar(data = df %>% filter(n == 1) %>% arrange(desc(parameter_value)) %>% 
+                    mutate(label_group = factor(label_group, levels=unique(label_group)),
+                           urefs = factor(urefs, levels = unique(urefs))),
+                  aes(x = central, xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
+                      color = .data[[color_column]], group = .data[[ycol]],
+                      y = .data[[ycol]]),
+                  width = 0.2, lwd=0.7,  alpha = 1) +#color = "black",
+    geom_point(data = df %>% filter(n == 1) %>% arrange(desc(parameter_value)) %>% 
+                 mutate(label_group = factor(label_group, levels=unique(label_group)),
+                        urefs = factor(urefs, levels = unique(urefs))),
+               aes(x = central, y = .data[[ycol]],
+                   shape = .data[[shape_column]], fill = .data[[color_column]],
+                   color = .data[[color_column]]),
+               size = 4, stroke = 1,
+               alpha = 1)
   
   
   
@@ -68,13 +80,15 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
     gg <- gg + 
       scale_shape_manual(name = "Parameter Type",
                          values = c(Mean = 21, Median = 22, Central = 25, "Maximum likelihood" = 23, Unspecified = 24, Other = 8),
-                         breaks = c("Mean", "Median", "Unspecified", "Central", "Maximum likelihood", "Other")) 
+                         breaks = c("Mean", "Median", "Unspecified", "Central", "Maximum likelihood", "Other"), 
+                         labels = function(x) str_wrap(x, width = 18)) 
   } else if (shape_column == 'case_definition'){
     gg <- gg + 
       scale_shape_manual(name = 'Case definition',
                          values = c("Confirmed" = 21, "Suspected" = 22, "Confirmed;Suspected" = 25,
                                     "Unspecified" = 24),
-                         breaks = c("Confirmed", "Suspected", "Confirmed;Suspected", "Unspecified"))
+                         breaks = c("Confirmed", "Suspected", "Confirmed;Suspected", "Unspecified"), 
+                         labels = function(x) str_wrap(x, width = 18))
   } else if (shape_column == 'population_sample_type'){
     gg <- gg + 
       scale_shape_manual(name = 'Sample type',
@@ -82,7 +96,8 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                                     "Travel based" = 23, "Community based" = 8, 'Unspecified' = 4,
                                     "Other" = 24),
                          breaks = c("Hospital based", "Mixed settings", "Population based",
-                                    "Travel based","Community based", "Other", 'Unspecified'))
+                                    "Travel based","Community based", "Other", 'Unspecified'), 
+                         labels = function(x) str_wrap(x, width = 18))
   } else if (shape_column == 'population_group'){
     gg <- gg + 
       scale_shape_manual(name = 'Sample group',
@@ -91,14 +106,14 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                                     "Other" = 23, 'Unspecified' = 24),
                          breaks = c("General population", "Persons under investigation", "Blood donors",
                                     "Mixed groups", 'Pregnant women', 'Children', 'Household contacts of survivors',
-                                    "Other", 'Unspecified'))
+                                    "Other", 'Unspecified'), 
+                         labels = function(x) str_wrap(x, width = 18))
   }
   
   if(sum(!is.na(custom_colours)))
   {
     gg <- gg + 
       scale_x_continuous(limits = lims, expand = c(0.05, 0)) +
-      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
       scale_color_manual(values = custom_colours, labels = function(x) str_wrap(x, width = 18)) +
       scale_fill_manual(values = custom_colours, labels = function(x) str_wrap(x, width = 18)) +
@@ -106,14 +121,22 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
       theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))
   } else {
-    gg <- gg + scale_fill_lancet(palette = "lanonc", labels = function(x) str_wrap(x, width = 18)) +
+    gg <- gg + 
+      scale_fill_lancet(palette = "lanonc", labels = function(x) str_wrap(x, width = 18)) +
       scale_color_lancet(palette = "lanonc", labels = function(x) str_wrap(x, width = 18)) +
       scale_x_continuous(limits = lims, expand = c(0.05, 0)) +
-      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
       theme_minimal() + 
       theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))  
+  }
+  
+  if(ycol == 'urefs'){
+    gg <- gg + 
+      scale_y_discrete(labels = setNames(df$refs, df$urefs))
+  } else {
+    gg <- gg + 
+      scale_y_discrete(labels = function(x) str_wrap(x, width = 25)) 
   }
   
   if (cats == 1) {
