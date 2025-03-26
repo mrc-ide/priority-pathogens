@@ -216,7 +216,7 @@ ggsave("r0_human_noqa.pdf", r0_human, height = 10, width = WIDTH, bg = 'white')
 ggsave("r0_mosquito_noqa.pdf", r0_mosquito, height = 8, width = WIDTH, bg = 'white')
 ggsave("re_noqa.pdf", re, height = 14, width = WIDTH, bg = 'white')
 ggsave("re_human_noqa.pdf", re_human, height = 12, width = 12, bg = 'white')
-ggsave("re_mosquito_noqa.pdf", re_mosquito, height = 10, width = 12, bg = 'white')
+# ggsave("re_mosquito_noqa.pdf", re_mosquito, height = 10, width = 12, bg = 'white')
 
 
 # Combine the plots together 
@@ -233,10 +233,13 @@ r0_pl <- r0_sampletype + r0_human + r0_mosquito +
 r0__plnoqa <- r0_sampletype_noqa + r0_human_noqa + r0_mosquito_noqa +
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
 
+
+
 re_pl <- re + re_human + re_mosquito + 
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-re_plnoqa <- re_noqa + re_human_noqa + re_mosquito_noqa + 
-  plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
+re_plnoqa <- re_noqa + re_human_noqa +# re_mosquito_noqa + 
+  plot_layout(design = "AAA
+                        BBB") + plot_annotation(tag_levels = 'A')
 
 ggsave("r0_pl.pdf", r0_pl, height = 35, width = 35, bg = 'white')
 ggsave("r0__plnoqa.pdf", r0__plnoqa, height = 35, width = 35, bg = 'white')
