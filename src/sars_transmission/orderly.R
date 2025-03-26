@@ -198,17 +198,17 @@ d3_without_qa <- d3_tmp
 
 # Evolutionary mutation rates
 p1 <- forest_plot(d1 |> filter(qa_score>0.5),expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,50),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 p2 <- forest_plot(d2 |> filter(qa_score>0.5),expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,100),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 
 p1_noqa <- forest_plot(d1|>mutate(parameter_unit='Unspecified'), expression(Evolutionary~Rate~(s/s/y ~10^{-4})),"genome_site",c(-5,200),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 p2_noqa <- forest_plot(d2, expression(Substitution~Rate~(s/s/y ~10^{-4})),"genome_site",c(0,100),
-                  custom_colours = c('L'='darkgreen', 'S' = 'yellow4','Unspecified'='grey'),text_size = 16) + 
+                  custom_colours = c('L'='brown', 'S' = 'yellow2','Unspecified'='grey'),text_size = 16) + 
   guides(color = guide_legend(title = "Segment", order = 1))
 
 #Overdispersion
@@ -231,10 +231,13 @@ p4_secondary_noqa <- forest_plot(d4 |> filter(arate=='Secondary'),'Secondary Att
                             text_size = 16)
 
 
-# Growth rate
+# Growth rate -- display in percentage terms as requested
 d5$parameter_unit <- 'Per day'
-p5 <- forest_plot(d5|> filter(qa_score>0.5) ,'Growth rate (r per day)',"pathogen",c(0,.25),text_size = 16)
-p5_noqa <- forest_plot(d5, 'Growth rate (r per day)',"pathogen",c(0,.25),text_size = 16)
+d5$parameter_value <- d5$parameter_value *100
+d5$parameter_lower_bound <- d5$parameter_lower_bound *100
+d5$parameter_upper_bound <- d5$parameter_upper_bound *100
+p5 <- forest_plot(d5|> filter(qa_score>0.5) ,'Growth rate (r per day in %)',"pathogen",c(0,25),text_size = 16)
+p5_noqa <- forest_plot(d5, 'Growth rate (r per day in %)',"pathogen",c(0,25),text_size = 16)
 
 
 # make colours across plots the same to simplify legend!!! + add in consideration for setting
