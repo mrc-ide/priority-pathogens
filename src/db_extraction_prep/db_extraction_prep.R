@@ -1,7 +1,8 @@
 library(orderly2)
 
 orderly_parameters(pathogen = NULL,
-                   mode="")
+                   mode="",
+                   orderly_download_dependency=FALSE)
 
 pathogen <- toupper(pathogen)
 mode <- toupper(mode)
