@@ -45,9 +45,20 @@ articles   <- dfs$articles
 models     <- dfs$models
 parameters <- dfs$parameters
 
-article_refs_file <- articles %>% 
+models_simple <- models %>% dplyr::select(covidence_id) %>% unique() %>%
+  mutate(has_model='Y')
+parameters_simple <- parameters %>% dplyr::select(covidence_id,parameter_class) %>%
+  unique() %>% mutate(has_model='Y') %>% pivot_wider(names_from = 'parameter_class',values_from = 'has_model')
+
+
+article_refs_file <- articles %>% left_join(models_simple) %>% left_join(parameters_simple) %>%
   #mutate(cov_id_text = paste0('#',covidence_id)) %>%
-  dplyr::select(refs,first_author_first_name,first_author_surname,article_title,doi,journal,year_publication,volume,issue)
+  dplyr::select(refs,first_author_first_name,first_author_surname,article_title,doi,journal,year_publication,volume,issue,
+                has_model, `Growth rate`, `Reproduction number`, Mutations, `Risk factors`, `Attack rate`, Severity, 
+                Seroprevalence, `Human delay`, `Other transmission parameters`, Overdispersion, `Doubling time`) %>%
+  mutate(volume = as.character(volume),
+         issue  = as.character(issue))
+article_refs_file[is.na(article_refs_file)] <- ""
 write_csv(article_refs_file,'article_ref_file.csv')
 
 create_inset_png <- function(data=non_imported_cnts_short,location='SGP')
