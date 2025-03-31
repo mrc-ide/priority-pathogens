@@ -95,7 +95,8 @@ all_articles <- map(
 # Save all objects directly as extracted from the database for ease of
 # debugging.
 saveRDS(all_articles, "all_articles_raw.rds")
-orderly_artefact("All articles", "all_articles_raw.rds")
+orderly_artefact(description = "All articles", 
+                 files = "all_articles_raw.rds")
 
 all_models <- map(
   all_conns, function(con) {
@@ -112,7 +113,8 @@ all_models <- map(
 )
 
 saveRDS(all_models, "all_models_raw.rds")
-orderly_artefact("All Models", "all_models_raw.rds")
+orderly_artefact(description = "All Models", 
+                 files = "all_models_raw.rds")
 
 all_params <- map(
   all_conns, function(con) {
@@ -129,7 +131,8 @@ all_params <- map(
 )
 
 saveRDS(all_params, "all_params_raw.rds")
-orderly_artefact("All parameters", "all_params_raw.rds")
+orderly_artefact(description = "All parameters",
+                 files = "all_params_raw.rds")
 
 # Check if we have extracted outbreaks for this pathogen
 all_tables <- dbListTables(all_conns[[1]])
@@ -153,7 +156,8 @@ if (!outbreaks_ex) {
 }
 
 saveRDS(all_outbreaks, "all_outbreaks_raw.rds")
-orderly_artefact("All outbreaks", "all_outbreaks_raw.rds")
+orderly_artefact(description = "All outbreaks", 
+                 files = "all_outbreaks_raw.rds")
 
 # Close all connections
 walk(all_conns, function(con) dbDisconnect(con))
