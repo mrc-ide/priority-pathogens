@@ -110,6 +110,9 @@ orderly_run('zika_zcs_microcephaly', parameters = list(pathogen = 'ZIKA'))
 # # Latex tables
 orderly_run("zika_latex_tables", parameters = list(pathogen = "ZIKA"))
 
+# Seroprevalence
+# orderly_run('zika_serop', parameters = list(pathogen = 'ZIKA'))
+
 ######################
 ## FIGURES & TABLES ##
 ######################
