@@ -54,6 +54,9 @@ zika_clean_articles <- function(df, pathogen){
     arrange(covidence_id) %>%
     # Fix article with group name in first name column
     mutate(first_author_surname = ifelse(covidence_id == 4427, "Singapore Zika Study Group", first_author_surname)) %>%
+    # Surname and first names were mixed up 
+    mutate(first_author_first_name = ifelse(covidence_id == 927, 'J', first_author_first_name),
+           first_author_surname = ifelse(covidence_id == 927, 'Rocklov', first_author_surname)) %>%
     # Make Names title case 
     mutate(first_author_surname = str_to_title(first_author_surname),
            first_author_first_name = str_to_title(first_author_first_name)) %>%
@@ -460,6 +463,7 @@ zika_clean_params <- function(df, pathogen){
         " "
       ),
       population_location = case_when(
+        covidence_id == 6211 ~ "Singapore",
         population_location %in% 
           c("Salvador; Bahia", "Salvador city in Bahia","Salvador") ~ "Salvador, Bahia",
         population_location %in% "Salvador (Hospital Geral\r\nRoberto Santos)" ~ "Salvador, Bahia (Hospital Geral Roberto Santos)",
@@ -484,6 +488,7 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Guadeloupe,Martinique, French Guiana" ~ "Guadeloupe, Martinique, French Guiana",
         covidence_id == 5907 & population_location == "Asia & Americas" ~ "Americas and Oceania",
         population_location %in% "Entire country" ~ NA,
+        population_location == "Yap"~ "Yap Island",
         TRUE ~ population_location
       ),
       population_location = str_replace_all(population_location, ";", ",")) %>%
@@ -531,6 +536,8 @@ zika_clean_params <- function(df, pathogen){
       ),
       population_country =
         case_when(
+          # If Yap, should be Micronesia not French Polynesia 
+          population_location == 'Yap Island' ~ "Federated States of Micronesia",
           #Specify country in locations defined as "Unspecified"
           covidence_id == 10741 & population_location == 'Ponce' ~ 'Puerto Rico',
           covidence_id == 4438 & population_location == 'Florida' ~ "United States",
@@ -783,7 +790,15 @@ zika_clean_params <- function(df, pathogen){
                                                                                   "Severity - proportion of symptomatic cases"), "Unspecified", parameter_value_type),
       parameter_value_type = ifelse(covidence_id == 3528 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
                                                                                  "Severity - proportion of symptomatic cases"), "Unspecified", parameter_value_type)) 
+  # Cleaning of wrongly extracted attack rates
   
+  df <- df %>%
+    mutate(
+      exponent =  ifelse(covidence_id %in% c(3337, 1941) & parameter_type == "Attack rate", 0, exponent),
+      parameter_unit =  ifelse(covidence_id %in% c(3337, 5949) & parameter_type == "Attack rate", "Per 10,000 population", parameter_unit),
+      parameter_unit =  ifelse(covidence_id %in% c(3221, 5671, 11866) & parameter_type == "Attack rate", "Percentage (%)", parameter_unit)
+    )
+
   # Add article id and parameter ids for new parameters
   #     id =
   #       case_when(
@@ -951,8 +966,8 @@ zika_clean_delays <- function(params_df){
   
   # Remove delays that aren't estimated (parameters were fixed in model and originally were extracted but should not have been)
   df <- df %>%
-    filter(!(covidence_id == 6765 & parameter_type == 'Human delay - incubation period' & population_location %in% c("Sous-le-vent Islands", "Marquesas Islands", "Yap")),
-           !(covidence_id == 6765 & parameter_type == 'Human delay - infectious period' & population_location %in% c('Tahiti', 'Tuamotu-Gambier','Australes','Yap',"Mo'orea")))
+    filter(!(covidence_id == 6765 & parameter_type == 'Human delay - incubation period' & population_location %in% c("Sous-le-vent Islands", "Marquesas Islands", "Yap Island")),
+           !(covidence_id == 6765 & parameter_type == 'Human delay - infectious period' & population_location %in% c('Tahiti', 'Tuamotu-Gambier','Australes','Yap Island',"Mo'orea")))
   
   return(df)
 }
