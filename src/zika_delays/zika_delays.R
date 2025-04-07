@@ -60,6 +60,23 @@ parameters <- readRDS("parameters_curated.rds")
 
 # sample sd is the same as sd, so need to make this clear somehow / change param field to work for meta analysis
 
+#Find total numbers of delays 
+delays <- parameters %>% 
+  filter(parameter_class == 'Human delay' & qa_score >= 0.5)
+mosq <- parameters %>%
+  filter(grepl('Mosquito delay',parameter_type) & qa_score >= 0.5)
+table(delays$parameter_type)
+length(unique(delays$covidence_id))
+length(unique(mosq$covidence_id))
+
+delaysum <- delays %>%
+  group_by(parameter_type) %>%
+  mutate(n = n()) %>%
+  filter(central == max(central, na.rm = TRUE) | central == min(central, na.rm = TRUE)) %>%
+  filter(n >1) %>%
+  select(central, parameter_type:case_definition, method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, 
+         survey_start_date, survey_end_date, article_label) 
+
 
 d1 <- parameters %>% filter(parameter_type == 'Human delay - incubation period' |
                               parameter_type == 'Human delay - incubation period (inverse parameter)') %>%
@@ -245,21 +262,22 @@ ggsave("incubation_period2_noqa.png", plot = incp2_noqa, width = 14, height = 12
 #                             width = 9500, height = 9750, resolution = 1000, subgroup = 'population_group', sort_by_subg = TRUE, colgap_shift = 2 )
 
 # Plot with latent, symptom onst to recovery, serial 
-lat_onset_serial <- rbind(d2, d5, d4) %>% mutate(parameter_unit = 'Days') %>%
+lat_onset_serial_admission <- rbind(d2, d5, d4, d8) %>% mutate(parameter_unit = 'Days') %>%
   mutate(parameter_type = case_when(
     parameter_type == "Human delay - latent period (inverse parameter)" ~ "Latent period",
     parameter_type == "Human delay - serial interval" ~ 'Serial interval',
     parameter_type == 'Human delay - Symptom Onset/Fever to Recovery/non-Infectiousness' ~ "Symptom onset to recovery",
+    parameter_type == "Human delay - symptom onset to admission to care" ~ "Symptom onset to admission",
     TRUE ~ parameter_type
   ))
-lat_onset_serialplt <- forest_plot(lat_onset_serial %>% filter(qa_score > 0.5) |> arrange(parameter_value,desc(parameter_value)),
+lat_onset_serialplt <- forest_plot(lat_onset_serial_admission %>% filter(qa_score > 0.5) |> arrange(parameter_value,desc(parameter_value)),
             label = 'Delay in days',
             ycol = 'label_group',
             shape_column = "parameter_type",
             color_column = "population_sample_type", 
-            lims = c(0,50),
+            lims = c(0,33),
             text_size = TEXT_SIZE)
-lat_onset_serialplt_noqa <- forest_plot(lat_onset_serial |> arrange(parameter_value,desc(parameter_value)),
+lat_onset_serialplt_noqa <- forest_plot(lat_onset_serial_admission |> arrange(parameter_value,desc(parameter_value)),
                                    label = 'Delay in days',
                                    ycol = 'label_group',
                                    shape_column = "parameter_type",
