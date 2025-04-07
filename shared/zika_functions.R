@@ -2,7 +2,7 @@
 
 forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_value_type', 
                         color_column, lims, text_size = 12, show_label = FALSE, 
-                        custom_colours = NA) {
+                        custom_colours = NA, facet_by_country = FALSE) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
@@ -12,9 +12,10 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
              is.na(population_location) | population_location == '' ~ population_country,
              (population_location !="" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,'\n' ,' (',population_country,')'),
              !is.na(population_location) & population_country == 'Unspecified' ~ population_location,
-             TRUE ~ NA)) %>%
+             TRUE ~ NA),
+           country_brazil = ifelse(population_country == 'Brazil', 'Brazil','Rest of World')) %>%
     arrange(desc(parameter_value)) %>% 
-    mutate(label_group = factor(label_group, levels=unique(label_group)),
+    mutate(label_group = factor(label_group, levels = unique(label_group)),
            urefs = factor(urefs, levels = unique(urefs)))
   cats <- length(unique(df[[color_column]]))
   
@@ -27,14 +28,15 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   sortby <- if(ycol == 'label_group') 'population_country' else 'parameter_value'
   
   gg <- ggplot(df) +
-    geom_segment(data = df %>% filter(n > 1) %>% arrange(sortby) %>% 
+    
+    geom_segment(data = df %>% filter(n > 1) %>% arrange(sortby) %>%
                    mutate(label_group = factor(label_group, levels=unique(label_group)),
                           urefs = factor(urefs, levels = unique(urefs))),
                  aes(x = parameter_lower_bound, xend = parameter_upper_bound,
                      y = .data[[ycol]], yend = .data[[ycol]], color = .data[[color_column]]),
                  position = jitterer,
-                 linewidth = 4, alpha = 0.65) +
-    geom_errorbar(data = df %>% filter(n > 1) %>% arrange(sortby) %>% 
+                 linewidth = 4, alpha = 0.6) +
+    geom_errorbar(data = df %>% filter(n > 1) %>% arrange(sortby) %>%
                     mutate(label_group = factor(label_group, levels=unique(label_group)),
                            urefs = factor(urefs, levels = unique(urefs))),
                   aes(x = central, xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
@@ -42,37 +44,42 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                       y = .data[[ycol]]),
                   position = jitterer,
                   width = 0.2, lwd=0.5,  alpha = 1) +#color = "black",
-    geom_point(data = df %>% filter(n > 1) %>% arrange(sortby) %>% 
+    geom_point(data = df %>% filter(n > 1) %>% arrange(sortby) %>%
                  mutate(label_group = factor(label_group, levels=unique(label_group)),
                         urefs = factor(urefs, levels = unique(urefs))),
-               aes(x = central, y = .data[[ycol]], 
-                   shape = .data[[shape_column]], fill = .data[[color_column]], 
+               aes(x = central, y = .data[[ycol]],
+                   shape = .data[[shape_column]], fill = .data[[color_column]],
                    color = .data[[color_column]]),
                position = jitterer,
-               size = 4, stroke = 1,
+               size = 3, stroke = 1,
                alpha = 1) +
-    
-    geom_segment(data = df %>% filter(n == 1) %>% arrange(sortby) %>% 
+
+    geom_segment(data = df %>% filter(n == 1) %>% arrange(sortby) %>%
                    mutate(label_group = factor(label_group, levels=unique(label_group)),
                           urefs = factor(urefs, levels = unique(urefs))),
                  aes(x = parameter_lower_bound, xend = parameter_upper_bound,
                      y = .data[[ycol]], yend = .data[[ycol]], color = .data[[color_column]]),
-                 linewidth = 4, alpha = 0.65) +
-    geom_errorbar(data = df %>% filter(n == 1) %>% arrange(sortby) %>% 
+                 linewidth = 4, alpha = 0.6) +
+    geom_errorbar(data = df %>% filter(n == 1) %>% arrange(sortby) %>%
                     mutate(label_group = factor(label_group, levels=unique(label_group)),
                            urefs = factor(urefs, levels = unique(urefs))),
                   aes(x = central, xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       color = .data[[color_column]], group = .data[[ycol]],
                       y = .data[[ycol]]),
                   width = 0.2, lwd=0.7,  alpha = 1) +#color = "black",
-    geom_point(data = df %>% filter(n == 1) %>% arrange(sortby) %>% 
+    geom_point(data = df %>% filter(n == 1) %>% arrange(sortby) %>%
                  mutate(label_group = factor(label_group, levels=unique(label_group)),
                         urefs = factor(urefs, levels = unique(urefs))),
                aes(x = central, y = .data[[ycol]],
                    shape = .data[[shape_column]], fill = .data[[color_column]],
                    color = .data[[color_column]]),
-               size = 4, stroke = 1,
-               alpha = 1)
+               size = 3, stroke = 1,
+               alpha = 1) 
+  
+  if(facet_by_country){
+    gg <- gg +
+      ggforce::facet_col(vars(country_brazil), scales = 'free_y', space = 'free')  #.~country_brazil ncol = 1, 
+  } 
   
   
   
@@ -138,7 +145,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
       scale_y_discrete(labels = setNames(df$refs, df$urefs))
   } else {
     gg <- gg + 
-      scale_y_discrete(labels = function(x) str_wrap(x, width = 25)) 
+      scale_y_discrete(labels = function(x) str_wrap(x, width = 28)) 
   }
   
   if (cats == 1) {

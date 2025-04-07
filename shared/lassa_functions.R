@@ -115,7 +115,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
+forest_plot_old <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
