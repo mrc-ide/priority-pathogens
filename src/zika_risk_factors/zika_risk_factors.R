@@ -144,14 +144,20 @@ parameters <- parameters %>% mutate_all(~ ifelse(is.na(.), "", .))
 
 #parameters - risk factors
 risk_params <- parameters %>%
+  filter(qa_score >= 0.5) %>%
   filter(grepl("Risk factors", parameter_type, ignore.case = TRUE)) %>%
-  select(riskfactor_outcome, 
+  select(covidence_id, riskfactor_outcome, 
          riskfactor_name,	riskfactor_significant, 
          riskfactor_adjusted, population_sample_size,
          population_country, dates,
          population_sample_type, population_group, refs)
 
-risk_table <- risk_params %>%
+nrow(risk_params)
+length(unique(risk_params$covidence_id))
+table(risk_params$riskfactor_outcome)
+table(risk_params$riskfactor_name)
+
+risk_table <- risk_params %>% select(-covidence_id) %>%
   separate_longer_delim(riskfactor_name, delim = ";") %>% 
   mutate(population_sample_size = replace_na(as.double(population_sample_size),0),
          riskfactor_adjusted    = case_when(riskfactor_adjusted=='' ~ 'Unspecified',
@@ -160,8 +166,21 @@ risk_table <- risk_params %>%
   summarise(n=n(),
             pop_size = sum(population_sample_size)) %>%
   unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
+sum(summ_risks$n) # number of unique combos of risk factor, outcome, adjusted, significant
 
-text_size <- 14
+summ_risks <- risk_params %>% select(-covidence_id) %>%
+  separate_longer_delim(riskfactor_name, delim = ";")
+table(summ_risks$riskfactor_outcome)
+table(summ_risks$riskfactor_name)
+table(summ_risks$riskfactor_significant)
+
+summ_risks2 <- summ_risks %>% 
+  group_by(riskfactor_outcome,riskfactor_name) %>%
+  summarise(n=n()) 
+
+nrow(summ_risks2) # number of unique combos of risk factor and outcome 
+
+text_size <- 18
 custom_colours <- c('Significant / Adjusted'='blue4', 'Significant / Not adjusted' = 'lightblue', 'Significant / Unspecified'='blue',
                     'Not significant / Adjusted'='darkred', 'Not significant / Not adjusted' = 'pink', 'Not significant / Unspecified'='red',
                     'Unspecified / Adjusted'='grey30', 'Unspecified / Not adjusted' = 'grey50', 'Unspecified / Unspecified'='grey70')
