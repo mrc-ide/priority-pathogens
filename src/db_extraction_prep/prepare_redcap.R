@@ -220,6 +220,7 @@ get_overflow_mapping_table <- function(df,
   non_na_df <- df[!is.na(df[[extractor_col]]) & !is.na(df[[cov_id_col]]), ]
   continuations_df <- non_na_df[!is.na(non_na_df[[continuation_col]]),
                                 c(cov_id_col, extractor_col)]
+  continuations_df <- unique(continuations_df)
 
   id_mapping_list <- list()
 
