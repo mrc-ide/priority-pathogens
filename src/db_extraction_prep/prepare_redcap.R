@@ -2,6 +2,7 @@ library(cli)
 library(ids)
 library(orderly2)
 library(readr)
+library(tools)
 library(yaml)
 
 
@@ -659,6 +660,7 @@ target_names_df <- read_csv(target_filename)
 
 df_raw_list <- lapply(table_filenames_vec, function(x) read_csv(x))
 
+cli_h1("Comparing REDCap input and mapping file")
 check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
                        raw_in_mapping=TRUE)
 check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
@@ -673,6 +675,7 @@ if (!is.null(tables_to_stack)){
     function(table_name) subset_long_df(df_raw_list[[1]], mapping_df, table_name)
     ), distinct_input_tables)
 
+  cli_h1("Checking for form continuations")
   id_mapping_list <- get_overflow_mapping_table(
     df=df_raw_list[[continuation_table]],
     id_col=id_col,
@@ -706,12 +709,16 @@ if (!is.null(tables_to_stack)){
 }
 
 # *------------------------- Clean & generate targets -------------------------*
+cli_h1("Keeping non-empty rows")
+
 df_clean_list <- Map(filter_empty_rows,
                      df=df_raw_list,
                      name=names(df_raw_list))
 
 # Filter out rows with an Answer of No for linked parameter
 if (!is.null(linked_rows_list)){
+  cli_h1("Keeping rows with answers")
+
   df_clean_list[names(linked_rows_list)] <- Map(filter_linked_rows,
                                                 df=df_clean_list[names(linked_rows_list)],
                                                 col=linked_rows_list,
@@ -738,6 +745,8 @@ not_pathogen_ids <- get_not_pathogen_ids(df=df_clean_list[[pathogen_table]],
                                           id_col="record_id",
                                           pathogen_col = "pathogen")
 
+cli_h1(paste("Keeping", toTitleCase(tolower(pathogen)), "rows"))
+
 df_clean_list <-  Map(
   function(df, name) filter_record_ids(df,
                                        not_pathogen_ids,
@@ -751,6 +760,7 @@ unfiltered_article_df <- df_clean_list[[pathogen_table]]
 
 # Filter out irrelevant records
 if (!is.null(incomplete_cols)){
+  cli_h1("Keeping complete rows")
   incomplete_rows_df_list <- Map(get_incomplete_rows,
                                  df_clean_list[names(incomplete_cols)],
                                  incomplete_cols,
@@ -787,6 +797,8 @@ if (!is.null(incomplete_cols)){
     names(df_clean_list))
 }
 
+cli_h1("Generating target tables")
+
 target_df_raw_list <- setNames(
   lapply(target_table_names,
          function (target) generate_target_table(input_df_list=df_clean_list,
@@ -798,6 +810,7 @@ target_df_raw_list <- setNames(
 # Split date columns into day, month, year
 target_df_clean_list <- target_df_raw_list
 if (!is.null(date_cols_to_split)){
+  cli_h1("Expanding date columns")
   for (name in names(date_cols_to_split)){
     cli_inform(paste("Expanding the following ", name, "table date columns:",
                      paste(date_cols_to_split[[name]], collapse=", ")))
