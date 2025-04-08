@@ -369,9 +369,10 @@ split_data_column <- function(input_df, date_col){
 }
 
 # *------------------------- Process report functions -------------------------*
-check_raw_cols_in_mapping <- function(raw_df_list,
-                                      mapping_df,
-                                      tables_to_stack){
+check_raw_cols_mapping <- function(raw_df_list,
+                                   mapping_df,
+                                   tables_to_stack,
+                                   raw_in_mapping=TRUE){
   if(!is.null(tables_to_stack)){
     colnames_vec <- unlist(
       sapply(df_raw_list, function(df) unique(gsub("_\\d+", "", colnames(df)))))
@@ -379,13 +380,23 @@ check_raw_cols_in_mapping <- function(raw_df_list,
     colnames_vec <- unlist(sapply(df_raw_list, colnames))
   }
 
-  not_in_mapping <- colnames_vec[!(colnames_vec %in% mapping_df[["input_col"]])]
+  input_col_vec <- mapping_df[["input_col"]]
 
-  if (length(not_in_mapping) > 1){
-    cli_alert_info(paste0("The following ", NROW(not_in_mapping), " columns are",
-                          " in the input but not in the mapping file and will",
-                          " be exlcuded in the final output:\n",
-                         paste(not_in_mapping, collapse=", ")))
+  if (raw_in_mapping){
+    not_contained <- colnames_vec[!(colnames_vec %in% input_col_vec)]
+    table_source <- "input"
+    table_target <- "mapping file"
+  }else{
+    not_contained <- input_col_vec[!(input_col_vec %in% colnames_vec)]
+    table_source <- "mapping file"
+    table_target <- "input"
+  }
+
+  if (length(not_contained) > 1){
+    cli_alert_info(paste0("The following ", NROW(not_contained), " columns are",
+                          " in the ", table_source ," but not in the ",
+                          table_target," and will be exlcuded in the final
+                          output: ", paste0(not_contained, collapse=", ")))
   }
 }
 
@@ -648,7 +659,10 @@ target_names_df <- read_csv(target_filename)
 
 df_raw_list <- lapply(table_filenames_vec, function(x) read_csv(x))
 
-check_raw_cols_in_mapping(df_raw_list, mapping_df, tables_to_stack)
+check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
+                       raw_in_mapping=TRUE)
+check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
+                       raw_in_mapping=FALSE)
 
 if (!is.null(tables_to_stack)){
   distinct_input_tables <- unique(mapping_df[["input_table"]])
