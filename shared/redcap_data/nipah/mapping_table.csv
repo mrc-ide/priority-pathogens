@@ -151,6 +151,7 @@ parameter_distr_a_uncertainty,parameters,Distribution_par1_uncertainty,parameter
 parameter_pair_unc_single_type,parameters,Parameter 2 uncertainty - single type,parameters
 parameter_pair_distr_a_uncertainty,parameters,Distribution_2_par1_uncertainty,parameters
 outbreak_notes,outbreaks,,outbreaks
+outbreak_probable,outbreaks,,outbreaks
 model_uncertainty,models,,models
 model_spillover,models,,models
 model_fitting_method,models,,models
