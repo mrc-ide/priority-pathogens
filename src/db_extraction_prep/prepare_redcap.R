@@ -63,7 +63,9 @@ filter_record_ids <- function(df, record_id_vec, name, cli_text){
 get_not_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="pathogen"){
   # Update for Pathogen other
   pathogen_lower_vec <- sapply(df[pathogen_col], tolower)
-  record_vec <- df[pathogen_lower_vec!=tolower(pathogen), ][[id_col]]
+  not_pathogen_filter <- (pathogen_lower_vec!=tolower(pathogen) |
+                            is.na(pathogen_lower_vec))
+  record_vec <- df[not_pathogen_filter, ][[id_col]]
   record_vec <- unique(record_vec)
   return (record_vec)
 }
