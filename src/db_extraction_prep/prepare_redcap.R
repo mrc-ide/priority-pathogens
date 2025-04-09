@@ -632,13 +632,14 @@ cov_id_col <- config_list[["continuation_config"]][["cov_id_col"]]
 continuation_col <- config_list[["continuation_config"]][["continuation_col"]]
 extractor_col <- config_list[["continuation_config"]][["extractor_col"]]
 incomplete_col  <- config_list[["continuation_config"]][["incomplete_col"]]
-
+notes_cols <-  config_list[["continuation_config"]][["notes_cols"]]
 # Assumes if there are not tables to stack then data is in a REDCap repeat
 # instance format
 redcap_repeat_instances <- is.null(tables_to_stack)
 
 data_table_names <- config_list[["data_table_names"]]
 incomplete_cols  <- config_list[["incomplete_col_names"]]
+incomplete_col_key  <- config_list[["incomplete_col_key"]]
 
 linked_rows_list <- config_list[["linked_row_col_names"]]
 uuid_col_names <- config_list[["uuid_col_names"]]
@@ -667,6 +668,65 @@ check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
 check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
                        raw_in_mapping=FALSE)
 
+get_unique_na_preserve  <- function(vec){
+  unique_vec <- unique(na.omit(vec))
+  if (length(unique_vec) == 0){
+    return (NA)
+  }else{
+    return (unique_vec)
+  }
+}
+
+update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
+                                   notes_cols, continuation_col, id_col,
+                                   incomplete_col, incomplete_col_key,
+                                   continuation_table){
+  ids_to_combine <- c(as.numeric(id_to_map_to), ids_to_map)
+  to_combine_df <- df[df[[id_col]] %in% ids_to_combine, ]
+
+  cli_alert_info(
+    paste0("Attempting to merge ", continuation_table, " rows with ", id_col,
+           ": ", paste(ids_to_combine, collapse=", "),
+           "\nIf there are any conflicts we will highlight them ",
+           "and choose the latest entry"))
+
+  notes_list <- lapply(
+    notes_cols,
+    function(col) paste(get_unique_na_preserve(to_combine_df[[col]]),
+                        collapse="; ")
+  )
+  names(notes_list) <- notes_cols
+  id_list <- setNames(list(as.numeric(id_to_map_to)), id_col)
+  continuation_list <- setNames(list(NA), continuation_col)
+
+  unqiue_col_df <- to_combine_df[, !(colnames(to_combine_df) %in%
+                                       c(notes_cols, continuation_col, id_col))]
+  unique_value_list <- lapply(unqiue_col_df,
+                              function(col) get_unique_na_preserve(col))
+
+  unique_incomplete_col <- unique_value_list[[incomplete_col]]
+    unique_value_list[[incomplete_col]] <- ifelse(
+      length(unique_incomplete_col)>1,
+      unique_incomplete_col[unique_incomplete_col!=incomplete_col_key],
+      unique_incomplete_col)
+
+  for (name in names(unique_value_list)){
+    values <- unique_value_list[[name]]
+    if (NROW(values) > 1){
+      cli_alert_danger(
+        paste0("Found a mismatch for ", name, "It has the following values: ",
+              paste(values, collapse=", "), ". The final value '", values[-1],
+              "' will be used."))
+    }
+    unique_value_list[[name]] <- values[NROW(values)]
+  }
+
+  final_return_list <- c(id_list, unique_value_list, notes_list, continuation_list)
+  return (final_return_list)
+}
+
+
+
 if (!is.null(tables_to_stack)){
   distinct_input_tables <- unique(mapping_df[["input_table"]])
 
@@ -676,7 +736,8 @@ if (!is.null(tables_to_stack)){
     function(table_name) subset_long_df(df_raw_list[[1]], mapping_df, table_name)
     ), distinct_input_tables)
 
-  cli_h1("Checking for form continuations")
+  cli_h1("Form continuations")
+  cli_h3("Checking for form continuations")
   id_mapping_list <- get_overflow_mapping_table(
     df=df_raw_list[[continuation_table]],
     id_col=id_col,
@@ -684,16 +745,9 @@ if (!is.null(tables_to_stack)){
     continuation_col=continuation_col,
     extractor_col=extractor_col,
     incomplete_col=incomplete_col,
-    incomplete_key="Incomplete")
+    incomplete_key=incomplete_col_key)
 
   if(NROW(id_mapping_list)>0){
-    ids_to_keep_filter <- !(
-      df_raw_list[[continuation_table]][[id_col]] %in%
-          unlist(id_mapping_list)
-      )
-
-    df_raw_list[[continuation_table]] <- (
-      df_raw_list[[continuation_table]][ids_to_keep_filter,])
     df_raw_list[tables_to_stack] <- lapply(
       df_raw_list[tables_to_stack],
       function(df) update_records(df=df,
@@ -707,6 +761,33 @@ if (!is.null(tables_to_stack)){
   # compatability with existing functions
   df_raw_list[tables_to_stack] <- lapply(
     df_raw_list[tables_to_stack], function(df) df[!colnames(df) %in% "repeat_id"])
+
+    cli_h3(paste("Merging", continuation_table,
+                 "rows repeated due to continuation"))
+    ids_to_keep_filter <- !(
+      df_raw_list[[continuation_table]][[id_col]] %in%
+          unlist(id_mapping_list)
+      )
+
+    list_of_updated_records <- lapply(
+      names(id_mapping_list), function (id_to_map_to)
+        update_id_rows_to_keep(df_raw_list[[continuation_table]],
+                               id_to_map_to, id_mapping_list[[id_to_map_to]],
+                               notes_cols, continuation_col, id_col,
+                               incomplete_col, incomplete_col_key,
+                               continuation_table)
+    )
+
+    for (updated_record in list_of_updated_records){
+      id_filter <- (df_raw_list[[continuation_table]][[id_col]] ==
+                      updated_record[[id_col]])
+
+      df_raw_list[[continuation_table]][
+        id_filter, names(updated_record)] <- updated_record
+    }
+
+    df_raw_list[[continuation_table]] <- (
+      df_raw_list[[continuation_table]][ids_to_keep_filter,])
 }
 
 # *------------------------- Clean & generate targets -------------------------*
