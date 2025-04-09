@@ -60,8 +60,6 @@ parameter_unc_pair_value_up,parameters,Parameter uncertainty - upper value,param
 parameter_unc_pair_type,parameters,Parameter uncertainty - type,parameters
 parameter_cfr_num,parameters,CFR_IFR_numerator,parameters
 parameter_cfr_denom,parameters,CFR_IFR_denominator,parameters
-parameter_distribution_type,parameters,,parameters
-parameter_distribution_value,parameters,,parameters
 parameter_supplement,parameters,Method_from_supplement,parameters
 parameter_cfr_method,parameters,CFR_IFR_Method,parameters
 parameter_r_method,parameters,Method_R,parameters
@@ -116,22 +114,18 @@ outbreak_source,outbreaks,,outbreaks
 parameter_notes,parameters,,parameters
 qa_notes,articles,,articles
 parameter_context_location_type,parameters,,parameters
-parameter_pair_type,parameters,,parameters
 parameter_pair_value,parameters,Parameter 2 value,parameters
 parameter_pair_exponent,parameters,Exponent_2,parameters
 parameter_pair_range_low,parameters,Parameter 2 lower bound,parameters
 parameter_pair_range_up,parameters,Parameter 2 upper bound,parameters
 parameter_pair_inverse,parameters,Inverse_param_2,parameters
 parameter_pair_unit,parameters,Parameter 2 unit,parameters
-parameter_pair_value_type,parameters,,parameters
 parameter_pair_supplement,parameters,Method_2_from_supplement,parameters
 parameter_pair_statistical,parameters,Parameter 2 statistical approach,parameters
 parameter_pair_unc_single_value,parameters,Parameter 2 uncertainty - single value,parameters
 parameter_pair_unc_pair_type,parameters,Parameter 2 uncertainty – type,parameters
 parameter_pair_unc_pair_value_low,parameters,Parameter 2 uncertainty - lower value,parameters
 parameter_pair_unc_pair_value_up,parameters,Parameter 2 uncertainty - upper value,parameters
-parameter_pair_distribution_type,parameters,,parameters
-parameter_pair_distribution_value,parameters,,parameters
 parameter_distr_type,parameters,Distribution_type,parameters
 parameter_distr_a_type,parameters,Distribution_par1_type,parameters
 parameter_distr_a_value,parameters,Distribution_par1_value,parameters
