@@ -249,10 +249,10 @@ get_overflow_mapping_table <- function(df,
     id_mapping_list[[as.character(id_to_map_to)]] <- id_update_vec
 
     cli_alert_info(
-      paste0(extractor, " has indicated that Covidence ID:", cov_id,
+      paste0(extractor, " has indicated that Covidence ID: ", cov_id,
             " is a continuation. There are ", NROW(temp_df), " REDCap entries with this ID.\n",
             "The following ", id_col, " will be mapped to ", id_to_map_to, ": ",
-            paste(id_update_vec, collapse=","))
+            paste(id_update_vec, collapse=", "))
     )
 
   }
@@ -275,7 +275,7 @@ generate_target_table <- function(input_df_list, mapping_df, target_table,
                                   target_table_col_name="target_table",
                                   input_col_name = "input_col",
                                   target_col_name = "target_col"){
-  cli_inform(paste("Generating table:", target_table))
+  cli_h3(paste("Generating table:", target_table))
 
   mapping_non_na_df <- mapping_df[!is.na(mapping_df[target_table_col_name]), ]
   filtered_mapping_df <- (mapping_non_na_df[
@@ -648,7 +648,7 @@ article_cols_to_add_start <- config_list[["article_cols_to_add_start"]]
 article_cols_to_add_end <- config_list[["article_cols_to_add_end"]]
 
 # *------------------------------- Read in data -------------------------------*
-mapping_df <- read_csv(mapping_filename)
+mapping_df <- read_csv(mapping_filename, show_col_types = FALSE)
 
 if (!is.null(table_instrument_source_list)){
   mapping_df <- col_list_key_map(df=mapping_df,
@@ -656,9 +656,10 @@ if (!is.null(table_instrument_source_list)){
                                  mapping_list=table_instrument_source_list)
 }
 
-target_names_df <- read_csv(target_filename)
+target_names_df <- read_csv(target_filename, show_col_types = FALSE)
 
-df_raw_list <- lapply(table_filenames_vec, function(x) read_csv(x))
+df_raw_list <- lapply(table_filenames_vec,
+                      function(x) read_csv(x, show_col_types = FALSE))
 
 cli_h1("Comparing REDCap input and mapping file")
 check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
