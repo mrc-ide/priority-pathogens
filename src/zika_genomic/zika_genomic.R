@@ -31,23 +31,24 @@ genomic <- genomic %>%
 # calculate sampling interval 
 genomic <- genomic %>%
   mutate(sampling_interval = population_study_end_year - population_study_start_year,
-         sampling_interval = ifelse(sampling_interval == 0, 1, sampling_interval))
+         sampling_interval = ifelse(sampling_interval == 0, 1, sampling_interval)) %>%
+  mutate(lineage = ifelse(is.na(genomic_lineage), 'Unspecified', genomic_lineage))
 
 # make plot for only sub/site/year
-jitterer <- position_jitter(seed = 123, width = 2)
+jitterer <- position_jitter(seed = 123, width = 5)
 
 ggplot(genomic) +
   geom_segment(aes(y = parameter_lower_bound, yend = parameter_upper_bound,
                    x = sampling_interval, yend = sampling_interval),
-               # position = jitterer,
+               position = jitterer,
                linewidth = 3, alpha = 0.65, color = 'lightblue') +
   geom_errorbar(data =genomic , 
                 aes(ymin=parameter_uncertainty_lower_value, ymax=parameter_uncertainty_upper_value,
                     y = central,x = sampling_interval, color = parameter_uncertainty_type),
-                # position = jitterer,
+                position = jitterer,
                 width = 1.3, lwd=0.75, alpha = 1) +
   geom_point(aes(x = sampling_interval, y = central, shape = parameter_value_type), 
-             # position = jitterer, 
+             position = jitterer,
              size = 2) + 
   scale_y_log10()+
   scale_color_discrete(na.translate = F) +
@@ -59,4 +60,3 @@ ggplot(genomic) +
        shape = '')
 
 ggsave('zika_genomic.png', height = 4, width = 12)
-
