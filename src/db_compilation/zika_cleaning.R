@@ -448,6 +448,10 @@ zika_clean_params <- function(df, pathogen){
         population_location, "\r\n",
         " "
       ),
+      population_location = str_replace(
+        population_location, "West Indies: ",
+        ""  
+      ),
       population_location = case_when(
         population_location %in% 
           c("Salvador; Bahia", "Salvador city in Bahia","Salvador") ~ "Salvador, Bahia",
@@ -473,6 +477,8 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Guadeloupe,Martinique, French Guiana" ~ "Guadeloupe, Martinique, French Guiana",
         covidence_id == 5907 & population_location == "Asia & Americas" ~ "Americas and Oceania",
         population_location %in% "Entire country" ~ NA,
+        # Below is from manually looking at genomic analyses - these are multi-country analyses and don't have specific locations
+        covidence_id %in% c(3152, 6361, 5908) & parameter_class == "Mutations" ~ NA,
         TRUE ~ population_location
       ),
       population_location = str_replace_all(population_location, ";", ",")) %>%
@@ -531,6 +537,14 @@ zika_clean_params <- function(df, pathogen){
           covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso" ~ "Burkina Faso", 
           covidence_id == 6681 ~ "Cabo Verde",
           covidence_id == 879 & population_location == "Ponce; San Juan; Guayama" ~ 'Puerto Rico',
+          # Specify countries in locations for genomic data (then will change to be multi-country...)
+          covidence_id == 3152 & parameter_class == 'Mutations' ~ "Brazil, Polynesia, Caribbean, Central America, South America",
+          covidence_id == 3490 & parameter_class == "Mutations" ~ "Southeastern Asia (n = 20, 1966-2016), Pacific (n = 23, 2007-2016) and the Americas (n = 22, 2014-2015)",
+          covidence_id == 5908 & parameter_class == "Mutations" ~ "Central African Republic, Nigeria, Senegal, Uganda, Malaysia, Cambodia, Thailand, Singapore, French Polynesia, Mexico, Honduras, Guatemala, Panama, Venezuela, Colombia, Ecuador, Brazil, Suriname, American Samoa, Tonga, the Philippines, Micronesia, Puerto Rico, Haiti, Dominican Republic, Martinique, Cuba",
+          covidence_id == 6361 & parameter_class == 'Mutations' ~ "USA, Malaysia, Philippines, Singapore, Thailand, Indonesia, China, Brazil, French Polynesia, Yap Island, Venezuela, Samoa, Suriname, Guatemala, Uganda, Senegal, Nigeria",
+          covidence_id == 7717 & population_study_start_year == 1966 ~ "Mexico, United States, Nicaragua, Honduras, Haiti, Puerto Rico, Panama, Guatemala, Suriname, Brazil, Venezuela, Colombia, Ecuador, Singapore, Australia, Thailand, China, Japan, French Polynesia, South Korea",
+          covidence_id == 7717 & population_study_start_year == 2013 ~ "Uganda, Malaysia, Honduras, Puerto Rico, China, Japan, South Korea, Colombia, Brazil, Nicaragua, Dominican Republic, Philippines, Thailand, Australia, Ecuador, French Polynesia, Austria, Cambodia, Haiti, United States, Panama, Senegal, Singapore, Mexico",
+          covidence_id == 10526 & parameter_class == 'Mutations' ~ "Cambodia, Singapore, Myanmar, China, Vietnam, French Polynesia, United States, Puerto Rico, Nicaragua, Haiti, Honduras, Dominican Republic, Mexico, Brazil, French Guiana, Ecuador, Suriname, Venezuela, Colombia, India, Indonesia, Philippines, Micronesia, Malaysia",
           TRUE ~ population_country),
       population_country_original = population_country, 
       population_country = case_when(
@@ -600,6 +614,24 @@ zika_clean_params <- function(df, pathogen){
           ) ~ "Multi-country: Puerto Rico and the United States",
           population_country %in% "Brazil,Ecuador,Federated States of Micronesia" ~ 
             "Multi-country: Brazil, Ecuador, Federated States of Micronesia",
+          # Genomic ones manually cleaned
+          population_country == "Brazil, Polynesia, Caribbean, Central America, South America" ~ "Multi-country: Americas, Asia, Oceania",
+          population_country == "Southeastern Asia (n = 20, 1966-2016), Pacific (n = 23, 2007-2016) and the Americas (n = 22, 2014-2015)" ~ "Multi-country: Americas (n = 22), Asia (n = 43)",
+          population_country %in% c(
+            "Central African Republic, Nigeria, Senegal, Uganda, Malaysia, Cambodia, Thailand, Singapore, French Polynesia, Mexico, Honduras, Guatemala, Panama, Venezuela, Colombia, Ecuador, Brazil, Suriname, American Samoa, Tonga, Philippines, Micronesia, Puerto Rico, Haiti, Dominican Republic, Martinique, Cuba"
+          ) ~ "Multi-country: Africa (n = 4), Americas (n = 14), Asia (n = 5), Oceania (n = 3)",
+          population_country %in% c(
+            "USA, Malaysia, Philippines, Singapore, Thailand, Indonesia, China, Brazil, French Polynesia, Micronesia, Venezuela, Samoa, Suriname, Guatemala, Uganda, Senegal, Nigeria"
+          ) ~ "Multi-country: Africa (n = 3), Americas (n = 5), Asia (n = 6), Oceania (n = 3)",
+          population_country %in% c(
+            "Mexico, United States, Nicaragua, Honduras, Haiti, Puerto Rico, Panama, Guatemala, Suriname, Brazil, Venezuela, Colombia, Ecuador, Singapore, Australia, Thailand, China, Japan, French Polynesia, South Korea"
+          ) ~ "Multi-country: Americas (n = 13), Asia (n = 5), Oceania (n = 2)",
+          population_country %in% c(
+            "Uganda, Malaysia, Honduras, Puerto Rico, China, Japan, South Korea, Colombia, Brazil, Nicaragua, Dominican Republic, Philippines, Thailand, Australia, Ecuador, French Polynesia, Austria, Cambodia, Haiti, United States, Panama, Senegal, Singapore, Mexico"
+          ) ~ 'Multi-country: Africa (n = 2), Americas (n = 11), Asia (n = 8), Oceania (n = 2), Europe (n = 1)',
+          population_country %in% c(
+            "Cambodia, Singapore, Myanmar, China, Vietnam, French Polynesia, United States, Puerto Rico, Nicaragua, Haiti, Honduras, Dominican Republic, Mexico, Brazil, French Guiana, Ecuador, Suriname, Venezuela, Colombia, India, Indonesia, Philippines, Micronesia, Malaysia"
+          ) ~ "Multi-country: Americas (n = 13), Asia: (n = 9), Oceania (n = 2)",
           is.na(population_country) ~ "Unspecified",
           TRUE ~ population_country
         ),
@@ -1182,7 +1214,9 @@ zika_clean_mod_notes <- function(model_df){
            compartmental_type = ifelse(covidence_id %in% c(19025,25075, 25162 ) & compartmental_type == "Other compartmental", 
                                        "SI-SI", compartmental_type),
            compartmental_type = ifelse(covidence_id == 6775 & compartmental_type == "Other compartmental", 
-                                       "SLIR-SLI", compartmental_type)
+                                       "SLIR-SLI", compartmental_type),
+           compartmental_type = ifelse(covidence_id == 2425 & compartmental_type == "Other compartmental", 
+                                       "SI", compartmental_type)
            
            #to check what kind of model extracted for ID 6772,  6015, 5725
            
