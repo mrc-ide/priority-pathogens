@@ -2,18 +2,19 @@
 
 forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_value_type', 
                         color_column, lims, text_size = 12, show_label = FALSE, 
-                        custom_colours = NA, facet_by_country = FALSE) {
+                        custom_colours = NA, facet_by_country = FALSE,
+                        point_size = 3) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
   
   df   <- df %>% mutate(urefs = make.unique(refs)) %>%
     mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
+           country_brazil = ifelse(population_country == 'Brazil', 'Brazil','Rest of World'),
            label_group = case_when(
              is.na(population_location) | population_location == '' ~ population_country,
              (population_location !="" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,'\n' ,' (',population_country,')'),
-             !is.na(population_location) & population_country == 'Unspecified' ~ population_location,
-             TRUE ~ NA),
-           country_brazil = ifelse(population_country == 'Brazil', 'Brazil','Rest of World')) %>%
+             (!is.na(population_location) & population_country == 'Unspecified') | (population_country == 'Brazil' & facet_by_country == TRUE) ~ population_location,
+             TRUE ~ NA)) %>%
     arrange(desc(parameter_value)) %>% 
     mutate(label_group = factor(label_group, levels = unique(label_group)),
            urefs = factor(urefs, levels = unique(urefs)))
@@ -51,7 +52,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                    shape = .data[[shape_column]], fill = .data[[color_column]],
                    color = .data[[color_column]]),
                position = jitterer,
-               size = 3, stroke = 1,
+               size = point_size, stroke = 1,
                alpha = 1) +
 
     geom_segment(data = df %>% filter(n == 1) %>% arrange(sortby) %>%
@@ -73,7 +74,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                aes(x = central, y = .data[[ycol]],
                    shape = .data[[shape_column]], fill = .data[[color_column]],
                    color = .data[[color_column]]),
-               size = 3, stroke = 1,
+               size = point_size, stroke = 1,
                alpha = 1) 
   
   if(facet_by_country){
@@ -119,27 +120,41 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                          labels = function(x) str_wrap(x, width = 18))
   }
   
-  if(sum(!is.na(custom_colours)))
-  {
-    gg <- gg + 
-      scale_x_continuous(limits = lims, expand = c(0.05, 0)) +
-      labs(x = label, y = NULL) +
-      scale_color_manual(values = custom_colours, labels = function(x) str_wrap(x, width = 18)) +
-      scale_fill_manual(values = custom_colours, labels = function(x) str_wrap(x, width = 18)) +
-      theme_minimal() + 
-      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
-            text = element_text(size = text_size))
+  lancetcols <- c('#00468BFF', '#ED0000FF','#42B540FF','#0099B4FF', '#925E9FFF','#FDAF91FF','#AD002AFF','#ADB6B6FF','#1B1919FF')
+  
+  if(sum(!is.na(custom_colours))) {
+      gg <- gg + 
+        scale_color_manual(values = custom_colours, labels = function(x) str_wrap(x, width = 18)) +
+        scale_fill_manual(values = custom_colours, labels = function(x) str_wrap(x, width = 18)) 
   } else {
-    gg <- gg + 
+    if(color_column == 'population_sample_type'){
+      gg <- gg + 
+        scale_color_manual(values = c("Population based" = lancetcols[1], 'Hospital based' =  lancetcols[2] ,
+                                      "Community based"  = lancetcols[3], 'Travel based' =    lancetcols[4] ,
+                                      'Unspecified'      = lancetcols[5], 'Contact based' =   lancetcols[6] ,
+                                      'Mixed settings'   = lancetcols[7], 'Other' =           lancetcols[8] ,
+                                      'School based'     = lancetcols[9], 'Household based' = "#DF8F44"), 
+                           labels = function(x) str_wrap(x, width = 18)) +
+        scale_fill_manual(values = c("Population based" = lancetcols[1], 'Hospital based' =   lancetcols[2] ,
+                                     "Community based"  = lancetcols[3], 'Travel based' =     lancetcols[4] ,
+                                     'Unspecified'      = lancetcols[5], 'Contact based' =    lancetcols[6] ,
+                                     'Mixed settings'   = lancetcols[7], 'Other' =            lancetcols[8] ,
+                                     'School based'     = lancetcols[9], 'Household based' =  "#DF8F44"), 
+                          labels = function(x) str_wrap(x, width = 18)) 
+    } else {gg <- gg + 
       scale_fill_lancet(palette = "lanonc", labels = function(x) str_wrap(x, width = 18)) +
-      scale_color_lancet(palette = "lanonc", labels = function(x) str_wrap(x, width = 18)) +
-      scale_x_continuous(limits = lims, expand = c(0.05, 0)) +
-      labs(x = label, y = NULL) +
-      theme_minimal() + 
-      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
-            text = element_text(size = text_size))  
+      scale_color_lancet(palette = "lanonc", labels = function(x) str_wrap(x, width = 18)) 
+    }
   }
   
+  gg <- gg +
+    scale_x_continuous(limits = lims, expand = c(0.05, 0)) +
+    labs(x = label, y = NULL) +
+    theme_minimal() + 
+    theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+          text = element_text(size = text_size))#,
+          # legend.key.size = unit(5, 'cm')) 
+    
   if(ycol == 'urefs'){
     gg <- gg + 
       scale_y_discrete(labels = setNames(df$refs, df$urefs))
@@ -148,10 +163,10 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
       scale_y_discrete(labels = function(x) str_wrap(x, width = 28)) 
   }
   
-  if (cats == 1) {
-    gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
-  } else {
-    gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
+  # if (cats == 1) {
+  #   gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
+  # } else {
+    gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))#}
   
   if(show_label)
     gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" ) 
