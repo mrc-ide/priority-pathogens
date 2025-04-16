@@ -7,6 +7,7 @@ library(rnaturalearth)
 library(gpkg)
 library(RSQLite)
 library(ggrepel)
+library(countrycode)
 
 #orderly preparation 
 orderly_strict_mode()
@@ -136,3 +137,21 @@ sero_gen <- ggplot() +
 ggsave("outbreaks.png", out_plt, bg = 'white')
 ggsave("sero_all.png", sero_all, bg = 'white')
 ggsave("sero_general.png", sero_gen, bg = 'white')
+
+
+# Get information about outbreaks
+nrow(outbreaks)
+length(unique(outbreaks$covidence_id))
+length(unique(outbreaks$outbreak_country))
+
+table(outbreaks$outbreak_country)
+outsumm <- as.data.frame(table(outbreaks$outbreak_country, outbreaks$covidence_id)) %>%
+  filter(Freq > 0) %>%
+  group_by(Var1) %>%
+  count()
+
+outbreaks <- outbreaks %>%
+  mutate(continent = countrycode(sourcevar = outbreak_country,
+                                 origin = "country.name",
+                                 destination = "continent"))
+table(outbreaks$continent)

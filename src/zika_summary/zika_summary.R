@@ -19,6 +19,7 @@ orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen
 articles   <- readRDS("articles_curated.rds")
 models     <- readRDS("models_curated.rds")
 parameters <- readRDS("parameters_curated.rds")
+outbreaks <- readRDS('outbreaks_curated.rds')
 
 dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE )
 
@@ -105,4 +106,5 @@ p4 <- answers %>%
 
 patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
-ggsave("figure_S1.png", plot = patchwork, width = 18, height = 12)
+ggsave("figure_qa_articles.png", plot = patchwork, width = 18, height = 12)
+
