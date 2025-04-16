@@ -16,7 +16,9 @@ fix_cov_ids <- function(df, pathogen){
         covidence_id == 6238 ~ 6246, 
         TRUE ~ covidence_id)
     ) %>%
-    filter(!covidence_id %in% c(7033, 3491,  1663, 66, 4338, 4340)) # this is a Research Letter, commeents and not pars 
+    filter(!covidence_id %in% c(7033, 3491,  1663, 66, 4338, 4340)) %>%# this is a Research Letter, commeents and not pars 
+    filter(covidence_id != 5749) %>% # this is the same as 873 
+    filter(covidence_id != 10652) # this is the same as 2302 
   
   
   return(df)
@@ -60,6 +62,87 @@ zika_clean_articles <- function(df, pathogen){
     # Make Names title case 
     mutate(first_author_surname = str_to_title(first_author_surname),
            first_author_first_name = str_to_title(first_author_first_name)) %>%
+    # Fix article with group name in first name column and other name issues
+    mutate(
+      first_author_surname = case_when(
+        covidence_id == 4427 ~ "Singapore Zika Study Group", 
+        covidence_id == 674 ~ "Sebrango-Rodriguez",
+        covidence_id == 1508 ~ "O'Reilly",
+        covidence_id == 1941 ~ "Lourenco",
+        TRUE ~ first_author_surname),
+      first_author_first_name = case_when(
+        covidence_id == 674 ~ "C.R.",
+        covidence_id == 24965 ~ "F.B.",
+        covidence_id == 22284 ~ "C.S.",
+        covidence_id == 4308 ~ "Allard",
+        covidence_id == 564 ~ "Y.A",
+        covidence_id == 890 ~ "D.P.",
+        covidence_id == 1993 ~ "J.G.",
+        covidence_id == 3100 ~ "W.E.",
+        covidence_id == 4365 ~ "F.B.",
+        covidence_id == 4464 ~ "I.I.",
+        covidence_id == 5530 ~ "O.C.",
+        covidence_id == 5535 ~ "M.S.C.",
+        covidence_id == 5537 ~ "M.A.",
+        covidence_id == 5543 ~ "A.K.T.",
+        covidence_id == 5552 ~ "L.P.",
+        covidence_id == 5572 ~ "S.M.",
+        covidence_id == 5621 ~ "F.X.",
+        covidence_id == 5665 ~ "E.O.",
+        covidence_id == 5694 ~ "Y.C.",
+        covidence_id == 6585 ~ "T.M.",
+        covidence_id == 6618 ~ "P.C.",
+        covidence_id == 6658 ~ "L.A.",
+        covidence_id == 6670 ~ "S.M.",
+        covidence_id == 6744 ~ "C.C.",
+        covidence_id == 6762 ~ "S.N.",
+        covidence_id == 7050 ~ "J.K.",
+        covidence_id == 7090 ~ "M.H.",
+        covidence_id == 7416 ~ "A.G.",
+        covidence_id == 7448 ~ "L.E.",
+        covidence_id == 7464 ~ "A.R.",
+        covidence_id == 7491 ~ "M.M.N.",
+        covidence_id == 7503 ~ "N.S.",
+        covidence_id == 7892 ~ "Anneke L",
+        covidence_id == 8302 ~ "T.A.",
+        covidence_id == 8608 ~ "J.M.",
+        covidence_id == 9768 ~ "S.B.",
+        covidence_id == 9777 ~ "A.S.",
+        covidence_id == 9881 ~ "C.H.A.",
+        covidence_id == 10009 ~ "S.F.",
+        covidence_id == 10010 ~ "H.A.",
+        covidence_id == 10094 ~ "M.J.",
+        covidence_id == 10125 ~ "A.A.",
+        covidence_id == 10429 ~ "E.J.M.",
+        covidence_id == 10437 ~ "I.R.",
+        covidence_id == 10495 ~ "A.C.",
+        covidence_id == 10509 ~ "V.V.",
+        covidence_id == 10561 ~ "G.C.",
+        covidence_id == 10697 ~ "G.A.",
+        covidence_id == 10743 ~ "S.E.",
+        covidence_id == 11133 ~ "B.B.",
+        covidence_id == 11297 ~ "R.A.A.",
+        covidence_id == 11328 ~ "P.M.S.",
+        covidence_id == 11434 ~ "C.M.",
+        covidence_id == 11438 ~ "A.R.S.",
+        covidence_id == 11493 ~ "G.O.",
+        covidence_id == 11565 ~ "R.E.",
+        covidence_id == 11575 ~ "J.D.",
+        covidence_id == 11720 ~ "F.A.",
+        covidence_id == 11853 ~ "I.J.A.A.",
+        covidence_id == 11900 ~ "R.S.",
+        covidence_id == 11966 ~ "J.P.",
+        covidence_id == 12064 ~ "A.O.",
+        covidence_id == 12074 ~ "C.L.",
+        covidence_id == 12202 ~ "H.J.",
+        covidence_id == 12234 ~ "R.A.",
+        covidence_id == 12630 ~ "J.T.",
+        covidence_id == 12798 ~ "B.S.",
+        covidence_id == 22284 ~ "C.S.",
+        covidence_id == 24965 ~ "F.B.",
+        covidence_id == 25075 ~ "K.M.",
+        TRUE ~ first_author_first_name
+      )) %>%
     # Add article label
     mutate(
       article_label = as.character(
@@ -288,7 +371,6 @@ zika_clean_params <- function(df, pathogen){
       method_disaggregated_by = str_replace_all(method_disaggregated_by, ";", ", "),
       population_location = str_replace_all(population_location, ";", ","),
       
-      
       # Update parameter type values 
       parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
                                  parameter_type == "Growth rate ®" ~"Growth rate (r)",
@@ -304,7 +386,9 @@ zika_clean_params <- function(df, pathogen){
       parameter_type == "Seroprevalence - Unspecified" & covidence_id == 6072 ~ "Risk factors",
       parameter_type == "Zika congenital syndrome (microcephaly) risk" & covidence_id == 12202 ~ "Risk factors",
       TRUE ~ parameter_type
-    ))
+    )) %>%
+    # Remove overdispersion 
+    filter(parameter_type != 'Overdispersion')
   
   # Make parameter class
   df <- df %>%
@@ -470,7 +554,7 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Saint-Martin" ~ "Saint Martin",
         population_location %in% c("Rio de Janeiro (city)", "Rio de Janeiro", "Rio de janeiro", "Rio  de Janeiro") ~
           "Rio de Janeiro",
-        population_location %in% c("Puerto Rico: Ponce; San Juan; Guayama") ~ "Ponce; San Juan; Guayama",
+        population_location %in% c("Puerto Rico: Ponce, San Juan, Guayama") ~ "Ponce, San Juan, Guayama",
         population_location %in% "3 states in Nigeria\r\nNigeria; Abia State in Southern Nigeria; and Kaduna\r\nState in Northern Nigeria" ~
           "Nasarawa state, Abia state, Kaduna state",
         population_location %in% c("Sao Paolo State", "São Paulo State") ~ "São Paulo state",
@@ -489,9 +573,13 @@ zika_clean_params <- function(df, pathogen){
         covidence_id == 5907 & population_location == "Asia & Americas" ~ "Americas and Oceania",
         population_location %in% "Entire country" ~ NA,
         population_location == "Yap"~ "Yap Island",
+        # Below is from manually looking at genomic analyses - these are multi-country analyses and don't have specific locations
+        covidence_id %in% c(3152, 6361, 5908) & parameter_class == "Mutations" ~ NA,
         TRUE ~ population_location
       ),
-      population_location = str_replace_all(population_location, ";", ",")) %>%
+      population_location = str_replace_all(population_location, ";", ",")) 
+  
+  df <- df %>%
     mutate(
       # Population country
       population_country = str_replace(
@@ -548,11 +636,28 @@ zika_clean_params <- function(df, pathogen){
           covidence_id == 10999 & population_location ==  "Bauchi state" ~ "Nigeria", 
           covidence_id == 6182 & population_location ==  "São Paulo" ~ "Brazil", 
           covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso" ~ "Burkina Faso", 
+          covidence_id == 6197 & population_location ==  "Ouagadougou, Bobo-Dioulasso" ~ "Burkina Faso", 
           covidence_id == 6681 ~ "Cabo Verde",
-          covidence_id == 879 & population_location == "Ponce; San Juan; Guayama" ~ 'Puerto Rico',
+          covidence_id == 873 & population_location == "Ponce, San Juan, Guayama" ~ 'Puerto Rico',
+          # Specify countries in locations for genomic data (then will change to be multi-country...)
+          covidence_id == 3152 & parameter_class == 'Mutations' ~ "Brazil, Polynesia, Caribbean, Central America, South America",
+          covidence_id == 3490 & parameter_class == "Mutations" ~ "Southeastern Asia (n = 20, 1966-2016), Pacific (n = 23, 2007-2016) and the Americas (n = 22, 2014-2015)",
+          covidence_id == 5908 & parameter_class == "Mutations" ~ "Central African Republic, Nigeria, Senegal, Uganda, Malaysia, Cambodia, Thailand, Singapore, French Polynesia, Mexico, Honduras, Guatemala, Panama, Venezuela, Colombia, Ecuador, Brazil, Suriname, American Samoa, Tonga, the Philippines, Micronesia, Puerto Rico, Haiti, Dominican Republic, Martinique, Cuba",
+          covidence_id == 6361 & parameter_class == 'Mutations' ~ "USA, Malaysia, Philippines, Singapore, Thailand, Indonesia, China, Brazil, French Polynesia, Yap Island, Venezuela, Samoa, Suriname, Guatemala, Uganda, Senegal, Nigeria",
+          covidence_id == 7717 & population_study_start_year == 1966 ~ "Mexico, United States, Nicaragua, Honduras, Haiti, Puerto Rico, Panama, Guatemala, Suriname, Brazil, Venezuela, Colombia, Ecuador, Singapore, Australia, Thailand, China, Japan, French Polynesia, South Korea",
+          covidence_id == 7717 & population_study_start_year == 2013 ~ "Uganda, Malaysia, Honduras, Puerto Rico, China, Japan, South Korea, Colombia, Brazil, Nicaragua, Dominican Republic, Philippines, Thailand, Australia, Ecuador, French Polynesia, Austria, Cambodia, Haiti, United States, Panama, Senegal, Singapore, Mexico",
+          covidence_id == 10526 & parameter_class == 'Mutations' ~ "Cambodia, Singapore, Myanmar, China, Vietnam, French Polynesia, United States, Puerto Rico, Nicaragua, Haiti, Honduras, Dominican Republic, Mexico, Brazil, French Guiana, Ecuador, Suriname, Venezuela, Colombia, India, Indonesia, Philippines, Micronesia, Malaysia",
+          covidence_id == 4328 & parameter_class == 'Mutations' ~ "Multi-country: Americas",
+          covidence_id == 5907 & parameter_class == 'Mutations' ~ "Multi-country: Americas, Oceania",
+          covidence_id == 6511 & parameter_class == 'Mutations' ~ "Multi-country: Pacific, Americas",
+          covidence_id == 6571 & parameter_class == 'Mutations' ~ "Malaysia, Micronesia, Cambodia, Philippines, Thailand, Canada, French Polynesia, Haiti, Honduras, Brazil, Suriname, Colombia, Guatemala, Mexico, Puerto Rico, Panama, Martinique, French Guiana, Nicaragua, Italy, China, Australia, Venezuela, USA, Dominican Republic, Ecuador, United Kingdom, Japan, Singapore",
+          covidence_id == 4438 & population_sample_size == 139 ~ "Brazil, USA, other Americas",
+          covidence_id == 3154 & parameter_class == 'Mutations' ~ "Russia, Colombia, Brazil, China, Thailand, Indonesia, Mexico, Philippines, Haiti, Martinique, Puerto Rico, Guatemala, Suriname, Cook Islands, New Caledonia, Easter Island, French Polynesia, Indonesia, Malaysia, Cambodia, Micronesia, Senegal, Central African Republic, Nigeria, Uganda, Norway",
           TRUE ~ population_country),
-      population_country_original = population_country, 
-      population_country = case_when(
+      population_country_original = population_country)
+  
+  df <- df %>%
+    mutate(population_country = case_when(
           # Clean multi country names 
           population_country %in% 
             "Belize;Bolivia;Colombia;Costa Rica;Dominican Republic;Ecuador;El Salvador;Guatemala;Honduras;Mexico;Panama;Peru;Puerto Rico" ~
@@ -619,6 +724,31 @@ zika_clean_params <- function(df, pathogen){
           ) ~ "Multi-country: Puerto Rico and the United States",
           population_country %in% "Brazil,Ecuador,Federated States of Micronesia" ~ 
             "Multi-country: Brazil, Ecuador, Federated States of Micronesia",
+          # Genomic ones manually cleaned
+          population_country == "Brazil, Polynesia, Caribbean, Central America, South America" ~ "Multi-country: Americas, Asia, Oceania",
+          population_country == "Southeastern Asia (n = 20, 1966-2016), Pacific (n = 23, 2007-2016) and the Americas (n = 22, 2014-2015)" ~ "Multi-country: Americas, Asia, Oceania",
+          population_country %in% c(
+            "Central African Republic, Nigeria, Senegal, Uganda, Malaysia, Cambodia, Thailand, Singapore, French Polynesia, Mexico, Honduras, Guatemala, Panama, Venezuela, Colombia, Ecuador, Brazil, Suriname, American Samoa, Tonga, the Philippines, Micronesia, Puerto Rico, Haiti, Dominican Republic, Martinique, Cuba"
+          ) ~ "Multi-country: Africa (n = 4), Americas (n = 14), Asia (n = 5), Oceania (n = 3)",
+          population_country %in% c(
+            "USA, Malaysia, Philippines, Singapore, Thailand, Indonesia, China, Brazil, French Polynesia, Yap Island, Venezuela, Samoa, Suriname, Guatemala, Uganda, Senegal, Nigeria"
+          ) ~ "Multi-country: Africa (n = 3), Americas (n = 5), Asia (n = 6), Oceania (n = 3)",
+          population_country %in% c(
+            "Mexico, United States, Nicaragua, Honduras, Haiti, Puerto Rico, Panama, Guatemala, Suriname, Brazil, Venezuela, Colombia, Ecuador, Singapore, Australia, Thailand, China, Japan, French Polynesia, South Korea"
+          ) ~ "Multi-country: Americas (n = 13), Asia (n = 5), Oceania (n = 2)",
+          population_country %in% c(
+            "Uganda, Malaysia, Honduras, Puerto Rico, China, Japan, South Korea, Colombia, Brazil, Nicaragua, Dominican Republic, Philippines, Thailand, Australia, Ecuador, French Polynesia, Austria, Cambodia, Haiti, United States, Panama, Senegal, Singapore, Mexico"
+          ) ~ 'Multi-country: Africa (n = 2), Americas (n = 11), Asia (n = 8), Oceania (n = 2), Europe (n = 1)',
+          population_country %in% c(
+            "Cambodia, Singapore, Myanmar, China, Vietnam, French Polynesia, United States, Puerto Rico, Nicaragua, Haiti, Honduras, Dominican Republic, Mexico, Brazil, French Guiana, Ecuador, Suriname, Venezuela, Colombia, India, Indonesia, Philippines, Micronesia, Malaysia"
+          ) ~ "Multi-country: Americas (n = 13), Asia: (n = 9), Oceania (n = 2)",
+          population_country %in% c(
+            "Malaysia, Micronesia, Cambodia, Philippines, Thailand, Canada, French Polynesia, Haiti, Honduras, Brazil, Suriname, Colombia, Guatemala, Mexico, Puerto Rico, Panama, Martinique, French Guiana, Nicaragua, Italy, China, Australia, Venezuela, USA, Dominican Republic, Ecuador, United Kingdom, Japan, Singapore"
+          ) ~ "Multi-country: Americas (n = 17), Asia (n = 7), Oceania (n = 3), Europe (n = 2)",
+          population_country %in% c("Brazil, USA, other Americas") ~ "Multi-country: Americas",
+          population_country %in% c(
+            "Russia, Colombia, Brazil, China, Thailand, Indonesia, Mexico, Philippines, Haiti, Martinique, Puerto Rico, Guatemala, Suriname, Cook Islands, New Caledonia, Easter Island, French Polynesia, Indonesia, Malaysia, Cambodia, Micronesia, Senegal, Central African Republic, Nigeria, Uganda, Norway"
+          ) ~ "Multi-country: Africa (n = 4), Americas (n = 9), Asia (n = 7), Oceania (n = 4), Europe (n = 2)",
           is.na(population_country) ~ "Unspecified",
           TRUE ~ population_country
         ),
@@ -629,12 +759,7 @@ zika_clean_params <- function(df, pathogen){
   df <- df %>%
     # Fix variables mixed up from the db1 fixing file 
     mutate(method_disaggregated = ifelse(method_disaggregated=='Method' & covidence_id == 729, TRUE, as.logical(method_disaggregated)),
-           method_disaggregated_by = ifelse(method_disaggregated_by == 'TRUE' & covidence_id == 729, "Method", as.logical(method_disaggregated_by))) %>%
-    # If method_disaggregated_by or method_disaggregated_only are true, then method_disaggregated should be TRUE
-    mutate(either = ifelse(method_disaggregated_by != 'NA' | method_disaggregated_only == TRUE, 1, 0),
-           correct = ifelse((either == 1 & method_disaggregated == TRUE) | (either == 0 & method_disaggregated == FALSE), 1, 0),
-           method_disaggregated = ifelse(correct == 0, TRUE, method_disaggregated)) %>%
-    select(-either, -correct)
+           method_disaggregated_by = ifelse(method_disaggregated_by == 'TRUE' & covidence_id == 729, "Method", method_disaggregated_by)) 
   
   # Clean delays 
   df <- zika_clean_delays(df)
@@ -773,7 +898,11 @@ zika_clean_params <- function(df, pathogen){
   df <- df %>%
     mutate(
       parameter_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
-                                                                           "Relative contribution - zoonotic to human"), 23, parameter_value),
+                                                                           "Relative contribution - zoonotic to human"), parameter_value * 100, parameter_value),
+      parameter_uncertainty_upper_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
+                                                                                             "Relative contribution - zoonotic to human"), parameter_uncertainty_upper_value * 100 , parameter_uncertainty_upper_value),
+      parameter_uncertainty_lower_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
+                                                                                             "Relative contribution - zoonotic to human"), parameter_uncertainty_lower_value * 100 , parameter_uncertainty_lower_value),
       parameter_unit = ifelse(covidence_id == 422  & parameter_type %in% c("Relative contribution - human to human",
                                                                         "Relative contribution - zoonotic to human"), "Percentage (%)", parameter_unit)
     )
@@ -819,12 +948,15 @@ zika_clean_params <- function(df, pathogen){
   return(df)
 }
 
-zika_clean_ar <- function(params_df){
+zika_clean_ar <- function(params_df){ #to convert from epidemic size (written as attack rate)
   params_df <- params_df %>%
-    mutate(parameter_value = case_when(
-      covidence_id == 6542 & parameter_type == "Attack rate" ~ cfr_ifr_numerator / cfr_ifr_denominator * 100, 
-      TRUE ~ parameter_value
-    ))
+    mutate(
+      parameter_value = ifelse(covidence_id == 6542 & parameter_type == "Attack rate", cfr_ifr_numerator / cfr_ifr_denominator * 100, 
+       parameter_value),
+      parameter_lower_bound = ifelse(covidence_id == 6542 & parameter_type == "Attack rate", parameter_lower_bound / cfr_ifr_denominator * 100, 
+                                     parameter_lower_bound),
+      parameter_upper_bound = ifelse(covidence_id == 6542 & parameter_type == "Attack rate", parameter_upper_bound / cfr_ifr_denominator * 100, 
+                                     parameter_upper_bound))
 }
 
 zika_clean_delays <- function(params_df){
@@ -977,7 +1109,7 @@ zika_clean_r <- function(params_df){
     mutate(parameter_value = case_when(
       covidence_id == 7647 & parameter_type == "Reproduction number (Basic R0)" ~ 1.12,
       TRUE ~ parameter_value
-    ))
+    )) 
   
   return(params_df)
 }
