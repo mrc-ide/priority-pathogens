@@ -166,7 +166,6 @@ risk_table <- risk_params %>% select(-covidence_id) %>%
   summarise(n=n(),
             pop_size = sum(population_sample_size)) %>%
   unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
-sum(summ_risks$n) # number of unique combos of risk factor, outcome, adjusted, significant
 
 summ_risks <- risk_params %>% select(-covidence_id) %>%
   separate_longer_delim(riskfactor_name, delim = ";")
@@ -174,13 +173,15 @@ table(summ_risks$riskfactor_outcome)
 table(summ_risks$riskfactor_name)
 table(summ_risks$riskfactor_significant)
 
+# sum(summ_risks$n) # number of unique combos of risk factor, outcome, adjusted, significant
+
 summ_risks2 <- summ_risks %>% 
   group_by(riskfactor_outcome,riskfactor_name) %>%
   summarise(n=n()) 
 
 nrow(summ_risks2) # number of unique combos of risk factor and outcome 
 
-text_size <- 18
+text_size <- 22
 custom_colours <- c('Significant / Adjusted'='blue4', 'Significant / Not adjusted' = 'lightblue', 'Significant / Unspecified'='blue',
                     'Not significant / Adjusted'='darkred', 'Not significant / Not adjusted' = 'pink', 'Not significant / Unspecified'='red',
                     'Unspecified / Adjusted'='grey30', 'Unspecified / Not adjusted' = 'grey50', 'Unspecified / Unspecified'='grey70')

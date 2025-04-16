@@ -68,7 +68,7 @@ zcs_rate <- parameters %>%
            case_definition %in% c('Confirmed','Lab confirmed') ~ "Confirmed",
            case_definition %in% c('Clinically diagnosed/symptomatic','Suspected') ~ "Suspected",
            TRUE ~ case_definition) 
-         ) %>%
+  ) %>%
   # remove entry that is called 'clearly incorrect' in the paper that reported it (#7050)
   filter(!(covidence_id == 7050 & population_country == 'Argentina'))  %>%
   mutate(continent = countrycode(sourcevar = population_country,
@@ -80,40 +80,43 @@ zcs_rate_qa <- zcs_rate %>%
 length(unique(zcs_rate_qa$covidence_id))
 
 zcsplot <- forest_plot(zcs_rate %>% filter(qa_score >= 0.5) %>% arrange(central) ,
-                     label = "CZS/Microcephaly risk (%)", 
-                     facet_by_country = TRUE,
-                     ycol = 'label_group',
-            shape_column = "case_definition",
-            color_column = "refs", lims = c(0,100),
-            custom_colours = cols)
+                       label = "Microcephaly risk given Zika-infected mother (%)", 
+                       facet_by_country = TRUE,
+                       ycol = 'label_group',
+                       text_size = 25,
+                       shape_column = "case_definition",
+                       color_column = "refs", lims = c(0,100),
+                       custom_colours = cols) + 
+  theme(legend.position = 'inside')
 zcsplot_noqa <- forest_plot(zcs_rate %>% arrange(central) ,
-                     label = "CZS/Microcephaly risk (%)", 
-                     facet_by_country = TRUE,
-                     ycol = 'label_group',
-                     shape_column = "case_definition",
-                     color_column = "refs", lims = c(0,100),
-                     custom_colours = cols)
-ggsave(filename = 'zcs_plot_loc_country.png', zcsplot, height =13, width = 11, bg = 'white')
-ggsave(filename = 'zcs_plot_loc_country.pdf', zcsplot, height =13, width = 11, bg = 'white')
-ggsave(filename = 'zcs_plot_loc_country_noqa.png', zcsplot_noqa, height =13, width = 11, bg = 'white')
-ggsave(filename = 'zcs_plot_loc_country_noqa.pdf', zcsplot_noqa, height =13, width = 11, bg = 'white')
+                            label = "Microcephaly risk given Zika-infected mother (%)", 
+                            facet_by_country = TRUE,
+                            ycol = 'label_group',
+                            text_size = 25,
+                            shape_column = "case_definition",
+                            color_column = "refs", lims = c(0,100),
+                            custom_colours = cols)
+ggsave(filename = 'zcs_plot_loc_country.png', zcsplot, height =20, width = 13, bg = 'white')
+ggsave(filename = 'zcs_plot_loc_country.pdf', zcsplot, height =20, width = 13, bg = 'white')
+ggsave(filename = 'zcs_plot_loc_country_noqa.png', zcsplot_noqa, height =20, width = 13, bg = 'white')
+ggsave(filename = 'zcs_plot_loc_country_noqa.pdf', zcsplot_noqa, height =20, width = 13, bg = 'white')
 
-zcsplot <- forest_plot(zcs_rate %>% filter(qa_score >= 0.5)%>% arrange(refs),
-                       label = "CZS/Microcephaly risk (%)", 
-                       ycol = 'urefs',
-                     shape_column = "case_definition",
-                     color_column = "population_country", lims = c(0,100),
-                     custom_colours = cols)
-zcsplot_noqa <- forest_plot(zcs_rate %>% arrange(refs),
-                            label = "CZS/Microcephaly risk (%)", 
-                            ycol = 'urefs',
-                     shape_column = "case_definition",
-                     color_column = "population_country", lims = c(0,100),
-                     custom_colours = cols)
-ggsave(filename = 'zcs_plot_refs_country.png', zcsplot, height = 12, width = 10, bg = 'white')
-ggsave(filename = 'zcs_plot_refs_country.pdf', zcsplot, height = 12, width = 10, bg = 'white')
-ggsave(filename = 'zcs_plot_refs_country_noqa.png', zcsplot_noqa, height = 12, width = 10, bg = 'white')
-ggsave(filename = 'zcs_plot_refs_country_noqa.pdf', zcsplot_noqa, height = 12, width = 10, bg = 'white')
+zcsplot_urefs <- forest_plot(zcs_rate %>% filter(qa_score >= 0.5)%>% arrange(refs),
+                             label = "Microcephaly risk given Zika-infected mother (%)", 
+                             ycol = 'urefs',
+                             shape_column = "case_definition",
+                             color_column = "population_country", lims = c(0,100),
+                             custom_colours = cols)
+zcsplot__urefsnoqa <- forest_plot(zcs_rate %>% arrange(refs),
+                                  label = "Microcephaly risk given Zika-infected mother (%)", 
+                                  ycol = 'urefs',
+                                  shape_column = "case_definition",
+                                  color_column = "population_country", lims = c(0,100),
+                                  custom_colours = cols)
+ggsave(filename = 'zcs_plot_refs_country.png', zcsplot_urefs, height = 12, width = 10, bg = 'white')
+ggsave(filename = 'zcs_plot_refs_country.pdf', zcsplot_urefs, height = 12, width = 10, bg = 'white')
+ggsave(filename = 'zcs_plot_refs_country_noqa.png', zcsplot__urefsnoqa, height = 12, width = 10, bg = 'white')
+ggsave(filename = 'zcs_plot_refs_country_noqa.pdf', zcsplot__urefsnoqa, height = 12, width = 10, bg = 'white')
 
 # forest_plot(zcs_rate,label = "Forest plot of microcephaly risk (%)", color_column = "case_definition", lims = c(0,100),
 #             custom_colours = cols)
@@ -134,10 +137,10 @@ ggsave("zcs_metaanalysis.png", plot = zcs_meta, width = 9, height = 16)
 ggsave("zcs_metaanalysis.pdf", plot = zcs_meta, width = 9, height = 16)
 
 metaanalysis_zcs_continent <- metaprop_wrap(dataframe = zcs_rate %>% filter(qa_score >= 0.5 & !is.na(continent)), 
-                                  plot_pooled = TRUE, subgroup = 'continent', 
-                                  sort_by_subg = TRUE, xlabel = "Microcephaly risk given Zika-infected mother",
-                                  plot_study = TRUE, digits = 2, colour = "dodgerblue3",
-                                  width = 9000, height = 16000, resolution = 1000)
+                                            plot_pooled = TRUE, subgroup = 'continent', 
+                                            sort_by_subg = TRUE, xlabel = "Microcephaly risk given Zika-infected mother",
+                                            plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                            width = 9000, height = 16000, resolution = 1000)
 zcs_meta_continent <- metaanalysis_zcs_continent$plot
 
 ggsave("zcs_metaanalysis_continent.png", plot = zcs_meta_continent, width = 9, height = 16)
@@ -145,19 +148,39 @@ ggsave("zcs_metaanalysis_continent.pdf", plot = zcs_meta_continent, width = 9, h
 
 
 metaanalysis_zcs_country <- metaprop_wrap(dataframe = zcs_rate %>% filter(qa_score >= 0.5 & population_country %in%c('Brazil','Colombia','France','Puerto Rico','United States')), 
-                                            plot_pooled = TRUE, subgroup = 'population_country', 
-                                            sort_by_subg = TRUE, xlabel = "Microcephaly risk given Zika-infected mother",
-                                            plot_study = TRUE, digits = 2, colour = "dodgerblue3",
-                                            width = 9000, height =16000, resolution = 1000)
+                                          plot_pooled = TRUE, subgroup = 'population_country', 
+                                          sort_by_subg = TRUE, xlabel = "Microcephaly risk given Zika-infected mother",
+                                          plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                          width = 9000, height =16000, resolution = 1000)
 zcs_meta_country <- metaanalysis_zcs_country$plot
-
 ggsave("zcs_metaanalysis_country.png", plot = zcs_meta_country, width = 9, height = 16)
 ggsave("zcs_metaanalysis_country.pdf", plot = zcs_meta_country, width = 9, height = 16)
 
+
+metaanalysis_zcs_sampletype <- metaprop_wrap(dataframe = zcs_rate %>% filter(qa_score >= 0.5 & !is.na(population_sample_type)), 
+                                             plot_pooled = TRUE, subgroup = 'population_sample_type', 
+                                             sort_by_subg = TRUE, xlabel = "Microcephaly risk given Zika-infected mother",
+                                             plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                             width = 9000, height =16000, resolution = 1000)
+zcs_meta_sampletype <- metaanalysis_zcs_sampletype$plot
+
+ggsave("zcs_meta_sampletype.png", plot = zcs_meta_sampletype, width = 9, height = 16)
+ggsave("zcs_meta_sampletype.pdf", plot = zcs_meta_sampletype, width = 9, height = 16)
+
+# metaanalysis_zcs_popgroup <- metaprop_wrap(dataframe = zcs_rate %>% filter(qa_score >= 0.5 & !is.na(population_group)), 
+#                                              plot_pooled = TRUE, subgroup = 'population_group', 
+#                                              sort_by_subg = TRUE, xlabel = "Microcephaly risk given Zika-infected mother",
+#                                              plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+#                                              width = 9000, height =18000, resolution = 1000)
+# zcs_meta_popgroup <- metaanalysis_zcs_popgroup$plot
+# 
+# ggsave("zcs_meta_popgroup.png", plot = zcs_meta_popgroup, width = 9, height = 16)
+# ggsave("zcs_meta_popgroup.pdf", plot = zcs_meta_popgroup, width = 9, height = 16)
+
 metaanalysis_zcs_noqa <- metaprop_wrap(dataframe = zcs_rate , plot_pooled = TRUE, subgroup = NA, 
-                                  sort_by_subg = FALSE, xlabel = "Microcephaly risk given Zika-infected mother",
-                                  plot_study = TRUE, digits = 2, colour = "dodgerblue3",
-                                  width = 9000, height = 16000, resolution = 1000)
+                                       sort_by_subg = FALSE, xlabel = "Microcephaly risk given Zika-infected mother",
+                                       plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                       width = 9000, height = 16000, resolution = 1000)
 zcs_meta_noqa <- metaanalysis_zcs_noqa$plot
 
 ggsave("zcs_metaanalysis.png", plot = zcs_meta_noqa, width = 9, height = 16)
@@ -173,49 +196,49 @@ miscarriage <- parameters %>%
                                  origin = "country.name",
                                  destination = "continent"),
          continent = ifelse(is.na(continent), 'Americas',continent))# %>%
-  # select(continent, central, parameter_value, cfr_ifr_denominator, cfr_ifr_numerator, parameter_value_type, population_country, population_location)
+# select(continent, central, parameter_value, cfr_ifr_denominator, cfr_ifr_numerator, parameter_value_type, population_country, population_location)
 misc_qa <- miscarriage %>%
   filter(qa_score >= 0.5)
 length(unique(miscarriage$covidence_id))
 length(unique(misc_qa$covidence_id))
 
 misc1<-forest_plot(miscarriage %>% filter(qa_score >= 0.5) %>% arrange(desc(central)),
-                  label = "Miscarriage rate (%)", 
-                  shape_column = "population_sample_type", 
-                  color_column = "population_country", 
-                  lims = c(0,30),
-            custom_colours = cols)
-misc1_noqa <-forest_plot(miscarriage  %>% arrange(desc(central)),
                    label = "Miscarriage rate (%)", 
                    shape_column = "population_sample_type", 
                    color_column = "population_country", 
                    lims = c(0,30),
                    custom_colours = cols)
+misc1_noqa <-forest_plot(miscarriage  %>% arrange(desc(central)),
+                         label = "Miscarriage rate (%)", 
+                         shape_column = "population_sample_type", 
+                         color_column = "population_country", 
+                         lims = c(0,30),
+                         custom_colours = cols)
 ggsave(filename = 'miscarriage_refs_sample_country.png', misc1, height = 8, width = 6, bg = 'white')
 ggsave(filename = 'miscarriage_refs_sample_country_noqa.png', misc1_noqa, height = 8, width = 6, bg = 'white')
 ggsave(filename = 'miscarriage_refs_sample_country.pdf', misc1, height = 8, width = 6, bg = 'white')
 ggsave(filename = 'miscarriage_refs_sample_country_noqa.pdf', misc1_noqa, height = 8, width = 6, bg = 'white')
 
 misc2 <-forest_plot(miscarriage%>% filter(qa_score >= 0.5),
-                  ycol = 'label_group',
-                  label = "Miscarriage rate (%)", 
-                  facet_by_country = TRUE,
-                  shape_column = 'population_sample_type',
-                  # shape_column = "parameter_value_type", 
-                  # color_column = "population_sample_type",
-                  color_column = "refs",
-                  lims = c(0,30),
-                  custom_colours = cols)
-misc2_noqa <-forest_plot(miscarriage%>% arrange(desc(central)),
                     ycol = 'label_group',
-                    facet_by_country = TRUE,
                     label = "Miscarriage rate (%)", 
+                    facet_by_country = TRUE,
                     shape_column = 'population_sample_type',
                     # shape_column = "parameter_value_type", 
-                    # color_column = "population_sample_type", 
+                    # color_column = "population_sample_type",
                     color_column = "refs",
                     lims = c(0,30),
                     custom_colours = cols)
+misc2_noqa <-forest_plot(miscarriage%>% arrange(desc(central)),
+                         ycol = 'label_group',
+                         facet_by_country = TRUE,
+                         label = "Miscarriage rate (%)", 
+                         shape_column = 'population_sample_type',
+                         # shape_column = "parameter_value_type", 
+                         # color_column = "population_sample_type", 
+                         color_column = "refs",
+                         lims = c(0,30),
+                         custom_colours = cols)
 ggsave(filename = 'miscarriage_loc_sample_type.png', misc2, height = 8, width = 8, bg = 'white')
 ggsave(filename = 'miscarriage_loc_sample_type_noqa.png', misc2_noqa, height = 8, width = 8, bg = 'white')
 ggsave(filename = 'miscarriage_loc_sample_type.pdf', misc2, height = 8, width = 8, bg = 'white')
@@ -223,9 +246,9 @@ ggsave(filename = 'miscarriage_loc_sample_type_noqa.pdf', misc2_noqa, height = 8
 
 # Meta-analysis  miscarriage
 metaanalysis_misc <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_score >= 0.05), plot_pooled = TRUE, subgroup = NA, 
-                              sort_by_subg = FALSE, xlabel = "Miscarriage rate",
-                              plot_study = TRUE, digits = 2, colour = "dodgerblue3",
-                              width = 9000, height = 6000, resolution = 1000)
+                                   sort_by_subg = FALSE, xlabel = "Miscarriage rate",
+                                   plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                   width = 9000, height = 6000, resolution = 1000)
 misc_meta <- metaanalysis_misc$plot
 
 ggsave("misc_metaanalysis.png", plot = misc_meta, width = 9, height = 6)
@@ -233,10 +256,30 @@ ggsave("misc_metaanalysis.pdf", plot = misc_meta, width = 9, height = 6)
 
 metaanalysis_continent <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_score >= 0.05 & !is.na(continent)), 
                                         plot_pooled = TRUE, subgroup = 'continent', 
-                                   sort_by_subg = FALSE, xlabel = "Miscarriage rate",
-                                   plot_study = TRUE, digits = 2, colour = "dodgerblue3",
-                                   width = 9000, height = 8000, resolution = 1000)
+                                        sort_by_subg = FALSE, xlabel = "Miscarriage rate",
+                                        plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                        width = 9000, height = 8000, resolution = 1000)
 misc_meta_continent <- metaanalysis_continent$plot
 
 ggsave("misc_metaanalysis_continent.png", plot = misc_meta_continent, width = 9, height = 8)
 ggsave("misc_metaanalysis_continent.pdf", plot = misc_meta_continent, width = 9, height = 8)
+
+metaanalysis_sampletype <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_score >= 0.05 & !is.na(population_sample_type)), 
+                                         plot_pooled = TRUE, subgroup = 'population_sample_type', 
+                                         sort_by_subg = FALSE, xlabel = "Miscarriage rate",
+                                         plot_study = TRUE, digits = 2, colour = "dodgerblue3",
+                                         width = 9000, height = 8000, resolution = 1000)
+misc_meta_sampletype <- metaanalysis_sampletype$plot
+
+ggsave("misc_metaanalysis_sampletype.png", plot = misc_meta_sampletype, width = 9, height = 8)
+ggsave("misc_metaanalysis_sampletype.pdf", plot = misc_meta_sampletype, width = 9, height = 8)
+
+
+# Create and save plot for main analysis 
+layout = "
+AABBBB
+AABBBB"
+zcs_plot_combined <- zcsplot + zcs_meta_continent +
+  plot_layout(design = layout) #+ plot_annotation(tag_levels = 'A')
+ggsave("zcs_plot_combined.png", plot = zcs_plot_combined, width = 35, height = 30, bg = 'white', dpi = 600)
+ggsave("zcs_plot_combined.pdf", plot = zcs_plot_combined, width = 35, height = 30, bg = 'white', dpi = 600)

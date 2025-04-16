@@ -48,11 +48,13 @@ parameters <- readRDS("parameters_curated.rds")  %>%
 ###############
 
 outbreaks <- outbreaks %>%
-  mutate(dates = paste(outbreak_start_day,outbreak_start_month,outbreak_start_year,"-",
-                       outbreak_end_day,outbreak_end_month,outbreak_date_year),
-         dates = gsub("NA","",dates),
-         dates = trimws(gsub("\\s{2,}"," ",dates)),
-         dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE)) %>%
+  mutate(outbreak_location = str_replace_all(outbreak_location,' \\(Up\\)',''),
+         outbreak_location = str_replace_all(outbreak_location,',', ";")) %>%
+  # mutate(dates = paste(outbreak_start_day,outbreak_start_month,outbreak_start_year,"-",
+  #                      outbreak_end_day,outbreak_end_month,outbreak_date_year),
+  #        dates = gsub("NA","",dates),
+  #        dates = trimws(gsub("\\s{2,}"," ",dates)),
+  #        dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE)) %>%
   mutate(outbreak_start_day   = coalesce(outbreak_start_day,1),
          outbreak_start_month = ifelse(is.na(outbreak_start_month),"Jan",outbreak_start_month),
          outbreak_start_year  = coalesce(outbreak_start_year,0),
@@ -62,7 +64,12 @@ outbreaks <- outbreaks %>%
          outbreak_end_month = ifelse(is.na(outbreak_end_month),"Dec",outbreak_end_month),
          outbreak_date_year = coalesce(outbreak_date_year,2024),
          edate = as.Date(paste(outbreak_end_day,outbreak_end_month,
-                               outbreak_date_year, sep = "-"), format = "%d-%b-%Y"))
+                               outbreak_date_year, sep = "-"), format = "%d-%b-%Y")) %>%
+  mutate(dates = paste(outbreak_start_day,outbreak_start_month,outbreak_start_year,"-",
+                       outbreak_end_day,outbreak_end_month,outbreak_date_year),
+         dates = gsub("NA","",dates),
+         dates = trimws(gsub("\\s{2,}"," ",dates)),
+         dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE)) 
 
 outbreaks <- outbreaks %>% mutate_all(~ ifelse(is.na(.), "", .))
 outbreaks <- outbreaks %>% mutate(outbreak_location = gsub("Fct;","FCT;",outbreak_location),
@@ -97,7 +104,7 @@ mods$transmission_route <- gsub("Human to human \\(direct contact\\)", "Human-Hu
 mods$transmission_route <- gsub("Airborne or close contact", "Airborne", mods$transmission_route)
 mods$transmission_route <- gsub("Human-Human \\(Sexual\\)","Sexual", mods$transmission_route)
 mods$transmission_route <- gsub("Unspecified;Mosquito-Human","Mosquito-Human;Unspecified",mods$transmission_route)
-mods$transmission_route <- ifelse(is.na(mods$transmission_route), 'Missing', mods$transmission_route)
+mods$transmission_route <- ifelse(is.na(mods$transmission_route), 'Unspecified', mods$transmission_route)
 mods$assumptions        <- gsub("Latent period is same as incubation period", "Latent and incubation periods are same", mods$assumptions)
 mods$assumptions        <- gsub("Heterogenity in transmission rates - over time", "Heterogenity in transmission over time", mods$assumptions)
 mods$assumptions        <- gsub("Heterogenity in transmission rates - between human groups", "Heterogenity in transmission between human groups", mods$assumptions)
@@ -184,7 +191,11 @@ parameters <- parameters %>%
                   ifelse(!is.na(parameter_uncertainty_type),
                          paste(parameter_uncertainty_type),    
                          ifelse(!is.na(parameter_uncertainty_singe_type),
-                                paste(parameter_uncertainty_singe_type),""))))
+                                paste(parameter_uncertainty_singe_type),
+                                ifelse(!is.na(parameter_2_value_type),
+                                       paste(parameter_2_value_type),"")))))
+parameters$unc_type <- gsub(" \\(paired\\)", '', parameters$unc_type)
+parameters$unc_type <- gsub(" \\(paired or unpaired\\)", '', parameters$unc_type)
 parameters$unc_type <- gsub("Inter Quartile Range \\(IQR\\)", "IQR", parameters$unc_type)
 parameters$unc_type <- gsub("Standard Error", "SE", parameters$unc_type)
 parameters$unc_type <- gsub("Gamma Standard deviation", "Gamma SD", parameters$unc_type)
@@ -214,12 +225,12 @@ parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <-
 parameters <- parameters %>%
   mutate(population_study_start_month = substr(population_study_start_month, 1, 3),
          population_study_end_month   = substr(population_study_end_month, 1, 3)) %>%
-  mutate(dates = paste(population_study_start_day,population_study_start_month,population_study_start_year,"-",
-                       population_study_end_day,population_study_end_month,population_study_end_year),
-         dates = gsub("NA","",dates),
-         dates = trimws(gsub("\\s{2,}"," ",dates)),
-         dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE),
-         dates = ifelse(dates == "-","",dates)) %>%
+  # mutate(dates = paste(population_study_start_day,population_study_start_month,population_study_start_year,"-",
+  #                      population_study_end_day,population_study_end_month,population_study_end_year),
+  #        dates = gsub("NA","",dates),
+  #        dates = trimws(gsub("\\s{2,}"," ",dates)),
+  #        dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE),
+  #        dates = ifelse(dates == "-","",dates)) %>%
   mutate(population_study_start_day   = coalesce(population_study_start_day,1),
          population_study_start_month = ifelse(is.na(population_study_start_month),"Jan",population_study_start_month),
          population_study_start_year  = coalesce(population_study_start_year,0),
@@ -229,7 +240,13 @@ parameters <- parameters %>%
          population_study_end_month = ifelse(is.na(population_study_end_month),"Dec",population_study_end_month),
          population_study_end_year = coalesce(population_study_end_year,2024),
          edate = as.Date(paste(population_study_end_day,population_study_end_month,
-                               population_study_end_year, sep = "-"), format = "%d-%b-%Y"))
+                               population_study_end_year, sep = "-"), format = "%d-%b-%Y")) %>%
+  mutate(dates = paste(population_study_start_day,population_study_start_month,population_study_start_year,"-",
+                       population_study_end_day,population_study_end_month,population_study_end_year),
+         dates = gsub("NA","",dates),
+         dates = trimws(gsub("\\s{2,}"," ",dates)),
+         dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE),
+         dates = ifelse(dates == "-","",dates)) 
 #
 parameters$population_sample_type <- gsub("\\s.*", "", parameters$population_sample_type)
 parameters$population_group <- str_to_title(parameters$population_group)
@@ -244,7 +261,7 @@ parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", me
 #parameters - transmission ----
 trns_params <- parameters %>%
   filter(grepl("Attack|Relative contribution|Growth rate|Reproduction", parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_type, parameter_value, unc_type,
+  select(parameter_type, parameter_value, unc_type, uncertainty,
          method_disaggregated_by, 
          genome_site, method_r,
          population_sample_size,
@@ -270,7 +287,7 @@ write.table(trns_params, file = "latex_transmission.csv", sep = ",",
 # parameters - genomic 
 genomic_params <- parameters %>%
   filter(grepl('Mutations', parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_type, parameter_value, unc_type,
+  select(parameter_type, parameter_value, unc_type, uncertainty,
          genome_site, 
          population_sample_size,
          dates,
@@ -294,7 +311,7 @@ var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bou
 hdel_params <- parameters %>%
   filter(grepl("delay", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_type, other_delay_start, other_delay_end,
-         parameter_value, parameter_value_type, unc_type,
+         parameter_value, parameter_value_type, unc_type, uncertainty,
          method_disaggregated_by, 
          population_sample_size,
          population_country, dates,
@@ -348,7 +365,7 @@ cfrs_params <- parameters %>%
   mutate(parameter_type = ifelse(parameter_type == 'Severity - case fatality rate (CFR)', 'Case fatality ratio',
                                  ifelse(parameter_type == 'Severity - proportion of symptomatic cases', 
                                         "Proportion of symptomatic cases", parameter_type))) %>%
-  select(parameter_type, parameter_value, unc_type,
+  select(parameter_type, parameter_value, unc_type, uncertainty,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
@@ -363,7 +380,7 @@ write.table(cfrs_params, file = "latex_severity.csv", sep = ",",
 #parameters - seroprevalence ----
 sero_params <- parameters %>%
   filter(grepl("Seroprevalence", parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_value, unc_type,
+  select(parameter_value, unc_type, uncertainty,
          method_disaggregated_by, 
          parameter_type,cfr_ifr_numerator,cfr_ifr_denominator,population_sample_size,
          prnt_on_elisa, population_country, dates,
@@ -416,7 +433,7 @@ write.table(risk_params, file = "latex_riskfactors.csv", sep = ",",
 # parameters -- miscarriage rate/microcephaly risk ----
 infants <- parameters %>% 
   filter(parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk")) %>%
-  select(parameter_type, parameter_value, unc_type,
+  select(parameter_type, parameter_value, unc_type, uncertainty,
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
          population_sample_type, population_group, refs, central)
@@ -429,7 +446,7 @@ write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",",
 # parameters -- relative contributions ----
 relative <- parameters %>%
   filter(grepl("Relative contribution", parameter_type)) %>%
-  select(parameter_type, parameter_value, unc_type,
+  select(parameter_type, parameter_value, unc_type, uncertainty,
          population_country, dates,
          population_sample_type, population_group, refs, central)
 relative <- relative %>% arrange(tolower(population_country),as.numeric(central))
