@@ -10,11 +10,13 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   df   <- df %>% mutate(urefs = make.unique(refs)) %>%
     mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
            country_brazil = ifelse(population_country == 'Brazil', 'Brazil','Rest of World'),
+           population_country = str_replace(population_country, 'Multi-country: ', ""),
            label_group = case_when(
              is.na(population_location) | population_location == '' ~ population_country,
              (population_location !="" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,'\n' ,' (',population_country,')'),
              (!is.na(population_location) & population_country == 'Unspecified') | (population_country == 'Brazil' & facet_by_country == TRUE) ~ population_location,
-             TRUE ~ NA)) %>%
+             TRUE ~ NA),
+           label_group = ifelse(label_group == 'continental United States and Hawaii\n (United States)','United States',label_group)) %>%
     arrange(desc(parameter_value)) %>% 
     mutate(label_group = factor(label_group, levels = unique(label_group)),
            urefs = factor(urefs, levels = unique(urefs)))
@@ -160,7 +162,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
       scale_y_discrete(labels = setNames(df$refs, df$urefs))
   } else {
     gg <- gg + 
-      scale_y_discrete(labels = function(x) str_wrap(x, width = 28)) 
+      scale_y_discrete(labels = function(x) str_wrap(x, width = 30)) 
   }
   
   # if (cats == 1) {
