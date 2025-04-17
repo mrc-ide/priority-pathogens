@@ -8,6 +8,7 @@
     "continuation_col": "article_continuation"
     "extractor_col": "extractor_name"
     "incomplete_col": "pathogen_epidemiology_review_complete"
+    "notes_cols": ["article_notes", "qa_notes"]
 "target_filepath": "redcap_data/table_target.csv"
 "mapping_filepath": "redcap_data/nipah/mapping_table.csv"
 "table_filepaths":
@@ -18,6 +19,7 @@
     "parameters": "parameter_linked"
 "incomplete_col_names":
     "articles": "pathogen_epidemiology_review_complete"
+"incomplete_col_key": "Incomplete"
 "target_table_names": ["articles", "models", "outbreaks", "parameters"]
 "data_table_names": ["models", "outbreaks", "parameters"]
 "pk_col_names":

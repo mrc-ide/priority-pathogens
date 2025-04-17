@@ -2,6 +2,7 @@ library(cli)
 library(ids)
 library(orderly2)
 library(readr)
+library(tools)
 library(yaml)
 
 
@@ -62,7 +63,9 @@ filter_record_ids <- function(df, record_id_vec, name, cli_text){
 get_not_pathogen_ids <- function(df, pathogen, id_col, pathogen_col="pathogen"){
   # Update for Pathogen other
   pathogen_lower_vec <- sapply(df[pathogen_col], tolower)
-  record_vec <- df[pathogen_lower_vec!=tolower(pathogen), ][[id_col]]
+  not_pathogen_filter <- (pathogen_lower_vec!=tolower(pathogen) |
+                            is.na(pathogen_lower_vec))
+  record_vec <- df[not_pathogen_filter, ][[id_col]]
   record_vec <- unique(record_vec)
   return (record_vec)
 }
@@ -220,6 +223,7 @@ get_overflow_mapping_table <- function(df,
   non_na_df <- df[!is.na(df[[extractor_col]]) & !is.na(df[[cov_id_col]]), ]
   continuations_df <- non_na_df[!is.na(non_na_df[[continuation_col]]),
                                 c(cov_id_col, extractor_col)]
+  continuations_df <- unique(continuations_df)
 
   id_mapping_list <- list()
 
@@ -247,10 +251,10 @@ get_overflow_mapping_table <- function(df,
     id_mapping_list[[as.character(id_to_map_to)]] <- id_update_vec
 
     cli_alert_info(
-      paste0(extractor, " has indicated that Covidence ID:", cov_id,
+      paste0(extractor, " has indicated that Covidence ID: ", cov_id,
             " is a continuation. There are ", NROW(temp_df), " REDCap entries with this ID.\n",
             "The following ", id_col, " will be mapped to ", id_to_map_to, ": ",
-            paste(id_update_vec, collapse=","))
+            paste(id_update_vec, collapse=", "))
     )
 
   }
@@ -273,7 +277,7 @@ generate_target_table <- function(input_df_list, mapping_df, target_table,
                                   target_table_col_name="target_table",
                                   input_col_name = "input_col",
                                   target_col_name = "target_col"){
-  cli_inform(paste("Generating table:", target_table))
+  cli_h3(paste("Generating table:", target_table))
 
   mapping_non_na_df <- mapping_df[!is.na(mapping_df[target_table_col_name]), ]
   filtered_mapping_df <- (mapping_non_na_df[
@@ -368,9 +372,10 @@ split_data_column <- function(input_df, date_col){
 }
 
 # *------------------------- Process report functions -------------------------*
-check_raw_cols_in_mapping <- function(raw_df_list,
-                                      mapping_df,
-                                      tables_to_stack){
+check_raw_cols_mapping <- function(raw_df_list,
+                                   mapping_df,
+                                   tables_to_stack,
+                                   raw_in_mapping=TRUE){
   if(!is.null(tables_to_stack)){
     colnames_vec <- unlist(
       sapply(df_raw_list, function(df) unique(gsub("_\\d+", "", colnames(df)))))
@@ -378,13 +383,23 @@ check_raw_cols_in_mapping <- function(raw_df_list,
     colnames_vec <- unlist(sapply(df_raw_list, colnames))
   }
 
-  not_in_mapping <- colnames_vec[!(colnames_vec %in% mapping_df[["input_col"]])]
+  input_col_vec <- mapping_df[["input_col"]]
 
-  if (length(not_in_mapping) > 1){
-    cli_alert_info(paste0("The following ", NROW(not_in_mapping), " columns are",
-                          " in the input but not in the mapping file and will",
-                          " be exlcuded in the final output:\n",
-                         paste(not_in_mapping, collapse=", ")))
+  if (raw_in_mapping){
+    not_contained <- colnames_vec[!(colnames_vec %in% input_col_vec)]
+    table_source <- "input"
+    table_target <- "mapping file"
+  }else{
+    not_contained <- input_col_vec[!(input_col_vec %in% colnames_vec)]
+    table_source <- "mapping file"
+    table_target <- "input"
+  }
+
+  if (length(not_contained) > 1){
+    cli_alert_info(paste0("The following ", NROW(not_contained), " columns are",
+                          " in the ", table_source ," but not in the ",
+                          table_target," and will be exlcuded in the final
+                          output: ", paste0(not_contained, collapse=", ")))
   }
 }
 
@@ -619,13 +634,14 @@ cov_id_col <- config_list[["continuation_config"]][["cov_id_col"]]
 continuation_col <- config_list[["continuation_config"]][["continuation_col"]]
 extractor_col <- config_list[["continuation_config"]][["extractor_col"]]
 incomplete_col  <- config_list[["continuation_config"]][["incomplete_col"]]
-
+notes_cols <-  config_list[["continuation_config"]][["notes_cols"]]
 # Assumes if there are not tables to stack then data is in a REDCap repeat
 # instance format
 redcap_repeat_instances <- is.null(tables_to_stack)
 
 data_table_names <- config_list[["data_table_names"]]
 incomplete_cols  <- config_list[["incomplete_col_names"]]
+incomplete_col_key  <- config_list[["incomplete_col_key"]]
 
 linked_rows_list <- config_list[["linked_row_col_names"]]
 uuid_col_names <- config_list[["uuid_col_names"]]
@@ -635,7 +651,7 @@ article_cols_to_add_start <- config_list[["article_cols_to_add_start"]]
 article_cols_to_add_end <- config_list[["article_cols_to_add_end"]]
 
 # *------------------------------- Read in data -------------------------------*
-mapping_df <- read_csv(mapping_filename)
+mapping_df <- read_csv(mapping_filename, show_col_types = FALSE)
 
 if (!is.null(table_instrument_source_list)){
   mapping_df <- col_list_key_map(df=mapping_df,
@@ -643,11 +659,75 @@ if (!is.null(table_instrument_source_list)){
                                  mapping_list=table_instrument_source_list)
 }
 
-target_names_df <- read_csv(target_filename)
+target_names_df <- read_csv(target_filename, show_col_types = FALSE)
 
-df_raw_list <- lapply(table_filenames_vec, function(x) read_csv(x))
+df_raw_list <- lapply(table_filenames_vec,
+                      function(x) read_csv(x, show_col_types = FALSE))
 
-check_raw_cols_in_mapping(df_raw_list, mapping_df, tables_to_stack)
+cli_h1("Comparing REDCap input and mapping file")
+check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
+                       raw_in_mapping=TRUE)
+check_raw_cols_mapping(df_raw_list, mapping_df, tables_to_stack,
+                       raw_in_mapping=FALSE)
+
+get_unique_na_preserve  <- function(vec){
+  unique_vec <- unique(na.omit(vec))
+  if (length(unique_vec) == 0){
+    return (NA)
+  }else{
+    return (unique_vec)
+  }
+}
+
+update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
+                                   notes_cols, continuation_col, id_col,
+                                   incomplete_col, incomplete_col_key,
+                                   continuation_table){
+  ids_to_combine <- c(as.numeric(id_to_map_to), ids_to_map)
+  to_combine_df <- df[df[[id_col]] %in% ids_to_combine, ]
+
+  cli_alert_info(
+    paste0("Attempting to merge ", continuation_table, " rows with ", id_col,
+           ": ", paste(ids_to_combine, collapse=", "),
+           "\nIf there are any conflicts we will highlight them ",
+           "and choose the latest entry"))
+
+  notes_list <- lapply(
+    notes_cols,
+    function(col) paste(get_unique_na_preserve(to_combine_df[[col]]),
+                        collapse="; ")
+  )
+  names(notes_list) <- notes_cols
+  id_list <- setNames(list(as.numeric(id_to_map_to)), id_col)
+  continuation_list <- setNames(list(NA), continuation_col)
+
+  unqiue_col_df <- to_combine_df[, !(colnames(to_combine_df) %in%
+                                       c(notes_cols, continuation_col, id_col))]
+  unique_value_list <- lapply(unqiue_col_df,
+                              function(col) get_unique_na_preserve(col))
+
+  unique_incomplete_col <- unique_value_list[[incomplete_col]]
+    unique_value_list[[incomplete_col]] <- ifelse(
+      length(unique_incomplete_col)>1,
+      unique_incomplete_col[unique_incomplete_col!=incomplete_col_key],
+      unique_incomplete_col)
+
+  for (name in names(unique_value_list)){
+    values <- unique_value_list[[name]]
+    if (NROW(values) > 1){
+      cli_alert_danger(
+        paste0("Found a mismatch for ", name, "It has the following values: ",
+              paste(values, collapse=", "), ". The final value '", values[-1],
+              "' will be used."))
+    }
+    unique_value_list[[name]] <- values[NROW(values)]
+  }
+
+  final_return_list <- c(id_list, unique_value_list, notes_list, continuation_list)
+  return (final_return_list)
+}
+
+
 
 if (!is.null(tables_to_stack)){
   distinct_input_tables <- unique(mapping_df[["input_table"]])
@@ -658,6 +738,8 @@ if (!is.null(tables_to_stack)){
     function(table_name) subset_long_df(df_raw_list[[1]], mapping_df, table_name)
     ), distinct_input_tables)
 
+  cli_h1("Form continuations")
+  cli_h3("Checking for form continuations")
   id_mapping_list <- get_overflow_mapping_table(
     df=df_raw_list[[continuation_table]],
     id_col=id_col,
@@ -665,16 +747,9 @@ if (!is.null(tables_to_stack)){
     continuation_col=continuation_col,
     extractor_col=extractor_col,
     incomplete_col=incomplete_col,
-    incomplete_key="Incomplete")
+    incomplete_key=incomplete_col_key)
 
   if(NROW(id_mapping_list)>0){
-    ids_to_keep_filter <- !(
-      df_raw_list[[continuation_table]][[id_col]] %in%
-          unlist(id_mapping_list)
-      )
-
-    df_raw_list[[continuation_table]] <- (
-      df_raw_list[[continuation_table]][ids_to_keep_filter,])
     df_raw_list[tables_to_stack] <- lapply(
       df_raw_list[tables_to_stack],
       function(df) update_records(df=df,
@@ -688,15 +763,46 @@ if (!is.null(tables_to_stack)){
   # compatability with existing functions
   df_raw_list[tables_to_stack] <- lapply(
     df_raw_list[tables_to_stack], function(df) df[!colnames(df) %in% "repeat_id"])
+
+    cli_h3(paste("Merging", continuation_table,
+                 "rows repeated due to continuation"))
+    ids_to_keep_filter <- !(
+      df_raw_list[[continuation_table]][[id_col]] %in%
+          unlist(id_mapping_list)
+      )
+
+    list_of_updated_records <- lapply(
+      names(id_mapping_list), function (id_to_map_to)
+        update_id_rows_to_keep(df_raw_list[[continuation_table]],
+                               id_to_map_to, id_mapping_list[[id_to_map_to]],
+                               notes_cols, continuation_col, id_col,
+                               incomplete_col, incomplete_col_key,
+                               continuation_table)
+    )
+
+    for (updated_record in list_of_updated_records){
+      id_filter <- (df_raw_list[[continuation_table]][[id_col]] ==
+                      updated_record[[id_col]])
+
+      df_raw_list[[continuation_table]][
+        id_filter, names(updated_record)] <- updated_record
+    }
+
+    df_raw_list[[continuation_table]] <- (
+      df_raw_list[[continuation_table]][ids_to_keep_filter,])
 }
 
 # *------------------------- Clean & generate targets -------------------------*
+cli_h1("Keeping non-empty rows")
+
 df_clean_list <- Map(filter_empty_rows,
                      df=df_raw_list,
                      name=names(df_raw_list))
 
 # Filter out rows with an Answer of No for linked parameter
 if (!is.null(linked_rows_list)){
+  cli_h1("Keeping rows with answers")
+
   df_clean_list[names(linked_rows_list)] <- Map(filter_linked_rows,
                                                 df=df_clean_list[names(linked_rows_list)],
                                                 col=linked_rows_list,
@@ -723,6 +829,8 @@ not_pathogen_ids <- get_not_pathogen_ids(df=df_clean_list[[pathogen_table]],
                                           id_col="record_id",
                                           pathogen_col = "pathogen")
 
+cli_h1(paste("Keeping", toTitleCase(tolower(pathogen)), "rows"))
+
 df_clean_list <-  Map(
   function(df, name) filter_record_ids(df,
                                        not_pathogen_ids,
@@ -736,6 +844,7 @@ unfiltered_article_df <- df_clean_list[[pathogen_table]]
 
 # Filter out irrelevant records
 if (!is.null(incomplete_cols)){
+  cli_h1("Keeping complete rows")
   incomplete_rows_df_list <- Map(get_incomplete_rows,
                                  df_clean_list[names(incomplete_cols)],
                                  incomplete_cols,
@@ -772,6 +881,8 @@ if (!is.null(incomplete_cols)){
     names(df_clean_list))
 }
 
+cli_h1("Generating target tables")
+
 target_df_raw_list <- setNames(
   lapply(target_table_names,
          function (target) generate_target_table(input_df_list=df_clean_list,
@@ -783,6 +894,7 @@ target_df_raw_list <- setNames(
 # Split date columns into day, month, year
 target_df_clean_list <- target_df_raw_list
 if (!is.null(date_cols_to_split)){
+  cli_h1("Expanding date columns")
   for (name in names(date_cols_to_split)){
     cli_inform(paste("Expanding the following ", name, "table date columns:",
                      paste(date_cols_to_split[[name]], collapse=", ")))
