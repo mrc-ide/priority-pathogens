@@ -1,5 +1,7 @@
 # Task to compile single and double extraction databases together
+library(cli)
 library(dplyr)
+library(ids)
 library(janitor)
 library(orderly2)
 library(readr)
@@ -75,6 +77,65 @@ join_and_create_extraction_table <- function(single_df,
                   fixed_df)
 
   return (all_df)
+}
+
+check_info_ids <- function(extraction_table,
+                           info_table,
+                           info_uuid_col,
+                           table_uuid_col,
+                           cov_id_col,
+                           extraction_table_name,
+                           info_table_name){
+  cli_h3(paste("Checking whether", info_uuid_col, "correspond between",
+               info_table_name, "table and", extraction_table_name))
+
+  ft_info_uuid_vec <- extraction_table[[info_uuid_col]]
+  cov_id_vec <- extraction_table[[cov_id_col]]
+
+  it_info_uuid_vec <- sapply(
+    cov_id_vec,
+    function(id) info_table[info_table[[cov_id_col]] == id, ][[info_uuid_col]])
+
+  not_matching <- ft_info_uuid_vec != it_info_uuid_vec
+  not_matching[is.na(not_matching)] <- FALSE
+
+  if (sum(not_matching) > 0){
+    cli_alert_warning(
+      paste("There are", sum(not_matching),
+             "rows with either no or mismatching", info_uuid_col,
+             "values. \nThe", extraction_table_name, "table will be updated to",
+            "match the", info_table_name, "table")
+      )
+
+    extraction_table[not_matching, info_uuid_col] <- it_info_uuid_vec[not_matching]
+  }
+
+  return (extraction_table)
+}
+
+fix_missing_ids <- function(extraction_table,
+                            id_col,
+                            cov_id,
+                            extraction_table_name){
+  missing_ids <- is.na(extraction_table[id_col])
+  num_ids_missing <-  sum(missing_ids)
+
+  if (num_ids_missing > 0){
+    cli_h3(paste("Generating missing", id_col, "for", extraction_table_name,
+                 "table"))
+
+    cli_alert_info(
+      paste("There are", num_ids_missing, "with no", id_col,"entry.
+          This is likely due to a mismatch between the fixing and
+          double_extraction files. These will be regenerated and,
+          as a result, will no longer match the ID extraction file.")
+    )
+
+    extraction_table[missing_ids, id_col] <- random_id(n = num_ids_missing,
+                                                       use_openssl = FALSE)
+  }
+
+  return (extraction_table)
 }
 
 # *============================================================================*
@@ -172,7 +233,9 @@ double_join_colnames <- list(
   "qa_fixing" = c("covidence_id", "name_data_entry")
 )
 
-
+extract_uuid_cols = c("params" = "parameter_data_id",
+                      "outbreaks" = "outbreak_data_id",
+                      "models"= "model_data_id")
 # *------------------------------- Read in data -------------------------------*
 # Single extractions
 single_extraction_list <- create_file_list(single_tables, col_type_list)
@@ -207,6 +270,14 @@ fixing_list <- lapply(
                                     "matching")))
 
 # *--------------------------- Create final tables ----------------------------*
+# Articles
+article_table <- join_qa_and_article(single_extraction_list[[info_table]],
+                                     double_extraction_list[[info_table]],
+                                     matching_list[[qa_table]],
+                                     fixing_list[[qa_table]],
+                                     double_join_colnames[["qa_fixing"]],
+                                     double_join_colnames[["qa_matching"]])
+
 # Extraction tables
 final_tables <- Map(
   function(single_df, double_df, fixed_df, matching_df, table_name)
@@ -221,14 +292,29 @@ final_tables <- Map(
   matching_list[extraction_tables],
   extraction_tables)
 
-# Articles
-article_table <- join_qa_and_article(single_extraction_list[[info_table]],
-                                     double_extraction_list[[info_table]],
-                                     matching_list[[qa_table]],
-                                     fixing_list[[qa_table]],
-                                     double_join_colnames[["qa_fixing"]],
-                                     double_join_colnames[["qa_matching"]])
+cli_h1("Checking (pk/fk) correspondence between extraction table & info table ids")
+final_tables <- lapply(names(final_tables),
+                       function (name) check_info_ids(final_tables[[name]],
+                                      article_df,
+                                      "id",
+                                      extract_uuid_cols[[name]],
+                                      "covidence_id",
+                                      name,
+                                      info_table)
+                       )
 
+final_tables <- setNames(final_tables, extraction_tables)
+
+cli_h1("Checking extraction table data ids")
+final_tables <- lapply(
+  names(final_tables),
+  function (name) fix_missing_ids(final_tables[[name]],
+                                  extract_uuid_cols[[name]],
+                                  "covidence_id",
+                                  name)
+  )
+
+final_tables <- setNames(final_tables, extraction_tables)
 final_tables[[info_table]] <- article_table
 
 for (table in names(csv_artefacts)){
