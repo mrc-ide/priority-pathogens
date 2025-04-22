@@ -17,7 +17,8 @@ orderly_run("db_redcap_download",list(pathogen="NIPAH"))
 #     (relative path: shared/redcap_data/nipah/mapping_table.csv)
 #   - config.yaml that specifies how to run the task
 #     (relative path: src/db_extraction_prep/redcap_task/nipah/config.yaml)
-orderly_run("db_extraction_prep",list(pathogen="NIPAH"))
+orderly_run("db_extraction_prep",list(pathogen="NIPAH",
+                                      orderly_download_dependency=TRUE))
 
 # *------------------------- Generate extraction csvs -------------------------*
 # Extracts double and single extraction csvs used the .rds file from
@@ -31,7 +32,7 @@ orderly_run("db_double",list(pathogen="NIPAH"))
 # *-------------------------- Generate final dataset --------------------------*
 # Merge double_extraction, fixing, and single extraction files to create a final
 # dataset
-orderly_run("db_compilation",list(pathogen="NIPAH"))
+orderly_run("nipah_compilation",list(pathogen="NIPAH"))
 
-
-
+# *-------------------------------- Clean data --------------------------------*
+orderly_run("nipah_cleaning",list(pathogen="NIPAH"))
