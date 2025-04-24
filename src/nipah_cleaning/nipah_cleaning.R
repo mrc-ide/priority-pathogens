@@ -93,7 +93,7 @@ if (model_table_name %in% tables){
                                    c(base_relocate_cols, "model_data_id"),
                                    order_col)
 
-  cleaned_df_list[[model_table_name]] <- outbreak_df
+  cleaned_df_list[[model_table_name]] <- model_df
 }
 
 # *============================ Parameter cleaning ============================*
