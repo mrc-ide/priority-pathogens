@@ -402,7 +402,15 @@ if (pathogen=="OROV"){
   article_all <- article_all %>% orov_cleaning_articles()
   parameter_all <- parameter_all %>% orov_cleaning_parameters()
   article_all <- add_qa_scores(article_all, parameter_all)
+  parameter_all <- merge(parameter_all,
+                         article_all %>% select(
+                           covidence_id,article_label,article_qa_score
+                         ),
+                         by = "covidence_id",
+                         all.x = TRUE)
 }
+
+
 
 print(class(article_all))
 write_csv(article_all, "articles.csv")
