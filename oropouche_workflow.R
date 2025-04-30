@@ -7,6 +7,12 @@ orderly_cleanup("db_extraction_prep")
 orderly_cleanup("db_extraction")
 orderly_cleanup("db_double")
 orderly_cleanup("db_compilation")
+## don't run the below because it gets rids of things you need 
+# orderly_cleanup("orov_summary")
+# #orderly_cleanup("orov_attack_rates")
+# orderly_cleanup("orov_delays")
+# orderly_cleanup("orov_evidence_of_infection")
+# #orderly_cleanup("orov_risk_factors")
 
 # workflow
 # sorting the data
