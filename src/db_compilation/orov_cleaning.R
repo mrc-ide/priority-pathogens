@@ -3,9 +3,7 @@ orov_cleaning_articles <- function(df) {
     # dummy entry but marked as OROV 
     filter(
       covidence_id!="999999",
-           # duplicate entries for 30 and 109 - the ID gets regenerated each run so not applicable for filtering
-           #id!="6e85a97a-c427-4eef-b0e8-f55142802ef1",
-           #id!="23d7b6a2-bbbe-4f94-984f-da9fd0bab2d5"
+           # duplicate entries for cov ID 30 and 109
            !(article_id %in% c(104,59))
            ) %>%
     mutate(
@@ -46,8 +44,27 @@ orov_cleaning_parameters <- function(df){
     ),
     riskfactor_outcome = case_when(
       riskfactor_outcome == "Presence of Oropouch [Oropouche ONLY]" ~ "Presence of Oropouche",
-      riskfactor_outcome != "Presence of Oropouch [Oropouche ONLY]" ~ riskfactor_outcome
+      covidence_id==9&access_param_id==1 ~ "Presence of Oropouche",
+      covidence_id==64&access_param_id==192 ~ "Presence of Oropouche",
+      covidence_id==525&access_param_id==315 ~ "Presence of Oropouche",
+      covidence_id==525&access_param_id==316 ~ "Presence of Oropouche",
+      .default = riskfactor_outcome
       ),
+    riskfactor_name = case_when(
+      covidence_id==28&access_param_id==68 ~ "Age,Sex,Other",
+      covidence_id==128&access_param_id==110 ~ "Sex,Other",
+      covidence_id==542&access_param_id==319 ~ "Sex",
+      .default = riskfactor_name
+    ),
+    riskfactor_adjusted = case_when(
+      covidence_id==64&access_param_id==192 ~ "Adjusted",
+      covidence_id==542&access_param_id==319 ~ "Not adjusted",
+      .default = riskfactor_adjusted
+    ),
+    riskfactor_significant = case_when(
+      covidence_id==64&access_param_id==192 ~ "Significant",
+      .default = riskfactor_significant
+    ),
     parameter_statistical = case_when(
       access_param_id %in% c(330,365,368,379) ~ "Observed sample statistic",
       access_param_id==321 ~ "Case study [Oropouche ONLY]",
@@ -60,13 +77,56 @@ orov_cleaning_parameters <- function(df){
     population_group = case_when(
       parameter_context_human=="Not human" ~ "Non-human",
       parameter_context_human!="Not human" ~ population_group
+    ),
+    parameter_type = case_when(
+      covidence_id==54&parameter_type=="Human delay - symptom onset>admission to care" ~ "Human delay - other human delay (go to section)",
+      covidence_id==571 & parameter_type=="Human delay - admission to care>discharge/recovery" ~ "Human delay - time in care (length of stay)",
+      covidence_id%in%c(17,109) & parameter_type == "Human delay - other human delay (go to section)" ~ "Human delay - symptom onset>discharge/recovery",
+      .default = parameter_type
+    ),
+    parameter_hd_from = case_when(
+      covidence_id==54&parameter_type=="Human delay - other human delay (go to section)" ~ "Symptom Onset/Fever",
+      covidence_id %in% c(208,551,35) & parameter_type=="Human delay - symptom onset>discharge/recovery" ~ NA,
+      covidence_id==c(571,17,109) & parameter_type_broad=="Human delay" ~ NA,
+      .default = parameter_hd_from
+    ),
+    parameter_hd_to = case_when(
+      covidence_id==54&parameter_type=="Human delay - other human delay (go to section)" ~ "Seeking Care",
+      covidence_id %in% c(208,551,35) & parameter_type=="Human delay - symptom onset>discharge/recovery" ~ NA,
+      covidence_id==c(571,17,109) & parameter_type_broad=="Human delay" ~ NA,
+      .default = parameter_hd_to
+    ),
+    parameter_statistical = case_when(
+      covidence_id==571 & parameter_type_broad=="Human delay" ~ "Case study [Oropouche ONLY]",
+      .default = parameter_statistical
+    ),
+    parameter_notes = case_when(
+      covidence_id==9 & access_param_id==1 ~ "'Other' is environmental variables",
+      covidence_id==28 & access_param_id==68 ~ "'Other' is specific symptoms",
+      covidence_id==28 & access_param_id==69 ~ "'Other' is specific symptoms",
+      covidence_id==42 & access_param_id==259 ~ "'Other' is specific symptoms",
+      covidence_id==64 & access_param_id==192 ~ "'Other' is vegetation coverage",
+      covidence_id==167 & access_param_id==375 ~ "'Other' occupations are those working in agriculture and housewives",
+      covidence_id==128 & access_param_id==110 ~ "'Other' is clinic location",
+      covidence_id==179 & access_param_id==388 ~ "'Other' is neighbourhood and contact with pigs",
+      covidence_id==128 & access_param_id==110 ~ "'Other' is clinic location",
+      covidence_id==521 & access_param_id==233 ~ "based on ~500 genomes sampled; 'Other' is environmental factors",
+      covidence_id==525 & access_param_id==315 ~ "'Other' is agricultural activities",
+      covidence_id==525 & access_param_id==316 ~ "'Other' is agricultural activities",
+      .default = parameter_notes
+    ),
+    cfr_ifr_denominator = case_when(
+      covidence_id==77 & access_param_id ==199 ~ 113,
+      covidence_id==77 & access_param_id ==200 ~ 296,
+      covidence_id==77 & access_param_id ==201 ~ 693,
+      .default = cfr_ifr_denominator
     )
     ) %>% filter(
-      !(access_param_id %in% c(147,149))
+      !(access_param_id %in% c(147,149,363,365,368,379,70,198,111,234))
     ) %>%
     filter(
-      !(covidence_id %in% c("136","127") & parameter_type=="Attack rate")
-    )
+      !(covidence_id %in% c(136,127) & parameter_type=="Attack rate")
+    ) 
 
   
   # logic to sort the missing parameter contexts 
@@ -101,6 +161,19 @@ orov_cleaning_parameters <- function(df){
   }
   
   return(df)
+  
+}
+
+
+orov_cleaning_outbreaks <- function(df){
+  
+  df <- df %>%
+    mutate(
+      outbreak_case_report = case_when(
+        covidence_id %in% c(81,64,28,318,) ~ "No",
+        .default = outbreak_case_report
+      )
+    )
   
 }
 
