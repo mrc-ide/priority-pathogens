@@ -59,6 +59,57 @@ parameters %>% group_by(parameter_type_broad,parameter_context_human) %>%
   summarise(length(parameter_type_broad))
 
 
+## how many preprints
+articles %>% group_by(article_preprint) %>% summarise(length(article_preprint))
+
+
+## look at QA scores
+ggplot(articles,
+       aes(x=year_publication,y=article_qa_score))+
+  geom_point()+
+  theme_bw()+
+  labs(x="Article publication year",y="Quality assessment score (%)")
+
+articles %>% filter(article_qa_score>50) %>% nrow()
+articles %>% filter(article_qa_score>50) %>% nrow()/nrow(articles)
+
+lm(articles$article_qa_score~articles$year_publication) %>% summary()
+
+articles %>% filter(year_publication>=2020) %>% nrow()
+
+## test for difference in average QA scores between the two time periods
+articles %>% summarise(mean = mean(article_qa_score))
+
+articles %>% mutate(post_2020 = ifelse(year_publication>=2020,1,0)) %>%
+  group_by(post_2020) %>% 
+  summarise(mean = mean(article_qa_score))
+
+wilcox.test(
+  x = articles %>% filter(year_publication < 2020) %>% 
+    select(article_qa_score) %>% unlist() %>% as.numeric(),
+  y= articles %>% filter(year_publication >= 2020) %>% 
+    select(article_qa_score) %>% unlist() %>% as.numeric())
+
+
+ggplot(articles %>% 
+         mutate(post_2020 = factor(ifelse(
+           year_publication>=2020,"Post-2020","Pre-2020"),
+           levels=c("Pre-2020","Post-2020"))),
+       aes(x=article_qa_score,fill=post_2020))+
+  geom_histogram(position="dodge",bins=10)+
+  theme_bw()+
+  labs(x="Quality assessment score (%)",y="Number of papers",
+       fill="Time period")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values=c("forestgreen","palegreen2"))
+
+
+
+
+
+
+
+## need to see wtf is going on here
 parameters %>% filter(parameter_context_human=="Not human") %>% 
   select(population_sample_type) %>% unique()
 
@@ -66,25 +117,13 @@ parameters %>% filter(parameter_context_human=="Not human") %>%
   select(population_group) %>% unique()
 
 
+## how many people from people with symptoms/who had Dengue 
+parameters$population_group %>% as.factor() %>% summary()
 
 
-## investigating what is duplicated - now sorted in cleaning 
-# articles[1,]
-# ## this is a dummy one that I've worked on - omit 
-# 
-# # which ones are duplicated
-# dup_cov <- articles$covidence_id[which(duplicated(articles$covidence_id))]
-# articles[which(articles$covidence_id %in% dup_cov),]
-# ## want the second article entry from both I think
-# 
-# outbreaks[which(outbreaks$covidence_id %in% dup_cov),]
-# parameters[which(parameters$covidence_id %in% dup_cov),]
-# ## Cov ID 30 - Anna-Maria - need to resolve
-# ## Cov ID 109 - Joseph - need to remove one article row but the rest is fine 
-# 
-# 
-# articles %>% filter(covidence_id!="999999",
-#                     id!="6e85a97a-c427-4eef-b0e8-f55142802ef1",
-#                     id!="23d7b6a2-bbbe-4f94-984f-da9fd0bab2d5")
 
+
+###### outbreaks
+
+outbreaks$outbreak_case_report
 
