@@ -90,6 +90,7 @@ repsum <-repronums %>%
 
 table(repronums$method_r)
 
+basicr0 <- repronums %>% filter(parameter_type == 'Reproduction number (Basic R0)') 
 
 r0_pc_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'), 
                      label = "Basic reproduction number",
@@ -113,8 +114,9 @@ r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Repro
                              shape_column = 'population_group',
                              lims = c(0,9),
                              custom_colours = c25,
-                             text_size = 24)
-# NOTE: removed x values above 17 because 
+                             text_size = TEXT_SIZE) + 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
+ 
 r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'), 
                              label = "Basic reproduction number",
                              ycol = 'label_group',
@@ -123,7 +125,8 @@ r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_t
                              shape_column = 'population_group',
                              lims = c(0,9),
                              custom_colours = c25,
-                             text_size = 24)
+                             text_size = TEXT_SIZE)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
 
 
 # r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
@@ -141,16 +144,18 @@ r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_t
 r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
                          label = "Basic reproduction number - human",
                          ycol = 'label_group',
-                         facet_by_country = TRUE,
+                         # facet_by_country = TRUE,
                          color_column = 'population_group',
+                         shape_column = 'population_sample_type',
                          lims = c(0,17),
                          custom_colours = c25,
                          text_size = TEXT_SIZE)
 r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Human'), 
                         label = "Basic reproduction number - human",
                         ycol = 'label_group',
-                        facet_by_country = TRUE,
+                        # facet_by_country = TRUE,
                         color_column = 'population_group',
+                        shape_column = 'population_sample_type',
                         lims = c(0,17),
                         custom_colours = c25,
                         text_size = TEXT_SIZE)
@@ -170,7 +175,7 @@ r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type =
 r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Mosquito'), 
                            label = "Basic reproduction number - mosquito",
                            ycol = 'label_group',
-                           facet_by_country = TRUE,
+                           # facet_by_country = TRUE,
                            color_column = 'population_group',
                            lims = c(0,17),
                            custom_colours = c25,
@@ -178,7 +183,7 @@ r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reprodu
 r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Mosquito'), 
                             label = "Basic reproduction number - mosquito",
                             ycol = 'label_group',
-                           facet_by_country = TRUE,
+                           # facet_by_country = TRUE,
                            color_column = 'population_group',
                             lims = c(0,17),
                             custom_colours = c25,
@@ -187,7 +192,7 @@ r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_typ
 re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective, Re)'), 
                   label = "Effective reproduction number",
                   ycol = 'label_group',
-                  facet_by_country = TRUE,
+                  # facet_by_country = TRUE,
                   color_column = 'population_sample_type',
                   shape_column = 'population_group',
                   lims = c(0,4),
@@ -196,7 +201,7 @@ re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction num
 re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective, Re)'), 
                   label = "Effective reproduction number",
                   ycol = 'label_group',
-                  facet_by_country = TRUE,
+                  # facet_by_country = TRUE,
                   color_column = 'population_sample_type',
                   shape_column = 'population_group',
                   lims = c(0,4),
@@ -231,7 +236,7 @@ re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction
 HEIGHT = 25
 WIDTH = 20
 ggsave("r0_pc.pdf", r0_pc, height = HEIGHT, width = WIDTH, bg = 'white')
-ggsave("r0_sampletype.pdf", r0_sampletype, height = HEIGHT, width = HEIGHT, bg = 'white')
+ggsave("r0_sampletype.pdf", r0_sampletype, height = 28, width = WIDTH, bg = 'white')
 ggsave("r0_human.pdf", r0_human, height = 10, width = WIDTH, bg = 'white')
 ggsave("r0_mosquito.pdf", r0_mosquito, height = 8, width = WIDTH, bg = 'white')
 ggsave("re.pdf", re, height = 14, width = WIDTH, bg = 'white')
@@ -239,7 +244,7 @@ ggsave("re_human.pdf", re_human, height = 12, width = 12, bg = 'white')
 ggsave("re_mosquito.pdf", re_mosquito, height = 10, width = 12, bg = 'white')
 
 ggsave("r0_pc.png", r0_pc, height = HEIGHT, width = WIDTH, bg = 'white')
-ggsave("r0_sampletype.png", r0_sampletype, height = 18, width = 12, bg = 'white')
+ggsave("r0_sampletype.png", r0_sampletype, height = 28, width = WIDTH, bg = 'white')
 ggsave("r0_human.png", r0_human, height = 10, width = WIDTH, bg = 'white')
 ggsave("r0_mosquito.png", r0_mosquito, height = 8, width = WIDTH, bg = 'white')
 ggsave("re.png", re, height = 14, width = WIDTH, bg = 'white')
@@ -247,11 +252,11 @@ ggsave("re_human.png", re_human, height = 12, width = 12, bg = 'white')
 ggsave("re_mosquito.png", re_mosquito, height = 10, width = 12, bg = 'white')
 
 ggsave("r0_pc_noqa.pdf", r0_pc, height = HEIGHT, width = WIDTH, bg = 'white')
-ggsave("r0_sampletype_noqa.pdf", r0_sampletype, height = 18, width = 12, bg = 'white')
+ggsave("r0_sampletype_noqa.pdf", r0_sampletype, height = 28, width = WIDTH, bg = 'white')
 ggsave("r0_human_noqa.pdf", r0_human, height = 10, width = WIDTH, bg = 'white')
 ggsave("r0_mosquito_noqa.pdf", r0_mosquito, height = 8, width = WIDTH, bg = 'white')
 ggsave("re_noqa.pdf", re, height = 14, width = WIDTH, bg = 'white')
-ggsave("re_human_noqa.pdf", re_human, height = 12, width = 12, bg = 'white')
+ggsave("re_human_noqa.pdf", re_human, height = 10, width = 12, bg = 'white')
 # ggsave("re_mosquito_noqa.pdf", re_mosquito, height = 10, width = 12, bg = 'white')
 
 

@@ -99,18 +99,23 @@ d1 <- d1 %>%
           parameter_unit = ifelse(covidence_id == 2362, "Days", parameter_unit))
 
 d2 <- parameters %>% filter(parameter_type == 'Human delay - latent period (inverse parameter)')
-d3 <- parameters %>% filter(parameter_type == 'Human delay - time in care (length of stay)' |
-                              parameter_type == 'Human delay - admission to care to discharge/recovery' |
-                              parameter_type == 'Human delay - Admission to Care/Hospitalisation to Discharge from Care/Hospital') %>%
+d3 <- parameters %>% filter(parameter_type == 'Human delay - Admission to care to Discharge from care' #|
+                              # parameter_type == 'Human delay - time in care (length of stay)' |
+                              # parameter_type == 'Human delay - admission to care to discharge/recovery' |
+                              # parameter_type == 'Human delay - Admission to Care/Hospitalisation to Discharge from Care/Hospital'
+                            ) %>%
   mutate(parameter_value_type = case_when(is.na(parameter_value_type)~'Unspecified',
                                           TRUE ~ parameter_value_type))
-d4 <- parameters %>% filter(parameter_type == 'Human delay - Symptom Onset/Fever to Recovery/non-Infectiousness')
+d4 <- parameters %>% filter(parameter_type == 'Human delay - Onset to Recovery/non-Infectiousness')
 d5 <- parameters %>% filter(parameter_type == 'Human delay - serial interval')
 d6 <- parameters %>% filter(parameter_type == 'Human delay - infectious period' | parameter_type == "Human delay - infectious period (inverse parameter)")
 d7 <- parameters %>% filter(parameter_type == 'Human delay - generation time')
-d8 <- parameters %>% filter(parameter_type == "Human delay - symptom onset to admission to care")
-
-m1 <- parameters %>% filter(grepl("Mosquito delay", parameter_type)) %>%
+d8 <- parameters %>% filter(parameter_type == "Human delay - Onset to Admission to care" |
+                              parameter_type == "Human delay - symptom onset to admission to care" | 
+                              parameter_type == 'Human delay - Symptom Onset/Fever to Admission to care' |
+                              parameter_type == "Human delay - Onset of neurologic symptoms to Admission to Care/Hospitalisation")
+# onset to admission to care has 7 Human delay - Onset to Admission to care
+m1 <- parameters %>% filter(grepl("extrinsic", parameter_type)) %>%
   filter(parameter_type != "Mosquito delay - extrinsic incubation period (EIP10)") %>%
   mutate(parameter_type = "Mosquito delay - extrinsic incubation period") %>%
   filter(parameter_unit == 'Days') %>%
@@ -133,7 +138,8 @@ onset_recovery_forest <- forest_plot(d4 %>% filter(qa_score>0.5)|> arrange(desc(
                                      shape_column = "parameter_value_type",
                                      lims = c(0,8),
                                      text_size = TEXT_SIZE, 
-                                     point_size = 4)
+                                     point_size = 4) + 
+  theme(legend.position = 'inside', legend.position.inside =  c(.9, .88))
 ggsave("onset_recovery.png", plot =onset_recovery_forest, width = 10, height = 6, bg = 'white')
 
 
@@ -145,26 +151,29 @@ SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5)|> arrange(desc(parameter_va
                          shape_column = "parameter_value_type",
                          lims = c(0,35),
                          text_size = TEXT_SIZE, 
-                         point_size = 4)
+                         point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.9, .9))
 ggsave('serial_interval.png', plot =SI_forest, width = 10, height = 6, bg = 'white')
 
 # Infectious period 
 IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),
                          ycol = 'label_group',
                          label = 'Infectious Period (days)',
-                         color_column = 'population_sample_type',
-                         shape_column = "population_group",
+                         color_column = 'population_group',#population_sample_type',
+                         shape_column = "population_sample_type",
                          lims =c(0,50),
                          text_size = TEXT_SIZE, 
-                         point_size = 4)
+                         point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .2))
 IP_forest_noqa <- forest_plot(d6 |> arrange(desc(parameter_value)),
                               ycol = 'label_group',
                               label = 'Infectious Period (days)',
-                              color_column = 'population_sample_type',
-                              shape_column = "population_group",
+                              color_column = 'population_group',
+                              shape_column = "population_sample_type",
                               lims =c(0,50),
                               text_size = TEXT_SIZE, 
-                              point_size = 4)
+                              point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .2))
 
 # ip <- (ip_forest_mmv + ip_forest_pc) / (ip_forest_pg + ip_forest_pst ) + 
 #   theme(text = element_text(size = TEXT_SIZE)) + 
@@ -206,46 +215,48 @@ ggsave("infectious_period_noqa.png", plot =IP_forest_noqa, width = 14, height = 
 # ggsave("generation_time.png", plot = GT_forest, width = 8, height = 6, bg = 'white')
 
 # Incubation period
-incp1 <- forest_plot(d1 %>% filter(qa_score>0.5) |> arrange(parameter_value,desc(parameter_value)),
-                  label = 'Incubation Period (days)',
-                  ycol = 'label_group',
-                  color_column = "population_sample_type",
-                  shape_column = "parameter_value_type", 
-                  lims = c(0,30),
-                  text_size = TEXT_SIZE, 
-                  point_size = 4)
+# incp1 <- forest_plot(d1 %>% filter(qa_score>0.5) |> arrange(parameter_value,desc(parameter_value)),
+#                   label = 'Incubation Period (days)',
+#                   ycol = 'label_group',
+#                   color_column = "population_sample_type",
+#                   shape_column = "parameter_value_type",
+#                   lims = c(0,30),
+#                   text_size = TEXT_SIZE,
+#                   point_size = 4)
 
 incp2 <- forest_plot(d1 %>% filter(qa_score>0.5) |> arrange(parameter_value,desc(parameter_value)),
                     label = 'Incubation Period (days)',
                     ycol = 'label_group',
-                    color_column = "population_sample_type",
-                    shape_column = "population_group", 
-                    lims = c(0,30),
+                    color_column = "population_group", # had these backwards initially
+                    shape_column = "population_sample_type", 
+                    lims = c(0,18),
                     text_size = TEXT_SIZE, 
-                    point_size = 4)
+                    point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .6))
 
-incp1_noqa <- forest_plot(d1  |> arrange(parameter_value,desc(parameter_value)),
-                     label = 'Incubation Period (days)',
-                     ycol = 'label_group',
-                     color_column = "population_sample_type",
-                     shape_column = "parameter_value_type", 
-                     lims = c(0,30),
-                     text_size = TEXT_SIZE, 
-                     point_size = 4)
+# incp1_noqa <- forest_plot(d1  |> arrange(parameter_value,desc(parameter_value)),
+#                      label = 'Incubation Period (days)',
+#                      ycol = 'label_group',
+#                      color_column = "population_sample_type",
+#                      shape_column = "parameter_value_type", 
+#                      lims = c(0,30),
+#                      text_size = TEXT_SIZE, 
+#                      point_size = 4)
 
 incp2_noqa <- forest_plot(d1 |> arrange(parameter_value,desc(parameter_value)),
                      label = 'Incubation Period (days)',
                      ycol = 'label_group',
-                     color_column = "population_sample_type",
-                     shape_column = "population_group", 
-                     lims = c(0,30),
+                     color_column = "population_group", # had these backwards initially
+                     shape_column = "population_sample_type", 
+                     lims = c(0,18),
                      text_size = TEXT_SIZE, 
-                     point_size = 4)
+                     point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .6))
 
 
-ggsave("incubation_period1.png", plot = incp1, width = 14, height = 12, bg = 'white')
+# ggsave("incubation_period1.png", plot = incp1, width = 14, height = 12, bg = 'white')
 ggsave("incubation_period2.png", plot = incp2, width = 14, height = 12, bg = 'white')
-ggsave("incubation_period1_noqa.png", plot = incp1_noqa, width = 14, height = 12, bg = 'white')
+# ggsave("incubation_period1_noqa.png", plot = incp1_noqa, width = 14, height = 12, bg = 'white')
 ggsave("incubation_period2_noqa.png", plot = incp2_noqa, width = 14, height = 12, bg = 'white')
 
 # Plot with latent, symptom onst to recovery, serial 
@@ -253,26 +264,31 @@ lat_onset_serial_admission <- rbind(d2, d5, d4, d8) %>% mutate(parameter_unit = 
   mutate(parameter_type = case_when(
     parameter_type == "Human delay - latent period (inverse parameter)" ~ "Latent period",
     parameter_type == "Human delay - serial interval" ~ 'Serial interval',
-    parameter_type == 'Human delay - Symptom Onset/Fever to Recovery/non-Infectiousness' ~ "Symptom onset to recovery",
-    parameter_type == "Human delay - symptom onset to admission to care" ~ "Symptom onset to admission",
+    parameter_type == 'Human delay - Onset to Recovery/non-Infectiousness' ~ "Symptom onset to recovery",
+    parameter_type %in% c("Human delay - symptom onset to admission to care", "Human delay - Symptom Onset/Fever to Admission to care",
+                          "Human delay - Onset of neurologic symptoms to Admission to Care/Hospitalisation",
+                          "Human delay - Onset to Admission to care"
+                          ) ~ "Symptom onset to admission",
     TRUE ~ parameter_type
   ))
 lat_onset_serialplt <- forest_plot(lat_onset_serial_admission %>% filter(qa_score > 0.5) |> arrange(parameter_value,desc(parameter_value)),
             label = 'Delay in days',
             ycol = 'label_group',
-            shape_column = "parameter_type",
-            color_column = "population_sample_type", 
+            shape_column = "population_sample_type",
+            color_column = "parameter_type", 
             lims = c(0,33),
             text_size = TEXT_SIZE, 
-            point_size = 4)
+            point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
 lat_onset_serialplt_noqa <- forest_plot(lat_onset_serial_admission |> arrange(parameter_value,desc(parameter_value)),
                                    label = 'Delay in days',
                                    ycol = 'label_group',
-                                   shape_column = "parameter_type",
-                                   color_column = "population_sample_type", 
+                                   shape_column = "population_sample_type",
+                                   color_column = "parameter_type", 
                                    lims = c(0,50),
                                    text_size = TEXT_SIZE, 
-                                   point_size = 4)
+                                   point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
 ggsave("latent_serial_onsetrecov.png", plot = lat_onset_serialplt, width= 14, height = 10, bg = 'white')
 ggsave("latent_serial_onsetrecov_noqa.png", plot = lat_onset_serialplt_noqa, width= 14, height = 10, bg = 'white')
 
@@ -283,41 +299,46 @@ p2 <- forest_plot(d2 %>% mutate(parameter_unit = 'Days'),
                   shape_column = 'parameter_value_type',
                   lims = c(0,51),
                   text_size = TEXT_SIZE, 
-                  point_size = 4)
+                  point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
 ggsave("latent_period.png", plot = p2, width = 6, height = 4, bg = 'white')
 
 
 
 # admission to outcome... 
 outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) |> arrange(parameter_type,desc(parameter_value)) %>%
-                                mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
+                                mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ','')),
+                                       population_location = str_replace(population_location, 'VA',"Veterans Affairs")),
                               ycol = 'label_group',
                               label = 'Admission to discharge/recovery (days)',
-                              color_column = 'population_sample_type',
-                              shape_column = "population_group",
+                              color_column = "population_group", # had these backwards initially
+                              shape_column = "population_sample_type", 
                               lims = c(0,215),
                               text_size = TEXT_SIZE, 
-                              point_size = 4) 
+                              point_size = 4) + 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .8))
 outcome_forest_noqa <- forest_plot(d3  |> arrange(parameter_type,desc(parameter_value)) %>%
                                      mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
                                    ycol = 'label_group',
                                    label = 'Admission to discharge/recovery (days)',
-                                   color_column = 'population_sample_type',
-                                   shape_column = "population_group",
+                                   color_column = "population_group", # had these backwards initially
+                                   shape_column = "population_sample_type", 
                                    lims = c(0,215),
                                    text_size = TEXT_SIZE, 
-                                   point_size = 4)
+                                   point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .38))
 ggsave("admission_to_outcome.png", plot = outcome_forest, width = 12, height = 6, bg = 'white')
 ggsave("admission_to_outcome_noqa.png", plot = outcome_forest_noqa, width = 12, height = 6, bg = 'white')
 outcome_forest_noqa_type <- forest_plot(d3  |> arrange(parameter_type,desc(parameter_value)) %>%
-                                     mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ',''))),
+                                     mutate(parameter_type = stringr::str_to_sentence(str_replace(parameter_type,'Human delay - ',''))),
                                    ycol = 'label_group',
                                    label = 'Admission to discharge/recovery (days)',
                                    color_column = 'parameter_type',
                                    shape_column = "parameter_value_type",
                                    lims = c(0,215),
                                    text_size = TEXT_SIZE, 
-                                   point_size = 4)
+                                   point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .38))
 ggsave("admission_to_outcome_partype.png", plot = outcome_forest_noqa_type, width = 12, height = 6, bg = 'white')
 
 # Mosquito delay - EIP
@@ -330,7 +351,8 @@ eip_forest <- forest_plot(m1 %>% filter(qa_score>0.5)|> arrange(population_sampl
                           text_size = TEXT_SIZE,
                           custom_colours = c( "#00468B","#ED0000", "#42B540","#0099B4", "#925E9F", "#FDAF91","#DF8F44",
                                               "#6A6599","#CD534C","#A20056","#1B1919"), 
-                          point_size = 4)
+                          point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.1, .5))
 eip_forest_noqa <- forest_plot(m1 |> arrange(population_sample_type,desc(parameter_value)),
                           label = 'Extrinsic incubation period (days)',
                           ycol = 'label_group',
@@ -340,7 +362,8 @@ eip_forest_noqa <- forest_plot(m1 |> arrange(population_sample_type,desc(paramet
                           text_size = TEXT_SIZE,
                           custom_colours = c( "#00468B","#ED0000", "#42B540","#0099B4", "#925E9F", "#FDAF91","#DF8F44",
                                               "#6A6599","#CD534C","#A20056","#1B1919"), 
-                          point_size = 4)
+                          point_size = 4)+ 
+  theme(legend.position = 'inside', legend.position.inside =  c(.1, .5))
 
 ggsave("extrinsic_incubation_period.png", plot = eip_forest, width = 16, height = 10, bg = 'white')
 
