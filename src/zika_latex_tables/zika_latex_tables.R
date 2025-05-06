@@ -50,35 +50,49 @@ parameters <- readRDS("parameters_curated.rds")  %>%
 outbreaks <- outbreaks %>%
   mutate(outbreak_location = str_replace_all(outbreak_location,' \\(Up\\)',''),
          outbreak_location = str_replace_all(outbreak_location,',', ";")) %>%
-  # mutate(dates = paste(outbreak_start_day,outbreak_start_month,outbreak_start_year,"-",
-  #                      outbreak_end_day,outbreak_end_month,outbreak_date_year),
-  #        dates = gsub("NA","",dates),
-  #        dates = trimws(gsub("\\s{2,}"," ",dates)),
-  #        dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE)) %>%
-  mutate(outbreak_start_day   = coalesce(outbreak_start_day,1),
-         outbreak_start_month = ifelse(is.na(outbreak_start_month),"Jan",outbreak_start_month),
-         outbreak_start_year  = coalesce(outbreak_start_year,0),
-         sdate = as.Date(paste(outbreak_start_day,outbreak_start_month,
-                               outbreak_start_year, sep = "-"), format = "%d-%b-%Y")) %>%
-  mutate(outbreak_end_day   = coalesce(outbreak_end_day,28),
-         outbreak_end_month = ifelse(is.na(outbreak_end_month),"Dec",outbreak_end_month),
-         outbreak_date_year = coalesce(outbreak_date_year,2024),
-         edate = as.Date(paste(outbreak_end_day,outbreak_end_month,
-                               outbreak_date_year, sep = "-"), format = "%d-%b-%Y")) %>%
-  mutate(dates = paste(outbreak_start_day,outbreak_start_month,outbreak_start_year,"-",
-                       outbreak_end_day,outbreak_end_month,outbreak_date_year),
-         dates = gsub("NA","",dates),
-         dates = trimws(gsub("\\s{2,}"," ",dates)),
-         dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE)) 
+  mutate(
+    # Handle start date text
+    sdate = case_when(
+      !is.na(outbreak_start_day) & !is.na(outbreak_start_month) & !is.na(outbreak_start_year) ~ 
+        paste0(sprintf("%02d", outbreak_start_day), " ", outbreak_start_month, " ", outbreak_start_year),
+      is.na(outbreak_start_day) & !is.na(outbreak_start_month) & !is.na(outbreak_start_year) ~ 
+        paste0(outbreak_start_month, " ", outbreak_start_year),
+      is.na(outbreak_start_day) & is.na(outbreak_start_month) & !is.na(outbreak_start_year) ~ 
+        as.character(outbreak_start_year),
+      TRUE ~ NA_character_
+    ),
+    
+    # Handle end date text
+    edate = case_when(
+      !is.na(outbreak_end_day) & !is.na(outbreak_end_month) & !is.na(outbreak_date_year) ~ 
+        paste0(sprintf("%02d", outbreak_end_day), " ", outbreak_end_month, " ", outbreak_date_year),
+      is.na(outbreak_end_day) & !is.na(outbreak_end_month) & !is.na(outbreak_date_year) ~ 
+        paste0(outbreak_end_month, " ", outbreak_date_year),
+      is.na(outbreak_end_day) & is.na(outbreak_end_month) & !is.na(outbreak_date_year) ~ 
+        as.character(outbreak_date_year),
+      TRUE ~ NA_character_
+    ),
+    
+    # Build final dates string
+    dates = case_when(
+      !is.na(sdate) & !is.na(edate) ~ paste0(sdate, " - ", edate),
+      !is.na(sdate) & is.na(edate) ~ sdate,
+      is.na(sdate) & !is.na(edate) ~ edate,
+      !is.na(sdate) & is.na(edate) ~ "Unspecified",
+      TRUE ~ NA_character_
+    )
+  ) 
 
-outbreaks <- outbreaks %>% mutate_all(~ ifelse(is.na(.), "", .))
-outbreaks <- outbreaks %>% mutate(outbreak_location = gsub("Fct;","FCT;",outbreak_location),
-                                  outbreak_location = gsub("Kenema ;","Kenema;",outbreak_location),
-                                  outbreak_location = gsub("OuéMé","Ouémé",outbreak_location))
+outbreaks <- outbreaks %>% 
+  mutate(nocases = ifelse(is.na(cases_confirmed) & is.na(cases_suspected) & is.na(cases_asymptomatic) *
+                            is.na(cases_severe) & is.na(cases_unspecified) & is.na(female_cases) & is.na(male_cases), 1, 0),
+         outbreak_location = ifelse(nocases == 1, paste0(outbreak_location, "*"), outbreak_location)) %>%
+  mutate_all(~ ifelse(is.na(.), "", .))
 
 outs <- outbreaks %>%
   select(outbreak_country, outbreak_location, dates, 
-         cases_suspected, cases_confirmed, cases_mode_detection, cases_severe, deaths,			
+         cases_suspected, cases_confirmed, cases_mode_detection,	
+         female_cases, male_cases,
          refs,sdate,edate)
 outs$cases_mode_detection <- gsub(" \\(PCR etc\\)", "", outs$cases_mode_detection)
 outs <- outs %>% arrange(tolower(outbreak_country),desc(sdate),desc(edate))
@@ -138,6 +152,14 @@ write.table(mods, file = "latex_models.csv", sep = ",",
 
 
 # Prep par data for tables ----
+# make variable with location and country to use or not
+parameters <- parameters %>%
+  mutate(label_group = case_when(
+    is.na(population_location) | population_location == '' ~ population_country,
+    (population_location !="" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,' (',population_country,')'),
+    (!is.na(population_location) & population_country == 'Unspecified') | (population_country == 'Brazil') ~ population_location,
+    TRUE ~ NA))
+
 parameters <- mutate_at(parameters, 
                         vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
@@ -178,6 +200,7 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == -3 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 1000",
   exponent == -4 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 10k",
   exponent == -5 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 100k",
+  parameter_unit == 'Unspecified' & parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk") ~ '',
   TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")))
 # new bit
 parameters <- parameters %>% 
@@ -225,28 +248,39 @@ parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <-
 parameters <- parameters %>%
   mutate(population_study_start_month = substr(population_study_start_month, 1, 3),
          population_study_end_month   = substr(population_study_end_month, 1, 3)) %>%
-  # mutate(dates = paste(population_study_start_day,population_study_start_month,population_study_start_year,"-",
-  #                      population_study_end_day,population_study_end_month,population_study_end_year),
-  #        dates = gsub("NA","",dates),
-  #        dates = trimws(gsub("\\s{2,}"," ",dates)),
-  #        dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE),
-  #        dates = ifelse(dates == "-","",dates)) %>%
-  mutate(population_study_start_day   = coalesce(population_study_start_day,1),
-         population_study_start_month = ifelse(is.na(population_study_start_month),"Jan",population_study_start_month),
-         population_study_start_year  = coalesce(population_study_start_year,0),
-         sdate = as.Date(paste(population_study_start_day,population_study_start_month,
-                               population_study_start_year, sep = "-"), format = "%d-%b-%Y")) %>%
-  mutate(population_study_end_day   = coalesce(population_study_end_day,28),
-         population_study_end_month = ifelse(is.na(population_study_end_month),"Dec",population_study_end_month),
-         population_study_end_year = coalesce(population_study_end_year,2024),
-         edate = as.Date(paste(population_study_end_day,population_study_end_month,
-                               population_study_end_year, sep = "-"), format = "%d-%b-%Y")) %>%
-  mutate(dates = paste(population_study_start_day,population_study_start_month,population_study_start_year,"-",
-                       population_study_end_day,population_study_end_month,population_study_end_year),
-         dates = gsub("NA","",dates),
-         dates = trimws(gsub("\\s{2,}"," ",dates)),
-         dates = gsub("\\b(\\d{4})\\s*-\\s*\\1\\b","\\1",dates,perl = TRUE),
-         dates = ifelse(dates == "-","",dates)) 
+  mutate(
+    # Handle start date text
+    start_text = case_when(
+      !is.na(population_study_start_day) & !is.na(population_study_start_month) & !is.na(population_study_start_year) ~ 
+        paste0(sprintf("%02d", population_study_start_day), " ", population_study_start_month, " ", population_study_start_year),
+      is.na(population_study_start_day) & !is.na(population_study_start_month) & !is.na(population_study_start_year) ~ 
+        paste0(population_study_start_month, " ", population_study_start_year),
+      is.na(population_study_start_day) & is.na(population_study_start_month) & !is.na(population_study_start_year) ~ 
+        as.character(population_study_start_year),
+      TRUE ~ NA_character_
+    ),
+    
+    # Handle end date text
+    end_text = case_when(
+      !is.na(population_study_end_day) & !is.na(population_study_end_month) & !is.na(population_study_end_year) ~ 
+        paste0(sprintf("%02d", population_study_end_day), " ", population_study_end_month, " ", population_study_end_year),
+      is.na(population_study_end_day) & !is.na(population_study_end_month) & !is.na(population_study_end_year) ~ 
+        paste0(population_study_end_month, " ", population_study_end_year),
+      is.na(population_study_end_day) & is.na(population_study_end_month) & !is.na(population_study_end_year) ~ 
+        as.character(population_study_end_year),
+      TRUE ~ NA_character_
+    ),
+    
+    # Build final dates string
+    dates = case_when(
+      !is.na(start_text) & !is.na(end_text) ~ paste0(start_text, " - ", end_text),
+      !is.na(start_text) & is.na(end_text) ~ start_text,
+      is.na(start_text) & !is.na(end_text) ~ end_text,
+      survey_start_date == 'Unspecified' & survey_end_date == 'Unspecified' ~ "Unspecified",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(-start_text, -end_text)
 #
 parameters$population_sample_type <- gsub("\\s.*", "", parameters$population_sample_type)
 parameters$population_group <- str_to_title(parameters$population_group)
@@ -261,12 +295,13 @@ parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", me
 #parameters - transmission ----
 trns_params <- parameters %>%
   filter(grepl("Attack|Relative contribution|Growth rate|Reproduction", parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_type, parameter_value, unc_type, uncertainty,
+  select(parameter_type, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
-         genome_site, method_r,
+         method_r,
          population_sample_size,
          population_country, dates,
-         population_sample_type, population_group, refs, central)
+         population_sample_type, population_group, refs, central) %>%
+  mutate(method_r = str_replace_all(method_r, ';',', '))
 trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Human-Human Transmission Contribution", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Relative contribution - zoonotic to human", "Human-Vector Transmission Contribution", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Attack rate (inverse parameter)", "Attack rate", trns_params$parameter_type)
@@ -278,7 +313,7 @@ trns_params$parameter_type  <- str_to_title(trns_params$parameter_type)
 #                                      levels = c("Reproduction Number ","Growth Rate ","Attack Rate",
 #                                                 "Human-Human Transmission Contribution","Evolutionary Rate","Substitution Rate"))
 trns_params$method_r <- str_to_title(trns_params$method_r)
-trns_params <- trns_params[order(trns_params$parameter_type,trns_params$genome_site,as.numeric(trns_params$central)),]
+trns_params <- trns_params[order(trns_params$parameter_type,as.numeric(trns_params$central)),]
 trns_params <- trns_params %>% select(-central)
 trns_params <- insert_blank_rows(trns_params,"parameter_type")
 write.table(trns_params, file = "latex_transmission.csv", sep = ",", 
@@ -287,7 +322,7 @@ write.table(trns_params, file = "latex_transmission.csv", sep = ",",
 # parameters - genomic 
 genomic_params <- parameters %>%
   filter(grepl('Mutations', parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_type, parameter_value, unc_type, uncertainty,
+  select(parameter_type, parameter_value, unc_type, #uncertainty,
          genome_site, 
          population_sample_size,
          dates,
@@ -311,7 +346,7 @@ var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bou
 hdel_params <- parameters %>%
   filter(grepl("delay", parameter_type, ignore.case = TRUE)) %>%
   select(parameter_type, other_delay_start, other_delay_end,
-         parameter_value, parameter_value_type, unc_type, uncertainty,
+         parameter_value, parameter_value_type, unc_type, #uncertainty,
          method_disaggregated_by, 
          population_sample_size,
          population_country, dates,
@@ -327,24 +362,14 @@ hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgm\\b"
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bIgg\\b", "IgG")
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bPcr\\b", "PCR")
 hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bZikv\\b", "ZIKV")
-hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bEip\\b", "EIP")
-hdel_params <- hdel_params %>% mutate(parameter_type = case_when(
-  (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Symptom Resolution") ~ "Symptomatic Period",   
-  (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Specimen Collection") ~ "Onset - Testing",   
-  (other_delay_start =="Specimen Collection" & other_delay_end == "Test Result") ~ "Testing - Test Result",   
-  (other_delay_start =="Admission to Care/Hospitalisation" & other_delay_end == "Symptom Resolution") ~ "Admission - Symptom Resolution",   
-  (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Other: Sample collection/Diagnosis") ~ "Onset - Testing",   
-  (other_delay_start =="Symptom Onset/Fever" & other_delay_end == "Other: Start of ribavirin treatment") ~ "Onset - Start of Treatment",   
-  (other_delay_start =="Other: Start of ribavirin treatment" & other_delay_end == "Other: End of ribavirin treatment") ~ "Duration of Antiviral Treatment",   
-  (other_delay_start =="Other: Start of oxygen therapy" & other_delay_end == "Other: End of oxygen therapy") ~ "Duration of Oxygen Therapy",   
-  (other_delay_start =="Other: Start of antibacterial therapy" & other_delay_end == "Other: End of antibacterial therapy") ~ "Duration of Antibacterial Therapy",   
-  TRUE ~ parameter_type))
+hdel_params$parameter_type = str_replace(hdel_params$parameter_type, "\\bEip10\\b", "EIP")
 hdel_params <- hdel_params %>%
   mutate(other_delay_start = ifelse(other_delay_start=="Other: type timepoint in this text box", NA, other_delay_start),
          other_delay_end = ifelse(other_delay_end=="Other: type timepoint in this text box", NA, other_delay_end))
 hdel_params <- hdel_params %>% select(-c("other_delay_start","other_delay_end"))
 hdel_params$parameter_type <- sub("Symptom Onset", "Onset", hdel_params$parameter_type)
 hdel_params$parameter_type <- sub("Admission To Care", "Admission", hdel_params$parameter_type)
+hdel_params$parameter_type <- sub("Admission To care", "Admission", hdel_params$parameter_type)
 hdel_params$parameter_type <- sub("Discharge/Recovery", "Recovery", hdel_params$parameter_type)
 # hdel_params$parameter_type <- factor(hdel_params$parameter_type, 
 #                                      levels = c("Incubation Period",
@@ -365,7 +390,7 @@ cfrs_params <- parameters %>%
   mutate(parameter_type = ifelse(parameter_type == 'Severity - case fatality rate (CFR)', 'Case fatality ratio',
                                  ifelse(parameter_type == 'Severity - proportion of symptomatic cases', 
                                         "Proportion of symptomatic cases", parameter_type))) %>%
-  select(parameter_type, parameter_value, unc_type, uncertainty,
+  select(parameter_type, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
@@ -378,14 +403,20 @@ write.table(cfrs_params, file = "latex_severity.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #parameters - seroprevalence ----
-sero_params <- parameters %>%
+sero_params1 <- parameters %>%
   filter(grepl("Seroprevalence", parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_value, unc_type, uncertainty,
+  select(parameter_type, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
-         parameter_type,cfr_ifr_numerator,cfr_ifr_denominator,population_sample_size,
+         cfr_ifr_numerator,cfr_ifr_denominator,population_sample_size,
          prnt_on_elisa, population_country, dates,
          population_sample_type, population_group, refs, central, 
          covidence_id)
+sero_params <- sero_params1 %>%
+  mutate(parameter_type = case_when(
+    parameter_type == 'Seroprevalence - Neutralisation/PRNT' ~ 'PRNT',
+    parameter_type %in% c("Seroprevalence - Biotinylated-EDIII antigen capture ELISA") ~ 'Biotinylated-\nEDIII antigen\ncapture ELISA',
+    TRUE ~ parameter_type))
+
 sero_params$prnt_on_elisa <- ifelse(sero_params$prnt_on_elisa == 'F', '', 
                                     ifelse(sero_params$prnt_on_elisa == 'V', 'TRUE', sero_params$prnt_on_elisa))
 sero_params$parameter_type <- sub("^.* - ", "", sero_params$parameter_type)
@@ -433,11 +464,12 @@ write.table(risk_params, file = "latex_riskfactors.csv", sep = ",",
 # parameters -- miscarriage rate/microcephaly risk ----
 infants <- parameters %>% 
   filter(parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk")) %>%
-  select(parameter_type, parameter_value, unc_type, uncertainty,
+  select(parameter_type, parameter_value, unc_type, #uncertainty,
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
-         population_sample_type, population_group, refs, central)
-infants <- infants %>% arrange(tolower(population_country),as.numeric(central))
+         population_sample_type, refs, central) %>%
+  mutate(cfr_ifr_method = ifelse(cfr_ifr_method == '','Unspecified', cfr_ifr_method))
+infants <- infants %>% arrange(parameter_type, tolower(population_country),as.numeric(central))
 infants <- infants %>% select(-central)
 infants <- insert_blank_rows(infants,"parameter_type")
 write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",", 
@@ -446,7 +478,7 @@ write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",",
 # parameters -- relative contributions ----
 relative <- parameters %>%
   filter(grepl("Relative contribution", parameter_type)) %>%
-  select(parameter_type, parameter_value, unc_type, uncertainty,
+  select(parameter_type, parameter_value, unc_type, #uncertainty,
          population_country, dates,
          population_sample_type, population_group, refs, central)
 relative <- relative %>% arrange(tolower(population_country),as.numeric(central))
