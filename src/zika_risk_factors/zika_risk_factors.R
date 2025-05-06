@@ -25,11 +25,6 @@ articles   <- readRDS("articles_curated.rds")
 models     <- readRDS("models_curated.rds")
 parameters <- readRDS("parameters_curated.rds")
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE )
-
-articles   <- dfs$articles
-models     <- dfs$models
-parameters <- dfs$parameters
 
 #parameters
 parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
@@ -156,6 +151,7 @@ nrow(risk_params)
 length(unique(risk_params$covidence_id))
 table(risk_params$riskfactor_outcome)
 table(risk_params$riskfactor_name)
+length(unique(risk_params$riskfactor_outcome))
 
 risk_table <- risk_params %>% select(-covidence_id) %>%
   separate_longer_delim(riskfactor_name, delim = ";") %>% 
@@ -166,6 +162,8 @@ risk_table <- risk_params %>% select(-covidence_id) %>%
   summarise(n=n(),
             pop_size = sum(population_sample_size)) %>%
   unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
+
+length(unique(risk_table$riskfactor_name))
 
 summ_risks <- risk_params %>% select(-covidence_id) %>%
   separate_longer_delim(riskfactor_name, delim = ";")

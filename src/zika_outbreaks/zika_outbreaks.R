@@ -52,10 +52,10 @@ out_sf <- world %>%
     admin == 'Federated States of Micronesia' ~ "Micronesia",
     TRUE ~ admin
   ))
-
+# colour = "gray50", fill = "gray90"
 out_plt <- ggplot() +
-  geom_sf(data = out_sf, lwd = 0.3, col = "grey30", aes(fill = n)) +
-  scale_fill_viridis_c(option = 'plasma', direction = -1, na.value = 'grey80') +
+  geom_sf(data = out_sf, lwd = 0.3, col = "gray50", aes(fill = as.factor(n))) +
+  scale_fill_viridis_d( na.value = 'grey90') +
   theme_void() +
   theme(axis.text = element_blank(),
         text = element_text(size = 14)) +
@@ -134,7 +134,8 @@ sero_gen <- ggplot() +
   coord_sf(xlim=c(-180,180), ylim=c(-60,90))
 
 
-ggsave("outbreaks.png", out_plt, bg = 'white')
+ggsave("outbreaks.svg", out_plt, bg = 'white', height = 8, width = 14, dpi =300)
+ggsave("outbreaks.png", out_plt, bg = 'white', height = 8, width = 14, dpi =300)
 ggsave("sero_all.png", sero_all, bg = 'white')
 ggsave("sero_general.png", sero_gen, bg = 'white')
 
