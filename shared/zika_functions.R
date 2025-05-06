@@ -97,9 +97,10 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   } else if (shape_column == 'case_definition'){
     gg <- gg + 
       scale_shape_manual(name = 'Case definition',
-                         values = c("Confirmed" = 21, "Suspected" = 22, "Confirmed;Suspected" = 25,
+                         values = c("Confirmed" = 21, "Suspected" = 22, "Confirmed or suspected" = 25,
+                                    'Other' = 13,
                                     "Unspecified" = 24),
-                         breaks = c("Confirmed", "Suspected", "Confirmed;Suspected", "Unspecified"), 
+                         breaks = c("Confirmed", "Suspected", "Confirmed or suspected", "Other","Unspecified"), 
                          labels = function(x) str_wrap(x, width = 18))
   } else if (shape_column == 'population_sample_type'){
     gg <- gg + 
@@ -122,7 +123,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                          labels = function(x) str_wrap(x, width = 18))
   }
   
-  lancetcols <- c('#00468BFF', '#ED0000FF','#42B540FF','#0099B4FF', '#925E9FFF','#FDAF91FF','#AD002AFF','#ADB6B6FF','#1B1919FF')
+  lancetcols <- c('#00468BFF', '#ED0000FF','#42B540FF','#0099B4FF', '#925E9FFF','#AD002AFF','#FDAF91FF','#ADB6B6FF','#1B1919FF')
   
   if(sum(!is.na(custom_colours))) {
       gg <- gg + 
@@ -142,6 +143,30 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                                      'Unspecified'      = lancetcols[5], 'Contact based' =    lancetcols[6] ,
                                      'Mixed settings'   = lancetcols[7], 'Other' =            lancetcols[8] ,
                                      'School based'     = lancetcols[9], 'Household based' =  "#DF8F44"), 
+                          labels = function(x) str_wrap(x, width = 18)) 
+    } else if(color_column == 'parameter_type'){
+      gg <- gg + 
+        scale_color_manual(values = c("Serial interval" = lancetcols[5], 'Symptom onset to admission' =  lancetcols[6] ,
+                                      "Symptom onset to recovery"  = lancetcols[7], "Latent period" = "#DF8F44",
+                                      "Admission to care to discharge from care" = lancetcols[4]), 
+                           labels = function(x) str_wrap(x, width = 18)) +
+        scale_fill_manual(values = c("Serial interval" = lancetcols[5], 'Symptom onset to admission' =  lancetcols[6] ,
+                                     "Symptom onset to recovery"  = lancetcols[7], "Latent period" = "#DF8F44",
+                                     "Admission to care to discharge from care" = lancetcols[4]), 
+                          labels = function(x) str_wrap(x, width = 18)) 
+    } else if(color_column == 'population_group'){
+      gg <- gg + 
+        scale_color_manual(values = c("General population" = lancetcols[1], 'Persons under investigation' =  lancetcols[2] ,
+                                      "Other"  = lancetcols[3], 'Children' =    lancetcols[4] ,
+                                      'Pregnant women'      = lancetcols[5], 'Mixed groups' =   lancetcols[6] ,
+                                      'Blood donors'   = lancetcols[7], 'Unspecified' =  lancetcols[8] ,
+                                      'Household contacts of survivors' = "#DF8F44"), 
+                           labels = function(x) str_wrap(x, width = 18)) +
+        scale_fill_manual(values = c("General population" = lancetcols[1], 'Persons under investigation' =  lancetcols[2] ,
+                                     "Other"  = lancetcols[3], 'Children' =    lancetcols[4] ,
+                                     'Pregnant women'      = lancetcols[5], 'Mixed groups' =   lancetcols[6] ,
+                                     'Blood donors'   = lancetcols[7], 'Unspecified' =  lancetcols[8] ,
+                                     'Household contacts of survivors' = "#DF8F44"), 
                           labels = function(x) str_wrap(x, width = 18)) 
     } else {gg <- gg + 
       scale_fill_lancet(palette = "lanonc", labels = function(x) str_wrap(x, width = 18)) +

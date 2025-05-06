@@ -81,7 +81,7 @@ orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
 # orderly_location_pull_packet()
 
 ##############
-## ANALYSIS ##
+## ANALYSIS, FIGURES, AND TABLES ##
 ##############
 
 # Data curation for analysis 
@@ -113,9 +113,11 @@ orderly_run("zika_latex_tables", parameters = list(pathogen = "ZIKA"))
 # Seroprevalence
 # orderly_run('zika_serop', parameters = list(pathogen = 'ZIKA'))
 
-######################
-## FIGURES & TABLES ##
-######################
+# summary figures 
+orderly_run('zika_summary', parameters = list(pathogen = 'ZIKA'))
+
+# Outbreaks
+orderly_run('zika_outbreaks', parameters = list(pathogen = 'ZIKA'))
 
 # Collate figures and tables
-#orderly_run("lassa_collate", parameters = list(pathogen = "LASSA"))
+# orderly_run("zika_collate_plots", parameters = list(pathogen = "LASSA"))
