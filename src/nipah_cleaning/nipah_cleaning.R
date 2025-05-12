@@ -20,7 +20,7 @@ rds_inputs <- sapply(tables, function(table) paste0(table, ".rds"))
 
 orderly_dependency("nipah_compilation",
                    "latest(parameter:pathogen == this:pathogen)",
-                   setNames(rds_artefacts, rds_artefacts))
+                   setNames(rds_inputs, rds_inputs))
 
 orderly_artefact(
   description="Merged single and double extracted data as csv and rds files",
@@ -101,7 +101,7 @@ param_table_name <- table_check_list[["params"]]
 
 if (param_table_name %in% tables){
   param_rds_filename <- rds_inputs[[param_table_name]]
-  model_df <- readRDS(param_rds_filename)
+  param_df <- readRDS(param_rds_filename)
 
 # *--------------------------- Update column types ----------------------------*
   if (!is.null(type_map_list)){
