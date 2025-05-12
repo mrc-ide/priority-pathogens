@@ -130,9 +130,16 @@ add_uuid_id <- function(input_df, uuid_col){
   return (input_df)
 }
 
-add_pks <- function(input_df, pk_col){
+add_pks <- function(input_df, pk_col, base_id, combine_id){
   if (NROW(input_df) > 0) {
-    input_df[pk_col] <- 1:NROW(input_df)
+    if (!is.null(base_id) & !is.null(combine_id)){
+      base_digits <- floor(log10(max(input_df[[base_id]]))) + 1
+      combined_digits <- floor(log10(max(input_df[[base_id]]))) + 1
+      input_df[pk_col] <- paste(
+        sprintf("%.*d", base_digits, as.numeric(input_df[[base_id]])),
+        sprintf("%.*d", combined_digits, as.numeric(input_df[[combine_id]])),
+        sep="_")
+    }
   } else {
     input_df[pk_col] <- character(0)
   }
@@ -162,6 +169,7 @@ df_cols_key_map <- function(input_vec,
   names_not_updated <- updated_vec[input_vec %in% updated_vec]
   n_no_updated <- length(names_not_updated)
   if (n_no_updated > 0) {
+    # No mappings means that the name is the same as the input
     cli_alert_info(paste("No mappings found for the following", n_no_updated,
                          "columns: ", paste0(names_not_updated, collapse=", ")))
   }
@@ -689,6 +697,8 @@ continuation_col <- config_list[["continuation_config"]][["continuation_col"]]
 extractor_col <- config_list[["continuation_config"]][["extractor_col"]]
 incomplete_col  <- config_list[["continuation_config"]][["incomplete_col"]]
 notes_cols <-  config_list[["continuation_config"]][["notes_cols"]]
+
+article_id <- config_list[["article_id"]]
 # Assumes if there are not tables to stack then data is in a REDCap repeat
 # instance format
 redcap_repeat_instances <- is.null(tables_to_stack)
@@ -700,9 +710,13 @@ incomplete_col_key  <- config_list[["incomplete_col_key"]]
 linked_rows_list <- config_list[["linked_row_col_names"]]
 uuid_col_names <- config_list[["uuid_col_names"]]
 pk_col_names <- config_list[["pk_col_names"]]
+pk_base_id <- config_list[["pk_base_id"]]
+
 date_cols_to_split <- config_list[["date_cols_to_split"]]
+article_add_sort_cols <- config_list[["article_add_sort_cols"]]
 article_cols_to_add_start <- config_list[["article_cols_to_add_start"]]
 article_cols_to_add_end <- config_list[["article_cols_to_add_end"]]
+
 
 # *------------------------------- Read in data -------------------------------*
 mapping_df <- read_csv(mapping_filename, show_col_types = FALSE)
@@ -939,10 +953,35 @@ if (!is.null(incomplete_cols)){
 
 cli_h1("Generating target tables")
 
+if (!is.null(pk_col_names)){
+  # Assumes fixed column names for mapping file
+  input_names <- sapply(
+    data_table_names, function(name) unique(
+      na.omit(mapping_df[mapping_df$target_table==name, "input_table"])
+      )
+    )
+
+  input_names <- unname(unlist(input_names))
+  new_repeat_id_name <- "Repeat_ID"
+  # repeat ids are created within this script and are required for pk generation
+  # new name to suppress mapping warning (quick fix)
+  repeat_id_rows_df <- data.frame(
+    rep("repeat_id", length(data_table_names)),
+    input_names,
+    rep(new_repeat_id_name, length(data_table_names)),
+    data_table_names)
+  colnames(repeat_id_rows_df) <- colnames(mapping_df)
+
+  # original mapping df is used for the progress report
+  mapping_updated_df <- rbind(mapping_df, repeat_id_rows_df)
+}else{
+  mapping_updated_df <- mapping_df
+}
+
 target_df_raw_list <- setNames(
   lapply(target_table_names,
          function (target) generate_target_table(input_df_list=df_clean_list,
-                                                 mapping_df=mapping_df,
+                                                 mapping_df=mapping_updated_df,
                                                  target_table=target)),
   target_table_names)
 
@@ -961,13 +1000,44 @@ if (!is.null(date_cols_to_split)){
   }
 }
 
+# Add PK columns
+if (!is.null(pk_col_names)){
+  target_df_clean_list[data_table_names] <- lapply(
+    data_table_names,
+    function(name) add_pks(input_df=target_df_clean_list[[name]],
+                           pk_col=pk_col_names[[name]],
+                           base_id=article_id,
+                           combine_id=new_repeat_id_name)
+  )
+
+  # Remove repeat ids that were included for cleaning
+  target_df_clean_list[data_table_names] <- lapply(
+    target_df_clean_list[data_table_names],
+    function(df) df[!colnames(df) %in% new_repeat_id_name])
+}
+
 # Add UUID columns
 if (!is.null(uuid_col_names)){
+  # Order by ArticleID and additional cols to ensure uuid is always assigned
+  # in the same order
+  article_sort_cols <- c(article_id, article_add_sort_cols)
+  sort_order <- do.call(
+    what = order,
+    args = target_df_clean_list[[continuation_table]][,article_sort_cols])
+  target_df_clean_list[[continuation_table]] <-
+    target_df_clean_list[[continuation_table]][sort_order, ]
+
+  # Order by new pk to ensure uuid is always assigned in the same order
+  target_df_clean_list[data_table_names] <- lapply(
+    data_table_names,
+    function(name) target_df_clean_list[[name]][
+      order(target_df_clean_list[[name]][[pk_col_names[[name]][1]]]), ])
+
   target_df_clean_list <- setNames(
     lapply(target_table_names,
            function(name) add_uuid_id(input_df=target_df_clean_list[[name]],
                                       uuid_col=uuid_col_names[[name]])
-           ),
+    ),
     target_table_names)
 }
 
@@ -978,7 +1048,7 @@ if (!is.null(article_cols_to_add_start)){
     function(name) add_article_cols(target_df_clean_list[[name]],
                                     target_df_clean_list[["articles"]],
                                     cols_to_add=article_cols_to_add_start,
-                                    join_col="Article_ID",
+                                    join_col=article_id,
                                     start=TRUE
     )
   )
@@ -990,18 +1060,9 @@ if (!is.null(article_cols_to_add_end)){
     function(name) add_article_cols(target_df_clean_list[[name]],
                                     target_df_clean_list[["articles"]],
                                     cols_to_add=article_cols_to_add_end,
-                                    join_col="Article_ID",
+                                    join_col=article_id,
                                     start=FALSE
     )
-  )
-}
-
-# Add PK columns
-if (!is.null(pk_col_names)){
-target_df_clean_list[data_table_names] <- lapply(
-  data_table_names,
-  function(name) add_pks(input_df=target_df_clean_list[[name]],
-                         pk_col=pk_col_names[[name]])
   )
 }
 
