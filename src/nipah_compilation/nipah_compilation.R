@@ -97,7 +97,7 @@ check_info_ids <- function(extraction_table,
     function(id) info_table[info_table[[cov_id_col]] == id, ][[info_uuid_col]])
 
   not_matching <- ft_info_uuid_vec != it_info_uuid_vec
-  not_matching[is.na(not_matching)] <- FALSE
+  not_matching[is.na(not_matching)] <- TRUE
 
   if (sum(not_matching) > 0){
     cli_alert_warning(
