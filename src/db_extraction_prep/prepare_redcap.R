@@ -986,8 +986,9 @@ target_df_raw_list <- setNames(
   target_table_names)
 
 # *------------------------------ Process target ------------------------------*
-# Split date columns into day, month, year
 target_df_clean_list <- target_df_raw_list
+
+# Split date columns into day, month, year
 if (!is.null(date_cols_to_split)){
   cli_h1("Expanding date columns")
   for (name in names(date_cols_to_split)){
