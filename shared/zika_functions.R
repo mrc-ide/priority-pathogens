@@ -2,7 +2,8 @@
 
 forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_value_type', 
                         color_column, lims, text_size = 12, show_label = FALSE, 
-                        custom_colours = NA, facet_by_country = FALSE,
+                        custom_colours = NA, 
+                        facet_by_country = FALSE, facet_by_continent = FALSE, facet_by_poptype = FALSE, facet_by_delay = FALSE,
                         point_size = 3) {
   
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
@@ -10,13 +11,41 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   df   <- df %>% mutate(urefs = make.unique(refs)) %>%
     mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
            country_brazil = ifelse(population_country == 'Brazil', 'Brazil','Rest of World'),
+           population_location = ifelse(population_location == 'Wynwood Neighborhood, Miami-Dade County, Florida','Miami-Dade County, Florida', population_location),
+           continent = countrycode(sourcevar = population_country,
+                                               origin = "country.name",
+                                               destination = "continent"),
+           continent = case_when(
+             grepl(population_country, 'Multi') ~ "Multi-country",
+             population_country == 'France (French Guiana)' ~ "Europe",
+             population_country == "France (Martinique, Guadeloupe, French Guiana)" ~ "Europe",
+             population_country == "Multi-country: France and Netherlands" ~ "Europe",
+             population_country == "Micronesia" ~ "Oceania",
+             population_country == 'Multi-country: Brazil and Colombia'  ~ "Americas",
+             population_country == "Multi-country: Brazil, Colombia, El Salvador" ~ "Americas",
+             population_country == "Multi-country: Americas (n = 32)" ~ "Americas",
+             population_country == "Singapore" | population_location == 'Singapore' ~ "Asia",
+             population_country == 'Brazil' ~ "Brazil",
+             population_country == 'French Polynesia' ~ "French Polynesia",
+             population_country == 'Colombia' ~ "Colombia",
+             population_country == 'Unspecified' ~ "Unspecified",
+             TRUE ~ continent
+             ),
+           continent = factor(continent, levels = c('Brazil','French Polynesia','Colombia', 'Americas','Asia','Europe','Oceania','Africa',"Unspecified")),
            population_country = str_replace(population_country, 'Multi-country: ', ""),
            label_group = case_when(
              is.na(population_location) | population_location == '' ~ population_country,
-             (population_location !="" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,'\n' ,' (',population_country,')'),
-             (!is.na(population_location) & population_country == 'Unspecified') | (population_country == 'Brazil' & facet_by_country == TRUE) ~ population_location,
+             is.na(population_country) | population_country=='' ~ population_location,
+             (!is.na(population_location) & population_country == 'Unspecified') | 
+               ((population_country == 'Brazil' | population_country == "Colombia" | population_country == 'French Polynesia') & 
+                  (facet_by_country == TRUE | facet_by_continent == TRUE)) ~ population_location,
+             (population_location != "" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,'\n' ,' (',population_country,')'),
              TRUE ~ NA),
-           label_group = ifelse(label_group == 'continental United States and Hawaii\n (United States)','United States',label_group)) %>%
+           label_group = case_when(
+             label_group == 'continental United States and Hawaii\n (United States)' ~ 'United States',
+             label_group == 'Singapore\n (Singapore)' ~ 'Singapore',
+             # label_group == 'Brazil' ~ "Brazil (national)",
+             TRUE ~ label_group)) %>%
     arrange(desc(parameter_value)) %>% 
     mutate(label_group = factor(label_group, levels = unique(label_group)),
            urefs = factor(urefs, levels = unique(urefs)))
@@ -82,7 +111,16 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   if(facet_by_country){
     gg <- gg +
       ggforce::facet_col(vars(country_brazil), scales = 'free_y', space = 'free')  #.~country_brazil ncol = 1, 
-  } 
+  } else if(facet_by_continent){
+    gg <- gg + 
+      ggforce::facet_col(vars(continent), scales = 'free_y', space = 'free')
+  } else if(facet_by_poptype){
+    gg <- gg + 
+      ggforce::facet_col(vars(population_sample_type), scales = 'free_y', space = 'free')
+  } else if (facet_by_delay){
+    gg <- gg +
+      ggforce::facet_col(vars(parameter_type), scales = 'free_y', space = 'free')
+  }
   
   
   

@@ -933,7 +933,7 @@ zika_clean_params <- function(df, pathogen){
                                                        7336, 10749, 11866) & is.na(parameter_unit) & parameter_type == "Attack rate", 
                                    "Unspecified", parameter_unit))
   
-  #cleaning of relative contributions (fixing units)
+  #cleaning of relative contributions (fixing units) and growth rate
   df <- df %>%
     mutate(
       parameter_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
@@ -943,7 +943,8 @@ zika_clean_params <- function(df, pathogen){
       parameter_uncertainty_lower_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
                                                                                              "Relative contribution - zoonotic to human"), parameter_uncertainty_lower_value * 100 , parameter_uncertainty_lower_value),
       parameter_unit = ifelse(covidence_id == 422  & parameter_type %in% c("Relative contribution - human to human",
-                                                                        "Relative contribution - zoonotic to human"), "Percentage (%)", parameter_unit)
+                                                                        "Relative contribution - zoonotic to human"), "Percentage (%)", parameter_unit),
+      parameter_unit = ifelse(covidence_id == 422  & parameter_type == "Growth rate (r)", "Per day", parameter_unit)
     )
   
   #Cleaning of severity (fixing units)

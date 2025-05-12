@@ -50,7 +50,7 @@ library(zip)
 ## DATABASES ##
 ###############
 
-# Extraction prep - access versus recap
+# Extraction prep - access versus redcap
 orderly_run("db_extraction_prep", parameter = list(pathogen = 'ZIKA'))
 
 # # Extract databases from shared drive (ensure config file pathway matches your machine)
