@@ -19,7 +19,8 @@ fix_cov_ids <- function(df, pathogen){
     filter(!covidence_id %in% c(7033, 3491,  1663, 66, 4338, 4340)) %>%# this is a Research Letter, commeents and not pars 
     filter(covidence_id != 5749) %>% # this is the same as 873 
     filter(covidence_id != 10652) %>% # this is the same as 2302 
-    filter(covidence_id != 3077) # this isa Brief Report (wrong study type)
+    filter(covidence_id != 3077) %>%# this isa Brief Report (wrong study type)
+    filter(covidence_id != 1475) # research letter
   
   
   return(df)
@@ -561,6 +562,7 @@ zika_clean_params <- function(df, pathogen){
         " "
       ),
       population_location = case_when(
+        population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA,
         covidence_id == 6211 ~ "Singapore",
         population_location %in% 
           c("Salvador; Bahia", "Salvador city in Bahia","Salvador") ~ "Salvador, Bahia",
@@ -861,9 +863,15 @@ zika_clean_params <- function(df, pathogen){
       population_study_start_month = ifelse(covidence_id == 6270, 'Jan', population_study_start_month),
       population_study_end_year = ifelse(covidence_id == 6270, 2019, population_study_end_year),
       population_study_end_month = ifelse(covidence_id == 6270, 'Apr', population_study_end_month),
+      # Fix missing dates for 430
+      population_study_start_year = ifelse(covidence_id == 430, 2015, population_study_start_year),
+      population_study_end_year = ifelse(covidence_id == 430, 2016, population_study_end_year),
       # Format start/stop months for parameters
       population_study_start_month = str_sub(population_study_start_month, 1, 3),
       population_study_end_month = str_sub(population_study_end_month, 1, 3),
+      
+      population_group = ifelse(is.na(population_group) & covidence_id == 4427, "Persons under investigation", population_group),
+      
       
       
       # create combined variable for survey date
@@ -1167,6 +1175,8 @@ zika_clean_zcs_microcephaly <- function(df){
     # Change 6521 to report without units and in num/denominator columns instead
     mutate(parameter_value = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ NA,
+      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ NA, # was incorrrect
+      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 5.4, # was less precise (5 only)
       TRUE ~ parameter_value
     ),
     cfr_ifr_denominator = case_when(
@@ -1186,8 +1196,13 @@ zika_clean_zcs_microcephaly <- function(df){
       covidence_id == 6301 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 18, # missing
       covidence_id == 6028 & parameter_type == "Miscarriage rate" ~ 11, # missing
       covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 7, # missing
+      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 2, # was incorrrect
       TRUE ~ cfr_ifr_numerator
-    ))
+    )) %>%
+    filter(!(covidence_id == 6993 & parameter_value %in% c(81.0, 16.7, 0.02))) %>% # not a ZCS risk
+    filter(!(covidence_id == 10681 & parameter_value %in% c(10, 6))) %>% #these were IgG prevalences not ZCS risks (Table 1)
+    mutate(population_sample_type = ifelse(covidence_id == 6993, 'Hospital based', population_sample_type),
+           population_group = ifelse(covidence_id == 6993, 'Pregnant women',population_group))
 }
 
 zika_clean_genomics <- function(df){

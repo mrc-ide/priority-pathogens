@@ -15,6 +15,7 @@ library(grid)
 library(patchwork)
 library(gridExtra)
 library(orderly2)
+library(countrycode)
 
 #orderly preparation 
 orderly_strict_mode()
@@ -33,7 +34,7 @@ source("zika_functions.R")
 ###################
 ## DATA CURATION ##
 ###################
-TEXT_SIZE <- 28
+TEXT_SIZE <- 22
 
 articles   <- readRDS("articles_curated.rds")
 models     <- readRDS("models_curated.rds")
@@ -43,7 +44,9 @@ parameters <- readRDS("parameters_curated.rds")%>%
   mutate(population_location = ifelse(population_country_original == "Brazil;Colombia" & covidence_id == 268, NA, population_location),
          population_location = ifelse(population_location == "90 major cities across LAC", "90 major cities", population_location),
          # shorten name of Micronesia 
-         population_country = ifelse(population_country == 'Federated States of Micronesia', "Micronesia", population_country))
+         population_country = ifelse(population_country == 'Federated States of Micronesia', "Micronesia", population_country)) %>%
+  mutate(central2 = coalesce(central, round(0.5*(parameter_lower_bound+parameter_upper_bound),3))) #central value for 
+
 # 
 # dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
 # 
@@ -74,31 +77,61 @@ c25 <- c(
 # Make plots of reproduction numbers
 # epireview::forest_plot_r0(parameters, shape_by = 'parameter_value_type', col_by = 'r_pathway')
 repronums <- parameters %>%
-  filter(qa_score >= 0.5 & parameter_class == 'Reproduction number') 
+  filter(qa_score >= 0.5) %>%
+  filter(parameter_class == 'Reproduction number') 
 repronumsnoqa <- parameters %>%
   filter(parameter_class == 'Reproduction number') 
 table(repronums$parameter_type)
 table(repronumsnoqa$parameter_type)
 length(unique(repronums[grepl('Basic',repronums$parameter_type),]$covidence_id))
 length(unique(repronums[grepl('Effective',repronums$parameter_type),]$covidence_id))
+length(unique(repronums$covidence_id))
+table(repronums$population_country)
+tabyl(repronums %>% filter(parameter_type=='Reproduction number (Basic R0)' & method_moment_value != 'Unspecified'), method_moment_value)
 
 # TO find info about max and min of each param type
 repsum <-repronums %>%
+  arrange(parameter_type, parameter_value)  %>%
   group_by(parameter_type) %>%
-  filter(parameter_value == max(parameter_value, na.rm = TRUE) | parameter_value == min(parameter_value, na.rm = TRUE)) %>%
-  select(parameter_type:case_definition, method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label)
+  # filter(parameter_value == max(parameter_value, na.rm = TRUE) | parameter_value == min(parameter_value, na.rm = TRUE)) %>%
+  select(central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label) 
+
+r0 <- repronums %>%
+  filter(parameter_type == 'Reproduction number (Basic R0)') %>%
+  mutate(between = ifelse(central2 > 1 & central2 < 4, 1, 0),
+         below1 = ifelse(central2 < 1, 1, 0))
+tabyl(r0$between)
+tabyl(r0$below1)
+
+re <- repronums %>%
+  filter(parameter_type == 'Reproduction number (Effective, Re)') %>%
+  select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label)  %>%
+  mutate(between = ifelse(central2 > 1 & central2 < 4, 1, 0),
+         below1 = ifelse(central2 < 1, 1, 0)) 
+tabyl(re$between)
+tabyl(re$below1)
+table(re$population_country)
+length(unique(re$covidence_id))
+# repro <- repronums %>%
+#   group_by(parameter_type) %>%
+table(repronums$population_group)
+tabyl(repronums, population_sample_type)
+table(repronums$parameter_statistical_approach)
+min(repronums$population_study_start_year, na.rm = TRUE)
+max(repronums$population_study_end_year, na.rm = TRUE)
+table(repronums$population_study_end_year, repronums$population_country)
 
 table(repronums$method_r)
 
 basicr0 <- repronums %>% filter(parameter_type == 'Reproduction number (Basic R0)') 
 
-r0_pc_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'), 
+r0_pc_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'),
                      label = "Basic reproduction number",
                      color_column = 'population_country',
                      lims = c(0,17),
                      custom_colours = c25,
                      text_size = TEXT_SIZE)
-r0_pc <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'), 
+r0_pc <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'),
                      label = "Basic reproduction number",
                      color_column = 'population_country',
                      lims = c(0,17),
@@ -106,27 +139,31 @@ r0_pc <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == '
                      text_size = TEXT_SIZE)
 
 
-r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'), 
+r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)') %>%
+                                    mutate(population_location= ifelse(population_location == 'Belo Horizonte, Salvador, Laranjeiras, Fortaleza, Recife, Cuiaba and Campo Grande, Porto Velho',
+                                                                       '8 major cities', population_location)), 
                              label = "Basic reproduction number",
                              ycol = 'label_group',
-                             facet_by_country = TRUE,
+                             facet_by_continent = TRUE,
                              color_column = 'population_sample_type',
                              shape_column = 'population_group',
-                             lims = c(0,9),
+                             lims = c(0,12),
                              custom_colours = c25,
                              text_size = TEXT_SIZE) + 
-  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
  
-r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'), 
+r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)') %>%
+                               mutate(population_location= ifelse(population_location == 'Belo Horizonte, Salvador, Laranjeiras, Fortaleza, Recife, Cuiaba and Campo Grande, Porto Velho',
+                                                                  '8 major cities', population_location)), 
                              label = "Basic reproduction number",
                              ycol = 'label_group',
-                             facet_by_country = TRUE,
+                             facet_by_continent = TRUE,
                              color_column = 'population_sample_type',
                              shape_column = 'population_group',
                              lims = c(0,9),
                              custom_colours = c25,
                              text_size = TEXT_SIZE)+ 
-  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
 
 
 # r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
@@ -236,7 +273,7 @@ re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction
 HEIGHT = 25
 WIDTH = 20
 ggsave("r0_pc.pdf", r0_pc, height = HEIGHT, width = WIDTH, bg = 'white')
-ggsave("r0_sampletype.pdf", r0_sampletype, height = 28, width = WIDTH, bg = 'white')
+ggsave("r0_sampletype.pdf", r0_sampletype, height = 24, width = WIDTH, bg = 'white')
 ggsave("r0_human.pdf", r0_human, height = 10, width = WIDTH, bg = 'white')
 ggsave("r0_mosquito.pdf", r0_mosquito, height = 8, width = WIDTH, bg = 'white')
 ggsave("re.pdf", re, height = 14, width = WIDTH, bg = 'white')
@@ -244,19 +281,19 @@ ggsave("re_human.pdf", re_human, height = 12, width = 12, bg = 'white')
 ggsave("re_mosquito.pdf", re_mosquito, height = 10, width = 12, bg = 'white')
 
 ggsave("r0_pc.png", r0_pc, height = HEIGHT, width = WIDTH, bg = 'white')
-ggsave("r0_sampletype.png", r0_sampletype, height = 28, width = WIDTH, bg = 'white')
+ggsave("r0_sampletype.png", r0_sampletype, height = 24, width = WIDTH, bg = 'white')
 ggsave("r0_human.png", r0_human, height = 10, width = WIDTH, bg = 'white')
 ggsave("r0_mosquito.png", r0_mosquito, height = 8, width = WIDTH, bg = 'white')
 ggsave("re.png", re, height = 14, width = WIDTH, bg = 'white')
 ggsave("re_human.png", re_human, height = 12, width = 12, bg = 'white')
 ggsave("re_mosquito.png", re_mosquito, height = 10, width = 12, bg = 'white')
 
-ggsave("r0_pc_noqa.pdf", r0_pc, height = HEIGHT, width = WIDTH, bg = 'white')
-ggsave("r0_sampletype_noqa.pdf", r0_sampletype, height = 28, width = WIDTH, bg = 'white')
-ggsave("r0_human_noqa.pdf", r0_human, height = 10, width = WIDTH, bg = 'white')
-ggsave("r0_mosquito_noqa.pdf", r0_mosquito, height = 8, width = WIDTH, bg = 'white')
-ggsave("re_noqa.pdf", re, height = 14, width = WIDTH, bg = 'white')
-ggsave("re_human_noqa.pdf", re_human, height = 10, width = 12, bg = 'white')
+ggsave("r0_pc_noqa.pdf", r0_pc_noqa, height = HEIGHT, width = WIDTH, bg = 'white')
+ggsave("r0_sampletype_noqa.pdf", r0_sampletype_noqa, height = 30, width = WIDTH, bg = 'white')
+ggsave("r0_human_noqa.pdf", r0_human_noqa, height = 10, width = WIDTH, bg = 'white')
+ggsave("r0_mosquito_noqa.pdf", r0_mosquito_noqa, height = 8, width = WIDTH, bg = 'white')
+ggsave("re_noqa.pdf", re_noqa, height = 14, width = WIDTH, bg = 'white')
+ggsave("re_human_noqa.pdf", re_human_noqa, height = 10, width = 12, bg = 'white')
 # ggsave("re_mosquito_noqa.pdf", re_mosquito, height = 10, width = 12, bg = 'white')
 
 

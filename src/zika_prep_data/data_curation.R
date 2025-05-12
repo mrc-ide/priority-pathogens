@@ -1,6 +1,8 @@
 # Data curation functions
 # These used to be housed within the lassa_functions.R script but have been moved here 
 
+# curated data should be used for plotting but not for the final epireview dataset (i.e. we have changed to inverse parameters, exponentiated, etc)
+
 data_curation <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
   
      # this is due to legacy access database issue

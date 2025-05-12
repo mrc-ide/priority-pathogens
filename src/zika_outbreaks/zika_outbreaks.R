@@ -1,6 +1,6 @@
 # Task to produce results for outbreaks 
 
-
+library(tidyverse)
 library(ggplot2)
 library(sf)
 library(rnaturalearth)
@@ -36,6 +36,10 @@ world <- ne_countries(scale = 'medium', returnclass = 'sf')
 # 
 # world <- geopackage('data/gadm_410-levels.gpkg')
 # 
+
+outbreaks <- merge(outbreaks, articles, by = "covidence_id") 
+# outbreaks <-   filter(outbreaks, !qa_score < 0.5)
+
 outbreaks_agg <- outbreaks %>%
   mutate(outbreak_country = case_when(
     outbreak_country == 'France (Martinique)' ~ "France",

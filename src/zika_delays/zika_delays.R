@@ -40,7 +40,7 @@ source("zika_functions.R")
 ###################
 ## DATA CURATION ##
 ###################
-TEXT_SIZE <- 36
+TEXT_SIZE <- 22
 
 articles   <- readRDS("articles_curated.rds")
 models     <- readRDS("models_curated.rds")
@@ -70,11 +70,16 @@ length(unique(delays$covidence_id))
 length(unique(mosq$covidence_id))
 
 delaysum <- delays %>%
+  mutate(parameter_type = str_replace_all(parameter_type, ' \\(inverse parameter\\)', "")) %>%
+  rowwise() %>%
+  mutate(row_max = max(across(c(central, parameter_upper_bound, parameter_lower_bound)), na.rm = TRUE),
+         row_min = min(across(c(central, parameter_upper_bound, parameter_lower_bound)), na.rm = TRUE)) %>%
   group_by(parameter_type) %>%
   mutate(n = n()) %>%
-  filter(central == max(central, na.rm = TRUE) | central == min(central, na.rm = TRUE)) %>%
+  filter(row_max == max(row_max, na.rm = TRUE) | row_min == min(row_min, na.rm = TRUE)) %>%
+  # filter(central == max(central, na.rm = TRUE) | central == min(central, na.rm = TRUE)) %>%
   filter(n >1) %>%
-  select(central, parameter_type:case_definition, method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, 
+  select(central, row_max, row_min,parameter_lower_bound,parameter_upper_bound, parameter_type:case_definition, method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, 
          survey_start_date, survey_end_date, article_label) 
 
 
@@ -131,7 +136,7 @@ m1 <- parameters %>% filter(grepl("extrinsic", parameter_type)) %>%
 # didn't look at rest
 
 # Symptom onset to recovery
-onset_recovery_forest <- forest_plot(d4 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),
+onset_recovery_forest <- forest_plot(d4 %>% filter(qa_score>=0.5)|> arrange(desc(parameter_value)),
                                      ycol = 'label_group',
                                      label = 'Symptom onset to recovery (days)',
                                      color_column="population_sample_type",
@@ -144,7 +149,7 @@ ggsave("onset_recovery.png", plot =onset_recovery_forest, width = 10, height = 6
 
 
 # Serial interval
-SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),
+SI_forest <- forest_plot(d5 %>% filter(qa_score>=0.5)|> arrange(desc(parameter_value)),
                          ycol = 'label_group',
                          label = 'Serial Interval (days)',
                          color_column = 'population_sample_type',
@@ -156,7 +161,7 @@ SI_forest <- forest_plot(d5 %>% filter(qa_score>0.5)|> arrange(desc(parameter_va
 ggsave('serial_interval.png', plot =SI_forest, width = 10, height = 6, bg = 'white')
 
 # Infectious period 
-IP_forest <- forest_plot(d6 %>% filter(qa_score>0.5)|> arrange(desc(parameter_value)),
+IP_forest <- forest_plot(d6 %>% filter(qa_score>=0.5)|> arrange(desc(parameter_value)),
                          ycol = 'label_group',
                          label = 'Infectious Period (days)',
                          color_column = 'population_group',#population_sample_type',
@@ -224,7 +229,7 @@ ggsave("infectious_period_noqa.png", plot =IP_forest_noqa, width = 14, height = 
 #                   text_size = TEXT_SIZE,
 #                   point_size = 4)
 
-incp2 <- forest_plot(d1 %>% filter(qa_score>0.5) |> arrange(parameter_value,desc(parameter_value)),
+incp2 <- forest_plot(d1 %>% filter(qa_score>=0.5) |> arrange(parameter_value,desc(parameter_value)),
                     label = 'Incubation Period (days)',
                     ycol = 'label_group',
                     color_column = "population_group", # had these backwards initially
@@ -270,25 +275,36 @@ lat_onset_serial_admission <- rbind(d2, d5, d4, d8) %>% mutate(parameter_unit = 
                           "Human delay - Onset to Admission to care"
                           ) ~ "Symptom onset to admission",
     TRUE ~ parameter_type
-  ))
-lat_onset_serialplt <- forest_plot(lat_onset_serial_admission %>% filter(qa_score > 0.5) |> arrange(parameter_value,desc(parameter_value)),
+  ),
+  parameter_type = factor(parameter_type, levels = c('Latent period','Serial interval','Symptom onset to admission', "Symptom onset to recovery"))) %>%
+  mutate(population_location = case_when(
+    population_location == 'Cases acquired in travellers in Americas or Caribbean' ~ "Travellers in Americas or Caribbean", 
+    population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA, 
+    TRUE~ population_location),
+    population_country = case_when(
+      population_location == "Travellers in Americas or Caribbean" ~ 'Unspecified',
+      TRUE ~ population_country))
+
+lat_onset_serialplt <- forest_plot(lat_onset_serial_admission %>% filter(qa_score >= 0.5) |> arrange(parameter_value,desc(parameter_value)),
             label = 'Delay in days',
             ycol = 'label_group',
             shape_column = "population_sample_type",
-            color_column = "parameter_type", 
+            color_column = "population_group", 
             lims = c(0,33),
+            facet_by_delay = TRUE,
             text_size = TEXT_SIZE, 
             point_size = 4)+ 
-  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .51))
 lat_onset_serialplt_noqa <- forest_plot(lat_onset_serial_admission |> arrange(parameter_value,desc(parameter_value)),
                                    label = 'Delay in days',
                                    ycol = 'label_group',
                                    shape_column = "population_sample_type",
-                                   color_column = "parameter_type", 
+                                   color_column = "population_group", 
                                    lims = c(0,50),
+                                   facet_by_delay = TRUE,
                                    text_size = TEXT_SIZE, 
                                    point_size = 4)+ 
-  theme(legend.position = 'inside', legend.position.inside =  c(.8, .63))
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.43))
 ggsave("latent_serial_onsetrecov.png", plot = lat_onset_serialplt, width= 14, height = 10, bg = 'white')
 ggsave("latent_serial_onsetrecov_noqa.png", plot = lat_onset_serialplt_noqa, width= 14, height = 10, bg = 'white')
 
@@ -306,7 +322,7 @@ ggsave("latent_period.png", plot = p2, width = 6, height = 4, bg = 'white')
 
 
 # admission to outcome... 
-outcome_forest <- forest_plot(d3 %>% filter(qa_score>0.5) |> arrange(parameter_type,desc(parameter_value)) %>%
+outcome_forest <- forest_plot(d3 %>% filter(qa_score>=0.5) |> arrange(parameter_type,desc(parameter_value)) %>%
                                 mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ','')),
                                        population_location = str_replace(population_location, 'VA',"Veterans Affairs")),
                               ycol = 'label_group',
@@ -342,7 +358,7 @@ outcome_forest_noqa_type <- forest_plot(d3  |> arrange(parameter_type,desc(param
 ggsave("admission_to_outcome_partype.png", plot = outcome_forest_noqa_type, width = 12, height = 6, bg = 'white')
 
 # Mosquito delay - EIP
-eip_forest <- forest_plot(m1 %>% filter(qa_score>0.5)|> arrange(population_sample_type,desc(parameter_value)),
+eip_forest <- forest_plot(m1 %>% filter(qa_score>=0.5)|> arrange(population_sample_type,desc(parameter_value)),
                              label = 'Extrinsic incubation period (days)',
                           ycol = 'label_group',
                           # shape_column = 'popultio',
@@ -372,15 +388,15 @@ layout <- "
 AABB
 CCDD
 EEEE"
-delays_plot <-  IP_forest  + incp2 +  outcome_forest+lat_onset_serialplt + eip_forest+
+delays_plot <-  incp2 +  IP_forest  + lat_onset_serialplt + outcome_forest + eip_forest+
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-ggsave("delays.png", plot = delays_plot, width = 35, height = 30, bg = 'white')
-ggsave("delays.pdf", plot = delays_plot, width = 35, height = 30, bg = 'white')
+ggsave("delays.png", plot = delays_plot, width = 24, height = 25, bg = 'white')
+ggsave("delays.pdf", plot = delays_plot, width = 24, height = 25, bg = 'white')
 
-delays_plotSI <-  IP_forest_noqa + incp2_noqa +  outcome_forest_noqa + lat_onset_serialplt_noqa +eip_forest_noqa + 
+delays_plotSI <-  incp2_noqa + IP_forest_noqa + lat_onset_serialplt_noqa + outcome_forest_noqa + eip_forest_noqa + 
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-ggsave("SI_delays.png", plot = delays_plotSI, width = 35, height = 30)
-ggsave("SI_delays.pdf", plot = delays_plotSI, width = 35, height = 30)
+ggsave("SI_delays.png", plot = delays_plotSI, width = 24, height = 27)
+ggsave("SI_delays.pdf", plot = delays_plotSI, width = 24, height = 27)
 
 # SI figures
 # ggsave("figure_5SI_subgroup_meta.png", plot = m1_SI$plot, width = 22, height = 22) # note that qa & noqa lets through sames papers
