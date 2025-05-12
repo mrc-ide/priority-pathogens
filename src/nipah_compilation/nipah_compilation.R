@@ -44,6 +44,7 @@ join_qa_and_article <- function(article_single_df,
   article_matching_df <- left_join(qa_matching_df,
                                 article_double_details_df,
                                 by = matching_join_cols)
+  # Removes duplicated article rows which causes missing info ids
   article_matching_df <- distinct(article_matching_df,
                                   covidence_id, .keep_all = TRUE)
   article_matching_df$double_extracted <- 1
@@ -295,12 +296,12 @@ final_tables <- Map(
 cli_h1("Checking (pk/fk) correspondence between extraction table & info table ids")
 final_tables <- lapply(names(final_tables),
                        function (name) check_info_ids(final_tables[[name]],
-                                      article_df,
-                                      "id",
-                                      extract_uuid_cols[[name]],
-                                      "covidence_id",
-                                      name,
-                                      info_table)
+                                                      article_df,
+                                                      "id",
+                                                      extract_uuid_cols[[name]],
+                                                      "covidence_id",
+                                                      name,
+                                                      info_table)
                        )
 
 final_tables <- setNames(final_tables, extraction_tables)
