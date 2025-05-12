@@ -111,7 +111,7 @@ if (param_table_name %in% tables){
 # *---------------------------- Update punctuation ----------------------------*
   if (!is.null(cols_to_punctuate_vec)){
     param_df[cols_to_punctuate_vec] <- lapply(
-      param_df[cols_to_punctuate_vec], function(x) str_replace_all(x, ";", ", "))
+      param_df[cols_to_punctuate_vec], function(x) str_replace_all(x, ",", "; "))
   }
 
 # *------------------------------ Update values -------------------------------*
