@@ -215,12 +215,12 @@ col_type_list <- list("qa" = cols(Covidence_ID = col_integer()),
                       "models" = cols(Covidence_ID = col_integer(),
                                       Article_ID = col_integer(),
                                       access_model_id = col_integer()),
-                      "params" = cols(Covidence_ID = col_integer(),
+                      "params" = cols(Covidence_ID = col_character(),
                                       Article_ID = col_integer(),
-                                      access_param_id = col_integer()),
+                                      access_param_id = col_character()),
                       "outbreaks"= cols(Covidence_ID = col_integer(),
                                         Article_ID = col_integer(),
-                                        access_outbreak_id = col_integer()))
+                                        access_outbreak_id = col_character()))
 
 double_join_colnames <- list(
   "outbreaks" =  c("article_id", "name_data_entry", "access_outbreak_id",
