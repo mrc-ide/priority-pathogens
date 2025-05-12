@@ -15,6 +15,7 @@ library(grid)
 library(patchwork)
 library(gridExtra)
 library(orderly2)
+library(countrycode)
 
 #orderly preparation 
 orderly_strict_mode()

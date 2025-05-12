@@ -19,23 +19,9 @@ orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen
 ##################
 ## DATA CURATION ##
 ###################
-
-articles   <- readRDS("articles_curated.rds")
-models     <- readRDS("models_curated.rds")
-parameters <- readRDS("parameters_curated.rds")
 outbreaks <- readRDS('outbreaks_curated.rds')
 
-dfs <- data_curation(articles,tibble(),models,parameters, plotting = FALSE )
-
-articles   <- dfs$articles
-models     <- dfs$models
-parameters <- dfs$parameters
-
-
 world <- ne_countries(scale = 'medium', returnclass = 'sf')
-# 
-# world <- geopackage('data/gadm_410-levels.gpkg')
-# 
 
 outbreaks <- merge(outbreaks, articles, by = "covidence_id") 
 # outbreaks <-   filter(outbreaks, !qa_score < 0.5)
@@ -73,7 +59,7 @@ out_plt <- ggplot() +
                    label.padding = 0.2) +
   coord_sf(xlim=c(-180,180), ylim=c(-60,90))     # cut out antarctica
 
-out_plt
+# out_plt
 
 # Sero plot 
 sero_all <- parameters %>%
