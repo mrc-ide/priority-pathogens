@@ -1018,6 +1018,7 @@ if (!is.null(pk_col_names)){
 
 # Add UUID columns
 if (!is.null(uuid_col_names)){
+  set.seed(3141)
   # Order by ArticleID and additional cols to ensure uuid is always assigned
   # in the same order
   sort_order <- do.call(
