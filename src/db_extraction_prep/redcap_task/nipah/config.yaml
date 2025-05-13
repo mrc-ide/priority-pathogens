@@ -34,7 +34,6 @@ date_cols_to_split:
     "outbreaks": "Outbreak_data_ID"
     "parameters": "Parameter_data_ID"
     "models": "Model_data_ID"
-"article_add_sort_cols": ["Name_data_entry"]
 "article_cols_to_add_end": ["Pathogen", "ID"]
 "article_cols_to_add_start": [ "Covidence_ID", "Name_data_entry"]
 "article_id": "Article_ID"

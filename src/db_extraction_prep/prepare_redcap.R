@@ -713,7 +713,6 @@ pk_col_names <- config_list[["pk_col_names"]]
 pk_base_id <- config_list[["pk_base_id"]]
 
 date_cols_to_split <- config_list[["date_cols_to_split"]]
-article_add_sort_cols <- config_list[["article_add_sort_cols"]]
 article_cols_to_add_start <- config_list[["article_cols_to_add_start"]]
 article_cols_to_add_end <- config_list[["article_cols_to_add_end"]]
 
@@ -1021,10 +1020,9 @@ if (!is.null(pk_col_names)){
 if (!is.null(uuid_col_names)){
   # Order by ArticleID and additional cols to ensure uuid is always assigned
   # in the same order
-  article_sort_cols <- c(article_id, article_add_sort_cols)
   sort_order <- do.call(
     what = order,
-    args = target_df_clean_list[[continuation_table]][,article_sort_cols])
+    args = target_df_clean_list[[continuation_table]][,article_id])
   target_df_clean_list[[continuation_table]] <-
     target_df_clean_list[[continuation_table]][sort_order, ]
 
