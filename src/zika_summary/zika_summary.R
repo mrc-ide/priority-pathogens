@@ -12,6 +12,7 @@ orderly_parameters(pathogen = NULL)
 orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen &&
                    parameter:plotting == TRUE)",
                    c("articles_curated.rds", "outbreaks_curated.rds", "models_curated.rds", "parameters_curated.rds"))
+
 text_size = 14
 ##################
 ## DATA CURATION ##
@@ -450,9 +451,3 @@ patchwork <- (p2 | (p1 / p3 / p4)) + plot_layout(#heights = c(1,1,1),
 dev.set(dev.next())
 ggsave("parameters_summary.png", plot = patchwork, width = 16, height = 16)
 
-
-
-#########################
-######  OUTBREAKS  ######
-#########################
-# plot of n outbreaks per year, n outbreaks per country, # cases per country

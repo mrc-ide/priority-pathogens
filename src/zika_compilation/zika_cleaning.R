@@ -20,7 +20,8 @@ fix_cov_ids <- function(df, pathogen){
     filter(covidence_id != 5749) %>% # this is the same as 873 
     filter(covidence_id != 10652) %>% # this is the same as 2302 
     filter(covidence_id != 3077) %>%# this isa Brief Report (wrong study type)
-    filter(covidence_id != 1475) # research letter
+    filter(covidence_id != 1475) %>%# research letter
+    filter(covidence_id != 10009) # this is using the exact same data as 6993 and cites it 
   
   
   return(df)
@@ -1168,16 +1169,26 @@ zika_clean_r <- function(params_df){
       TRUE ~ parameter_value
     )) 
   
+  # Re-label incorrectly reported reproduction numbers
+  params_df <- params_df %>%
+    mutate(parameter_type = case_when(
+      covidence_id == 6211 & parameter_value == 0.24 ~ "Reproduction number (Effective, Re)",
+      covidence_id == 4427 & parameter_value == 1.22 ~ "Reproduction number (Effective, Re)",
+      TRUE ~ parameter_type
+    ))
+  
   return(params_df)
 }
 
 zika_clean_zcs_microcephaly <- function(df){
   df <- df %>%
+    # Remove incorrect entry 
+    filter(!(covidence_id == 12074 & cfr_ifr_numerator == 6)) %>%
     # Change 6521 to report without units and in num/denominator columns instead
     mutate(parameter_value = case_when(
       covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ NA,
       covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ NA, # was incorrrect
-      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 5.4, # was less precise (5 only)
+      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 5.26, # was less precise (5 only)
       TRUE ~ parameter_value
     ),
     cfr_ifr_denominator = case_when(
@@ -1198,6 +1209,7 @@ zika_clean_zcs_microcephaly <- function(df){
       covidence_id == 6028 & parameter_type == "Miscarriage rate" ~ 11, # missing
       covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 7, # missing
       covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 2, # was incorrrect
+      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 5, # was incorrect (24)
       TRUE ~ cfr_ifr_numerator
     )) %>%
     filter(!(covidence_id == 6993 & parameter_value %in% c(81.0, 16.7, 0.02))) %>% # not a ZCS risk

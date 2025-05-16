@@ -42,7 +42,7 @@ cols<-c(
   "palegreen2",
   "#CAB2D6", # lt purple
   "#FDBF6F", # lt orange
-  #"gray70", 
+  "gray70", 
   "khaki2",
   "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
   "green1","darkturquoise",  "yellow4", "yellow3",
@@ -59,6 +59,7 @@ parameters <- readRDS("parameters_curated.rds")
 
 
 # Plotting microcephaly risk
+
 CZS_rate <- parameters %>%
   filter(parameter_type == 'Zika congenital syndrome (microcephaly) risk')  %>%
   # mutate(parameter_value = ifelse(!is.na(central) & is.na(parameter_value), central, parameter_value)) %>% # those that don't have a central value have a
@@ -74,7 +75,12 @@ CZS_rate <- parameters %>%
            case_definition == 'Confirmed;Suspected' ~ "Confirmed or suspected",
            TRUE ~ case_definition) 
   ) %>%
-  mutate(population_country = ifelse(population_country %in% c('France (French Guiana)',"France (Martinique, Guadeloupe, French Guiana)"), 'France',population_country)) %>%
+  mutate(population_country = case_when(population_country %in% c('France (French Guiana)',"France (Martinique, Guadeloupe, French Guiana)") ~ 'France',
+                                        population_location == 'Guadeloupe, Martinique, French Guiana' ~ NA,
+                                        TRUE ~ population_country),
+         population_location = case_when(population_location == 'Hospital Universitari Vall d’Hebron Barcelona, Catalonia' ~ 'Barcelona', 
+                                         population_location == 'Campina Grande, State of Paraíba' ~ "Campina Grande, Paraíba",
+                                         TRUE ~ population_location)) %>%
   # remove entry that is called 'clearly incorrect' in the paper that reported it (#7050)
   filter(!(covidence_id == 7050 & population_country == 'Argentina'))  %>%
   mutate(continent = countrycode(sourcevar = population_country,
@@ -86,7 +92,18 @@ CZS_rate <- parameters %>%
     is.na(population_sample_type) | population_sample_type %in% c('Mixed settings', 'Community based','Other','Travel based') ~ "Other",
     TRUE ~ population_sample_type
   ),
-  population_sample_type = factor(population_sample_type, levels = c('Hospital based','Other','Population based')))
+  population_sample_type = factor(population_sample_type, levels = c('Hospital based','Other','Population based'))) 
+
+# for 6810, am combining the 3 cluster level estiamtes into 1 overall estimate 
+par6810 <- CZS_rate %>%
+  filter(covidence_id == 6810) %>%
+  mutate(parameter_value = 38.5, # from counting red and grey squares in figure 3a
+         population_sample_size = sum(population_sample_size)) %>%
+  distinct(covidence_id, .keep_all = TRUE)
+
+CZS_rate <- rbind(CZS_rate %>%
+                    filter(covidence_id != 6810), par6810)
+  
   # select(parameter_type,parameter_value, parameter_unit, continent, population_country, population_location, population_sample_type, population_group,
   #        refs, central, case_definition, parameter_upper_bound, parameter_lower_bound, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
   #        parameter_uncertainty_type, population_study_start_day, population_study_start_month,population_study_start_year, population_study_end_day,
@@ -97,6 +114,8 @@ CZS_rate_qa <- CZS_rate %>%
 length(unique(CZS_rate_qa$covidence_id))
 janitor::tabyl(CZS_rate_qa$continent, useNA = 'ifany')
 max(CZS_rate_qa$population_study_end_year, na.rm = TRUE)
+min(CZS_rate_qa$population_study_start_year, na.rm = TRUE)
+table(CZS_rate_qa$trimester_exposed, useNA = 'ifany')
 
 CZSplot <- forest_plot(CZS_rate %>% filter(qa_score >= 0.5) %>% arrange(central) ,
                        label = "CZS risk given Zika-infected mother (%)", 
@@ -116,10 +135,10 @@ CZSplot_noqa <- forest_plot(CZS_rate %>% arrange(central) ,
                             color_column = "refs", lims = c(0,100),
                             custom_colours = cols) + 
   theme(legend.position = 'inside', legend.position.inside =  c(.65, 0.3))
-ggsave(filename = 'CZS_plot_loc_country.png', CZSplot, height =21, width = 12, bg = 'white')
-ggsave(filename = 'CZS_plot_loc_country.pdf', CZSplot, height =32, width = 16, bg = 'white')
-ggsave(filename = 'CZS_plot_loc_country_noqa.png', CZSplot_noqa, height =30, width = 16, bg = 'white')
-ggsave(filename = 'CZS_plot_loc_country_noqa.pdf', CZSplot_noqa, height =30, width = 16, bg = 'white')
+ggsave(filename = 'CZS_plot_loc_country.svg', CZSplot, height =26, width = 14, bg = 'white')
+ggsave(filename = 'CZS_plot_loc_country.pdf', CZSplot, height =26, width = 14, bg = 'white')
+ggsave(filename = 'CZS_plot_loc_country_noqa.svg', CZSplot_noqa, height =32, width = 16, bg = 'white')
+ggsave(filename = 'CZS_plot_loc_country_noqa.pdf', CZSplot_noqa, height =32, width = 16, bg = 'white')
 
 CZSplot_urefs <- forest_plot(CZS_rate %>% filter(qa_score >= 0.5)%>% arrange(refs),
                              label = "CZS risk given Zika-infected mother (%)", 
@@ -173,7 +192,7 @@ metaanalysis_CZS_country <- metaprop_wrap(dataframe = CZS_rate %>% filter(qa_sco
                                           plot_pooled = TRUE, subgroup = 'population_country', 
                                           sort_by_subg = TRUE, xlabel = "CZS risk given Zika-infected mother",
                                           plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                          width = 9000, height =19000, resolution = 1000)
+                                          width = 8200, height =19000, resolution = 1000)
 CZS_meta_country <- metaanalysis_CZS_country$plot
 ggsave(filename = "CZS_metaanalysis_country.png", plot = CZS_meta_country, width = 9, height = 19)
 ggsave(filename = "CZS_metaanalysis_country.pdf", plot = CZS_meta_country, width = 9, height = 19)
@@ -183,36 +202,27 @@ metaanalysis_CZS_sampletype <- metaprop_wrap(dataframe = CZS_rate %>% filter(qa_
                                              plot_pooled = TRUE, subgroup = 'population_sample_type', 
                                              sort_by_subg = TRUE, xlabel = "CZS risk given Zika-infected mother",
                                              plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                             width = 9000, height =19000, resolution = 1000)
+                                             width = 8200, height =19000, resolution = 1000)
 CZS_meta_sampletype <- metaanalysis_CZS_sampletype$plot
 
-ggsave(filename = "CZS_meta_sampletype.png", plot = CZS_meta_sampletype, width = 9, height = 19)
+ggsave(filename = "CZS_meta_sampletype.svg", plot = CZS_meta_sampletype, width = 9, height = 19)
 ggsave(filename = "CZS_meta_sampletype.pdf", plot = CZS_meta_sampletype, width = 9, height = 19)
 
 metaanalysis_CZS_sampletype_noqa <- metaprop_wrap(dataframe = CZS_rate %>% filter(!is.na(population_sample_type)), 
                                              plot_pooled = TRUE, subgroup = 'population_sample_type', 
                                              sort_by_subg = TRUE, xlabel = "CZS risk given Zika-infected mother",
                                              plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                             width = 9000, height =21000, resolution = 1000)
+                                             width = 8200, height =21000, resolution = 1000)
 CZS_meta_sampletype_noqa <- metaanalysis_CZS_sampletype_noqa$plot
 
-# metaanalysis_CZS_popgroup <- metaprop_wrap(dataframe = CZS_rate %>% filter(qa_score >= 0.5 & !is.na(population_group)), 
-#                                              plot_pooled = TRUE, subgroup = 'population_group', 
-#                                              sort_by_subg = TRUE, xlabel = "CZS risk given Zika-infected mother",
-#                                              plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-#                                              width = 9000, height =18000, resolution = 1000)
-# CZS_meta_popgroup <- metaanalysis_CZS_popgroup$plot
-# 
-# ggsave("CZS_meta_popgroup.png", plot = CZS_meta_popgroup, width = 9, height = 16)
-# ggsave("CZS_meta_popgroup.pdf", plot = CZS_meta_popgroup, width = 9, height = 16)
 
 metaanalysis_CZS_noqa <- metaprop_wrap(dataframe = CZS_rate , plot_pooled = TRUE, subgroup = NA, 
                                        sort_by_subg = FALSE, xlabel = "CZS risk given Zika-infected mother",
                                        plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                       width = 9000, height = 21000, resolution = 1000)
+                                       width = 8200, height = 21000, resolution = 1000)
 CZS_meta_noqa <- metaanalysis_CZS_noqa$plot
 
-ggsave(filename = "CZS_metaanalysis.png", plot = CZS_meta_noqa, width = 9, height = 21)
+ggsave(filename = "CZS_metaanalysis.svg", plot = CZS_meta_noqa, width = 9, height = 21)
 ggsave(filename = "CZS_metaanalysis.pdf", plot = CZS_meta_noqa, width = 9, height = 21)
 
 
