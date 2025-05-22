@@ -113,6 +113,20 @@ serop_data_map <- filter(serop_data_map, !qa_score < 0.5) #malaysia excluded
 #geolocate locations
 locations <- geocode_locations(serop_data_map)
 
+#Mexico has 4 entries but only one to use, fix name removing State. Honduras and Puerto rico are at national level
+locations <- locations %>%
+  mutate(population_location = ifelse(population_location == "Chiapas State", "Chiapas", population_location),
+         population_location = ifelse(population_country == "Honduras", "Honduras", population_location),
+         population_location = ifelse(population_country == "Puerto Rico", "Puerto Rico", population_location),
+         population_country = ifelse(population_country ==  "France (French Guiana)", "French Guiana", population_country) )
+
+
+#Bangladesh has some that are only national, same Thailand
+locations <- locations %>%
+  mutate(population_location = ifelse(is.na(population_location) & population_country == "Bangladesh", "Bangladesh", population_location),
+         population_location = ifelse(is.na(population_location) & population_country == "Thailand", "Thailand", population_location))
+
+
 #keep most recent estimate in case of multiple entry for same location
 locations <- locations %>%
   group_by(population_location) %>%
@@ -124,16 +138,11 @@ result.COL <- filter(locations, population_country == "Colombia") %>% #national
   mutate(population_location = ifelse(is.na(population_location), "Colombia", population_location)) %>%
   filter(population_location != "Barranquilla")  # town
 
-#Mexico has 4 entries but only one to use, fix name removing State. Honduras and Puerto rico are at national level
-locations <- locations %>%
-  mutate(population_location = ifelse(population_location == "Chiapas State", "Chiapas", population_location),
-         population_location = ifelse(population_country == "Honduras", "Honduras", population_location),
-         population_location = ifelse(population_country == "Puerto Rico", "Puerto Rico", population_location))
 
 # Load country-level shapefiles
 result.BOL <- load_and_merge_shapefile(locations, "Bolivia", "gadm41_BOL_1.shp", "NAME_1")
 result.COL <- load_and_merge_shapefile(result.COL, "Colombia", "gadm41_COL_0.shp", "COUNTRY")
-result.FG  <- load_and_merge_shapefile(locations, "France", "gadm41_GUF_0.shp", "COUNTRY")
+result.FG  <- load_and_merge_shapefile(locations, "French Guiana", "gadm41_GUF_0.shp", "COUNTRY")
 result.MEX <- load_and_merge_shapefile(locations, "Mexico", "gadm41_MEX_1.shp", "NAME_1")
 result.HON <- load_and_merge_shapefile(locations, "Honduras", "gadm41_HND_0.shp", "COUNTRY")
 
@@ -159,24 +168,18 @@ result.geoloc.americas <- filter(locations, population_country %in% c("Brazil", 
 # Plot South America
 south_america <- ggplot() +
   borders("world", colour = "gray50", fill = "gray90") +
-  geom_sf(data = result.BOL, aes(fill = central), color = "white") +
+  # geom_sf(data = result.BOL, aes(fill = central), color = "white") +
   # geom_sf(data = result.COL, aes(fill = central), color = "white") +
-  # geom_sf(data = result.FG, aes(fill = central), color = "white") +
+  geom_sf(data = result.FG, aes(fill = central), color = "white") +
   # geom_sf(data = result.HON, aes(fill = central), color = "white") +
-  # geom_sf(data = result.MEX, aes(fill = central), color = "white") +
+  geom_sf(data = result.MEX, aes(fill = central), color = "white") +
   coord_sf(xlim = c(-100, -30), ylim = c(-30, 25)) +  # Adjusted limits
   geom_point(data = result.geoloc.americas, aes(x = long, y = lat, color = central), size = 3) +
   scale_color_viridis_c(limits = c(0, 70),guide = "none") +
   scale_fill_viridis_c(limits = c(0, 70),guide = "none") +
   theme_bw()
 
-# print(south_america)
-
-
-#Bangladesh has some that are only national, same Thailand
-locations <- locations %>%
-  mutate(population_location = ifelse(is.na(population_location) & population_country == "Bangladesh", "Bangladesh", population_location),
-         population_location = ifelse(is.na(population_location) & population_country == "Thailand", "Thailand", population_location))
+print(south_america)
 
 result.THA <- filter(locations, population_country == "Thailand")
 
@@ -295,7 +298,7 @@ central_africa <- ggplot() +
     # legend.position = c(0.3,0.4)
   )
 
-central_africa
+# central_africa
 
 central_africa <- central_africa+
   labs(fill = NULL, col = NULL) + #theme(legend.position = c(0.1,0.2))+

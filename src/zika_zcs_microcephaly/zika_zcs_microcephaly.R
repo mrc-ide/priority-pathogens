@@ -187,15 +187,46 @@ CZS_meta_continent <- metaanalysis_CZS_continent$plot
 ggsave(filename = "CZS_metaanalysis_continent.png", plot = CZS_meta_continent, width = 9, height = 19)
 ggsave(filename = "CZS_metaanalysis_continent.pdf", plot = CZS_meta_continent, width = 9, height = 19)
 
-
-metaanalysis_CZS_country <- metaprop_wrap(dataframe = CZS_rate %>% filter(qa_score >= 0.5 & population_country %in%c('Brazil','Colombia','France','Puerto Rico','United States')), 
-                                          plot_pooled = TRUE, subgroup = 'population_country', 
+# Country meta-analysis 
+CZS_rate <- CZS_rate %>%
+  mutate(label_group = case_when(
+    is.na(population_location) | population_location == '' ~ population_country,
+    is.na(population_country) | population_country=='' ~ population_location,
+    (!is.na(population_location) & population_country == 'Unspecified') | 
+      ((population_country == 'Brazil' | population_country == "Colombia" | population_country == 'French Polynesia')) ~ population_location,
+    (population_location != "" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,'\n' ,' (',population_country,')'),
+    TRUE ~ NA),
+    label_group = case_when(
+      label_group == 'continental United States and Hawaii\n (United States)' ~ 'United States',
+      label_group == 'Singapore\n (Singapore)' ~ 'Singapore',
+      # label_group == 'Brazil' ~ "Brazil (national)",
+      TRUE ~ label_group),
+    label = paste0(population_location, "; ", refs))
+metaanalysis_CZS_brazil <- metaprop_wrap(dataframe = CZS_rate %>% 
+                                            filter(qa_score >= 0.5 & population_country %in%c('Brazil')),#paste0(refs, ": ", population_location)), 
+                                          plot_pooled = TRUE, subgroup = 'population_sample_type', 
                                           sort_by_subg = TRUE, xlabel = "CZS risk given Zika-infected mother",
                                           plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                          width = 8200, height =19000, resolution = 1000)
-CZS_meta_country <- metaanalysis_CZS_country$plot
-ggsave(filename = "CZS_metaanalysis_country.png", plot = CZS_meta_country, width = 9, height = 19)
-ggsave(filename = "CZS_metaanalysis_country.pdf", plot = CZS_meta_country, width = 9, height = 19)
+                                          width = 5000, height =5200, resolution = 600)
+CZS_meta_brazil <- metaanalysis_CZS_brazil$plot
+metaanalysis_CZS_colombia <- metaprop_wrap(dataframe = CZS_rate %>% 
+                                           filter(qa_score >= 0.5 & population_country %in%c('Colombia')), 
+                                         plot_pooled = TRUE, subgroup = 'population_sample_type', 
+                                         sort_by_subg = TRUE, xlabel = "CZS risk given Zika-infected mother",
+                                         plot_study = TRUE, digits = 4, colour = "dodgerblue3",
+                                         width = 5000, height =2700, resolution = 600)
+CZS_meta_colombia <- metaanalysis_CZS_colombia$plot
+metaanalysis_CZS_france <- metaprop_wrap(dataframe = CZS_rate %>% 
+                                           filter(qa_score >= 0.5 & population_country %in%c('France')), 
+                                         studylabels = 'label',
+                                         plot_pooled = TRUE, subgroup = 'population_sample_type', 
+                                         sort_by_subg = TRUE, xlabel = "CZS risk given Zika-infected mother",
+                                         plot_study = TRUE, digits = 4, colour = "dodgerblue3",
+                                         width = 6000, height =2600, resolution = 600)
+CZS_meta_france <- metaanalysis_CZS_france$plot
+ggsave(filename = "CZS_metaanalysis_brazil.pdf", plot = CZS_meta_brazil, width = 5, height = 5.5)
+ggsave(filename = "CZS_metaanalysis_colombia.pdf", plot = CZS_meta_colombia, width = 5, height = 2.7)
+ggsave(filename = "CZS_metaanalysis_france.pdf", plot = CZS_meta_france, width = 6, height = 2.6)
 
 
 metaanalysis_CZS_sampletype <- metaprop_wrap(dataframe = CZS_rate %>% filter(qa_score >= 0.5 & !is.na(population_sample_type)), 
