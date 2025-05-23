@@ -36,3 +36,7 @@ orderly_run("nipah_compilation",list(pathogen="NIPAH"))
 
 # *-------------------------------- Clean data --------------------------------*
 orderly_run("nipah_cleaning",list(pathogen="NIPAH", debug_mode=TRUE))
+
+# *------------------------------- Latex tables -------------------------------*
+# Add cleaning mode
+orderly_run("nipah_latex_tables",list(pathogen="NIPAH"))
