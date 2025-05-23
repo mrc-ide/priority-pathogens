@@ -5,8 +5,8 @@ library(stringr)
 
 orderly_parameters(pathogen = NULL)
 
-pathogen <- tolower(pathogen)
-pathogen_config_filename <- paste0(pathogen, "_cleaning_config.R")
+pathogen_config_case <- tolower(pathogen)
+pathogen_config_filename <- paste0(pathogen_config_case, "_cleaning_config.R")
 orderly_resource(c("cleaning.R",
                    pathogen_config_filename)
 )
