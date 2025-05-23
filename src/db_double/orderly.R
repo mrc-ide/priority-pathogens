@@ -148,6 +148,7 @@ if (pathogen != 'LASSA') {
   qa_discordant <- qa_discordant %>% select(-ID)
   param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
   model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
+  outbreak_discordant <- outbreak_discordant |> select(-c(ID, Outbreak_data_ID))
   }
 
 # Create files
