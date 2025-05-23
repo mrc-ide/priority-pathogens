@@ -296,7 +296,7 @@ final_tables <- Map(
 cli_h1("Checking (pk/fk) correspondence between extraction table & info table ids")
 final_tables <- lapply(names(final_tables),
                        function (name) check_info_ids(final_tables[[name]],
-                                                      article_df,
+                                                      article_table,
                                                       "id",
                                                       extract_uuid_cols[[name]],
                                                       "covidence_id",
