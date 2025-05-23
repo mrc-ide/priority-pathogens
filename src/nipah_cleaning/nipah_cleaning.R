@@ -3,7 +3,7 @@ library(orderly2)
 library(readr)
 library(stringr)
 
-orderly_parameters(pathogen = NULL)
+orderly_parameters(pathogen = NULL, debug_mode=FALSE)
 
 pathogen_config_case <- tolower(pathogen)
 pathogen_config_filename <- paste0(pathogen_config_case, "_cleaning_config.R")
@@ -48,9 +48,13 @@ if (article_table_name %in% tables){
   article_df$article_label <-  paste(article_df$first_author_surname,
                                      article_df$year_publication)
 
-  article_filter_cols <- c("article_id", "name_data_entry")
-  article_df <- filter_cols(article_df,
-                            article_filter_cols)
+  if(debug_mode!=TRUE){
+    article_filter_cols <- c("article_id", "name_data_entry")
+    article_df <- filter_cols(article_df, article_filter_cols)
+  }else{
+    article_filter_cols <- c("")
+  }
+
 
   base_relocate_cols <- c("id", "covidence_id", "pathogen")
   order_col <- "covidence_id"

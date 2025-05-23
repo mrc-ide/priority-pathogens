@@ -35,4 +35,4 @@ orderly_run("db_double",list(pathogen="NIPAH"))
 orderly_run("nipah_compilation",list(pathogen="NIPAH"))
 
 # *-------------------------------- Clean data --------------------------------*
-orderly_run("nipah_cleaning",list(pathogen="NIPAH"))
+orderly_run("nipah_cleaning",list(pathogen="NIPAH", debug_mode=TRUE))
