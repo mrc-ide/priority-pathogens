@@ -480,8 +480,8 @@ for (i in 1:length(param_identifier)) {
                                      parameters[[unc_type]],
                                      NA)
 
-  parameters[[value_type_col]] <- str_replace_all(parameters[[value_type_col]],
-                                                  unc_replacements)
+  parameters[[unc_type]] <- str_replace_all(parameters[[unc_type]],
+                                            unc_replacements)
 }
 
 # Dates
