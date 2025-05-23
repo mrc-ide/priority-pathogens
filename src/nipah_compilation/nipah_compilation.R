@@ -117,7 +117,9 @@ check_info_ids <- function(extraction_table,
 fix_missing_ids <- function(extraction_table,
                             id_col,
                             cov_id,
-                            extraction_table_name){
+                            extraction_table_name,
+                            seed){
+  set.seed(seed)
   missing_ids <- is.na(extraction_table[id_col])
   num_ids_missing <-  sum(missing_ids)
 
@@ -305,6 +307,7 @@ final_tables <- lapply(names(final_tables),
                        )
 
 final_tables <- setNames(final_tables, extraction_tables)
+seeds <- setNames(1:3, sort(extraction_tables))
 
 cli_h1("Checking extraction table data ids")
 final_tables <- lapply(
@@ -312,7 +315,8 @@ final_tables <- lapply(
   function (name) fix_missing_ids(final_tables[[name]],
                                   extract_uuid_cols[[name]],
                                   "covidence_id",
-                                  name)
+                                  name,
+                                  seeds[[name]])
   )
 
 final_tables <- setNames(final_tables, extraction_tables)
