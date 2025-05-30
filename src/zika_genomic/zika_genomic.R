@@ -41,7 +41,7 @@ jitterer <- position_jitter(seed = 123, width = 5)
 
 p1 <- ggplot(genomic %>% filter(qa_score >= 0.5)) +
   geom_segment(aes(y = parameter_lower_bound, yend = parameter_upper_bound,
-                   x = sampling_interval, yend = sampling_interval),
+                   x = sampling_interval),#, yend = sampling_interval),
                position = jitterer,
                linewidth = 3, alpha = 0.65, color = 'lightblue') +
   geom_errorbar(aes(ymin=parameter_uncertainty_lower_value, ymax=parameter_uncertainty_upper_value,
