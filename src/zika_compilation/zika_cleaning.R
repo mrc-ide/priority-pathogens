@@ -953,7 +953,9 @@ zika_clean_params <- function(df, pathogen){
     filter(!(covidence_id == 7437 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
                                                        "Severity - proportion of symptomatic cases"))) %>% #cov id 7437 does not  have cfr or symptomatic cases 
     mutate(
-  
+      population_group = ifelse(covidence_id == 6798 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
+                                                                            "Severity - proportion of symptomatic cases"),
+                               "Persons under investigation", population_group),
       parameter_unit = ifelse(covidence_id == 12128 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
                                                                             "Severity - proportion of symptomatic cases"), "Percentage (%)", parameter_unit),
       parameter_value_type = ifelse(covidence_id == 12128 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
