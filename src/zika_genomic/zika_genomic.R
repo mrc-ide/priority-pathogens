@@ -39,7 +39,7 @@ genomic <- genomic %>%
 # make plot for only sub/site/year
 jitterer <- position_jitter(seed = 123, width = 5)
 
-ggplot(genomic %>% filter(qa_score >= 0.5)) +
+p1 <- ggplot(genomic %>% filter(qa_score >= 0.5)) +
   geom_segment(aes(y = parameter_lower_bound, yend = parameter_upper_bound,
                    x = sampling_interval, yend = sampling_interval),
                position = jitterer,
@@ -60,7 +60,7 @@ ggplot(genomic %>% filter(qa_score >= 0.5)) +
        color = '',
        shape = '')
 
-ggsave('zika_genomic.png', height = 4, width = 12)
+ggsave(filename = 'zika_genomic.png', plot = p1, height = 4, width = 12)
 
 
 
@@ -104,7 +104,7 @@ mutationplot <- ggplot(genomic %>% filter(parameter_type == 'Mutation Rate\n(mut
        y = 'Mutations/site/generation',
        color = '',
        shape = '')
-ggsave('zika_genomic_mut_rate.png', height = 4, width = 4)
+ggsave(filename ='zika_genomic_mut_rate.png', plot = mutationplot, height = 4, width = 4)
 
 # Combine the one without mutation rate and the one with to get all estimates but with mutation rates labeled by genome site
 layout <- "AAAABB"
@@ -112,11 +112,11 @@ zika_genomic_noqa <- noqa_nomut + mutationplot +
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
 ggsave('zika_genomic_noqa.png', zika_genomic_noqa, height = 4, width = 12)
 
-length(unique(genomic$covidence_id))
-nrow(genomic)
-length(unique(genomic[genomic$qa_score >= 0.5,]$covidence_id))
-nrow(genomic[genomic$qa_score >= 0.5,])
-
-table(genomic$parameter_type)
-table(genomic[genomic$qa_score >= 0.5,]$parameter_type)
-table(genomic$population_country)
+# length(unique(genomic$covidence_id))
+# nrow(genomic)
+# length(unique(genomic[genomic$qa_score >= 0.5,]$covidence_id))
+# nrow(genomic[genomic$qa_score >= 0.5,])
+# 
+# table(genomic$parameter_type)
+# table(genomic[genomic$qa_score >= 0.5,]$parameter_type)
+# table(genomic$population_country)

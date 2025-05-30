@@ -94,7 +94,7 @@ repsum <-repronums %>%
   arrange(parameter_type, parameter_value)  %>%
   group_by(parameter_type) %>%
   # filter(parameter_value == max(parameter_value, na.rm = TRUE) | parameter_value == min(parameter_value, na.rm = TRUE)) %>%
-  select(central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label) 
+  select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label) 
 
 r0 <- repronums %>%
   filter(parameter_type == 'Reproduction number (Basic R0)') %>%
@@ -103,15 +103,36 @@ r0 <- repronums %>%
 tabyl(r0$between)
 tabyl(r0$below1)
 
+r0 %>% 
+  group_by(population_country) %>%
+  summarize(n = n(), 
+            min = min(parameter_value, na.rm = TRUE),
+            max = max(parameter_value, na.rm = TRUE)) %>% View()
+
+r0hh <- repronums %>%
+  filter(parameter_type == 'Reproduction number (Basic R0) - Human') %>%
+  select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, qa_score, population_age_max:population_sex, survey_start_date, survey_end_date, article_label)  %>%
+  mutate(between = ifelse(central2 > 1 & central2 < 4, 1, 0),
+         below1 = ifelse(central2 < 1, 1, 0))
+tabyl(r0hh$between)
+tabyl(r0hh$below1)
+
 re <- repronums %>%
   filter(parameter_type == 'Reproduction number (Effective, Re)') %>%
-  select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label)  %>%
+  select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, qa_score, population_age_max:population_sex, survey_start_date, survey_end_date, article_label)  %>%
   mutate(between = ifelse(central2 > 1 & central2 < 4, 1, 0),
          below1 = ifelse(central2 < 1, 1, 0)) 
 tabyl(re$between)
 tabyl(re$below1)
 table(re$population_country)
 length(unique(re$covidence_id))
+
+re %>% 
+  group_by(population_country) %>%
+  summarize(n = n(), 
+            min = min(parameter_value, na.rm = TRUE),
+            max = max(parameter_value, na.rm = TRUE)) %>% View()
+
 # repro <- repronums %>%
 #   group_by(parameter_type) %>%
 table(repronums$population_group)

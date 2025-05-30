@@ -12,6 +12,7 @@ orderly_parameters(pathogen = NULL)
 orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen &&
                    parameter:plotting == TRUE)",
                    c("articles_curated.rds", "outbreaks_curated.rds", "models_curated.rds", "parameters_curated.rds"))
+
 text_size = 14
 ##################
 ## DATA CURATION ##
@@ -125,10 +126,10 @@ models <- models %>% mutate(stoch_deter = replace_na(stoch_deter,'Unspecified'),
                                 TRUE ~ model_type),
          compartmental_type = case_when(compartmental_type %in% c("Other compartmental;SEIR", "SIR;SIS","SEIR;SIR","SAIR-SEI",
                                                                   "SIRS-SI","SLIR-SLI","SEIR-SI", "SEI-SI"
-                                                                  ) ~ 'Other compartmental',
-                                        compartmental_type %in% c("Not compartmental;SEIR-SEI", "Other compartmental;SEIR-SEI") ~ "SEIR-SEI",
-                                        compartmental_type == 'Other compartmental;SIR' ~ "SIR",
-                                        TRUE ~ compartmental_type),
+         ) ~ 'Other compartmental',
+         compartmental_type %in% c("Not compartmental;SEIR-SEI", "Other compartmental;SEIR-SEI") ~ "SEIR-SEI",
+         compartmental_type == 'Other compartmental;SIR' ~ "SIR",
+         TRUE ~ compartmental_type),
          assumptions = ifelse(grepl(";", assumptions), "Several assumptions", assumptions))
 
 p1 <- ggplot() + 
@@ -146,12 +147,12 @@ p1 <- ggplot() +
 p2 <- ggplot() + 
   geom_bar(data = models %>%
              mutate(transmission_route = factor(transmission_route, levels = c("Human to human (direct contact)", 
-                                                          "Human to human (direct contact);Sexual;Vector/Animal to human",
-                                                          "Human to human (direct contact);Vector/Animal to human",
-                                                          "Sexual;Vector/Animal to human",
-                                                          "Unspecified;Vector/Animal to human",
-                                                          "Sexual", "Vector/Animal to human",
-                                                          "Unspecified"))) %>%
+                                                                               "Human to human (direct contact);Sexual;Vector/Animal to human",
+                                                                               "Human to human (direct contact);Vector/Animal to human",
+                                                                               "Sexual;Vector/Animal to human",
+                                                                               "Unspecified;Vector/Animal to human",
+                                                                               "Sexual", "Vector/Animal to human",
+                                                                               "Unspecified"))) %>%
              mutate(transmission_route = fct_infreq(transmission_route)),
            aes(x = transmission_route, fill = model_type), color = "black") + 
   scale_x_discrete(labels = c("Human to human (direct contact)" = "Human to human",
@@ -172,13 +173,13 @@ p2 <- ggplot() +
 p3 <- ggplot() + 
   geom_bar(data = models %>%
              mutate(assumptions = factor(assumptions, levels = c("Homogeneous mixing",
-                                                                "Heterogenity in transmission rates - over time",
-                                                                "Heterogenity in transmission rates - between human groups",
-                                                                "Heterogenity in transmission rates - between human and vector",
-                                                                "Latent period is same as incubation period",
-                                                                "Cross-immunity between Zika and dengue",
-                                                                "Age dependent susceptibility","Several assumptions",
-                                                                'Other', 'Unspecified'))) %>%
+                                                                 "Heterogenity in transmission rates - over time",
+                                                                 "Heterogenity in transmission rates - between human groups",
+                                                                 "Heterogenity in transmission rates - between human and vector",
+                                                                 "Latent period is same as incubation period",
+                                                                 "Cross-immunity between Zika and dengue",
+                                                                 "Age dependent susceptibility","Several assumptions",
+                                                                 'Other', 'Unspecified'))) %>%
              mutate(assumptions = fct_infreq(assumptions)),
            aes(x = assumptions,
                fill = model_type), color = "black") +
@@ -204,11 +205,11 @@ p3 <- ggplot() +
 p4 <- ggplot() + 
   geom_bar(data = models %>%
              mutate(compartmental_type = factor(compartmental_type, levels = c( "SEIR-SEI","Other SEIR-SEI",
-                                                           "SIR","SIR-SI",
-                                                           "SEIR","SI-SI","SIR-SEI",
-                                                           "Other compartmental",
-                                                           "Not compartmental",
-                                                           "Unspecified"))) %>%
+                                                                                "SIR","SIR-SI",
+                                                                                "SEIR","SI-SI","SIR-SEI",
+                                                                                "Other compartmental",
+                                                                                "Not compartmental",
+                                                                                "Unspecified"))) %>%
              mutate(compartmental_type = fct_infreq(compartmental_type)),  # Reorder by frequency (descending), 
            aes(x = compartmental_type, fill = model_type), color = "black") + 
   # scale_x_discrete(labels = c("Other compartmental" = "Other\ncompart-\nmental",
@@ -236,12 +237,12 @@ p5 <- ggplot() +
 p6 <- ggplot() + 
   geom_bar(data = models %>% separate_rows(interventions_type, sep = ";") %>%
              mutate(interventions_type = factor(interventions_type, levels = c("Vector/Animal control","Behaviour changes","Quarantine",
-                                                          "Indoor residual spraying", "Pesticides/larvicides", 
-                                                          "Insecticide-treated nets","Wolbachia replacement",
-                                                          "Wolbachia suppression","Genetically modified mosquitoes",
-                                                          "Mechanical removal of breeding sites ",
-                                                          "Contact tracing","Treatment","Hospitals",
-                                                          "Vaccination","Other", "None"))) %>%
+                                                                               "Indoor residual spraying", "Pesticides/larvicides", 
+                                                                               "Insecticide-treated nets","Wolbachia replacement",
+                                                                               "Wolbachia suppression","Genetically modified mosquitoes",
+                                                                               "Mechanical removal of breeding sites ",
+                                                                               "Contact tracing","Treatment","Hospitals",
+                                                                               "Vaccination","Other", "None"))) %>%
              mutate(interventions_type = fct_infreq(interventions_type)),  # Reorder by frequency (descending), 
            aes(x = interventions_type, fill = model_type), color = "black") +
   # scale_x_discrete(labels = c("Behaviour changes" = "Behaviour\nChanges",
@@ -305,9 +306,9 @@ parameters <- parameters %>% mutate(parameter_class = case_when(
     parameter_type == "Relative contribution - human to human" ~ "Relative Transmission Contribution",  
     parameter_type == "Relative contribution - vector to human" ~ "Relative Transmission Contribution",  
     parameter_type %in% c("Reproduction number (Basic R0)", "Reproduction number (Basic R0) - Human", "Reproduction number (Basic R0) - Mosquito"
-                          ) ~ "Basic (R0)",  
+    ) ~ "Basic (R0)",  
     parameter_type %in% c("Reproduction number (Effective, Re)", "Reproduction number (Effective; Re) - Mosquito", "Reproduction number (Effective; Re) - Human"
-                          )  ~ "Effective (Re)",  
+    )  ~ "Effective (Re)",  
     grepl("Mosquito delay", parameter_type) ~ "EIP", 
     parameter_type == "Risk factors" ~ "Risk Factors",  
     parameter_type == "Seroprevalence - IgG" ~ "IgG", 
@@ -337,7 +338,7 @@ parameters <- parameters %>% mutate(parameter_class = case_when(
     is.na(population_sample_type) ~ "Unspecified",
     TRUE ~ str_replace_all(population_sample_type, " based", "-Based"))) %>%
   mutate(parameter_type = factor(parameter_type, levels = unique(parameter_type[order(parameter_class,parameter_type)]))) %>%
- mutate(population_country_original = str_replace_all(population_country_original, ";", ", ")) 
+  mutate(population_country_original = str_replace_all(population_country_original, ";", ", ")) 
 
 p1 <- ggplot() + 
   geom_bar(data = parameters,
@@ -440,19 +441,13 @@ AAACC
 AAADD"
 p2 <- p2a / p2b + plot_layout(heights = c(0.1, 6.5))
 patchwork <- (p2 | (p1 / p3 / p4)) + plot_layout(#heights = c(1,1,1), 
-                                       guides = 'collect') + plot_annotation(tag_levels = 'A') &
+  guides = 'collect') + plot_annotation(tag_levels = 'A') &
   theme(legend.position='bottom')
 # patchwork <- p2 + p1 + p3 + p4 + plot_layout(design = layout, 
 #                                              # ncol = 1, 
 #                                              # heights = c(2,4,0.5,0.7), 
 #                                              guides = "collect") + plot_annotation(tag_levels = 'A') &
-  # theme(legend.position='bottom')
+# theme(legend.position='bottom')
 dev.set(dev.next())
 ggsave("parameters_summary.png", plot = patchwork, width = 16, height = 16)
 
-
-
-#########################
-######  OUTBREAKS  ######
-#########################
-# plot of n outbreaks per year, n outbreaks per country, # cases per country

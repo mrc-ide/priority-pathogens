@@ -109,6 +109,13 @@ orderly_run('zika_genomic', parameters = list(pathogen = 'ZIKA'))
  
 # Miscarriage/microcephaly 
 orderly_run('zika_zcs_microcephaly', parameters = list(pathogen = 'ZIKA'))
+
+# Other pars: H-to_H contribution to transmission rate, CFR, prop of sympt, overdisp, growth rate 
+orderly_run('zika_other_pars', parameters = list(pathogen = 'ZIKA'))
+
+#Seroprevalence plots and maps
+orderly_run('zika_serop', parameters = list(pathogen = 'ZIKA'))
+
 # # Summary figures
 # orderly_run("sars_summary", parameters = list(pathogen = "SARS"))
 # 

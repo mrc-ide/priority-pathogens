@@ -80,7 +80,7 @@ delaysum <- delays %>%
   filter(row_max == max(row_max, na.rm = TRUE) | row_min == min(row_min, na.rm = TRUE)) %>%
   # filter(central == max(central, na.rm = TRUE) | central == min(central, na.rm = TRUE)) %>%
   filter(n >1) %>%
-  select(central, row_max, row_min,parameter_lower_bound,parameter_upper_bound, parameter_type:case_definition, method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, 
+  select(covidence_id, central, row_max, row_min,parameter_lower_bound,parameter_upper_bound, parameter_type:case_definition, method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, 
          survey_start_date, survey_end_date, article_label) 
 
 
