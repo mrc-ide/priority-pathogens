@@ -545,9 +545,10 @@ parameters <- parameters |>
 # Check what should still be added
 # TODO: variability
 trns_params <- parameters |>
-  filter(grepl("Attack|Relative contribution|Growth rate|Reproduction|Mutations|
-               Overdispersion|proportion of symptomatic cases",
-               parameter_type, ignore.case = TRUE)) |>
+  filter(
+  grepl(paste0("Attack|Relative contribution|Growth rate|Reproduction|",
+               "Mutations|Overdispersion|proportion of symptomatic cases"),
+        parameter_type, ignore.case = TRUE)) |>
   select(parameter_type, parameter_value, unc_type,
          parameter_2_value, unc_var_type,
          method_disaggregated_by,
