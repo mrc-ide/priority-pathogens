@@ -563,7 +563,8 @@ zika_clean_params <- function(df, pathogen){
         " "
       ),
       population_location = case_when(
-        population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA,
+        population_country == 'New Caledonia' ~ 'New Caledonia',
+        # population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA,
         covidence_id == 6211 ~ "Singapore",
         population_location %in% 
           c("Salvador; Bahia", "Salvador city in Bahia","Salvador") ~ "Salvador, Bahia",
@@ -571,7 +572,10 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Saint-Martin" ~ "Saint Martin",
         population_location %in% c("Rio de Janeiro (city)", "Rio de Janeiro", "Rio de janeiro", "Rio  de Janeiro") ~
           "Rio de Janeiro",
-        population_location %in% c("Puerto Rico: Ponce, San Juan, Guayama") ~ "Ponce, San Juan, Guayama",
+        population_location == 'Ponce' ~ 'Ponce, Puerto Rico',
+        population_location %in% c("Ponce, San Juan, Guayama") ~ "Puerto Rico: Ponce, San Juan, Guayama",
+        population_location == 'San Juan metropolitan area' ~ "San Juan, Puerto Rico",
+        population_country == 'Puerto Rico' ~ "Puerto Rico",
         population_location %in% "3 states in Nigeria\r\nNigeria; Abia State in Southern Nigeria; and Kaduna\r\nState in Northern Nigeria" ~
           "Nasarawa state, Abia state, Kaduna state",
         population_location %in% c("Sao Paolo State", "São Paulo State") ~ "São Paulo state",
@@ -581,7 +585,8 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Paraiba" ~ "Paraíba",
         population_location %in% c("Northeastern Brazil", "North-East Brazil") ~ "Northeast Brazil",
         population_location %in% "Maranhao" ~ "Maranhao state",
-        population_location %in% c("Ile Sous", "Iles Sous-le-vent") ~ "Sous-le-vent Islands",
+        population_location %in% c("Ile Sous", "Sous-le-vent","Iles Sous-le-vent") ~ "Sous-le-vent Islands, French Polynesia",
+        (population_country == 'French Polynesia') ~ ifelse(!is.na(population_location) & population_location !='French Polynesia', paste0(population_location, ", French Polynesia"), 'French Polynesia'), # add French polynesia to location
         population_location %in% "Hospital\r\nHospital da Restauração; Recife; Pernambuco;" ~
           "Hospital da Restauração, Recife, Pernambuco",
         population_location %in% "Hospital Universitari Vall d’Hebron\r\nBarcelona; Catalonia" ~
@@ -643,10 +648,15 @@ zika_clean_params <- function(df, pathogen){
       ),
       population_country =
         case_when(
+          grepl("Puerto Rico", population_location) ~ 'United States',
           # If Yap, should be Micronesia not French Polynesia 
           population_location == 'Yap Island' ~ "Federated States of Micronesia",
+          # Add France as country for French Polynsia and French Guinea and New Caledonia
+          grepl("French Polynesia", population_location) | population_location == 'Sous-le-vent Islands' ~ "France",
+          population_location == 'French Guiana' ~ "France",
+          population_location == 'New Caledonia' ~ "France",
           #Specify country in locations defined as "Unspecified"
-          covidence_id == 10741 & population_location == 'Ponce' ~ 'Puerto Rico',
+          covidence_id == 10741 & population_location == 'Ponce' ~ 'United States',
           covidence_id == 4438 & population_location == 'Florida' ~ "United States",
           covidence_id == 5971 & population_location == "22 municipalities of French Guiana" ~ "France" , 
           covidence_id == 5951 & population_location ==  "Recife" ~ "Brazil", 
@@ -657,7 +667,7 @@ zika_clean_params <- function(df, pathogen){
           covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso" ~ "Burkina Faso", 
           covidence_id == 6197 & population_location ==  "Ouagadougou, Bobo-Dioulasso" ~ "Burkina Faso", 
           covidence_id == 6681 ~ "Cabo Verde",
-          covidence_id == 873 & population_location == "Ponce, San Juan, Guayama" ~ 'Puerto Rico',
+          covidence_id == 873 & population_location == "Ponce, San Juan, Guayama" ~ 'United States',
           population_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France',
           # Specify countries in locations for genomic data (then will change to be multi-country...)
           covidence_id == 3152 & parameter_class == 'Mutations' ~ "Brazil, Polynesia, Caribbean, Central America, South America",
@@ -772,10 +782,10 @@ zika_clean_params <- function(df, pathogen){
           population_location %in% c(
             'French Guiana', '22 municipalities of French Guiana', "Centre Hospitalier de l’Ouest Guyanais (CHOG, Saint-Laurent-du-Maroni, in French Guiana)",
             "western French Guiana"
-          ) ~ 'France (French Guiana)',
-          population_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France (Martinique, Guadeloupe, French Guiana)',
-          population_location == "Guadeloupe; Martinique" ~ "France (Guadeloupe; Martinique)",
-          population_location == 'Guadeloupe, Martinique, Saint-Martin' ~ "France (Guadeloupe, Martinique, Saint-Martin)",
+          ) ~ 'France',# (French Guiana)',
+          population_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France',# (Martinique, Guadeloupe, French Guiana)',
+          population_location == "Guadeloupe; Martinique" ~ "France",# (Guadeloupe; Martinique)",
+          population_location == 'Guadeloupe, Martinique, Saint-Martin' ~ "France",# (Guadeloupe, Martinique, Saint-Martin)",
           is.na(population_country) ~ "Unspecified",
           TRUE ~ population_country
         ),

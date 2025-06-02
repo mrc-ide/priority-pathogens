@@ -17,41 +17,50 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                                                destination = "continent"),
            continent = case_when(
              grepl(population_country, 'Multi') ~ "Multi-country",
-             population_country == 'France (French Guiana)' ~ "Europe",
-             population_country == "France (Martinique, Guadeloupe, French Guiana)" ~ "Europe",
+             population_country == 'France (French Guiana)' ~ "Americas",
+             population_location %in% c('Martinique','Guadeloupe','Saint Martin') ~ "Americas",
+             population_country == "France (Martinique, Guadeloupe, French Guiana)" ~ "Americas",
              population_country == "Multi-country: France and Netherlands" ~ "Europe",
              population_country == "Micronesia" ~ "Oceania",
              population_country == 'Multi-country: Brazil and Colombia'  ~ "Americas",
              population_country == "Multi-country: Brazil, Colombia, El Salvador" ~ "Americas",
              population_country == "Multi-country: Americas (n = 32)" ~ "Americas",
              population_country == "Singapore" | population_location == 'Singapore' ~ "Asia",
-             population_country == 'Brazil' ~ "Brazil",
-             population_country == 'French Polynesia' ~ "French Polynesia",
-             population_country == 'Colombia' ~ "Colombia",
+             population_country == 'Brazil' & population_location != 'Brazil' ~ "Brazil (Americas)",
+             # population_country == 'French Polynesia' & population_location != 'French Polynesia' ~ "French Polynesia (Oceania)",
+             population_country == 'France' & grepl('French Polynesia', population_location) & population_location != 'French Polynesia' ~ "French Polynesia, France (Oceania)",
+             population_location == 'French Polynesia' ~ "Oceania",
+             population_location == 'Sous-le-vent Islands' ~ "French Polynesia, France (Oceania)",
+             population_country == 'Colombia' & population_location != "Colombia" ~ "Colombia (Americas)",
+             population_country == 'France' & population_location == 'New Caledonia' ~ "Oceania",
+             population_country == 'France' & population_location == 'French Guiana' ~ "Americas",
              population_country == 'Unspecified' ~ "Unspecified",
              TRUE ~ continent
              ),
-           continent = factor(continent, levels = c('Brazil','French Polynesia','Colombia', 'Americas','Asia','Europe','Oceania','Africa',"Unspecified")),
+           continent = factor(continent, levels = c('Brazil (Americas)','French Polynesia, France (Oceania)','Colombia (Americas)', 'Americas','Asia','Europe','Oceania','Africa',"Unspecified")),
            population_country = str_replace(population_country, 'Multi-country: ', ""),
            label_group = case_when(
              is.na(population_location) | population_location == '' ~ population_country,
              is.na(population_country) | population_country=='' ~ population_location,
              (!is.na(population_location) & population_country == 'Unspecified') | 
-               ((population_country == 'Brazil' | population_country == "Colombia" | population_country == 'French Polynesia') & 
+               ((population_country == 'Brazil' | population_country == "Colombia" | continent == 'French Polynesia, France (Oceania)') & 
                   (facet_by_country == TRUE | facet_by_continent == TRUE)) ~ population_location,
-             (population_location != "" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,'\n' ,' (',population_country,')'),
+             (population_location != "" & !is.na(population_location)) & 
+               (population_country != 'Unspecified') ~ paste0(population_location,'\n' ,' (',population_country,')'),
              TRUE ~ NA),
            label_group = case_when(
              label_group == 'continental United States and Hawaii\n (United States)' ~ 'United States',
              label_group == 'Singapore\n (Singapore)' ~ 'Singapore',
              # label_group == 'Brazil' ~ "Brazil (national)",
-             TRUE ~ label_group)) %>%
+             TRUE ~ label_group),
+           label_group = str_replace(label_group, ", French Polynesia$", "")
+           ) %>%
     arrange(desc(parameter_value)) %>% 
     mutate(label_group = factor(label_group, levels = unique(label_group)),
            urefs = factor(urefs, levels = unique(urefs)))
   cats <- length(unique(df[[color_column]]))
   
-  jitterer <- position_jitter(seed = 123, width = 0.03)
+  jitterer <- position_jitter(seed = 123, width = 0.025)
   
   df <- df %>%
       group_by(.data[[ycol]]) %>%
@@ -75,7 +84,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                       color = .data[[color_column]], group = .data[[ycol]],
                       y = .data[[ycol]]),
                   position = jitterer,
-                  width = 0.2, lwd=0.5,  alpha = 1) +#color = "black",
+                  width = 0.2, lwd=0.6,  alpha = 1) +#color = "black",
     geom_point(data = df %>% filter(n > 1) %>% arrange(sortby) %>%
                  mutate(label_group = factor(label_group, levels=unique(label_group)),
                         urefs = factor(urefs, levels = unique(urefs))),
@@ -98,7 +107,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                   aes(x = central, xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       color = .data[[color_column]], group = .data[[ycol]],
                       y = .data[[ycol]]),
-                  width = 0.2, lwd=0.7,  alpha = 1) +#color = "black",
+                  width = 0.2, lwd=0.6,  alpha = 1) +#color = "black",
     geom_point(data = df %>% filter(n == 1) %>% arrange(sortby) %>%
                  mutate(label_group = factor(label_group, levels=unique(label_group)),
                         urefs = factor(urefs, levels = unique(urefs))),
@@ -144,7 +153,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
     gg <- gg + 
       scale_shape_manual(name = 'Sample type',
                          values = c("Hospital based" = 21, "Mixed settings" = 22, "Population based" = 25,
-                                    "Travel based" = 23, "Community based" = 8, 'Unspecified' = 4,
+                                    "Travel based" = 23, "Community based" = 7, 'Unspecified' = 4,
                                     "Other" = 24),
                          breaks = c("Hospital based", "Mixed settings", "Population based",
                                     "Travel based","Community based", "Other", 'Unspecified'), 
@@ -153,7 +162,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
     gg <- gg + 
       scale_shape_manual(name = 'Sample group',
                          values = c("General population" = 21, "Persons under investigation" = 22, "Blood donors" = 25,
-                                    "Mixed groups" = 13, 'Pregnant women' = 3, 'Children' = 8,'Household contacts of survivors'=4,
+                                    "Mixed groups" = 13, 'Pregnant women' = 7, 'Children' = 8,'Household contacts of survivors'=4,
                                     "Other" = 23, 'Unspecified' = 24),
                          breaks = c("General population", "Persons under investigation", "Blood donors",
                                     "Mixed groups", 'Pregnant women', 'Children', 'Household contacts of survivors',
@@ -213,7 +222,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   }
   
   gg <- gg +
-    scale_x_continuous(limits = lims, expand = c(0.05, 0)) +
+    scale_x_continuous(limits = lims, expand = c(0.0, 0)) +
     labs(x = label, y = NULL) +
     theme_minimal() + 
     theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),

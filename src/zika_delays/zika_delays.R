@@ -238,7 +238,7 @@ incp2 <- forest_plot(d1 %>% filter(qa_score>=0.5) |> arrange(parameter_value,des
                     lims = c(0,18),
                     text_size = TEXT_SIZE, 
                     point_size = 4)+ 
-  theme(legend.position = 'inside', legend.position.inside =  c(.8, .6))
+  theme(legend.position = 'inside', legend.position.inside =  c(.8, .55))
 
 # incp1_noqa <- forest_plot(d1  |> arrange(parameter_value,desc(parameter_value)),
 #                      label = 'Incubation Period (days)',
@@ -280,7 +280,7 @@ lat_onset_serial_admission <- rbind(d2, d5, d4, d8) %>% mutate(parameter_unit = 
   parameter_type = factor(parameter_type, levels = c('Latent period','Serial interval','Symptom onset to admission', "Symptom onset to recovery"))) %>%
   mutate(population_location = case_when(
     population_location == 'Cases acquired in travellers in Americas or Caribbean' ~ "Travellers in Americas or Caribbean", 
-    population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA, 
+    population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA,
     TRUE~ population_location),
     population_country = case_when(
       population_location == "Travellers in Americas or Caribbean" ~ 'Unspecified',
@@ -369,7 +369,7 @@ eip_forest <- forest_plot(m1 %>% filter(qa_score>=0.5)|> arrange(population_samp
                           custom_colours = c( "#00468B","#ED0000", "#42B540","#0099B4", "#925E9F", "#FDAF91","#DF8F44",
                                               "#6A6599","#CD534C","#A20056","#1B1919"), 
                           point_size = 4)+ 
-  theme(legend.position = 'inside', legend.position.inside =  c(.1, .5))
+  theme(legend.position = 'inside', legend.position.inside =  c(.08, .5))
 eip_forest_noqa <- forest_plot(m1 |> arrange(population_sample_type,desc(parameter_value)),
                           label = 'Extrinsic incubation period (days)',
                           ycol = 'label_group',
@@ -380,7 +380,7 @@ eip_forest_noqa <- forest_plot(m1 |> arrange(population_sample_type,desc(paramet
                           custom_colours = c( "#00468B","#ED0000", "#42B540","#0099B4", "#925E9F", "#FDAF91","#DF8F44",
                                               "#6A6599","#CD534C","#A20056","#1B1919"), 
                           point_size = 4)+ 
-  theme(legend.position = 'inside', legend.position.inside =  c(.1, .5))
+  theme(legend.position = 'inside', legend.position.inside =  c(.08, .5))
 
 ggsave("extrinsic_incubation_period.png", plot = eip_forest, width = 16, height = 10, bg = 'white')
 
