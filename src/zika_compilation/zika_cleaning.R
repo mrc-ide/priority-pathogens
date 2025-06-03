@@ -403,6 +403,7 @@ zika_clean_params <- function(df, pathogen){
     mutate(parameter_type = case_when(
       parameter_type == "Seroprevalence - Unspecified" & covidence_id == 6072 ~ "Risk factors",
       parameter_type == "Zika congenital syndrome (microcephaly) risk" & covidence_id == 12202 ~ "Risk factors",
+      covidence_id == 1954 & parameter_type == 'Mutations - mutation rate' ~ "Mutations - substitution rate",
       TRUE ~ parameter_type
     )) %>%
     # Remove overdispersion 
@@ -494,8 +495,9 @@ zika_clean_params <- function(df, pathogen){
       
       # shorten a longer method_r name
       method_r =
-        ifelse(method_r %in% "Renewal equations / Branching process",
-               "Branching process", method_r
+        case_when(method_r %in% "Renewal equations / Branching process" ~ "Branching process",
+                  covidence_id == 3152 & parameter_type == 'Reproduction number (Basic R0)' ~ "Growth rate",
+                  TRUE ~ method_r
         ))
   
   # Context cleaning
@@ -1277,12 +1279,14 @@ zika_clean_genomics <- function(df){
         covidence_id == 5907 & parameter_class == 'Mutations' ~ 360,
         covidence_id == 6717 & parameter_class == 'Mutations' ~ 59,
         covidence_id == 10180 & parameter_class == 'Mutations' ~ 238,
+        covidence_id == 6511 & parameter_class == 'Mutations' ~ 269,
         TRUE ~ population_sample_size
       ),
       genomic_sequence_available = case_when(
         covidence_id %in% c(506, 1954, 4438, 5908, 6361, 6571, 7717, 12777) & parameter_class == 'Mutations' ~ TRUE, 
         TRUE ~ genomic_sequence_available
-      )
+      ),
+      cfr_ifr_denominator = ifelse(covidence_id == 1954 & parameter_class == 'Mutations', 10272, cfr_ifr_denominator) # adding in the number of bases so we can calc sub rate/site/year
     ) %>%
     # Remove empty row 
     filter(!(covidence_id == 4438 & parameter_type == "Mutations - mutation rate" & is.na(parameter_value))) %>%
@@ -1296,19 +1300,20 @@ zika_clean_genomics <- function(df){
     mutate(parameter_unit = ifelse(covidence_id == 1954 & parameter_unit == 'Substitutions/site/year', 
                                    "Mutations/year", parameter_unit),
            parameter_lower_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                          NA, parameter_lower_bound),
+                                          12, parameter_lower_bound),
            parameter_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                          NA, parameter_upper_bound),
+                                          25, parameter_upper_bound),
            parameter_uncertainty_lower_value = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                                      12, parameter_uncertainty_lower_value),
+                                                      NA, parameter_uncertainty_lower_value),
            parameter_uncertainty_upper_value = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                                      25, parameter_uncertainty_upper_value),
-           parameter_uncertainty_type = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                               "Range", parameter_uncertainty_type),
+                                                      NA, parameter_uncertainty_upper_value),
+           # parameter_uncertainty_type = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+           #                                     "Range", parameter_uncertainty_type),
            parameter_2_lower_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
                                             NA, parameter_2_lower_bound),
            parameter_2_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                            NA, parameter_2_upper_bound)
+                                            NA, parameter_2_upper_bound),
+           exponent = ifelse(covidence_id == 1954, 0, exponent)
     ) %>%
     # cov id 6717 had incorrect values for lower and upper uncertainty given the exponent -3
     mutate(parameter_uncertainty_lower_value = case_when(
@@ -1323,7 +1328,7 @@ zika_clean_genomics <- function(df){
     mutate(parameter_value = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", 1.55, parameter_value),
            parameter_uncertainty_lower_value = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", 1.06, parameter_uncertainty_lower_value),
            parameter_uncertainty_upper_value = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", 2.05, parameter_uncertainty_upper_value),
-           exponent = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", -3, exponent))
+           exponent = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", -3, exponent)) 
     # Correct incorrect way of entering exponents (because lower and upper intervals have diff exponents) NB 1663 has been excluded as wrong study type 
     # mutate(parameter_value = ifelse(covidence_id == 1663 & parameter_value == 1.15, 0.00115, parameter_value),
     #        exponent = ifelse(covidence_id == 1663 & exponent == -3, 0, exponent))
@@ -1371,6 +1376,7 @@ zika_clean_genomics <- function(df){
         covidence_id == 4438 & parameter_class == 'Mutations' & population_location != "Florida" ~ 2015,
         covidence_id == 6717 & parameter_class == 'Mutations' ~ 2015,
         covidence_id == 12777 & parameter_class == 'Mutations' ~ 1947,
+        covidence_id == 6511 & parameter_class == 'Mutations' ~ 2013,
         covidence_id == 946 ~ 2015,
         TRUE ~ population_study_start_year
       ),

@@ -22,10 +22,16 @@ genomic <- genomic %>%
     parameter_value_type == 'Other' ~'Unspecified',
     is.na(parameter_value_type) ~ 'Unspecified',
     TRUE ~ parameter_value_type)) %>%
-  filter(parameter_unit !='Mutations/year') %>%
+  # filter(parameter_unit !='Mutations/year') %>%
   mutate(parameter_type = stringr::str_to_title(stringr::str_replace(parameter_type, 'Mutations - ','')),
          parameter_type = ifelse(parameter_type == "Mutation Rate", "Mutation Rate\n(mutations/site/generation)", parameter_type),
-         parameter_type = factor(parameter_type, levels = c('Evolutionary Rate', "Substitution Rate", "Mutation Rate\n(mutations/site/generation)")))
+         parameter_type = factor(parameter_type, levels = c('Evolutionary Rate', "Substitution Rate", "Mutation Rate\n(mutations/site/generation)"))) %>%
+  # for 1954, we need to calculate the values from number of bases + update the parameter unit 
+  mutate(parameter_unit = ifelse(covidence_id == 1954, 'Substitutions/site/year', parameter_unit),
+         parameter_lower_bound = ifelse(covidence_id == 1954, 
+                                        (parameter_lower_bound / cfr_ifr_denominator), parameter_lower_bound),
+         parameter_upper_bound = ifelse(covidence_id == 1954,
+                                        parameter_upper_bound / cfr_ifr_denominator, parameter_upper_bound))
 
 ###
 # plot values of genomic data by sampling interval 
@@ -51,7 +57,7 @@ p1 <- ggplot(genomic %>% filter(qa_score >= 0.5)) +
   geom_point(aes(x = sampling_interval, y = central, shape = parameter_value_type), 
              position = jitterer,
              size = 2) + 
-  scale_y_log10()+
+  scale_y_log10() + 
   scale_color_discrete(na.translate = F) +
   theme_bw(base_size = 14) + 
   facet_wrap(~parameter_type, scales = 'free_y') +

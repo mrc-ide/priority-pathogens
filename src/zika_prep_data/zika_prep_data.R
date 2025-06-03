@@ -58,8 +58,8 @@ genomic <- parameters %>%
   filter(parameter_class == 'Mutations') %>%
   left_join(articles_clean %>% select(-name_data_entry), by = c('covidence_id', 'pathogen'))  %>%
   select( -c(starts_with('riskfactor'), r_pathway, seroprevalence_adjusted, third_sample_param_yn,
-             contains('delay'), method_2_from_supplement, starts_with('cfr'), 
-             starts_with('distribution'), case_definition, exponent_2,
+             contains('delay'), method_2_from_supplement, #starts_with('cfr'), 
+             starts_with('distribution'), case_definition, exponent_2, 
              inverse_param, inverse_param_2, name_data_entry, trimester_exposed, starts_with('parameter_2')))
 
 saveRDS(genomic, "zika_genomic.rds")

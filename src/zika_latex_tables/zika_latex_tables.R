@@ -156,8 +156,10 @@ write.table(mods, file = "latex_models.csv", sep = ",",
 parameters <- parameters %>%
   mutate(label_group = case_when(
     is.na(population_location) | population_location == '' ~ population_country,
-    (population_location !="" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,' (',population_country,')'),
-    (!is.na(population_location) & population_country == 'Unspecified') | (population_country == 'Brazil') ~ population_location,
+    is.na(population_country) | population_country=='' ~ population_location,
+    (!is.na(population_location) & population_country == 'Unspecified') ~ population_location,
+    (population_location != "" & !is.na(population_location)) & 
+      (population_country != 'Unspecified') ~ paste0(population_location,' (',population_country,')'),
     TRUE ~ NA))
 
 parameters <- mutate_at(parameters, 
@@ -299,7 +301,7 @@ trns_params <- parameters %>%
          method_disaggregated_by, 
          method_r,
          population_sample_size,
-         population_country, dates,
+         label_group, dates,
          population_sample_type, population_group, refs, central) %>%
   mutate(method_r = str_replace_all(method_r, ';',', '))
 trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Human-Human Transmission Contribution", trns_params$parameter_type)
@@ -349,7 +351,7 @@ hdel_params <- parameters %>%
          parameter_value, parameter_value_type, unc_type, #uncertainty,
          method_disaggregated_by, 
          population_sample_size,
-         population_country, dates,
+         label_group, dates,
          population_sample_type, population_group, refs, central) 
 hdel_params$parameter_type <- sub("^.* - ", "", hdel_params$parameter_type)
 hdel_params$parameter_type <- sub(">", " - ", hdel_params$parameter_type)
@@ -393,11 +395,11 @@ cfrs_params <- parameters %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
-         population_country, dates,
+         population_country, label_group, dates,
          population_sample_type, population_group, refs, central)
 cfrs_params$population_country <- gsub(";", "\\, ", cfrs_params$population_country)
 cfrs_params <- cfrs_params %>% arrange(tolower(population_country),as.numeric(central))
-cfrs_params <- cfrs_params %>% select(-central)
+cfrs_params <- cfrs_params %>% select(-central, - population_country)
 cfrs_params <- insert_blank_rows(cfrs_params,"parameter_type")
 write.table(cfrs_params, file = "latex_severity.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -405,10 +407,10 @@ write.table(cfrs_params, file = "latex_severity.csv", sep = ",",
 #parameters - seroprevalence ----
 sero_params1 <- parameters %>%
   filter(grepl("Seroprevalence", parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_type, parameter_value, unc_type, #uncertainty,
+  select(parameter_type, population_location, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
          cfr_ifr_numerator,cfr_ifr_denominator,population_sample_size,
-         prnt_on_elisa, population_country, dates,
+         prnt_on_elisa, population_country,  dates,
          population_sample_type, population_group, refs, central, 
          covidence_id)
 sero_params <- sero_params1 %>%
@@ -434,7 +436,7 @@ risk_params <- parameters %>%
   select(riskfactor_outcome, 
          riskfactor_name,	riskfactor_significant, 
          riskfactor_adjusted, population_sample_size,
-         population_country, dates,
+         label_group, dates,
          population_sample_type, population_group, refs)
 risk_params$riskfactor_outcome <- factor(risk_params$riskfactor_outcome, 
                                          levels = c("Infection",#"Reproduction Number","Attack Rate","Occurrence",
@@ -466,11 +468,11 @@ infants <- parameters %>%
   filter(parameter_type %in% c("Miscarriage probability", "Zika congenital syndrome (microcephaly) probability")) %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
-         population_country, dates,
+         population_country, label_group, dates,
          population_sample_type, refs, central) %>%
   mutate(cfr_ifr_method = ifelse(cfr_ifr_method == '','Unspecified', cfr_ifr_method))
 infants <- infants %>% arrange(parameter_type, tolower(population_country),as.numeric(central))
-infants <- infants %>% select(-central)
+infants <- infants %>% select(-central, -population_country)
 infants <- insert_blank_rows(infants,"parameter_type")
 write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -479,10 +481,10 @@ write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",",
 relative <- parameters %>%
   filter(grepl("Relative contribution", parameter_type)) %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
-         population_country, dates,
+         population_country, label_group, dates,
          population_sample_type, population_group, refs, central)
 relative <- relative %>% arrange(tolower(population_country),as.numeric(central))
-relative <- relative %>% select(-central)
+relative <- relative %>% select(-central, -population_country)
 relative <- insert_blank_rows(relative,"parameter_type")
 write.table(relative, file = "latex_relative_contribution.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
