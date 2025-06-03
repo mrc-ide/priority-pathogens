@@ -394,6 +394,8 @@ zika_clean_params <- function(df, pathogen){
                                  parameter_type %in% 
                                    c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate", "Mutations – substitution rate") ~ "Mutations - substitution rate",
                                  parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
+                                 parameter_type == 'Miscarriage rate' ~ "Miscarriage probability",
+                                 parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ "Zika congenital syndrome (microcephaly) probability",
                                  TRUE ~ parameter_type)) %>%
     # Change parameter value type central-unspecified to just Central 
     mutate(parameter_value_type = ifelse(parameter_value_type == 'Central - unspecified', "Central", parameter_value_type)) %>%

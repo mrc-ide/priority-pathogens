@@ -200,7 +200,7 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == -3 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 1000",
   exponent == -4 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 10k",
   exponent == -5 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 100k",
-  parameter_unit == 'Unspecified' & parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk") ~ '',
+  parameter_unit == 'Unspecified' & parameter_type %in% c("Miscarriage probability", "Zika congenital syndrome (microcephaly) probability") ~ '',
   TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")))
 # new bit
 parameters <- parameters %>% 
@@ -461,9 +461,9 @@ write.table(risk_params, file = "latex_riskfactors.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 
-# parameters -- miscarriage rate/microcephaly risk ----
+# parameters -- miscarriage probability/microcephaly probability ----
 infants <- parameters %>% 
-  filter(parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk")) %>%
+  filter(parameter_type %in% c("Miscarriage probability", "Zika congenital syndrome (microcephaly) probability")) %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
