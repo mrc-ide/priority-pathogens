@@ -87,6 +87,7 @@ length(unique(repronums[grepl('Basic',repronums$parameter_type),]$covidence_id))
 length(unique(repronums[grepl('Effective',repronums$parameter_type),]$covidence_id))
 length(unique(repronums$covidence_id))
 table(repronums$population_country)
+repronums %>% filter(grepl('French Polynesia', population_location)) %>% tabyl(population_location)
 tabyl(repronums %>% filter(parameter_type=='Reproduction number (Basic R0)' & method_moment_value != 'Unspecified'), method_moment_value)
 
 # TO find info about max and min of each param type

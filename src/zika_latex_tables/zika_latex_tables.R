@@ -160,10 +160,12 @@ parameters <- parameters %>%
     (!is.na(population_location) & population_country == 'Unspecified') ~ population_location,
     (population_location != "" & !is.na(population_location)) & 
       (population_country != 'Unspecified') ~ paste0(population_location,' (',population_country,')'),
-    TRUE ~ NA))
+    TRUE ~ NA),
+    label_group = str_replace_all(label_group, ',',';')) 
 
-parameters <- mutate_at(parameters, 
-                        vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+parameters <- parameters %>% 
+  mutate(across(
+    c(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
                              parameter_uncertainty_single_value, distribution_par1_value, distribution_par2_value,
                              # distribution_par1_uncertainty, distribution_par2_uncertainty, 
@@ -173,7 +175,7 @@ parameters <- mutate_at(parameters,
                              parameter_2_uncertainty_single_value, distribution_2_par1_value, distribution_2_par2_value
                              # distribution_2_par1_uncertainty, distribution_2_par2_uncertainty
                              ),
-                        ~sub("\\.?0+$", "", sprintf("%.10f", round(., 10))))
+                        ~sub("\\.?0+$", "", sprintf("%.3f", round(., 3)))))
 ##
 parameters <- parameters %>%
   mutate(parameter_value=
@@ -195,7 +197,6 @@ parameters$parameter_unit <- gsub("per 100,000 population", "per 100k", paramete
 parameters$parameter_unit <- gsub("per 10,000 population", "per 10k", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("per 1,000 births", "per 1k births", parameters$parameter_unit)
 
-
 parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == 0 ~ parameter_unit,
   exponent == -2 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "\\%",
@@ -203,7 +204,10 @@ parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == -4 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 10k",
   exponent == -5 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 100k",
   parameter_unit == 'Unspecified' & parameter_type %in% c("Miscarriage probability", "Zika congenital syndrome (microcephaly) probability") ~ '',
-  TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")))
+  TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")),
+  # remove unspecifeid units 
+  parameter_unit = ifelse(parameter_unit == 'Unspecified','',parameter_unit))
+
 # new bit
 parameters <- parameters %>% 
   mutate(parameter_value = case_when(
@@ -291,7 +295,8 @@ parameters$method_disaggregated_by <- gsub("Level of exposure","Level of Exposur
 parameters <- parameters %>% mutate_all(~ ifelse(is.na(.), "", .))
 
 parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
-                                    population_country = gsub(", ", ";", population_country))
+                                    population_country = gsub(", ", ";", population_country),
+                                    population_location = gsub(',',';', population_location))
 
 
 #parameters - transmission ----
@@ -304,11 +309,12 @@ trns_params <- parameters %>%
          label_group, dates,
          population_sample_type, population_group, refs, central) %>%
   mutate(method_r = str_replace_all(method_r, ';',', '))
-trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Human-Human Transmission Contribution", trns_params$parameter_type)
-trns_params$parameter_type  <- gsub("Relative contribution - zoonotic to human", "Human-Vector Transmission Contribution", trns_params$parameter_type)
+trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Sexual Transmission Contribution", trns_params$parameter_type)
+trns_params$parameter_type  <- gsub("Relative contribution - zoonotic to human", "Vector Transmission Contribution", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Attack rate (inverse parameter)", "Attack rate", trns_params$parameter_type)
-trns_params$parameter_type <- gsub("Reproduction number \\(Basic R0\\)", "Reproduction Number", trns_params$parameter_type)
+trns_params$parameter_type <- gsub("Reproduction number \\(Basic R0\\)", "Basic Reproduction Number", trns_params$parameter_type)
 trns_params$parameter_type <- gsub("Reproduction number \\(Effective; Re\\)", "Effective Reproduction Number", trns_params$parameter_type)
+trns_params$parameter_type <- gsub("Reproduction number \\(Effective, Re\\)", "Effective Reproduction Number", trns_params$parameter_type)
 # trns_params$parameter_type  <- gsub("\\(.*?\\)", "", trns_params$parameter_type)
 trns_params$parameter_type  <- str_to_title(trns_params$parameter_type)
 # trns_params$parameter_type <- factor(trns_params$parameter_type, 
@@ -407,10 +413,10 @@ write.table(cfrs_params, file = "latex_severity.csv", sep = ",",
 #parameters - seroprevalence ----
 sero_params1 <- parameters %>%
   filter(grepl("Seroprevalence", parameter_type, ignore.case = TRUE)) %>%
-  select(parameter_type, population_location, parameter_value, unc_type, #uncertainty,
+  select(parameter_type, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
          cfr_ifr_numerator,cfr_ifr_denominator,population_sample_size,
-         prnt_on_elisa, population_country,  dates,
+         prnt_on_elisa, population_country, population_location, dates,
          population_sample_type, population_group, refs, central, 
          covidence_id)
 sero_params <- sero_params1 %>%
