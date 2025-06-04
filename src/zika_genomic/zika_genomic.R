@@ -43,19 +43,19 @@ genomic <- genomic %>%
   mutate(lineage = ifelse(is.na(genomic_lineage), 'Unspecified', genomic_lineage))
 
 # make plot for only sub/site/year
-jitterer <- position_jitter(seed = 123, width = 5)
+jitterer <- position_jitter(seed = 123, width = 2)
 
-p1 <- ggplot(genomic %>% filter(qa_score >= 0.5)) +
+p1 <- ggplot(genomic %>% filter(qa_score >= 0.5 & !is.na(sampling_interval))) +
   geom_segment(aes(y = parameter_lower_bound, yend = parameter_upper_bound,
                    x = sampling_interval),#, yend = sampling_interval),
-               position = jitterer,
+               # position = jitterer,
                linewidth = 3, alpha = 0.65, color = 'lightblue') +
   geom_errorbar(aes(ymin=parameter_uncertainty_lower_value, ymax=parameter_uncertainty_upper_value,
                     y = central,x = sampling_interval, color = parameter_uncertainty_type),
-                position = jitterer,
+                # position = jitterer,
                 width = 1.3, lwd=0.75, alpha = 1) +
   geom_point(aes(x = sampling_interval, y = central, shape = parameter_value_type), 
-             position = jitterer,
+             # position = jitterer,
              size = 2) + 
   scale_y_log10() + 
   scale_color_discrete(na.translate = F) +
@@ -64,8 +64,9 @@ p1 <- ggplot(genomic %>% filter(qa_score >= 0.5)) +
   labs(x = 'Sampling interval (years)',
        y = 'Substitutions/site/year',
        color = '',
-       shape = '')
-
+       shape = '')+ 
+  scale_x_continuous(expand = c(0.05,0), breaks = c(0,20,40,60))
+p1
 ggsave(filename = 'zika_genomic.png', plot = p1, height = 4, width = 12)
 
 
@@ -90,7 +91,8 @@ noqa_nomut <- ggplot(genomic %>% filter(parameter_type != 'Mutation Rate\n(mutat
   labs(x = 'Sampling interval (years)',
        y = 'Substitutions/site/year',
        color = '',
-       shape = '')
+       shape = '')+ 
+  scale_x_continuous(expand = c(0.05,0), breaks = c(0,20,40,60))
 
 # mutation rate plot
 mutationplot <- ggplot(genomic %>% filter(parameter_type == 'Mutation Rate\n(mutations/site/generation)') %>%
@@ -109,7 +111,8 @@ mutationplot <- ggplot(genomic %>% filter(parameter_type == 'Mutation Rate\n(mut
   labs(x = 'Sampling interval (years)',
        y = 'Mutations/site/generation',
        color = '',
-       shape = '')
+       shape = '') + 
+  scale_x_continuous(expand = c(0.05,0), breaks = c(0,20,40,60))
 ggsave(filename ='zika_genomic_mut_rate.png', plot = mutationplot, height = 4, width = 4)
 
 # Combine the one without mutation rate and the one with to get all estimates but with mutation rates labeled by genome site
