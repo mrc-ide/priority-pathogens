@@ -222,7 +222,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   }
   
   gg <- gg +
-    scale_x_continuous(limits = lims, expand = c(0.0, 0)) +
+    scale_x_continuous(limits = lims, expand = c(0.01, 0)) +
     labs(x = label, y = NULL) +
     theme_minimal() + 
     theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
