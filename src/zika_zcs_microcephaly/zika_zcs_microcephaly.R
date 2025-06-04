@@ -103,11 +103,11 @@ par6810 <- CZS_rate %>%
 
 CZS_rate <- rbind(CZS_rate %>%
                     filter(covidence_id != 6810), par6810)
-  
-  # select(parameter_type,parameter_value, parameter_unit, continent, population_country, population_location, population_sample_type, population_group,
-  #        refs, central, case_definition, parameter_upper_bound, parameter_lower_bound, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
-  #        parameter_uncertainty_type, population_study_start_day, population_study_start_month,population_study_start_year, population_study_end_day,
-  #        population_study_end_month, population_study_end_year, qa_score)
+
+# select(parameter_type,parameter_value, parameter_unit, continent, population_country, population_location, population_sample_type, population_group,
+#        refs, central, case_definition, parameter_upper_bound, parameter_lower_bound, parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+#        parameter_uncertainty_type, population_study_start_day, population_study_start_month,population_study_start_year, population_study_end_day,
+#        population_study_end_month, population_study_end_year, qa_score)
 
 CZS_rate_qa <- CZS_rate %>%
   filter(qa_score >= 0.5)
@@ -134,7 +134,7 @@ CZSplot_noqa <- forest_plot(CZS_rate %>% arrange(central) ,
                             shape_column = "case_definition",
                             color_column = "refs", lims = c(0,100),
                             custom_colours = cols) + 
-  theme(legend.position = 'inside', legend.position.inside =  c(.65, 0.3))
+  theme(legend.position = 'inside', legend.position.inside =  c(.55, 0.3))
 ggsave(filename = 'CZS_plot_loc_country.svg', CZSplot, height =26, width = 14, bg = 'white')
 ggsave(filename = 'CZS_plot_loc_country.pdf', CZSplot, height =26, width = 14, bg = 'white')
 ggsave(filename = 'CZS_plot_loc_country_noqa.svg', CZSplot_noqa, height =32, width = 16, bg = 'white')
@@ -202,31 +202,64 @@ CZS_rate <- CZS_rate %>%
       # label_group == 'Brazil' ~ "Brazil (national)",
       TRUE ~ label_group),
     label = paste0(population_location, "; ", refs))
+
+#Brazil
 metaanalysis_CZS_brazil <- metaprop_wrap(dataframe = CZS_rate %>% 
-                                            filter(qa_score >= 0.5 & population_country %in%c('Brazil')),#paste0(refs, ": ", population_location)), 
-                                          plot_pooled = TRUE, subgroup = 'population_sample_type', 
-                                          sort_by_subg = TRUE, xlabel = "CZS probability given Zika-infected mother",
-                                          plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                          width = 5000, height =5200, resolution = 600)
-CZS_meta_brazil <- metaanalysis_CZS_brazil$plot
-metaanalysis_CZS_colombia <- metaprop_wrap(dataframe = CZS_rate %>% 
-                                           filter(qa_score >= 0.5 & population_country %in%c('Colombia')), 
+                                           filter(qa_score >= 0.5 & population_country %in%c('Brazil')),#paste0(refs, ": ", population_location)), 
                                          plot_pooled = TRUE, subgroup = 'population_sample_type', 
                                          sort_by_subg = TRUE, xlabel = "CZS probability given Zika-infected mother",
                                          plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                         width = 5000, height =2700, resolution = 600)
+                                         width = 5200, height =5250, resolution = 600)
+CZS_meta_brazil <- metaanalysis_CZS_brazil$plot
+png(file = "temp.png", width = 4000, height = 5000, res = 600)
+funnel_czsmeta_brazil <- funnel(metaanalysis_CZS_brazil$result, common = FALSE,#only plots funnel for either common or random for some reason
+                                pch = 22, bg = "dodgerblue3", level = 0.95)#, 
+                                # studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funnel_czsbrazil <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+
+#Colombia
+metaanalysis_CZS_colombia <- metaprop_wrap(dataframe = CZS_rate %>% 
+                                             filter(qa_score >= 0.5 & population_country %in%c('Colombia')), 
+                                           plot_pooled = TRUE, subgroup = 'population_sample_type', 
+                                           sort_by_subg = TRUE, xlabel = "CZS probability given Zika-infected mother",
+                                           plot_study = TRUE, digits = 4, colour = "dodgerblue3",
+                                           width = 5000, height =2700, resolution = 600)
 CZS_meta_colombia <- metaanalysis_CZS_colombia$plot
+png(file = "temp.png", width = 4000, height = 5000, res = 600)
+funnel_czsmeta_colombia <- funnel(metaanalysis_CZS_colombia$result, common = FALSE,#only plots funnel for either common or random for some reason
+                                pch = 22, bg = "dodgerblue3", level = 0.95)#, 
+                                # studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funnel_czscolombia <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+
+# France
 metaanalysis_CZS_france <- metaprop_wrap(dataframe = CZS_rate %>% 
                                            filter(qa_score >= 0.5 & population_country %in%c('France')), 
-                                         studylabels = 'label',
+                                         # studylabels = 'label',
                                          plot_pooled = TRUE, subgroup = 'population_sample_type', 
                                          sort_by_subg = TRUE, xlabel = "CZS probability given Zika-infected mother",
                                          plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                         width = 6000, height =2600, resolution = 600)
+                                         width = 6200, height =2600, resolution = 600)
 CZS_meta_france <- metaanalysis_CZS_france$plot
+png(file = "temp.png", width = 4000, height = 5000, res = 600)
+funnel_czsmeta_france <- funnel(metaanalysis_CZS_france$result, common = FALSE,#only plots funnel for either common or random for some reason
+                                  pch = 22, bg = "dodgerblue3", level = 0.95)#, 
+                                  # studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funnel_czsfrance <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
+
 ggsave(filename = "CZS_metaanalysis_brazil.pdf", plot = CZS_meta_brazil, width = 5, height = 5.5)
 ggsave(filename = "CZS_metaanalysis_colombia.pdf", plot = CZS_meta_colombia, width = 5, height = 2.7)
 ggsave(filename = "CZS_metaanalysis_france.pdf", plot = CZS_meta_france, width = 6, height = 2.6)
+ggsave("CZS_combocountries_funnel.pdf", plot = funnel_czsbrazil + funnel_czscolombia + funnel_czsfrance+ plot_annotation(tag_levels = 'A'), width = 10, height = 4)
+
 
 
 metaanalysis_CZS_sampletype <- metaprop_wrap(dataframe = CZS_rate %>% filter(qa_score >= 0.5 & !is.na(population_sample_type)), 
@@ -235,15 +268,23 @@ metaanalysis_CZS_sampletype <- metaprop_wrap(dataframe = CZS_rate %>% filter(qa_
                                              plot_study = TRUE, digits = 4, colour = "dodgerblue3",
                                              width = 8200, height =19000, resolution = 1000)
 CZS_meta_sampletype <- metaanalysis_CZS_sampletype$plot
-
+png(file = "temp.png", width = 7000, height = 6000, res = 600)
+funnel_czsmeta_sampletype <- funnel(metaanalysis_CZS_sampletype$result, common = FALSE,#only plots funnel for either common or random for some reason
+                                pch = 22, bg = "dodgerblue3", level = 0.95)#, 
+                                # studlab = TRUE, cex.studlab = 0.75, pos.studlab = 2)
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funnel_czssampletype <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
 ggsave(filename = "CZS_meta_sampletype.svg", plot = CZS_meta_sampletype, width = 9, height = 19)
 ggsave(filename = "CZS_meta_sampletype.pdf", plot = CZS_meta_sampletype, width = 9, height = 19)
+ggsave("CZS_sampletype_funnel.pdf", plot = funnel_czssampletype, width = 8, height = 6)
 
 metaanalysis_CZS_sampletype_noqa <- metaprop_wrap(dataframe = CZS_rate %>% filter(!is.na(population_sample_type)), 
-                                             plot_pooled = TRUE, subgroup = 'population_sample_type', 
-                                             sort_by_subg = TRUE, xlabel = "CZS probability given Zika-infected mother",
-                                             plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                             width = 8200, height =21000, resolution = 1000)
+                                                  plot_pooled = TRUE, subgroup = 'population_sample_type', 
+                                                  sort_by_subg = TRUE, xlabel = "CZS probability given Zika-infected mother",
+                                                  plot_study = TRUE, digits = 4, colour = "dodgerblue3",
+                                                  width = 8200, height =21000, resolution = 1000)
 CZS_meta_sampletype_noqa <- metaanalysis_CZS_sampletype_noqa$plot
 
 
@@ -272,22 +313,22 @@ misc_qa <- miscarriage %>%
 length(unique(miscarriage$covidence_id))
 length(unique(misc_qa$covidence_id))
 
-misc1<-forest_plot(miscarriage %>% filter(qa_score >= 0.5) %>% arrange(desc(central)),
-                   label = "Miscarriage probability (%)", 
-                   shape_column = "population_sample_type", 
-                   color_column = "population_country", 
-                   lims = c(0,30),
-                   custom_colours = cols)
-misc1_noqa <-forest_plot(miscarriage  %>% arrange(desc(central)),
-                         label = "Miscarriage probability (%)", 
-                         shape_column = "population_sample_type", 
-                         color_column = "population_country", 
-                         lims = c(0,30),
-                         custom_colours = cols)
-ggsave(filename = 'miscarriage_refs_sample_country.png', misc1, height = 10, width = 6, bg = 'white')
-ggsave(filename = 'miscarriage_refs_sample_country_noqa.png', misc1_noqa, height = 10, width = 6, bg = 'white')
-ggsave(filename = 'miscarriage_refs_sample_country.pdf', misc1, height = 10, width = 6, bg = 'white')
-ggsave(filename = 'miscarriage_refs_sample_country_noqa.pdf', misc1_noqa, height = 10, width = 6, bg = 'white')
+# misc1<-forest_plot(miscarriage %>% filter(qa_score >= 0.5) %>% arrange(desc(central)),
+#                    label = "Miscarriage probability (%)", 
+#                    shape_column = "population_sample_type", 
+#                    color_column = "population_country", 
+#                    lims = c(0,30),
+#                    custom_colours = cols)
+# misc1_noqa <-forest_plot(miscarriage  %>% arrange(desc(central)),
+#                          label = "Miscarriage probability (%)", 
+#                          shape_column = "population_sample_type", 
+#                          color_column = "population_country", 
+#                          lims = c(0,30),
+#                          custom_colours = cols)
+# ggsave(filename = 'miscarriage_refs_sample_country.png', misc1, height = 10, width = 6, bg = 'white')
+# ggsave(filename = 'miscarriage_refs_sample_country_noqa.png', misc1_noqa, height = 10, width = 6, bg = 'white')
+# ggsave(filename = 'miscarriage_refs_sample_country.pdf', misc1, height = 10, width = 6, bg = 'white')
+# ggsave(filename = 'miscarriage_refs_sample_country_noqa.pdf', misc1_noqa, height = 10, width = 6, bg = 'white')
 
 misc2 <-forest_plot(miscarriage%>% filter(qa_score >= 0.5),
                     ycol = 'label_group',
@@ -320,9 +361,18 @@ metaanalysis_misc <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_score >
                                    plot_study = TRUE, digits = 4, colour = "dodgerblue3",
                                    width = 9000, height = 6000, resolution = 1000)
 misc_meta <- metaanalysis_misc$plot
+png(file = "temp.png", width = 7000, height = 6000, res = 600)
+funnel_misc <- funnel(metaanalysis_misc$result, common = FALSE,#only plots funnel for either common or random for some reason
+                                    pch = 22, bg = "dodgerblue3", level = 0.95)#, 
+                                    # studlab = FALSE, cex.studlab = 0.75, pos.studlab = 2)
+dev.off()
+gg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+funnel_misc <- wrap_elements(plot = rasterGrob(gg, interpolate = TRUE))
 
 ggsave(filename = "misc_metaanalysis.png", plot = misc_meta, width = 9, height = 10)
 ggsave(filename = "misc_metaanalysis.pdf", plot = misc_meta, width = 9, height = 10)
+ggsave("miscarriage_funnel.pdf", plot = funnel_misc, width = 8, height = 6)
 
 metaanalysis_continent <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_score >= 0.5 & !is.na(continent)), 
                                         plot_pooled = TRUE, subgroup = 'continent', 
