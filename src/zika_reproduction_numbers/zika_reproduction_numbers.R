@@ -204,8 +204,8 @@ r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_t
 #                         custom_colours = c25)
 
 
-r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
-                         label = "Basic reproduction number - human",
+r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Sexual'), 
+                         label = "Basic reproduction number - sexual",
                          ycol = 'label_group',
                          # facet_by_country = TRUE,
                          color_column = 'population_group',
@@ -214,8 +214,8 @@ r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproducti
                          custom_colours = c25,
                          text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
-r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Human'), 
-                        label = "Basic reproduction number - human",
+r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Sexual'), 
+                        label = "Basic reproduction number - sexual",
                         ycol = 'label_group',
                         # facet_by_country = TRUE,
                         color_column = 'population_group',
@@ -237,8 +237,8 @@ r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type =
 #                            custom_colours = c25)
 
 
-r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Mosquito'), 
-                           label = "Basic reproduction number - mosquito",
+r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Vector-borne'), 
+                           label = "Basic reproduction number - vector-borne",
                            ycol = 'label_group',
                            # facet_by_country = TRUE,
                            color_column = 'population_group',
@@ -246,8 +246,8 @@ r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reprodu
                            custom_colours = c25,
                            text_size = TEXT_SIZE) +
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
-r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Mosquito'), 
-                            label = "Basic reproduction number - mosquito",
+r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Vector-borne'), 
+                            label = "Basic reproduction number - vector-borne",
                             ycol = 'label_group',
                            # facet_by_country = TRUE,
                            color_column = 'population_group',
@@ -277,23 +277,23 @@ re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Rep
                   text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,4), expand = c(0, 0)) 
 
-re_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Human'),
-                        label = "Effective reproduction number - human",
+re_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
+                        label = "Effective reproduction number - sexual",
                         color_column = 'population_country',
                         lims = c(0,17),
                         custom_colours = c25,
                         text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
-re_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Human'),
-                        label = "Effective reproduction number - human",
+re_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
+                        label = "Effective reproduction number - sexual",
                         color_column = 'population_country',
                         lims = c(0,17),
                         custom_colours = c25,
                         text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
 
-re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Mosquito'),
-                           label = "Effective reproduction number - mosquito",
+re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Vector-borne'),
+                           label = "Effective reproduction number - vector-borne",
                            color_column = 'population_country',
                            lims = c(0,17),
                            custom_colours = c25,

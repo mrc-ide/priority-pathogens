@@ -396,6 +396,12 @@ zika_clean_params <- function(df, pathogen){
                                  parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
                                  parameter_type == 'Miscarriage rate' ~ "Miscarriage probability",
                                  parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ "Zika congenital syndrome (microcephaly) probability",
+                                 parameter_type == "Relative contribution - zoonotic to human" ~ "Relative contribution - vector-borne",
+                                 parameter_type == "Relative contribution - human to human" ~ "Relative contribution - sexual",
+                                 parameter_type == 'Reproduction number (Basic R0) - Human' ~ "Reproduction number (Basic R0) - Sexual",
+                                 parameter_type == 'Reproduction number (Basic R0) - Mosquito' ~ "Reproduction number (Basic R0) - Vector-borne",
+                                 parameter_type == 'Reproduction number (Effective; Re) - Human' ~ 'Reproduction number (Effective; Re) - Sexual',
+                                 parameter_type == 'Reproduction number (Effective; Re) - Mosquito' ~ 'Reproduction number (Effective; Re) - Vector-borne',
                                  TRUE ~ parameter_type)) %>%
     # Change parameter value type central-unspecified to just Central 
     mutate(parameter_value_type = ifelse(parameter_value_type == 'Central - unspecified', "Central", parameter_value_type)) %>%
@@ -950,14 +956,14 @@ zika_clean_params <- function(df, pathogen){
   #cleaning of relative contributions (fixing units) and growth rate
   df <- df %>%
     mutate(
-      parameter_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
-                                                                           "Relative contribution - zoonotic to human"), parameter_value * 100, parameter_value),
-      parameter_uncertainty_upper_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
-                                                                                             "Relative contribution - zoonotic to human"), parameter_uncertainty_upper_value * 100 , parameter_uncertainty_upper_value),
-      parameter_uncertainty_lower_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
-                                                                                             "Relative contribution - zoonotic to human"), parameter_uncertainty_lower_value * 100 , parameter_uncertainty_lower_value),
-      parameter_unit = ifelse(covidence_id == 422  & parameter_type %in% c("Relative contribution - human to human",
-                                                                        "Relative contribution - zoonotic to human"), "Percentage (%)", parameter_unit),
+      parameter_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - sexual",
+                                                                           "Relative contribution - vector-borne"), parameter_value * 100, parameter_value),
+      parameter_uncertainty_upper_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - sexual",
+                                                                                             "Relative contribution - vector-borne"), parameter_uncertainty_upper_value * 100 , parameter_uncertainty_upper_value),
+      parameter_uncertainty_lower_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - sexual",
+                                                                                             "Relative contribution - vector-borne"), parameter_uncertainty_lower_value * 100 , parameter_uncertainty_lower_value),
+      parameter_unit = ifelse(covidence_id == 422  & parameter_type %in% c("Relative contribution - sexual",
+                                                                        "Relative contribution - vector-borne"), "Percentage (%)", parameter_unit),
       parameter_unit = ifelse(covidence_id == 422  & parameter_type == "Growth rate (r)", "Per day", parameter_unit)
     )
   
@@ -1179,6 +1185,13 @@ zika_clean_delays <- function(params_df){
                                         "Guadeloupe, Martinique, Saint-Martin", population_location),
            population_country = ifelse(covidence_id == 946 & parameter_type == 'Human delay - generation time', 
                                        "France", population_country))
+  
+  # Fix dates
+  df <- df %>%
+    mutate(population_study_end_month = ifelse(covidence_id == 4427 & grepl('Serial Interval', parameter_type), 'Aug', population_study_end_month),
+           population_study_end_year = ifelse(covidence_id == 4427 & grepl('Serial Interval', parameter_type), 2016, population_study_end_year),
+           population_study_start_month = ifelse(covidence_id == 4427 & grepl('Serial Interval', parameter_type), 'Nov', population_study_start_month),
+           population_study_start_year = ifelse(covidence_id == 4427 & grepl('Serial Interval', parameter_type), 2016, population_study_start_year))
   
   return(df)
 }

@@ -309,8 +309,8 @@ trns_params <- parameters %>%
          label_group, dates,
          population_sample_type, population_group, refs, central) %>%
   mutate(method_r = str_replace_all(method_r, ';',', '))
-trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Sexual Transmission Contribution", trns_params$parameter_type)
-trns_params$parameter_type  <- gsub("Relative contribution - zoonotic to human", "Vector Transmission Contribution", trns_params$parameter_type)
+trns_params$parameter_type  <- gsub("Relative contribution - sexual", "Sexual Transmission Contribution", trns_params$parameter_type)
+trns_params$parameter_type  <- gsub("Relative contribution - vector-borne", "Vector Transmission Contribution", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Attack rate (inverse parameter)", "Attack rate", trns_params$parameter_type)
 trns_params$parameter_type <- gsub("Reproduction number \\(Basic R0\\)", "Basic Reproduction Number", trns_params$parameter_type)
 trns_params$parameter_type <- gsub("Reproduction number \\(Effective; Re\\)", "Effective Reproduction Number", trns_params$parameter_type)

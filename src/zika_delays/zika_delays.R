@@ -231,7 +231,7 @@ ggsave("infectious_period_noqa.png", plot =IP_forest_noqa, width = 14, height = 
 #                   point_size = 4)
 
 incp2 <- forest_plot(d1 %>% filter(qa_score>=0.5) |> arrange(parameter_value,desc(parameter_value)),
-                    label = 'Incubation Period (days)',
+                    label = 'Intrinsic incubation Period (days)',
                     ycol = 'label_group',
                     color_column = "population_group", # had these backwards initially
                     shape_column = "population_sample_type", 
@@ -250,7 +250,7 @@ incp2 <- forest_plot(d1 %>% filter(qa_score>=0.5) |> arrange(parameter_value,des
 #                      point_size = 4)
 
 incp2_noqa <- forest_plot(d1 |> arrange(parameter_value,desc(parameter_value)),
-                     label = 'Incubation Period (days)',
+                     label = 'Intrinsic incubation Period (days)',
                      ycol = 'label_group',
                      color_column = "population_group", # had these backwards initially
                      shape_column = "population_sample_type", 

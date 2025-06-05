@@ -42,8 +42,8 @@ params_clean.d1 <- filter(params_clean, parameter_type == "Attack rate")
 length(unique(params_clean.d1$covidence_id))
 nrow(params_clean.d1)
 
-params_clean.d2 <- filter(params_clean, parameter_type %in% c("Relative contribution - human to human", 
-                                                              "Relative contribution - zoonotic to human"))
+params_clean.d2 <- filter(params_clean, parameter_type %in% c("Relative contribution - sexual", 
+                                                              "Relative contribution - vector-borne"))
 length(unique(params_clean.d2$covidence_id))
 nrow(params_clean.d2)
 
@@ -118,6 +118,7 @@ df_attack_rate <- df_attack_rate %>%
                                                      3221,  5671, 6670,  7047,
                                                      7336, 10749, 11866) & is.na(parameter_unit), 
                                  "Unspecified", parameter_unit),
+         population_location = ifelse(population_country == "Netherlands", "travellers from ", population_location),
          population_location = ifelse(population_location == "Arauca, Armenia, Barranquilla, Bucaramanga, Cali, Cartagena, Cúcuta, Florencia, Ibagué, Inírida, Leticia, Medellín, Mitú, Mocoa, Montería, Neiva, Pereira, Popayán, Puerto Carreño, Quibdó, Riohacha, San Andrés, San José del Guaviare, Santa Marta, Sincelejo, Valledupar, Villavicencio, Yopal", "Multi-location (n = 28)", population_location),
          population_location = ifelse(population_location == "Wynwood Neighborhood, Miami-Dade County, Florida", "Miami-Dade County", population_location),
          population_location = ifelse(population_location == "\"Other four archipelagos\"", "archipelagos", population_location),
@@ -188,9 +189,9 @@ ggsave("Attack_rate.png", plot =p1, width = 15, height = 30, bg = 'white')
 
 # length(unique(df_attack_rate$covidence_id))
 # View(df_attack_rate[, c("covidence_id", "central", "parameter_value","parameter_uncertainty_type", "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
-#                         "parameter_lower_bound", "parameter_upper_bound", "population_sample_size", "population_country", "population_location", 
+#                         "parameter_lower_bound", "parameter_upper_bound", "population_sample_size", "population_country", "population_location",
 #                         "population_group",
-#                         "population_sample_type", "population_study_start_year", 
+#                         "population_sample_type", "population_study_start_year",
 #                         "population_study_end_year")])
 
 # Cleaning and plotting for Growth Rate
@@ -215,6 +216,13 @@ df_growth_rate <- df_growth_rate %>%
                                    "Unspecified", population_sample_type))
 # p3 <- save_plot(df_growth_rate, "Growth_rate", height = 100, width = 200)
 # p3
+# Calculate doubling times ln(2) / ln(1+r)
+# log(2) / log(1 + 0.08)
+# log(2) / log(1 + 0.066)
+# log(2) / log(1 + 0.087)
+# 
+# log(2) / log(1 + 0.82)
+# log(2) / log(1 + 5.8)
 
 p1_qa<- forest_plot(df_growth_rate %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
                     ycol = 'label_group',
@@ -244,11 +252,11 @@ ggsave("Growth_rate.png", plot =p1, width = 10, height = 6, bg = 'white')
 
 
 # length(unique(df_growth_rate$covidence_id))
-View(df_growth_rate[, c("central", "parameter_value", "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
-                        "parameter_lower_bound", "parameter_upper_bound", "population_sample_size", "population_country", "population_location",
-                        "population_group",
-                        "population_sample_type", "population_study_start_year",
-                        "population_study_end_year")])
+# View(df_growth_rate[, c("central", "parameter_value", "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
+#                         "parameter_lower_bound", "parameter_upper_bound", "population_sample_size", "population_country", "population_location",
+#                         "population_group",
+#                         "population_sample_type", "population_study_start_year",
+#                         "population_study_end_year")])
 
 # Cleaning and plotting for Overdispersion (assuming no units)
 # df_overdispersion <- clean_data(params_clean.d4)
