@@ -161,7 +161,7 @@ risk_table <- risk_params %>% select(-covidence_id) %>%
   group_by(riskfactor_outcome,riskfactor_name,riskfactor_significant,riskfactor_adjusted) %>%
   summarise(n=n(),
             pop_size = sum(population_sample_size)) %>%
-  unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
+  unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ") 
 
 length(unique(risk_table$riskfactor_name))
 
@@ -189,8 +189,9 @@ risk_table_plt_zcs <- risk_table %>% filter(riskfactor_outcome=='Zika congenital
   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
   scale_color_manual(values = custom_colours) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
   scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
-  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
+  theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
          strip.text = element_text( color = "black"), 
          text = element_text(size = text_size),
          strip.background =element_rect(fill="grey90"))
@@ -201,8 +202,9 @@ risk_table_plt_infection <- risk_table %>% filter(riskfactor_outcome=='Infection
   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
   scale_color_manual(values = custom_colours) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
   scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
-  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
+  theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
          strip.text = element_text( color = "black"),          
          strip.background =element_rect(fill="grey90"),
          text = element_text(size = text_size),
@@ -215,8 +217,9 @@ risk_table_plt_microcephaly <- risk_table %>% filter(riskfactor_outcome=='Microc
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) + 
   theme_light()+
   scale_color_manual(values = custom_colours) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
   scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  + 
-  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
+  theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
          strip.text = element_text( color = "black"),          
          strip.background =element_rect(fill="grey90"),
          text = element_text(size = text_size),
@@ -228,8 +231,9 @@ risk_table_plt_serology  <- risk_table %>% filter(riskfactor_outcome=='Serology'
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) + 
   theme_light()+
   scale_color_manual(values = custom_colours) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
   scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  + 
-  theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
+  theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
          strip.text = element_text( color = "black"),          
          strip.background =element_rect(fill="grey90"),
          text = element_text(size = text_size),
@@ -238,6 +242,11 @@ risk_table_plt_serology  <- risk_table %>% filter(riskfactor_outcome=='Serology'
 # Everything else
 risk_table_plt_other <- risk_table %>% 
   filter(!(riskfactor_outcome %in% c('Infection', 'Microcephaly','Serology','Zika congenital syndrome/other birth defects'))) %>%
+  mutate(riskfactor_outcome = case_when(
+    riskfactor_outcome == 'Other neurological symptoms in general population' ~ 'Other neurological symptoms\nin general population',
+    riskfactor_outcome == 'Severe disease (in general population)' ~ 'Severe disease\n(in general population)',
+    TRUE ~ riskfactor_outcome
+  )) %>%
   ggplot(aes(x = riskfactor_name, y = n,
              col = `Significant / Adjusted`,
              fill = `Significant / Adjusted`)) + 
@@ -254,8 +263,8 @@ risk_table_plt_other <- risk_table %>%
 risk_table_plt <- risk_table_plt_infection / risk_table_plt_zcs / risk_table_plt_microcephaly / risk_table_plt_serology +
   plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect")
 
-ggsave("figure_SI_risk_panel.pdf", plot = risk_table_plt, width = 17, height = 20)
-ggsave("figure_SI_risk_other.pdf", plot = risk_table_plt_other, width = 20, height = 16)
+ggsave("figure_SI_risk_panel.pdf", plot = risk_table_plt, width = 15, height = 20)
+ggsave("figure_SI_risk_other.pdf", plot = risk_table_plt_other, width = 22, height = 16)
 
-ggsave("figure_SI_risk_panel.png", plot = risk_table_plt, width = 17, height = 20)
-ggsave("figure_SI_risk_other.png", plot = risk_table_plt_other, width = 20, height = 16)
+ggsave("figure_SI_risk_panel.png", plot = risk_table_plt, width = 15, height = 20)
+ggsave("figure_SI_risk_other.png", plot = risk_table_plt_other, width = 22, height = 16)

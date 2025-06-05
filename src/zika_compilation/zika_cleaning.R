@@ -394,13 +394,16 @@ zika_clean_params <- function(df, pathogen){
                                  parameter_type %in% 
                                    c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate", "Mutations – substitution rate") ~ "Mutations - substitution rate",
                                  parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
+                                 parameter_type == 'Miscarriage rate' ~ "Miscarriage probability",
+                                 parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ "Zika congenital syndrome (microcephaly) probability",
                                  TRUE ~ parameter_type)) %>%
     # Change parameter value type central-unspecified to just Central 
     mutate(parameter_value_type = ifelse(parameter_value_type == 'Central - unspecified', "Central", parameter_value_type)) %>%
     # Fix incorrect parameter types 
     mutate(parameter_type = case_when(
       parameter_type == "Seroprevalence - Unspecified" & covidence_id == 6072 ~ "Risk factors",
-      parameter_type == "Zika congenital syndrome (microcephaly) risk" & covidence_id == 12202 ~ "Risk factors",
+      parameter_type == "Zika congenital syndrome (microcephaly) probability" & covidence_id == 12202 ~ "Risk factors",
+      covidence_id == 1954 & parameter_type == 'Mutations - mutation rate' ~ "Mutations - substitution rate",
       TRUE ~ parameter_type
     )) %>%
     # Remove overdispersion 
@@ -413,7 +416,6 @@ zika_clean_params <- function(df, pathogen){
       grepl("Human delay", parameter_type) ~ "Human delay",
       grepl("Seroprevalence", parameter_type) ~ "Seroprevalence",
       grepl("Mutations", parameter_type) ~ "Mutations",
-      grepl("Risk factors", parameter_type) ~ "Risk factors",
       grepl("Reproduction number", parameter_type) ~ "Reproduction number",
       grepl("Severity", parameter_type) ~ "Severity",
       grepl("Mosquito", parameter_type) ~ "Mosquito",
@@ -492,8 +494,9 @@ zika_clean_params <- function(df, pathogen){
       
       # shorten a longer method_r name
       method_r =
-        ifelse(method_r %in% "Renewal equations / Branching process",
-               "Branching process", method_r
+        case_when(method_r %in% "Renewal equations / Branching process" ~ "Branching process",
+                  covidence_id == 3152 & parameter_type == 'Reproduction number (Basic R0)' ~ "Growth rate",
+                  TRUE ~ method_r
         ))
   
   # Context cleaning
@@ -563,7 +566,8 @@ zika_clean_params <- function(df, pathogen){
         " "
       ),
       population_location = case_when(
-        population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA,
+        population_country == 'New Caledonia' ~ 'New Caledonia',
+        # population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA,
         covidence_id == 6211 ~ "Singapore",
         population_location %in% 
           c("Salvador; Bahia", "Salvador city in Bahia","Salvador") ~ "Salvador, Bahia",
@@ -571,7 +575,10 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Saint-Martin" ~ "Saint Martin",
         population_location %in% c("Rio de Janeiro (city)", "Rio de Janeiro", "Rio de janeiro", "Rio  de Janeiro") ~
           "Rio de Janeiro",
-        population_location %in% c("Puerto Rico: Ponce, San Juan, Guayama") ~ "Ponce, San Juan, Guayama",
+        population_location == 'Ponce' ~ 'Ponce, Puerto Rico',
+        population_location %in% c("Ponce, San Juan, Guayama") ~ "Puerto Rico: Ponce, San Juan, Guayama",
+        population_location == 'San Juan metropolitan area' ~ "San Juan, Puerto Rico",
+        population_country == 'Puerto Rico' ~ "Puerto Rico",
         population_location %in% "3 states in Nigeria\r\nNigeria; Abia State in Southern Nigeria; and Kaduna\r\nState in Northern Nigeria" ~
           "Nasarawa state, Abia state, Kaduna state",
         population_location %in% c("Sao Paolo State", "São Paulo State") ~ "São Paulo state",
@@ -581,7 +588,8 @@ zika_clean_params <- function(df, pathogen){
         population_location %in% "Paraiba" ~ "Paraíba",
         population_location %in% c("Northeastern Brazil", "North-East Brazil") ~ "Northeast Brazil",
         population_location %in% "Maranhao" ~ "Maranhao state",
-        population_location %in% c("Ile Sous", "Iles Sous-le-vent") ~ "Sous-le-vent Islands",
+        population_location %in% c("Ile Sous", "Sous-le-vent","Iles Sous-le-vent") ~ "Sous-le-vent Islands, French Polynesia",
+        (population_country == 'French Polynesia') ~ ifelse(!is.na(population_location) & population_location !='French Polynesia', paste0(population_location, ", French Polynesia"), 'French Polynesia'), # add French polynesia to location
         population_location %in% "Hospital\r\nHospital da Restauração; Recife; Pernambuco;" ~
           "Hospital da Restauração, Recife, Pernambuco",
         population_location %in% "Hospital Universitari Vall d’Hebron\r\nBarcelona; Catalonia" ~
@@ -643,10 +651,15 @@ zika_clean_params <- function(df, pathogen){
       ),
       population_country =
         case_when(
+          grepl("Puerto Rico", population_location) ~ 'United States',
           # If Yap, should be Micronesia not French Polynesia 
           population_location == 'Yap Island' ~ "Federated States of Micronesia",
+          # Add France as country for French Polynsia and French Guinea and New Caledonia
+          grepl("French Polynesia", population_location) | population_location == 'Sous-le-vent Islands' ~ "France",
+          population_location == 'French Guiana' ~ "France",
+          population_location == 'New Caledonia' ~ "France",
           #Specify country in locations defined as "Unspecified"
-          covidence_id == 10741 & population_location == 'Ponce' ~ 'Puerto Rico',
+          covidence_id == 10741 & population_location == 'Ponce' ~ 'United States',
           covidence_id == 4438 & population_location == 'Florida' ~ "United States",
           covidence_id == 5971 & population_location == "22 municipalities of French Guiana" ~ "France" , 
           covidence_id == 5951 & population_location ==  "Recife" ~ "Brazil", 
@@ -657,7 +670,7 @@ zika_clean_params <- function(df, pathogen){
           covidence_id == 6197 & population_location ==  "Ouagadougou; Bobo-Dioulasso" ~ "Burkina Faso", 
           covidence_id == 6197 & population_location ==  "Ouagadougou, Bobo-Dioulasso" ~ "Burkina Faso", 
           covidence_id == 6681 ~ "Cabo Verde",
-          covidence_id == 873 & population_location == "Ponce, San Juan, Guayama" ~ 'Puerto Rico',
+          covidence_id == 873 & population_location == "Ponce, San Juan, Guayama" ~ 'United States',
           population_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France',
           # Specify countries in locations for genomic data (then will change to be multi-country...)
           covidence_id == 3152 & parameter_class == 'Mutations' ~ "Brazil, Polynesia, Caribbean, Central America, South America",
@@ -772,10 +785,10 @@ zika_clean_params <- function(df, pathogen){
           population_location %in% c(
             'French Guiana', '22 municipalities of French Guiana', "Centre Hospitalier de l’Ouest Guyanais (CHOG, Saint-Laurent-du-Maroni, in French Guiana)",
             "western French Guiana"
-          ) ~ 'France (French Guiana)',
-          population_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France (Martinique, Guadeloupe, French Guiana)',
-          population_location == "Guadeloupe; Martinique" ~ "France (Guadeloupe; Martinique)",
-          population_location == 'Guadeloupe, Martinique, Saint-Martin' ~ "France (Guadeloupe, Martinique, Saint-Martin)",
+          ) ~ 'France',# (French Guiana)',
+          population_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France',# (Martinique, Guadeloupe, French Guiana)',
+          population_location == "Guadeloupe; Martinique" ~ "France",# (Guadeloupe; Martinique)",
+          population_location == 'Guadeloupe, Martinique, Saint-Martin' ~ "France",# (Guadeloupe, Martinique, Saint-Martin)",
           is.na(population_country) ~ "Unspecified",
           TRUE ~ population_country
         ),
@@ -825,13 +838,13 @@ zika_clean_params <- function(df, pathogen){
                # Reproduction numbers
                grepl("Reproduction", parameter_type) & is.na(parameter_unit) ~ "No units", 
                # others
-               covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ "Per 100,000 population",
+               covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ "Per 100,000 population",
                covidence_id == 10933 & parameter_type == "Seroprevalence - IgG" ~ "Percentage (%)",
                covidence_id == 1679 & parameter_unit == "per 100;000 population" ~ "Per 100,000 population",
                covidence_id == 4032 & parameter_unit == "Per 10000 population" ~ "Per 10,000 population",
                covidence_id == 4268 & parameter_unit == "Per 100000" ~ "Per 100,000 population",
                parameter_unit == 'Per 1000 births' ~ "Per 1,000 births",
-               covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ NA, # this has been changed to be num/denomi
+               covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ NA, # this has been changed to be num/denomi
                TRUE ~ parameter_unit
              )
     ) %>%
@@ -953,7 +966,9 @@ zika_clean_params <- function(df, pathogen){
     filter(!(covidence_id == 7437 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
                                                        "Severity - proportion of symptomatic cases"))) %>% #cov id 7437 does not  have cfr or symptomatic cases 
     mutate(
-  
+      population_group = ifelse(covidence_id == 6798 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
+                                                                            "Severity - proportion of symptomatic cases"),
+                               "Persons under investigation", population_group),
       parameter_unit = ifelse(covidence_id == 12128 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
                                                                             "Severity - proportion of symptomatic cases"), "Percentage (%)", parameter_unit),
       parameter_value_type = ifelse(covidence_id == 12128 & parameter_type %in% c("Severity - case fatality rate (CFR)", 
@@ -997,7 +1012,13 @@ zika_clean_ar <- function(params_df){ #to convert from epidemic size (written as
       parameter_lower_bound = ifelse(covidence_id == 6542 & parameter_type == "Attack rate", parameter_lower_bound / cfr_ifr_denominator * 100, 
                                      parameter_lower_bound),
       parameter_upper_bound = ifelse(covidence_id == 6542 & parameter_type == "Attack rate", parameter_upper_bound / cfr_ifr_denominator * 100, 
-                                     parameter_upper_bound))
+                                     parameter_upper_bound)) %>%
+    # fix incorrectly entered variables 
+    mutate(parameter_uncertainty_lower_value = ifelse(covidence_id == 6542 & !is.na(parameter_lower_bound), parameter_lower_bound, parameter_uncertainty_lower_value),
+           parameter_uncertainty_upper_value = ifelse(covidence_id == 6542 & !is.na(parameter_upper_bound), parameter_upper_bound, parameter_uncertainty_upper_value),
+           parameter_lower_bound = ifelse(covidence_id == 6542 & !is.na(parameter_uncertainty_lower_value), NA, parameter_lower_bound),
+           parameter_upper_bound = ifelse(covidence_id == 6542 & !is.na(parameter_uncertainty_upper_value), NA, parameter_upper_bound)
+           )
 }
 
 zika_clean_delays <- function(params_df){
@@ -1147,8 +1168,8 @@ zika_clean_delays <- function(params_df){
   
   # Remove delays that aren't estimated (parameters were fixed in model and originally were extracted but should not have been)
   df <- df %>%
-    filter(!(covidence_id == 6765 & parameter_type == 'Human delay - incubation period' & population_location %in% c("Sous-le-vent Islands", "Marquesas Islands", "Yap Island")),
-           !(covidence_id == 6765 & parameter_type == 'Human delay - infectious period' & population_location %in% c('Tahiti', 'Tuamotu-Gambier','Australes','Yap Island',"Mo'orea")))
+    filter(!(covidence_id == 6765 & grepl('incubation',parameter_type) & population_location %in% c("Sous-le-vent Islands, French Polynesia", "Marquesas Islands, French Polynesia", "Yap Island")),
+           !(covidence_id == 6765 & grepl('infectious period', parameter_type) & population_location %in% c('Tahiti, French Polynesia', 'Tuamotu-Gambier, French Polynesia','Australes, French Polynesia','Yap Island',"Mo'orea, French Polynesia")))
   
   # Add in distribution type and location / country 
   df <- df %>%
@@ -1186,33 +1207,33 @@ zika_clean_zcs_microcephaly <- function(df){
     filter(!(covidence_id == 12074 & cfr_ifr_numerator == 6)) %>%
     # Change 6521 to report without units and in num/denominator columns instead
     mutate(parameter_value = case_when(
-      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ NA,
-      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ NA, # was incorrrect
-      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 5.26, # was less precise (5 only)
+      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ NA,
+      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ NA, # was incorrrect
+      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 5.26, # was less precise (5 only)
       TRUE ~ parameter_value
     ),
     cfr_ifr_denominator = case_when(
-      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 11,
-      covidence_id == 4014  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 117, # mixed up num and denom
-      covidence_id == 4014  & parameter_type == 'Miscarriage rate' ~ 134, # mixed up num and denom
-      covidence_id == 18620  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 77, # mixed up num and denom
-      covidence_id == 10741  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 3, # missing
-      covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 154, # missing
+      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ 11,
+      covidence_id == 4014  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 117, # mixed up num and denom
+      covidence_id == 4014  & parameter_type == 'Miscarriage probability' ~ 134, # mixed up num and denom
+      covidence_id == 18620  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 77, # mixed up num and denom
+      covidence_id == 10741  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 3, # missing
+      covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 154, # missing
       TRUE ~ cfr_ifr_denominator
     ),
     cfr_ifr_numerator = case_when(
-      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 2,
-      covidence_id == 4014 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 4, # mixed up num and denom
-      covidence_id == 4014 & parameter_type == 'Miscarriage rate' ~ 9, # mixed up num and denom
-      covidence_id == 18620 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 4, # mixed up num and denom
-      covidence_id == 6301 & parameter_type == "Zika congenital syndrome (microcephaly) risk" ~ 18, # missing
-      covidence_id == 6028 & parameter_type == "Miscarriage rate" ~ 11, # missing
-      covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 7, # missing
-      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 2, # was incorrrect
-      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ 5, # was incorrect (24)
+      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ 2,
+      covidence_id == 4014 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 4, # mixed up num and denom
+      covidence_id == 4014 & parameter_type == 'Miscarriage probability' ~ 9, # mixed up num and denom
+      covidence_id == 18620 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 4, # mixed up num and denom
+      covidence_id == 6301 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ 18, # missing
+      covidence_id == 6028 & parameter_type == "Miscarriage probability" ~ 11, # missing
+      covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 7, # missing
+      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 2, # was incorrrect
+      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 5, # was incorrect (24)
       TRUE ~ cfr_ifr_numerator
     )) %>%
-    filter(!(covidence_id == 6993 & parameter_value %in% c(81.0, 16.7, 0.02))) %>% # not a ZCS risk
+    filter(!(covidence_id == 6993 & parameter_value %in% c(81.0, 16.7, 0.02))) %>% # not a ZCS probability
     filter(!(covidence_id == 10681 & parameter_value %in% c(10, 6))) %>% #these were IgG prevalences not ZCS risks (Table 1)
     mutate(population_sample_type = ifelse(covidence_id == 6993, 'Hospital based', population_sample_type),
            population_group = ifelse(covidence_id == 6993, 'Pregnant women',population_group))
@@ -1263,12 +1284,14 @@ zika_clean_genomics <- function(df){
         covidence_id == 5907 & parameter_class == 'Mutations' ~ 360,
         covidence_id == 6717 & parameter_class == 'Mutations' ~ 59,
         covidence_id == 10180 & parameter_class == 'Mutations' ~ 238,
+        covidence_id == 6511 & parameter_class == 'Mutations' ~ 269,
         TRUE ~ population_sample_size
       ),
       genomic_sequence_available = case_when(
         covidence_id %in% c(506, 1954, 4438, 5908, 6361, 6571, 7717, 12777) & parameter_class == 'Mutations' ~ TRUE, 
         TRUE ~ genomic_sequence_available
-      )
+      ),
+      cfr_ifr_denominator = ifelse(covidence_id == 1954 & parameter_class == 'Mutations', 10272, cfr_ifr_denominator) # adding in the number of bases so we can calc sub rate/site/year
     ) %>%
     # Remove empty row 
     filter(!(covidence_id == 4438 & parameter_type == "Mutations - mutation rate" & is.na(parameter_value))) %>%
@@ -1282,19 +1305,20 @@ zika_clean_genomics <- function(df){
     mutate(parameter_unit = ifelse(covidence_id == 1954 & parameter_unit == 'Substitutions/site/year', 
                                    "Mutations/year", parameter_unit),
            parameter_lower_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                          NA, parameter_lower_bound),
+                                          12, parameter_lower_bound),
            parameter_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                          NA, parameter_upper_bound),
+                                          25, parameter_upper_bound),
            parameter_uncertainty_lower_value = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                                      12, parameter_uncertainty_lower_value),
+                                                      NA, parameter_uncertainty_lower_value),
            parameter_uncertainty_upper_value = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                                      25, parameter_uncertainty_upper_value),
-           parameter_uncertainty_type = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                               "Range", parameter_uncertainty_type),
+                                                      NA, parameter_uncertainty_upper_value),
+           # parameter_uncertainty_type = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
+           #                                     "Range", parameter_uncertainty_type),
            parameter_2_lower_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
                                             NA, parameter_2_lower_bound),
            parameter_2_upper_bound = ifelse(covidence_id == 1954 & parameter_unit == 'Mutations/year',
-                                            NA, parameter_2_upper_bound)
+                                            NA, parameter_2_upper_bound),
+           exponent = ifelse(covidence_id == 1954, 0, exponent)
     ) %>%
     # cov id 6717 had incorrect values for lower and upper uncertainty given the exponent -3
     mutate(parameter_uncertainty_lower_value = case_when(
@@ -1309,7 +1333,7 @@ zika_clean_genomics <- function(df){
     mutate(parameter_value = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", 1.55, parameter_value),
            parameter_uncertainty_lower_value = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", 1.06, parameter_uncertainty_lower_value),
            parameter_uncertainty_upper_value = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", 2.05, parameter_uncertainty_upper_value),
-           exponent = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", -3, exponent))
+           exponent = ifelse(covidence_id == 4328 & parameter_type == "Mutations - evolutionary rate", -3, exponent)) 
     # Correct incorrect way of entering exponents (because lower and upper intervals have diff exponents) NB 1663 has been excluded as wrong study type 
     # mutate(parameter_value = ifelse(covidence_id == 1663 & parameter_value == 1.15, 0.00115, parameter_value),
     #        exponent = ifelse(covidence_id == 1663 & exponent == -3, 0, exponent))
@@ -1357,6 +1381,7 @@ zika_clean_genomics <- function(df){
         covidence_id == 4438 & parameter_class == 'Mutations' & population_location != "Florida" ~ 2015,
         covidence_id == 6717 & parameter_class == 'Mutations' ~ 2015,
         covidence_id == 12777 & parameter_class == 'Mutations' ~ 1947,
+        covidence_id == 6511 & parameter_class == 'Mutations' ~ 2013,
         covidence_id == 946 ~ 2015,
         TRUE ~ population_study_start_year
       ),

@@ -349,7 +349,7 @@ p1 <- ggplot() +
   xlab("Parameter Type") + ylab("Parameter Count") +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal(base_size = text_size) +      
-  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+  theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
         legend.position = 'top' ) +
   #legend.position = c(1,1), legend.justification = c(1,1), legend.box.just = "left") +
   coord_flip()
@@ -440,8 +440,9 @@ AAABB
 AAACC
 AAADD"
 p2 <- p2a / p2b + plot_layout(heights = c(0.1, 6.5))
-patchwork <- (p2 | (p1 / p3 / p4)) + plot_layout(#heights = c(1,1,1), 
-  guides = 'collect') + plot_annotation(tag_levels = 'A') &
+patchwork <- ((p2 + plot_layout(tag_level = 'new')) | (p1 / p3 / p4)) + 
+  plot_layout(guides = 'collect') + 
+  plot_annotation(tag_levels = c('A','1')) &
   theme(legend.position='bottom')
 # patchwork <- p2 + p1 + p3 + p4 + plot_layout(design = layout, 
 #                                              # ncol = 1, 

@@ -156,12 +156,16 @@ write.table(mods, file = "latex_models.csv", sep = ",",
 parameters <- parameters %>%
   mutate(label_group = case_when(
     is.na(population_location) | population_location == '' ~ population_country,
-    (population_location !="" & !is.na(population_location)) & population_country != 'Unspecified' ~ paste0(population_location,' (',population_country,')'),
-    (!is.na(population_location) & population_country == 'Unspecified') | (population_country == 'Brazil') ~ population_location,
-    TRUE ~ NA))
+    is.na(population_country) | population_country=='' ~ population_location,
+    (!is.na(population_location) & population_country == 'Unspecified') ~ population_location,
+    (population_location != "" & !is.na(population_location)) & 
+      (population_country != 'Unspecified') ~ paste0(population_location,' (',population_country,')'),
+    TRUE ~ NA),
+    label_group = str_replace_all(label_group, ',',';')) 
 
-parameters <- mutate_at(parameters, 
-                        vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
+parameters <- parameters %>% 
+  mutate(across(
+    c(parameter_value, parameter_lower_bound, parameter_upper_bound, 
                              parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
                              parameter_uncertainty_single_value, distribution_par1_value, distribution_par2_value,
                              # distribution_par1_uncertainty, distribution_par2_uncertainty, 
@@ -171,7 +175,7 @@ parameters <- mutate_at(parameters,
                              parameter_2_uncertainty_single_value, distribution_2_par1_value, distribution_2_par2_value
                              # distribution_2_par1_uncertainty, distribution_2_par2_uncertainty
                              ),
-                        ~sub("\\.?0+$", "", sprintf("%.10f", round(., 10))))
+                        ~sub("\\.?0+$", "", sprintf("%.3f", round(., 3)))))
 ##
 parameters <- parameters %>%
   mutate(parameter_value=
@@ -193,15 +197,17 @@ parameters$parameter_unit <- gsub("per 100,000 population", "per 100k", paramete
 parameters$parameter_unit <- gsub("per 10,000 population", "per 10k", parameters$parameter_unit)
 parameters$parameter_unit <- gsub("per 1,000 births", "per 1k births", parameters$parameter_unit)
 
-
 parameters <- parameters %>% mutate(parameter_unit = case_when(
   exponent == 0 ~ parameter_unit,
   exponent == -2 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "\\%",
   exponent == -3 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 1000",
   exponent == -4 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 10k",
   exponent == -5 & parameter_unit == "" & parameter_class != "Reproduction number" ~ "per 100k",
-  parameter_unit == 'Unspecified' & parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk") ~ '',
-  TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")))
+  parameter_unit == 'Unspecified' & parameter_type %in% c("Miscarriage probability", "Zika congenital syndrome (microcephaly) probability") ~ '',
+  TRUE ~ paste(parameter_unit, sprintf("$10^{%d}$",exponent), sep=" ")),
+  # remove unspecifeid units 
+  parameter_unit = ifelse(parameter_unit == 'Unspecified','',parameter_unit))
+
 # new bit
 parameters <- parameters %>% 
   mutate(parameter_value = case_when(
@@ -289,7 +295,8 @@ parameters$method_disaggregated_by <- gsub("Level of exposure","Level of Exposur
 parameters <- parameters %>% mutate_all(~ ifelse(is.na(.), "", .))
 
 parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", method_disaggregated_by),
-                                    population_country = gsub(", ", ";", population_country))
+                                    population_country = gsub(", ", ";", population_country),
+                                    population_location = gsub(',',';', population_location))
 
 
 #parameters - transmission ----
@@ -299,14 +306,15 @@ trns_params <- parameters %>%
          method_disaggregated_by, 
          method_r,
          population_sample_size,
-         population_country, dates,
+         label_group, dates,
          population_sample_type, population_group, refs, central) %>%
   mutate(method_r = str_replace_all(method_r, ';',', '))
-trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Human-Human Transmission Contribution", trns_params$parameter_type)
-trns_params$parameter_type  <- gsub("Relative contribution - zoonotic to human", "Human-Vector Transmission Contribution", trns_params$parameter_type)
+trns_params$parameter_type  <- gsub("Relative contribution - human to human", "Sexual Transmission Contribution", trns_params$parameter_type)
+trns_params$parameter_type  <- gsub("Relative contribution - zoonotic to human", "Vector Transmission Contribution", trns_params$parameter_type)
 trns_params$parameter_type  <- gsub("Attack rate (inverse parameter)", "Attack rate", trns_params$parameter_type)
-trns_params$parameter_type <- gsub("Reproduction number \\(Basic R0\\)", "Reproduction Number", trns_params$parameter_type)
+trns_params$parameter_type <- gsub("Reproduction number \\(Basic R0\\)", "Basic Reproduction Number", trns_params$parameter_type)
 trns_params$parameter_type <- gsub("Reproduction number \\(Effective; Re\\)", "Effective Reproduction Number", trns_params$parameter_type)
+trns_params$parameter_type <- gsub("Reproduction number \\(Effective, Re\\)", "Effective Reproduction Number", trns_params$parameter_type)
 # trns_params$parameter_type  <- gsub("\\(.*?\\)", "", trns_params$parameter_type)
 trns_params$parameter_type  <- str_to_title(trns_params$parameter_type)
 # trns_params$parameter_type <- factor(trns_params$parameter_type, 
@@ -349,7 +357,7 @@ hdel_params <- parameters %>%
          parameter_value, parameter_value_type, unc_type, #uncertainty,
          method_disaggregated_by, 
          population_sample_size,
-         population_country, dates,
+         label_group, dates,
          population_sample_type, population_group, refs, central) 
 hdel_params$parameter_type <- sub("^.* - ", "", hdel_params$parameter_type)
 hdel_params$parameter_type <- sub(">", " - ", hdel_params$parameter_type)
@@ -393,11 +401,11 @@ cfrs_params <- parameters %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
-         population_country, dates,
+         population_country, label_group, dates,
          population_sample_type, population_group, refs, central)
 cfrs_params$population_country <- gsub(";", "\\, ", cfrs_params$population_country)
 cfrs_params <- cfrs_params %>% arrange(tolower(population_country),as.numeric(central))
-cfrs_params <- cfrs_params %>% select(-central)
+cfrs_params <- cfrs_params %>% select(-central, - population_country)
 cfrs_params <- insert_blank_rows(cfrs_params,"parameter_type")
 write.table(cfrs_params, file = "latex_severity.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -408,7 +416,7 @@ sero_params1 <- parameters %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
          method_disaggregated_by, 
          cfr_ifr_numerator,cfr_ifr_denominator,population_sample_size,
-         prnt_on_elisa, population_country, dates,
+         prnt_on_elisa, population_country, population_location, dates,
          population_sample_type, population_group, refs, central, 
          covidence_id)
 sero_params <- sero_params1 %>%
@@ -434,7 +442,7 @@ risk_params <- parameters %>%
   select(riskfactor_outcome, 
          riskfactor_name,	riskfactor_significant, 
          riskfactor_adjusted, population_sample_size,
-         population_country, dates,
+         label_group, dates,
          population_sample_type, population_group, refs)
 risk_params$riskfactor_outcome <- factor(risk_params$riskfactor_outcome, 
                                          levels = c("Infection",#"Reproduction Number","Attack Rate","Occurrence",
@@ -461,16 +469,16 @@ write.table(risk_params, file = "latex_riskfactors.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 
-# parameters -- miscarriage rate/microcephaly risk ----
+# parameters -- miscarriage probability/microcephaly probability ----
 infants <- parameters %>% 
-  filter(parameter_type %in% c("Miscarriage rate", "Zika congenital syndrome (microcephaly) risk")) %>%
+  filter(parameter_type %in% c("Miscarriage probability", "Zika congenital syndrome (microcephaly) probability")) %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
-         population_country, dates,
+         population_country, label_group, dates,
          population_sample_type, refs, central) %>%
   mutate(cfr_ifr_method = ifelse(cfr_ifr_method == '','Unspecified', cfr_ifr_method))
 infants <- infants %>% arrange(parameter_type, tolower(population_country),as.numeric(central))
-infants <- infants %>% select(-central)
+infants <- infants %>% select(-central, -population_country)
 infants <- insert_blank_rows(infants,"parameter_type")
 write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -479,10 +487,10 @@ write.table(infants, file = "latex_miscarriage_zcs.csv", sep = ",",
 relative <- parameters %>%
   filter(grepl("Relative contribution", parameter_type)) %>%
   select(parameter_type, parameter_value, unc_type, #uncertainty,
-         population_country, dates,
+         population_country, label_group, dates,
          population_sample_type, population_group, refs, central)
 relative <- relative %>% arrange(tolower(population_country),as.numeric(central))
-relative <- relative %>% select(-central)
+relative <- relative %>% select(-central, -population_country)
 relative <- insert_blank_rows(relative,"parameter_type")
 write.table(relative, file = "latex_relative_contribution.csv", sep = ",", 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
