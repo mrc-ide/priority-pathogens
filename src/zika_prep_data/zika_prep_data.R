@@ -23,6 +23,10 @@ orderly_artefact(
   )
 )
 
+
+orderly_shared_resource("utils.R")
+source("utils.R")
+
 orderly_resource(c("data_curation.R" = "data_curation.R"))
 source("data_curation.R")
 
@@ -37,9 +41,21 @@ parameters <- readRDS("parameters.rds") %>%
   ########################### to remove once this is sorted
   filter(!is.na(parameter_data_id))
 
-dfs <- curation(articles,outbreaks,models,parameters, plotting = plotting)
 
-articles   <- dfs$articles
+## ## Added by SB and TN to deal with utf-8 encoding issues
+cols_to_convert <- c(
+  "first_author_first_name",
+  "first_author_surname",
+  "name_data_entry",
+  "article_title"
+)
+
+articles[cols_to_convert] <- lapply(articles[cols_to_convert], convert_to_utf)
+
+dfs <- curation(articles,outbreaks,models,parameters, plotting = plotting)
+articles <- dfs$articles
+
+
 qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
 
 outbreaks  <- dfs$outbreaks

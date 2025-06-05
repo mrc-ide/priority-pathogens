@@ -108,7 +108,7 @@ r0 %>%
   group_by(population_country) %>%
   summarize(n = n(), 
             min = min(parameter_value, na.rm = TRUE),
-            max = max(parameter_value, na.rm = TRUE)) %>% View()
+            max = max(parameter_value, na.rm = TRUE)) 
 
 r0hh <- repronums %>%
   filter(parameter_type == 'Reproduction number (Basic R0) - Human') %>%
@@ -132,7 +132,7 @@ re %>%
   group_by(population_country) %>%
   summarize(n = n(), 
             min = min(parameter_value, na.rm = TRUE),
-            max = max(parameter_value, na.rm = TRUE)) %>% View()
+            max = max(parameter_value, na.rm = TRUE)) 
 
 # repro <- repronums %>%
 #   group_by(parameter_type) %>%

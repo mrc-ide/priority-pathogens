@@ -177,3 +177,22 @@ database_files <- function(pathogen) {
   ## Return files for pathogen
   infiles[[pathogen]]
 }
+
+
+
+convert_to_utf <- function(vec, from = "windows-1252", to = "UTF-8") {
+  if (is.character(vec)) {
+    # If we can convert from and to the target then assume string is in target
+    # encoding
+    invalid <- is.na(iconv(vec, from = to, to = to))
+    if (any(invalid)) {
+      # Fix the problem by converting to the target :)
+      vec[invalid] <- iconv(vec[invalid], from = from, to = to)
+      # Not sure if this a good idea..., but letter following unrecognised
+      # encoding is captial
+      vec[invalid] <- str_to_title(vec[invalid])
+    }
+  }
+  vec
+}
+
