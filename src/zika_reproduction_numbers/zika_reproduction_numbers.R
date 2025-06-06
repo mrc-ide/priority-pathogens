@@ -99,7 +99,7 @@ repsum <-repronums %>%
 
 r0 <- repronums %>%
   filter(parameter_type == 'Reproduction number (Basic R0)') %>%
-  mutate(between = ifelse(central2 > 1 & central2 < 4, 1, 0),
+  mutate(between = ifelse(central2 >= 1.5 & central2 < 4, 1, 0),
          below1 = ifelse(central2 < 1, 1, 0))
 tabyl(r0$between)
 tabyl(r0$below1)
@@ -279,26 +279,35 @@ re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Rep
 
 re_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
                         label = "Effective reproduction number - sexual",
-                        color_column = 'population_country',
-                        lims = c(0,17),
+                        ycol = 'label_group',
+                        # facet_by_country = TRUE,
+                        color_column = 'population_sample_type',
+                        shape_column = 'population_group',
+                        lims = c(0,6),
                         custom_colours = c25,
                         text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,6), expand = c(0, 0)) 
 re_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
                         label = "Effective reproduction number - sexual",
-                        color_column = 'population_country',
-                        lims = c(0,17),
+                        ycol = 'label_group',
+                        # facet_by_country = TRUE,
+                        color_column = 'population_sample_type',
+                        shape_column = 'population_group',
+                        lims = c(0,6),
                         custom_colours = c25,
                         text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,6), expand = c(0, 0)) 
 
 re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Vector-borne'),
                            label = "Effective reproduction number - vector-borne",
-                           color_column = 'population_country',
-                           lims = c(0,17),
+                           ycol = 'label_group',
+                           # facet_by_country = TRUE,
+                           color_column = 'population_sample_type',
+                           shape_column = 'population_group',
+                           lims = c(0,2),
                            custom_colours = c25,
                            text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,2), expand = c(0, 0)) 
 # re_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Mosquito'),
 #                            label = "Effective reproduction number - mosquito",
 #                            color_column = 'population_country',

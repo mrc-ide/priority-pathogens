@@ -17,7 +17,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
                                                destination = "continent"),
            continent = case_when(
              grepl(population_country, 'Multi') ~ "Multi-country",
-             population_country == 'France (French Guiana)' ~ "Americas",
+             population_country == 'France' & population_location == 'French Guiana' ~ "Americas",
              population_location %in% c('Martinique','Guadeloupe','Saint Martin') ~ "Americas",
              population_country == "France (Martinique, Guadeloupe, French Guiana)" ~ "Americas",
              population_country == "Multi-country: France and Netherlands" ~ "Europe",

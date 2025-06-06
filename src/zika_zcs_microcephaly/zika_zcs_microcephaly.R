@@ -86,8 +86,30 @@ CZS_rate <- parameters %>%
   mutate(continent = countrycode(sourcevar = population_country,
                                  origin = "country.name",
                                  destination = "continent")) %>%
-  mutate(continent = ifelse(population_country %in% c('France (French Guiana)','France (Martinique, Guadeloupe, French Guiana)'),
+  mutate(continent = ifelse(population_location %in% c('French Guiana','Martinique, Guadeloupe, French Guiana'),
                             'Americas', continent)) %>%
+  mutate(continent = case_when(
+    grepl(population_country, 'Multi') ~ "Multi-country",
+    population_country == 'France' & population_location == 'French Guiana' ~ "Americas",
+    population_location %in% c('Martinique','Guadeloupe','Saint Martin') ~ "Americas",
+    population_country == "France (Martinique, Guadeloupe, French Guiana)" ~ "Americas",
+    population_country == "Multi-country: France and Netherlands" ~ "Europe",
+    population_country == "Micronesia" ~ "Oceania",
+    population_country == 'Multi-country: Brazil and Colombia'  ~ "Americas",
+    population_country == "Multi-country: Brazil, Colombia, El Salvador" ~ "Americas",
+    population_country == "Multi-country: Americas (n = 32)" ~ "Americas",
+    population_country == "Singapore" | population_location == 'Singapore' ~ "Asia",
+    population_country == 'Brazil' & population_location != 'Brazil' ~ "Brazil (Americas)",
+    # population_country == 'French Polynesia' & population_location != 'French Polynesia' ~ "French Polynesia (Oceania)",
+    population_country == 'France' & grepl('French Polynesia', population_location) & population_location != 'French Polynesia' ~ "French Polynesia, France (Oceania)",
+    population_location == 'French Polynesia' ~ "Oceania",
+    population_location == 'Sous-le-vent Islands' ~ "French Polynesia, France (Oceania)",
+    population_country == 'Colombia' & population_location != "Colombia" ~ "Colombia (Americas)",
+    population_country == 'France' & population_location == 'New Caledonia' ~ "Oceania",
+    population_country == 'France' & population_location == 'French Guiana' ~ "Americas",
+    population_country == 'Unspecified' ~ "Unspecified",
+    TRUE ~ continent
+  )) %>%
   mutate(population_sample_type = case_when(
     is.na(population_sample_type) | population_sample_type %in% c('Mixed settings', 'Community based','Other','Travel based') ~ "Other",
     TRUE ~ population_sample_type
@@ -356,7 +378,8 @@ ggsave(filename = 'miscarriage_loc_sample_type.pdf', misc2, height = 10, width =
 ggsave(filename = 'miscarriage_loc_sample_type_noqa.pdf', misc2_noqa, height = 10, width = 8, bg = 'white')
 
 # Meta-analysis  miscarriage
-metaanalysis_misc <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_score >= 0.5), plot_pooled = TRUE, subgroup = NA, 
+metaanalysis_misc <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_score >= 0.5), 
+                                   plot_pooled = TRUE, subgroup = NA, 
                                    sort_by_subg = FALSE, xlabel = "Miscarriage probability",
                                    plot_study = TRUE, digits = 4, colour = "dodgerblue3",
                                    width = 9000, height = 6000, resolution = 1000)
@@ -378,7 +401,7 @@ metaanalysis_continent <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_sc
                                         plot_pooled = TRUE, subgroup = 'continent', 
                                         sort_by_subg = FALSE, xlabel = "Miscarriage probability",
                                         plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                        width = 9000, height = 10000, resolution = 1000)
+                                        width = 9000, height = 9000, resolution = 1000)
 misc_meta_continent <- metaanalysis_continent$plot
 
 ggsave(filename = "misc_metaanalysis_continent.png", plot = misc_meta_continent, width = 9, height = 10)
@@ -388,7 +411,7 @@ metaanalysis_sampletype <- metaprop_wrap(dataframe = miscarriage %>% filter(qa_s
                                          plot_pooled = TRUE, subgroup = 'population_sample_type', 
                                          sort_by_subg = FALSE, xlabel = "Miscarriage probability",
                                          plot_study = TRUE, digits = 4, colour = "dodgerblue3",
-                                         width = 9000, height = 8000, resolution = 1000)
+                                         width = 9000, height = 9000, resolution = 1000)
 misc_meta_sampletype <- metaanalysis_sampletype$plot
 
 ggsave("misc_metaanalysis_sampletype.png", plot = misc_meta_sampletype, width = 9, height = 10)

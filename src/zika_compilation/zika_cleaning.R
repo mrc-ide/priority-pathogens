@@ -284,6 +284,12 @@ zika_clean_outbreaks <- function(df, pathogen){
         outbreak_location == 'St. Croix; St. John; St. Thomas;' ~ 'St. Croix; St. John; St. Thomas',
         outbreak_location == 'West Indies: Guadeloupe and Martinique' ~ "Guadeloupe; Martinique",
         TRUE ~ outbreak_location
+      ),
+      outbreak_location = case_when(
+        outbreak_location %in% c("Austral Islands", "Marquesas Islands",
+                                 "Mo'orea", "Sous-le-vent Islands","Sous-Le-Vent Islands",
+                                 "Tahiti", "Tuamotus") ~ paste(outbreak_location, ", French Polynesia"),
+        TRUE~ outbreak_location
       )
     ) %>%
     # mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
@@ -315,15 +321,15 @@ zika_clean_outbreaks <- function(df, pathogen){
         'Federated States of Micronesia'
       ),
       outbreak_country = case_when(
-        covidence_id == 947 & outbreak_location %in% c("Austral Islands", "Marquesas Islands",
-                                                       "Mo'orea", "Sous-le-vent Islands","Sous-Le-Vent Islands",
-                                                       "Tahiti", "Tuamotus") ~ "French Polynesia",
-        outbreak_location == "Martinique" ~ "France (Martinique)",
-        outbreak_location == "Guadeloupe" ~ "France (Guadeloupe)", 
-        outbreak_location == "Saint Martin" ~ "Saint Martin (French part)",
-        outbreak_location == 'French Guiana' ~ 'France (French Guiana)',
-        outbreak_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France (Martinique; Guadeloupe; French Guiana)',
-        outbreak_location == "Guadeloupe; Martinique" ~ "France (Guadeloupe; Martinique)",
+        outbreak_location %in% c("Austral Islands, French Polynesia", "Marquesas Islands, French Polynesia",
+                                                       "Mo'orea, French Polynesia, French Polynesia", "Sous-le-vent Islands, French Polynesia","Sous-Le-Vent Islands, French Polynesia",
+                                                       "Tahiti, French Polynesia", "Tuamotus, French Polynesia") ~ 'France',
+        outbreak_location == "Martinique" ~ "France",
+        outbreak_location == "Guadeloupe" ~ "France", 
+        outbreak_location == "Saint Martin" ~ "French and the Netherlands",
+        outbreak_location == 'French Guiana' ~ 'France',
+        outbreak_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France',
+        outbreak_location == "Guadeloupe; Martinique" ~ "France",
         TRUE ~ outbreak_country
       )) 
   
@@ -573,6 +579,7 @@ zika_clean_params <- function(df, pathogen){
       ),
       population_location = case_when(
         population_country == 'New Caledonia' ~ 'New Caledonia',
+        population_location == 'Saint Lucia' ~ "Saint Lucia",
         # population_location == 'French Polynesia' & population_country == 'French Polynesia' ~ NA,
         covidence_id == 6211 ~ "Singapore",
         population_location %in% 
@@ -657,6 +664,7 @@ zika_clean_params <- function(df, pathogen){
       ),
       population_country =
         case_when(
+          population_location == 'Saint Lucia' ~ NA,
           grepl("Puerto Rico", population_location) ~ 'United States',
           # If Yap, should be Micronesia not French Polynesia 
           population_location == 'Yap Island' ~ "Federated States of Micronesia",
@@ -1018,13 +1026,13 @@ zika_clean_ar <- function(params_df){ #to convert from epidemic size (written as
       parameter_lower_bound = ifelse(covidence_id == 6542 & parameter_type == "Attack rate", parameter_lower_bound / cfr_ifr_denominator * 100, 
                                      parameter_lower_bound),
       parameter_upper_bound = ifelse(covidence_id == 6542 & parameter_type == "Attack rate", parameter_upper_bound / cfr_ifr_denominator * 100, 
-                                     parameter_upper_bound)) %>%
+                                     parameter_upper_bound)) #%>%
     # fix incorrectly entered variables 
-    mutate(parameter_uncertainty_lower_value = ifelse(covidence_id == 6542 & !is.na(parameter_lower_bound), parameter_lower_bound, parameter_uncertainty_lower_value),
-           parameter_uncertainty_upper_value = ifelse(covidence_id == 6542 & !is.na(parameter_upper_bound), parameter_upper_bound, parameter_uncertainty_upper_value),
-           parameter_lower_bound = ifelse(covidence_id == 6542 & !is.na(parameter_uncertainty_lower_value), NA, parameter_lower_bound),
-           parameter_upper_bound = ifelse(covidence_id == 6542 & !is.na(parameter_uncertainty_upper_value), NA, parameter_upper_bound)
-           )
+    # mutate(parameter_uncertainty_lower_value = ifelse(covidence_id == 6542 & !is.na(parameter_lower_bound), parameter_lower_bound, parameter_uncertainty_lower_value),
+    #        parameter_uncertainty_upper_value = ifelse(covidence_id == 6542 & !is.na(parameter_upper_bound), parameter_upper_bound, parameter_uncertainty_upper_value),
+    #        parameter_lower_bound = ifelse(covidence_id == 6542 & !is.na(parameter_uncertainty_lower_value), NA, parameter_lower_bound),
+    #        parameter_upper_bound = ifelse(covidence_id == 6542 & !is.na(parameter_uncertainty_upper_value), NA, parameter_upper_bound)
+    #        )
 }
 
 zika_clean_delays <- function(params_df){

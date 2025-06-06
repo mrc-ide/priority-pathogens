@@ -118,7 +118,7 @@ locations <- locations %>%
   mutate(population_location = ifelse(population_location == "Chiapas State", "Chiapas", population_location),
          population_location = ifelse(population_country == "Honduras", "Honduras", population_location),
          population_location = ifelse(population_country == "Puerto Rico", "Puerto Rico", population_location),
-         population_country = ifelse(population_country ==  "France (French Guiana)", "French Guiana", population_country) )
+         population_country = ifelse(population_country ==  "France" & population_location ==  "French Guiana", "French Guiana", population_country) )
 
 
 #Bangladesh has some that are only national, same Thailand
@@ -141,10 +141,18 @@ result.COL <- filter(locations, population_country == "Colombia") %>% #national
 
 # Load country-level shapefiles
 result.BOL <- load_and_merge_shapefile(locations, "Bolivia", "gadm41_BOL_1.shp", "NAME_1")
-result.COL <- load_and_merge_shapefile(result.COL, "Colombia", "gadm41_COL_0.shp", "COUNTRY")
+# result.COL <- load_and_merge_shapefile(result.COL, "Colombia", "gadm41_COL_0.shp", "COUNTRY")
 result.FG  <- load_and_merge_shapefile(locations, "French Guiana", "gadm41_GUF_0.shp", "COUNTRY")
 result.MEX <- load_and_merge_shapefile(locations, "Mexico", "gadm41_MEX_1.shp", "NAME_1")
-result.HON <- load_and_merge_shapefile(locations, "Honduras", "gadm41_HND_0.shp", "COUNTRY")
+# result.HON <- load_and_merge_shapefile(locations, "Honduras", "gadm41_HND_0.shp", "COUNTRY")
+
+# Check if CRS is missing
+st_crs(result.BOL)       # should be NA as the others
+st_crs(result.MEX)
+st_crs(result.FG)
+
+result.BOL <- st_set_crs(result.BOL, NA)
+
 
 # Manually add coordinates for specific locations
 locations <- locations %>%
@@ -168,7 +176,7 @@ result.geoloc.americas <- filter(locations, population_country %in% c("Brazil", 
 # Plot South America
 south_america <- ggplot() +
   borders("world", colour = "gray50", fill = "gray90") +
-  # geom_sf(data = result.BOL, aes(fill = central), color = "white") +
+  geom_sf(data = result.BOL, aes(fill = central), color = "white") +
   # geom_sf(data = result.COL, aes(fill = central), color = "white") +
   geom_sf(data = result.FG, aes(fill = central), color = "white") +
   # geom_sf(data = result.HON, aes(fill = central), color = "white") +
@@ -179,7 +187,7 @@ south_america <- ggplot() +
   scale_fill_viridis_c(limits = c(0, 70),guide = "none") +
   theme_bw()
 
-print(south_america)
+# print(south_america)
 
 result.THA <- filter(locations, population_country == "Thailand")
 
@@ -214,7 +222,7 @@ central_asia <- ggplot() +
   coord_sf(xlim = c(70, 120), ylim = c(-5, 35)) +  # Adjusted limits
   geom_point(data = result.geoloc.asia, aes(x = long, y = lat, color = central), alpha = 0.7, size = 3) +
   # scale_color_viridis_c(limits = c(0, 70),guide = "none") +
-  scale_fill_viridis_c(limits = c(0, 70),name = "% Seroprevalence") +
+  scale_fill_viridis_c(limits = c(0, 70), name = "none") +
   scale_color_viridis_c(limits = c(0, 70), guide = "none") +
   theme_bw()
 
@@ -287,7 +295,7 @@ central_africa <- ggplot() +
   coord_sf(xlim = c(-25, 40), ylim = c(-15, 20)) + # Focused map
   geom_point(data = result.geoloc.africa, aes(x = long, y = lat, color = central), alpha = 0.7, size = 3) +
   scale_size_continuous(range = c(3, 8)) +
-  scale_color_viridis_c(limits = c(0, 70),guide = "none") +
+  scale_color_viridis_c(limits = c(0, 70), name = "% Seroprevalence") +
   scale_fill_viridis_c(limits = c(0, 70), guide = "none") +
   # scale_fill_viridis_c(limits = c(0, 70), name = "% Seroprevalence") +
   theme_bw() +
@@ -301,20 +309,28 @@ central_africa <- ggplot() +
 # central_africa
 
 central_africa <- central_africa+
-  labs(fill = NULL, col = NULL) + #theme(legend.position = c(0.1,0.2))+
+  labs(fill = NULL, col = NULL) + 
+  theme(legend.position = c(0.2,0.3),
+        legend.text = element_text(size = 6),
+        legend.title = element_text(size = 6))+
+  # theme(legend.position = "none")+
+        # legend.background = element_rect(fill = "transparent"))+
+  #theme(legend.position = c(0.1,0.2))+
   theme(
     axis.text = element_blank(),      # Remove text labels
     axis.ticks = element_blank(),     # Remove tick marks
     axis.title = element_blank()      # Remove axis titles
   )
-south_america <- south_america + #theme(legend.position = "none")+
+south_america <- south_america + 
+  theme(legend.position = "none")+
   labs(fill = NULL,  col = NULL) +
   theme(
     axis.text = element_blank(),      # Remove text labels
     axis.ticks = element_blank(),     # Remove tick marks
     axis.title = element_blank()      # Remove axis titles
   )
-central_asia <- central_asia +# theme(legend.position = "none")+
+central_asia <- central_asia +
+  theme(legend.position = "none")+
   labs(fill = NULL,  col = NULL) +
   theme(
     axis.text = element_blank(),      # Remove text labels

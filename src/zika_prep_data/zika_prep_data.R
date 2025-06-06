@@ -3,6 +3,8 @@
 
 # It will take the place of the data_curation() function currently housed in lassa_function.R
 # as well as the ad-hoc data cleaning in each of the analysis orderly tasks
+library(dplyr)
+library(stringr)
 
 #orderly preparation 
 orderly_strict_mode()
@@ -72,7 +74,7 @@ parameters <- dfs$parameters %>% left_join(qa_scores) %>%
 # Save genomic data 
 genomic <- parameters %>%
   filter(parameter_class == 'Mutations') %>%
-  left_join(articles_clean %>% select(-name_data_entry), by = c('covidence_id', 'pathogen'))  %>%
+  left_join(articles %>% select(-name_data_entry), by = c('covidence_id', 'pathogen'))  %>%
   select( -c(starts_with('riskfactor'), r_pathway, seroprevalence_adjusted, third_sample_param_yn,
              contains('delay'), method_2_from_supplement, #starts_with('cfr'), 
              starts_with('distribution'), case_definition, exponent_2, 
