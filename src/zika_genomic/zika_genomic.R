@@ -66,7 +66,7 @@ p1 <- ggplot(genomic %>% filter(qa_score >= 0.5 & !is.na(sampling_interval))) +
        color = '',
        shape = '')+ 
   scale_x_continuous(expand = c(0.05,0), breaks = c(0,20,40,60))
-p1
+# p1
 ggsave(filename = 'zika_genomic.png', plot = p1, height = 4, width = 12)
 
 

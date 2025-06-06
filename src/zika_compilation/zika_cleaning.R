@@ -15,7 +15,7 @@ fix_cov_ids <- function(df, pathogen){
       covidence_id = case_when(
         covidence_id == 6238 ~ 6246, 
         TRUE ~ covidence_id)
-    ) %>%
+      ) %>%
     filter(!covidence_id %in% c(7033, 3491,  1663, 66, 4338, 4340)) %>%# this is a Research Letter, commeents and not pars 
     filter(covidence_id != 5749) %>% # this is the same as 873 
     filter(covidence_id != 10652) %>% # this is the same as 2302 
@@ -160,7 +160,7 @@ zika_clean_articles <- function(df, pathogen){
   # Pathogen-specific article cleaning #
   ######################################
   
-  # here we need to remove duplicates by article and covidence IDs
+  #
   df <- df %>%
     mutate(# Fix issues with dois
       doi = str_remove_all(doi, 'doi:'),

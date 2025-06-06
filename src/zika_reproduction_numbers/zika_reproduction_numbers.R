@@ -39,7 +39,8 @@ TEXT_SIZE <- 22
 articles   <- readRDS("articles_curated.rds")
 models     <- readRDS("models_curated.rds")
 parameters <- readRDS("parameters_curated.rds")%>%
-  mutate(population_sample_type = ifelse(is.na(population_sample_type), 'Unspecified',population_sample_type)) %>%
+  mutate(population_sample_type = ifelse(is.na(population_sample_type), 'Unspecified',population_sample_type),
+         population_group = ifelse(is.na(population_group), 'Unspecified',population_group)) %>%
   # for plotting remove location that creates confusion 
   mutate(population_location = ifelse(population_country_original == "Brazil;Colombia" & covidence_id == 268, NA, population_location),
          population_location = ifelse(population_location == "90 major cities across LAC", "90 major cities", population_location),
@@ -172,7 +173,7 @@ r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Repro
                              color_column = 'population_sample_type',
                              shape_column = 'population_group',
                              lims = c(0,12),
-                             custom_colours = c25,
+                             # custom_colours = c25,
                              text_size = TEXT_SIZE) + 
   scale_x_continuous(limits = c(0,12), expand = c(0, 0)) +
   theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
@@ -186,7 +187,7 @@ r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_t
                              color_column = 'population_sample_type',
                              shape_column = 'population_group',
                              lims = c(0,9),
-                             custom_colours = c25,
+                             # custom_colours = c25,
                              text_size = TEXT_SIZE) +
   scale_x_continuous(limits = c(0,9), expand = c(0, 0))  +
   theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
@@ -211,7 +212,7 @@ r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproducti
                          color_column = 'population_group',
                          shape_column = 'population_sample_type',
                          lims = c(0,17),
-                         custom_colours = c25,
+                         # custom_colours = c25,
                          text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
 r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Sexual'), 
@@ -221,7 +222,7 @@ r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type =
                         color_column = 'population_group',
                         shape_column = 'population_sample_type',
                         lims = c(0,17),
-                        custom_colours = c25,
+                        # custom_colours = c25,
                         text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
 
@@ -243,7 +244,7 @@ r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reprodu
                            # facet_by_country = TRUE,
                            color_column = 'population_group',
                            lims = c(0,17),
-                           custom_colours = c25,
+                           # custom_colours = c25,
                            text_size = TEXT_SIZE) +
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
 r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Vector-borne'), 
@@ -252,7 +253,7 @@ r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_typ
                            # facet_by_country = TRUE,
                            color_column = 'population_group',
                             lims = c(0,17),
-                            custom_colours = c25,
+                            # custom_colours = c25,
                            text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
 
@@ -263,7 +264,7 @@ re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction num
                   color_column = 'population_sample_type',
                   shape_column = 'population_group',
                   lims = c(0,4),
-                  custom_colours = c25,
+                  # custom_colours = c25,
                   text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,4), expand = c(0, 0)) 
 re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective, Re)'), 
@@ -273,7 +274,7 @@ re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Rep
                   color_column = 'population_sample_type',
                   shape_column = 'population_group',
                   lims = c(0,4),
-                  custom_colours = c25,
+                  # custom_colours = c25,
                   text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,4), expand = c(0, 0)) 
 
@@ -350,10 +351,13 @@ AAAAACCCC
 AAAAACCCC
 AAAAACCCC"
 
-r0_pl <- r0_sampletype + r0_human + r0_mosquito +
-    plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-r0__plnoqa <- r0_sampletype_noqa + r0_human_noqa + r0_mosquito_noqa +
-  plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
+layout2 <- "
+AA
+BB"
+r0_pl <- r0_human + r0_mosquito +
+    plot_layout(design = layout2) + plot_annotation(tag_levels = 'A')
+r0__plnoqa <- r0_human_noqa + r0_mosquito_noqa +
+  plot_layout(design = layout2) + plot_annotation(tag_levels = 'A')
 
 
 
@@ -363,11 +367,12 @@ re_plnoqa <- re_noqa + re_human_noqa +# re_mosquito_noqa +
   plot_layout(design = "AAA
                         BBB") + plot_annotation(tag_levels = 'A')
 
-ggsave("r0_pl.pdf", r0_pl, height = 38, width = 35, bg = 'white')
-ggsave("r0__plnoqa.pdf", r0__plnoqa, height = 38, width = 35, bg = 'white')
+ggsave("r0_pl.pdf", r0_pl, height = 25, width = 20, bg = 'white')
+ggsave("r0_plnoqa.pdf", r0__plnoqa, height = 25, width = 20, bg = 'white')
 ggsave("re_pl.pdf", re_pl, height = 12, width = 20, bg = 'white')
 ggsave("re_plnoqa.pdf", re_plnoqa, height = 12, width = 20, bg = 'white')
-ggsave("r0_pl.png", r0_pl, height = 38, width = 35, bg = 'white', dpi = 400)
-ggsave("r0__plnoqa.png", r0__plnoqa, height = 38, width = 35, bg = 'white', dpi = 400)
+
+ggsave("r0_pl.png", r0_pl, height = 25, width = 20, bg = 'white', dpi = 400)
+ggsave("r0_plnoqa.png", r0__plnoqa, height = 25, width = 20, bg = 'white', dpi = 400)
 ggsave("re_pl.png", re_pl, height = 12, width = 20, bg = 'white', dpi = 400)
 ggsave("re_plnoqa.png", re_plnoqa, height = 12, width = 20, bg = 'white', dpi = 400)

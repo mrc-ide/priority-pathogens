@@ -411,7 +411,7 @@ p2b <- ggplot() +
   #legend.position = 'bottom', legend.justification = c(1,1), legend.box.just = "left") +
   coord_flip()
 p2 <- p2a / p2b + plot_layout(heights = c(0.1, 6.5))
-p2
+# p2
 p3 <- ggplot() + 
   geom_bar(data = parameters, aes(x = factor(study_midyear_cat, levels = c("pre-2000", "2000-2004", "2005-2009", "2010-2014",
                                                                            "2015-2019", "2020-Present",'Unspecified')), fill = parameter_class), color = "black") + 
@@ -449,6 +449,6 @@ patchwork <- ((p2 + plot_layout(tag_level = 'new')) | (p1 / p3 / p4)) +
 #                                              # heights = c(2,4,0.5,0.7), 
 #                                              guides = "collect") + plot_annotation(tag_levels = 'A') &
 # theme(legend.position='bottom')
-dev.set(dev.next())
+# dev.set(dev.next())
 ggsave("parameters_summary.png", plot = patchwork, width = 16, height = 16)
-
+# dev.off()

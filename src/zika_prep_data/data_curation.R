@@ -27,7 +27,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
   
   parameters <- parameters %>% 
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-    filter(!as.logical(parameter_from_figure)) # ensure that parameter_from_figure is logical not character
+    filter(!(as.logical(parameter_from_figure) & is.na(parameter_value) & is.na(parameter_lower_bound))) # ensure that parameter_from_figure is logical not character
   
   if (pathogen == 'ZIKA'){
     var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 

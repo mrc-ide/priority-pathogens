@@ -181,14 +181,14 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
       gg <- gg + 
         scale_color_manual(values = c("Population based" = lancetcols[1], 'Hospital based' =  lancetcols[2] ,
                                       "Community based"  = lancetcols[3], 'Travel based' =    lancetcols[4] ,
-                                      'Unspecified'      = lancetcols[5], 'Contact based' =   lancetcols[6] ,
-                                      'Mixed settings'   = lancetcols[7], 'Other' =           lancetcols[8] ,
+                                      'Unspecified'      = lancetcols[8], 'Contact based' =   lancetcols[6] ,
+                                      'Mixed settings'   = lancetcols[7], 'Other' =           lancetcols[5] ,
                                       'School based'     = lancetcols[9], 'Household based' = "#DF8F44"), 
                            labels = function(x) str_wrap(x, width = 18)) +
         scale_fill_manual(values = c("Population based" = lancetcols[1], 'Hospital based' =   lancetcols[2] ,
                                      "Community based"  = lancetcols[3], 'Travel based' =     lancetcols[4] ,
-                                     'Unspecified'      = lancetcols[5], 'Contact based' =    lancetcols[6] ,
-                                     'Mixed settings'   = lancetcols[7], 'Other' =            lancetcols[8] ,
+                                     'Unspecified'      = lancetcols[8], 'Contact based' =    lancetcols[6] ,
+                                     'Mixed settings'   = lancetcols[7], 'Other' =            lancetcols[5] ,
                                      'School based'     = lancetcols[9], 'Household based' =  "#DF8F44"), 
                           labels = function(x) str_wrap(x, width = 18)) 
     } else if(color_column == 'parameter_type'){
