@@ -23,7 +23,7 @@ orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 
 orderly_dependency(
-  "nipah_cleaning",
+  "db_cleaning",
   "latest(parameter:pathogen == this:pathogen)",
   c("articles.csv", "models.csv", "params.csv", "outbreaks.csv"))
 
