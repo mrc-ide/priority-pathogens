@@ -62,32 +62,33 @@ orderly_dependency(
   )
 )
 
+filepath_base <- "access"
+
 # Manually fixed files and "cleaning" script - these need to be in the
 # src/db_compilation folder
 orderly_resource(
   c(
-    "ebola_qa_fixing.csv",
-    "ebola_params_fixing.csv",
-    "ebola_models_fixing.csv",
+    file.path(filepath_base, "ebola_qa_fixing.csv"),
+    file.path(filepath_base, "ebola_params_fixing.csv"),
+    file.path(filepath_base, "ebola_models_fixing.csv"),
     ## LASSA FIXING FILES
-    "lassa_qa_fixing.csv",
-    "lassa_params_fixing.csv",
-    "lassa_models_fixing.csv",
-    "lassa_outbreaks_fixing.csv",
+    file.path(filepath_base, "lassa_qa_fixing.csv"),
+    file.path(filepath_base, "lassa_params_fixing.csv"),
+    file.path(filepath_base, "lassa_models_fixing.csv"),
+    file.path(filepath_base, "lassa_outbreaks_fixing.csv"),
     ## SARS FIXING FILES
-    "sars_qa_fixing.csv",
-    "sars_params_fixing.csv",
-    "sars_models_fixing.csv",
+    file.path(filepath_base, "sars_qa_fixing.csv"),
+    file.path(filepath_base, "sars_params_fixing.csv"),
+    file.path(filepath_base, "sars_models_fixing.csv"),
     ## OROV FIXING FILES
     #"orov_qa_fixing.csv",
     #"orov_params_fixing.csv",
     #"orov_models_fixing.csv",
     #"orov_outbreaks_fixing.csv",
-    ## NIPAH FIXING FILES
-    "cleaning.R",
-    "sars_cleaning.R",
-    "ebola_cleaning.R",
-    "lassa_cleaning.R"
+    file.path(filepath_base, "cleaning.R"),
+    file.path(filepath_base, "sars_cleaning.R"),
+    file.path(filepath_base,  "ebola_cleaning.R"),
+    file.path(filepath_base, "lassa_cleaning.R")
   )
 )
 
@@ -97,33 +98,33 @@ source("ebola_functions.R")
 ## pathogen.
 fixing_files <- list(
   EBOLA = list(
-    params_fix = "ebola_params_fixing.csv",
-    models_fix = "ebola_models_fixing.csv",
-    qa_fix = "ebola_qa_fixing.csv"
+    params_fix =  file.path(filepath_base, "ebola_params_fixing.csv"),
+    models_fix =  file.path(filepath_base, "ebola_models_fixing.csv"),
+    qa_fix =  file.path(filepath_base, "ebola_qa_fixing.csv")
   ),
   LASSA = list(
-     params_fix = "lassa_params_fixing.csv",
-     models_fix = "lassa_models_fixing.csv",
-     qa_fix = "lassa_qa_fixing.csv",
-     outbreaks_fix = "lassa_outbreaks_fixing.csv"
+     params_fix =  file.path(filepath_base, "lassa_params_fixing.csv"),
+     models_fix =  file.path(filepath_base, "lassa_models_fixing.csv"),
+     qa_fix =  file.path(filepath_base, "lassa_qa_fixing.csv"),
+     outbreaks_fix =  file.path(filepath_base, "lassa_outbreaks_fixing.csv")
   ),
   SARS = list(
-    params_fix = "sars_params_fixing.csv",
-    models_fix = "sars_models_fixing.csv",
-    qa_fix = "sars_qa_fixing.csv"
+    params_fix =  file.path(filepath_base, "sars_params_fixing.csv"),
+    models_fix =  file.path(filepath_base, "sars_models_fixing.csv"),
+    qa_fix =  file.path(filepath_base, "sars_qa_fixing.csv")
   ),
   OROV = list(
-    params_fix = "orov_params_fixing.csv",
+    params_fix =  file.path(filepath_base, "orov_params_fixing.csv"),
     #models_fix = "orov_models_fixing.csv",
-    qa_fix = "orov_qa_fixing.csv",
-    outbreaks_fix = "orov_outbreaks_fixing.csv"
+    qa_fix =  file.path(filepath_base, "orov_qa_fixing.csv"),
+    outbreaks_fix =  file.path(filepath_base, "orov_outbreaks_fixing.csv")
   )
 )
 
-source("cleaning.R")
-source("ebola_cleaning.R")
-source("lassa_cleaning.R")
-source("sars_cleaning.R")
+source(file.path(filepath_base, "cleaning.R"))
+source(file.path(filepath_base, "ebola_cleaning.R"))
+source(file.path(filepath_base, "lassa_cleaning.R"))
+source(file.path(filepath_base, "sars_cleaning.R"))
 
 # Single extractions
 article_single <- read_csv("single_extraction_articles.csv")
