@@ -1,5 +1,3 @@
-
-
 library(tidyverse)
 library(stringr)
 library(metafor)
@@ -216,13 +214,13 @@ df_growth_rate <- df_growth_rate %>%
                                    "Unspecified", population_sample_type))
 # p3 <- save_plot(df_growth_rate, "Growth_rate", height = 100, width = 200)
 # p3
-# Calculate doubling times ln(2) / ln(1+r)
-# log(2) / log(1 + 0.08)
-# log(2) / log(1 + 0.066)
-# log(2) / log(1 + 0.087)
+# Calculate doubling times ln(2) / ln(r) https://mathcentral.uregina.ca/QQ/database/QQ.09.04/nick2.html https://en.wikipedia.org/wiki/Doubling_time 
+# log(2) / 0.08
+# log(2) / 0.066
+# log(2) / 0.087
 # 
-# log(2) / log(1 + 0.82)
-# log(2) / log(1 + 5.8)
+# log(2) / 0.82
+# log(2) / 5.8
 
 p1_qa<- forest_plot(df_growth_rate %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
                     ycol = 'label_group',
