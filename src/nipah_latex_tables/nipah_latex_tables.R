@@ -27,7 +27,7 @@ orderly_dependency(
   "latest(parameter:pathogen == this:pathogen)",
   c("articles.csv", "models.csv", "params.csv", "outbreaks.csv"))
 
-orderly_resource("nipah_functions.R")
+orderly_shared_resource("nipah_functions.R"="nipah_functions.R")
 
 source("nipah_functions.R")
 
