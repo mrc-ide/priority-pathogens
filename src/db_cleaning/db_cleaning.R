@@ -8,12 +8,16 @@ orderly_parameters(pathogen = NULL, debug_mode=FALSE)
 pathogen_config_case <- tolower(pathogen)
 pathogen_config_filename <- file.path(
   pathogen_config_case, paste0(pathogen_config_case, "_cleaning_config.R"))
+pathogen_cleaning_filename <- file.path(
+  pathogen_config_case, paste0(pathogen_config_case, "_cleaning.R"))
 
 orderly_resource(c("cleaning.R",
-                   pathogen_config_filename)
-)
+                   pathogen_config_filename,
+                   pathogen_cleaning_filename))
 source("cleaning.R")
 source(pathogen_config_filename)
+source(pathogen_cleaning_filename)
+
 
 # pathogen config needs to needs to have a vector called tables that has
 # table names which match the input rds filenames
@@ -66,10 +70,9 @@ if (article_table_name %in% tables){
     order_col
   )
 
-  article_df <- article_df %>%           # ARTICLE CLEANING IN HERE
-    mutate(journal = str_to_title(journal)) %>%
-    mutate(journal = sub("^The\\s+", "", journal, useBytes = TRUE))
-  
+  # ARTICLE CLEANING IN HERE
+  article_df <- article_cleaning(article_df)
+
   cleaned_df_list[[article_table_name]] <- article_df
 } else{
   cli_alert_danger("You need to have an article table (or similar information
@@ -89,9 +92,8 @@ if (oubreak_table_name %in% tables){
                                       c(base_relocate_cols, "outbreak_data_id"),
                                       order_col)
 
-  #outbreak_df <- outbreak_df %>%       
-  #  mutate(country = str_to_title(country))
-  
+  outbreak_df <- outbreak_cleaning(outbreak_df)
+
   cleaned_df_list[[oubreak_table_name]] <- outbreak_df
 }
 
@@ -107,6 +109,8 @@ if (model_table_name %in% tables){
   model_df <- relocate_and_arrange(model_df,
                                    c(base_relocate_cols, "model_data_id"),
                                    order_col)
+
+  model_df <- model_cleaning(model_df)
 
   cleaned_df_list[[model_table_name]] <- model_df
 }
@@ -172,6 +176,8 @@ if (param_table_name %in% tables){
     param_df,
     c(base_relocate_cols, "parameter_data_id"),
     order_col)
+
+  param_df <- param_cleaning(param_df)
 
   cleaned_df_list[[param_table_name]] <- param_df
 }
