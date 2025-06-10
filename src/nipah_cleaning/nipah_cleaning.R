@@ -64,11 +64,17 @@ if (article_table_name %in% tables){
     order_col
   )
 
+  article_df <- article_df %>%           # ARTICLE CLEANING IN HERE
+    mutate(journal = str_to_title(journal)) %>%
+    mutate(journal = sub("^The\\s+", "", journal, useBytes = TRUE))
+  
   cleaned_df_list[[article_table_name]] <- article_df
 } else{
   cli_alert_danger("You need to have an article table (or similar information
                    table)")
 }
+
+
 
 # *============================ Outbreak cleaning =============================*
 oubreak_table_name <- table_check_list[["outbreaks"]]
@@ -81,6 +87,9 @@ if (oubreak_table_name %in% tables){
                                       c(base_relocate_cols, "outbreak_data_id"),
                                       order_col)
 
+  #outbreak_df <- outbreak_df %>%       
+  #  mutate(country = str_to_title(country))
+  
   cleaned_df_list[[oubreak_table_name]] <- outbreak_df
 }
 
