@@ -18,7 +18,7 @@ source(pathogen_config_filename)
 csv_artefacts <- sapply(tables, function(table) paste0(table, ".csv"))
 rds_inputs <- sapply(tables, function(table) paste0(table, ".rds"))
 
-orderly_dependency("nipah_compilation",
+orderly_dependency("db_compilation",
                    "latest(parameter:pathogen == this:pathogen)",
                    setNames(rds_inputs, rds_inputs))
 
