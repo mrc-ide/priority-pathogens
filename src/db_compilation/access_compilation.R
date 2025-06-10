@@ -4,16 +4,7 @@ library(janitor)
 library(orderly2)
 library(readr)
 
-
-orderly_strict_mode()
-
-## pathogen should be set to one of our priority-pathogens
-## use capital case
-## orderly_parameters(pathogen = 'EBOLA')
-orderly_parameters(pathogen = NULL)
-
 ## Outputs
-
 if(pathogen!="OROV"){
   orderly_artefact(
     "Merged single and double extracted data as csv",

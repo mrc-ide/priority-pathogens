@@ -143,12 +143,9 @@ fix_missing_ids <- function(extraction_table,
 
 # *============================================================================*
 # *------------------------------ Orderly config ------------------------------*
-orderly_strict_mode()
-
-orderly_parameters(pathogen = NULL)
-
 config_file_path <- file.path(
-  "config", paste(tolower(pathogen), "compilation_config.yaml", sep="_"))
+  "redcap", tolower(pathogen),
+  paste(tolower(pathogen), "compilation_config.yaml", sep="_"))
 orderly_resource(config_file_path)
 
 config_list <- yaml.load_file(config_file_path)
@@ -173,8 +170,10 @@ single_tables <- sapply(tables,
                        paste0("single_extraction_", table, ".csv"))
 
 fixing_files <- sapply(
-  recon, function(recon_table) paste(tolower(pathogen), recon_table,
-                                     "fixing.csv", sep="_"))
+  recon, function(recon_table) file.path(
+    "redcap", tolower(pathogen),
+    paste(tolower(pathogen), recon_table, "fixing.csv", sep="_")))
+
 matching_files<- sapply(
   recon, function(recon_table) paste(recon_table, "matching.csv",
                                     sep="_"))

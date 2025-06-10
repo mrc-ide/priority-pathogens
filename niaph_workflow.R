@@ -32,11 +32,11 @@ orderly_run("db_double",list(pathogen="NIPAH"))
 # *-------------------------- Generate final dataset --------------------------*
 # Merge double_extraction, fixing, and single extraction files to create a final
 # dataset
-orderly_run("nipah_compilation",list(pathogen="NIPAH"))
+orderly_run("db_compilation", list(pathogen="NIPAH"))
 
 # *-------------------------------- Clean data --------------------------------*
 orderly_run("db_cleaning",list(pathogen="NIPAH", debug_mode=TRUE))
 
 # *------------------------------- Latex tables -------------------------------*
 # Add cleaning mode
-orderly_run("nipah_latex_tables",list(pathogen="NIPAH"))
+orderly_run("nipah_latex_tables", list(pathogen="NIPAH"))
