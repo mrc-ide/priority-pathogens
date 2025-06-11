@@ -24,15 +24,11 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     filter(!parameter_from_figure)
 
   param4plot <- parameters %>%
-    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound,
-                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
-              list(~ ifelse(inverse_param, 1/.x, .x))) %>%
-    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound,
-                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
-              list(~ .x * 10^exponent)) %>%
-    mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
-                   parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
-              list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>%
+    mutate(across(
+      c(parameter_value, parameter_lower_bound, parameter_upper_bound,
+        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+      ~ ifelse(inverse_param, 1 / ., .) * 10^exponent * ifelse(parameter_unit %in% "Weeks", 7, 1))
+      ) %>%
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
            parameter_uncertainty_lower_value = case_when(
@@ -49,8 +45,11 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
              str_detect(str_to_lower(parameter_uncertainty_single_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),
              TRUE ~ parameter_uncertainty_upper_value)) %>%
-    select(-c(no_unc)) %>%
-    mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
+    mutate(central = coalesce(parameter_value,
+                              100*cfr_ifr_numerator/cfr_ifr_denominator,
+                              0.5*(parameter_lower_bound+parameter_upper_bound))
+           ) |> #central value for plotting
+  select(-c(no_unc))
 
   if (plotting) {
     parameters <- param4plot
