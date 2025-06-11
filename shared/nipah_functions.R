@@ -110,7 +110,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
                       y = urefs),
                   width = 0.15, lwd=0.5, color = "black", alpha = 1) +
     geom_point(aes(x = parameter_value, y = urefs,
-                   shape = df$parameter_value_type, fill = .data[[color_column]]),
+                   shape = parameter_value_type, fill = .data[[color_column]]),
                size = 3, stroke = 1,
                color = "black", alpha = 1)
 
@@ -119,7 +119,11 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   if(sum(!is.na(custom_colours)))
   {
     gg <- gg +
-      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_shape_manual(name = "Parameter Type",
+                         values = c(Mean = 21, Median = 22, Unspecified = 24,
+                                    Other = 23, `Central - unspecified`=25),
+                         breaks = c("Mean", "Median", "Unspecified", "Other",
+                                    "Central - unspecified")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
@@ -130,7 +134,11 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
             text = element_text(size = text_size))
   } else {
     gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
-      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
+      scale_shape_manual(name = "Parameter Type",
+                         values = c(Mean = 21, Median = 22, Unspecified = 24,
+                                    Other = 23, `Central - unspecified`=25),
+                         breaks = c("Mean", "Median", "Unspecified", "Other",
+                                    "Central - unspecified")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
