@@ -46,12 +46,6 @@ models <- read_csv("models.csv")
 outbreaks <- read_csv("outbreaks.csv")
 parameters <- read_csv("params.csv")
 
-# Expected for curation
-parameters$parameter_from_figure <- ifelse(
-  (is.na(parameters$parameter_from_figure) |
-     parameters$parameter_from_figure=="No"),
-  FALSE, TRUE)
-
 # TODO: Check data_curation
 dfs <- data_curation(articles, outbreaks,models,parameters, plotting = FALSE)
 
@@ -355,9 +349,6 @@ for (i in 1:length(param_identifier)) {
 
   unit_col  <- paste0("parameter", id, "_unit")
   exp_col    <- paste0("exponent", id)
-
-  # Na cols
-  parameters[[exp_col]][is.na(parameters[[exp_col]])] <- 0
 
   # Clean parameter unit
   parameters[[unit_col]][is.na(parameters[[unit_col]])] <- "unspecified"
