@@ -51,7 +51,7 @@ convert_column_types <- function(df, type_map) {
 }
 
 relocate_and_arrange <- function(df, relocate_cols, arrange_col){
-  df <- relocate(df, relocate_cols)
+  df <- relocate(df, all_of(relocate_cols))
   df <- arrange(df, arrange_col)
 
   return (df)
