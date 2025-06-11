@@ -19,7 +19,7 @@ library(orderly2)
 #orderly preparation 
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("nipah_compilation", "latest(parameter:pathogen == this:pathogen)",
+orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "models.csv", "params.csv",'outbreaks.csv'))
 orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
 source("nipah_functions.R")
