@@ -40,3 +40,6 @@ orderly_run("db_cleaning",list(pathogen="NIPAH", debug_mode=TRUE))
 # *------------------------------- Latex tables -------------------------------*
 # Add cleaning mode
 orderly_run("nipah_latex_tables", list(pathogen="NIPAH"))
+
+# *---------------------------- Plots and analysis ----------------------------*
+orderly_run("nipah_transmission", list(pathogen="NIPAH"))
