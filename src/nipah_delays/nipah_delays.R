@@ -43,14 +43,10 @@ models     <- read_csv("models.csv")
 parameters <- read_csv("params.csv")
 outbreaks  <- read_csv("outbreaks.csv")
 
-if('first_aauthor_surname' %in% colnames(articles))
-  articles <- articles %>% rename(first_author_surname = first_aauthor_surname)
-
 #dfs <- curation(articles,tibble(),models,parameters, adjust_for_exponents = FALSE )
 dfs <- data_curation(articles,outbreaks,models,parameters, plotting = TRUE )
 
 articles   <- dfs$articles
-articles   <- articles %>% mutate(across(c(qa_m1,qa_m2,qa_a3,qa_a4,qa_d5,qa_d6,qa_d7), ~ na_if(.x, 'Not Applicable')))
 
 articles   <- epireview::assign_qa_score(articles = articles)$articles
 qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
