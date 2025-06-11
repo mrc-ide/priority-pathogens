@@ -253,7 +253,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                           plot_study, digits, lims, colour, label,
                           width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
 
-  dataframe <- epireview::filter_df_for_metamean(dataframe)
+  dataframe <- filter_df_for_metamean(dataframe)
   dataframe <- dataframe[!is.na(dataframe$id),]
   if(!is.na(subgroup))
   {
@@ -633,4 +633,39 @@ insert_blank_rows <- function(dataframe, column) {
   dataframe            <- dataframe %>% mutate_all(~ ifelse(is.na(.), "", .))
 
   dataframe
+}
+
+# --------- Copied from epireview:
+# Changes: parameter_uncertainty_singe_type -> parameter_uncertainty_single_type
+filter_df_for_metamean <- function (df)
+{
+  cols_needed <- c("parameter_value", "parameter_unit", "population_sample_size",
+                   "parameter_value_type", "parameter_uncertainty_single_type",
+                   "parameter_uncertainty_type", "parameter_uncertainty_lower_value",
+                   "parameter_uncertainty_upper_value")
+  df <- epireview::check_df_for_meta(df, cols_needed)
+  df <- df[!is.na(df[["population_sample_size"]]), ]
+  df <- df[!is.na(df[["parameter_value"]]), ]
+  df <- df[df[["parameter_value_type"]] == "Mean" & grepl(x = tolower(df[["parameter_uncertainty_single_type"]]),
+                                                          pattern = "standard deviation") | df[["parameter_value_type"]] ==
+             "Median" & grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                              pattern = "iqr") | df[["parameter_value_type"]] == "Median" &
+             grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                   pattern = "range"), ]
+  df$xbar <- ifelse(df[["parameter_value_type"]] == "Mean",
+                    df[["parameter_value"]], NA)
+  df$median <- ifelse(df[["parameter_value_type"]] == "Median",
+                      df[["parameter_value"]], NA)
+  df$q1 <- ifelse(grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                        "iqr"), df[["parameter_uncertainty_lower_value"]], NA)
+  df$q3 <- ifelse(grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                        "iqr"), df[["parameter_uncertainty_upper_value"]], NA)
+  df$min <- ifelse(grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                         pattern = "range") & !grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                                                     "iqr"), df[["parameter_uncertainty_lower_value"]], NA)
+  df$max <- ifelse(grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                         pattern = "range") & !grepl(x = tolower(df[["parameter_uncertainty_type"]]),
+                                                     pattern = "iqr"), df[["parameter_uncertainty_upper_value"]],
+                   NA)
+  df
 }
