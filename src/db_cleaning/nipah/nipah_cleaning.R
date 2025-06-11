@@ -1,4 +1,6 @@
 # *========================== Manual Niaph cleaning ===========================*
+library(tidyr)
+
 article_cleaning <- function(df){
   # Update Not Applicable so that epireview assign_qa_score works
   qa_cols <- c("qa_m1", "qa_m2", "qa_a3", "qa_a4", "qa_d5", "qa_d6", "qa_d7")
