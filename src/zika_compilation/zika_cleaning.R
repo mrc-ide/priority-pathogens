@@ -1258,6 +1258,26 @@ zika_clean_zcs_microcephaly <- function(df){
     filter(!(covidence_id == 10681 & parameter_value %in% c(10, 6))) %>% #these were IgG prevalences not ZCS risks (Table 1)
     mutate(population_sample_type = ifelse(covidence_id == 6993, 'Hospital based', population_sample_type),
            population_group = ifelse(covidence_id == 6993, 'Pregnant women',population_group))
+  
+  # After cleaning that finished on 12 June, 2025, we decided to pull in the edited spreadsheet instead of cleaning it here (because of the many changes)
+  covids_toedit <- c(5715, 5895, 6175, 10818, # these are cov ids with entries that we removed that didn't have another entry (for either CZS or misc),
+                                              # so they will not be added back in when we bind below (they do have other entries for other parameters)
+                     705,1236,1326,2704,2713,3071,4014,4324,4383,5753,5902,6028,6072,6120,6241,6270,6301,6427,
+                     6501,6521,6547,6658,6670,6686,6810,6823,6952,6971,6993,7050,7165,7452,7503,10125,10318,
+                     10509,10681,10741,10760,10965,11048,11297,11565,11900,11966,12074,18620,18800,19021,31944,31965)
+  
+  # remove the entries that we are editing 
+  df_filtered <- df %>%
+    filter(!(covidence_id %in% covids_toedit & (parameter_type == "Zika congenital syndrome (microcephaly) probability" | 
+                                                  parameter_type == 'Miscarriage probability'))) %>%
+    mutate(metaanalysis_inclusion = NA,
+           women_or_infants = NA,
+           pregnancy_outcome_type = NA)
+  
+  # add the new ones back in 
+  df <- df_filtered %>%
+    rbind(czs_misc_cleaned)
+  
 }
 
 zika_clean_genomics <- function(df){
