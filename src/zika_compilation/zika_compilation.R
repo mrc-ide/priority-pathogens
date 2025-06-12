@@ -10,6 +10,7 @@ library(stringi)
 library(rio)
 library(orderly.sharedfile)
 library(epireview)
+library(readxl)
 
 ## pathogen should be set to one of our priority-pathogens
 ## use capital case
@@ -73,7 +74,10 @@ orderly_resource(
     "zika_db2_qa_fixing.xlsx" = "zika_db2_qa_fixing.xlsx",
     "zika_db2_params_fixing.xlsx" = "zika_db2_params_fixing.xlsx",
     "zika_db2_models_fixing.xlsx" = "zika_db2_models_fixing.xlsx",
-    "zika_db2_outbreaks_fixing.csv" = "zika_db2_outbreaks_fixing.csv")
+    "zika_db2_outbreaks_fixing.csv" = "zika_db2_outbreaks_fixing.csv",
+    # Cleaning file for CZS/microcephaly and miscarriage probabilities
+    "czs_misc_checked.xlsx" = "czs_misc_checked.xlsx"
+    )
 )
 
 # source('cleaning.R')
@@ -207,6 +211,9 @@ outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks) %>
   clean_names()
 params_all <- rbind(db1_params, db2_fixing_params, single_params) %>%
   clean_names()
+
+# Read in the cleaned file for CZS/miscarriage probabilities 
+czs_misc_cleaned <- readxl::read_excel("czs_misc_checked.xlsx")
 
 #' cleaning script for zika
 articles_clean <- zika_clean_articles(articles_all, pathogen = 'ZIKA')

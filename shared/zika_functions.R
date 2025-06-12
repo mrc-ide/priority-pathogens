@@ -10,7 +10,10 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
   
   df   <- df %>% mutate(urefs = make.unique(refs)) %>%
     mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
-           country_brazil = ifelse(population_country == 'Brazil', 'Brazil','Rest of World'),
+           country_brazil = case_when(
+             population_country == 'Brazil' ~ 'Brazil',
+             population_country != 'Brazil' | is.na(population_country) ~ 'Rest of World',
+             TRUE ~ 'missing'),
            population_location = ifelse(population_location == 'Wynwood Neighborhood, Miami-Dade County, Florida','Miami-Dade County, Florida', population_location),
            continent = countrycode(sourcevar = population_country,
                                                origin = "country.name",
@@ -35,6 +38,7 @@ forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_val
              population_country == 'France' & population_location == 'New Caledonia' ~ "Oceania",
              population_country == 'France' & population_location == 'French Guiana' ~ "Americas",
              population_country == 'Unspecified' ~ "Unspecified",
+             population_location == 'Veterans Health Administration in US and Caribbean' ~ "Americas",
              TRUE ~ continent
              ),
            continent = factor(continent, levels = c('Brazil (Americas)','French Polynesia, France (Oceania)','Colombia (Americas)', 'Americas','Asia','Europe','Oceania','Africa',"Unspecified")),
