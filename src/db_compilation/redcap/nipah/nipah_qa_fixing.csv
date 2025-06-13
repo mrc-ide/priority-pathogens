@@ -1,0 +1,26 @@
+fixed,only_notes_mismatch,Covidence_ID,Name_data_entry,QA_M1,QA_M2,QA_A3,QA_A4,QA_D5,QA_D6,QA_D7,qa_notes,num_rows,matching
+1,FALSE,21,Anne Cori,No,No,Not Applicable,Not Applicable,No,Yes,No,NA,1,0
+1,FALSE,42,Joseph Hicks,No,No,No,No,No,No,No,NA,1,0
+1,FALSE,65,Tristan Naidoo,Yes,Yes,Not Applicable,Not Applicable,No,Yes,No,NA,1,0
+1,FALSE,86,Anne Cori,No,No,No,No,Yes,No,No,NA,1,0
+1,FALSE,167,sangeeta bhatia,Yes,Yes,Yes,Yes,Yes,Yes,No,NA,1,0
+1,FALSE,184,Rob Johnson,No,No,Yes,Yes,No,Yes,No,NA,1,0
+1,FALSE,192,Richard Sheppard,Yes,No,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,FALSE,207,Rhys Earl,Yes,No,NA,No,Yes,No,No,NA,1,0
+1,FALSE,266,Ruth McCabe,No,No,No,Yes,Yes,No,No,NA,1,0
+1,FALSE,270,Christian Morgenstern,Yes,No,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,FALSE,271,Rob Johnson,Yes,Yes,No,No,No,No,No,NA,1,0
+1,FALSE,274,Richard Sheppard,No,No,No,No,Yes,No,No,NA,1,0
+1,FALSE,275,Joseph Hicks,No,No,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,FALSE,280,Rhys Earl,Yes,No,No,Yes,Yes,No,No,NA,1,0
+1,FALSE,291,Tristan Naidoo,Yes,Yes,Not Applicable,Not Applicable,No,Yes,No,NA,1,0
+1,FALSE,292,Christian Morgenstern,Yes,Yes,No,No,No,Yes,No,18Feb2001 barrier methods were introduced for case management.,1,0
+1,FALSE,345,Richard Sheppard,No,No,No,No,No,No,No,NA,1,0
+1,FALSE,409,Rob Johnson,Yes,No,Not Applicable,Not Applicable,No,Yes,No,NA,1,0
+1,FALSE,708,Thomas Rawson,Yes,No,Yes,Yes,No,No,No,Some issues around the fact that cases were from the same household.,1,0
+1,FALSE,833,Rob Johnson,No,No,No,No,No,Yes,No,NA,1,0
+1,FALSE,851,Richard Sheppard,No,No,Yes,No,No,Yes,No,NA,1,0
+1,FALSE,896,Rhys Earl,Yes,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,FALSE,2892,Christian Morgenstern,Yes,Yes,Not Applicable,Not Applicable,No,Yes,No,NA,1,0
+1,FALSE,3374,Joseph Hicks,Yes,No,No,No,Not Applicable,Not Applicable,Not Applicable,NA,1,0
+1,FALSE,3411,Patrick Doohan,No,No,No,No,Not Applicable,Not Applicable,Not Applicable,NA,1,0
