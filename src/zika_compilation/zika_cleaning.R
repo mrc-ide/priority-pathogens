@@ -263,34 +263,36 @@ zika_clean_outbreaks <- function(df, pathogen){
     # Clean outbreak location
     mutate(# Outbreak location 
       outbreak_location = case_when(
+        outbreak_country == 'Puerto Rico' ~ 'Puerto Rico',
         outbreak_location == "Entire Country" ~ NA,
         outbreak_location == 'Rajastan' ~ 'Rajasthan',
         outbreak_location == 'Australes' | outbreak_location == "Polynesia: Austral Islands (AUS)" 
-        ~ "Austral Islands",
+        ~ "Austral Islands, French Polynesia",
         outbreak_location == 'Moorea' | outbreak_location == "Polynesia: Mo'orea Island (MOO)" 
-        ~ "Mo'orea",
+        ~ "Mo'orea, French Polynesia",
         outbreak_location == 'Iles Sous-Le-Vent' | outbreak_location == 'Iles sous-le-vent' | 
           outbreak_location == "Polynesia: Sous-le-vent Islands (SLV)" | outbreak_location=='Sous-Le-Vent Islands'
-        ~ 'Sous-le-vent Islands',
+        ~ 'Sous-le-vent Islands, French Polynesia',
         outbreak_location == "Marquises" | outbreak_location == "Polynesia: Marquesas Islands (MRQ)"
-        ~ "Marquesas Islands",
-        outbreak_location == 'Shastri Nagar And Surrounding Area Jaipur;\r\nRajasthan' ~ "Rajasthan: Jaipur", # very specific neighborhood which is not relevant; switch to writing it this way 
+        ~ "Marquesas Islands, French Polynesia",
+        outbreak_location == 'Shastri Nagar And Surrounding Area Jaipur;\r\nRajasthan' ~ "Jaipur, Rajasthan", # very specific neighborhood which is not relevant; switch to writing it this way 
         outbreak_location == "West Indies: Guadelopue (GLP)" ~ 'Guadeloupe',
         outbreak_location == "West Indies: Martinique (MTQ)" ~ "Martinique",
         outbreak_location == "West Indies: Saint-Martin (MAF)" ~ "Saint Martin",
-        outbreak_location == "Polynesia: Tuamotus (TUA)" ~ "Tuamotus",
-        outbreak_location == "Polynesia: Tahiti (TAH)" ~ "Tahiti",
+        outbreak_location == "Polynesia: Tuamotus (TUA)" ~ "Tuamotus, French Polynesia",
+        outbreak_location == 'Tuamotu-Gambier' ~ "Tuamotu-Gambier, French Polynesia",
+        outbreak_location == "Polynesia: Tahiti (TAH)" | outbreak_location == "Tahiti" ~ "Tahiti, French Polynesias",
         outbreak_location == "Cucuta" ~ "Cúcuta",
-        outbreak_location == 'St. Croix; St. John; St. Thomas;' ~ 'St. Croix; St. John; St. Thomas',
-        outbreak_location == 'West Indies: Guadeloupe and Martinique' ~ "Guadeloupe; Martinique",
+        outbreak_location == 'St. Croix; St. John; St. Thomas;' ~ 'St. Croix, St. John, St. Thomas',
+        outbreak_location == 'West Indies: Guadeloupe and Martinique' ~ "Guadeloupe, Martinique",
         TRUE ~ outbreak_location
       ),
-      outbreak_location = case_when(
-        outbreak_location %in% c("Austral Islands", "Marquesas Islands",
-                                 "Mo'orea", "Sous-le-vent Islands","Sous-Le-Vent Islands",
-                                 "Tahiti", "Tuamotus") ~ paste(outbreak_location, ", French Polynesia"),
-        TRUE~ outbreak_location
-      )
+      # outbreak_location = case_when(
+      #   outbreak_location %in% c("Austral Islands", "Marquesas Islands",
+      #                            "Mo'orea", "Sous-le-vent Islands","Sous-Le-Vent Islands",
+      #                            "Tahiti", "Tuamotus") ~ paste(outbreak_location, ", French Polynesia"),
+        # TRUE~ outbreak_location
+      # )
     ) %>%
     # mutate(outbreak_location = gsub(",", ";", outbreak_location)) %>%
     # mutate(outbreak_location = gsub("and", ";", outbreak_location)) %>%
@@ -321,15 +323,24 @@ zika_clean_outbreaks <- function(df, pathogen){
         'Federated States of Micronesia'
       ),
       outbreak_country = case_when(
+        outbreak_location == 'Puerto Rico'~ "United States",
         outbreak_location %in% c("Austral Islands, French Polynesia", "Marquesas Islands, French Polynesia",
                                                        "Mo'orea, French Polynesia, French Polynesia", "Sous-le-vent Islands, French Polynesia","Sous-Le-Vent Islands, French Polynesia",
                                                        "Tahiti, French Polynesia", "Tuamotus, French Polynesia") ~ 'France',
+        outbreak_location == 'Entire Country' ~ NA,
         outbreak_location == "Martinique" ~ "France",
         outbreak_location == "Guadeloupe" ~ "France", 
-        outbreak_location == "Saint Martin" ~ "French and the Netherlands",
+        outbreak_location == "Saint Martin" ~ "France and the Netherlands",
         outbreak_location == 'French Guiana' ~ 'France',
         outbreak_location == 'Martinique, Guadeloupe, French Guiana' ~ 'France',
         outbreak_location == "Guadeloupe; Martinique" ~ "France",
+        grepl("Puerto Rico", outbreak_location) ~ 'United States',
+        # If Yap, should be Micronesia not French Polynesia 
+        outbreak_location == 'Yap Island' ~ "Federated States of Micronesia",
+        # Add France as country for French Polynsia and French Guinea and New Caledonia
+        grepl("French Polynesia", outbreak_location) | outbreak_location == 'Sous-le-vent Islands' ~ "France",
+        outbreak_location == 'New Caledonia' ~ "France",
+        grepl('Croix', outbreak_location) | grepl('St. John', outbreak_location) | grepl('St. Thomas', outbreak_location) ~ "United States",
         TRUE ~ outbreak_country
       )) 
   
