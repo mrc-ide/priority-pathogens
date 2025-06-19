@@ -40,6 +40,15 @@ param_cleaning <- function(df){
   df[no_true_false] <- lapply(no_true_false,
                               function(col) df[[col]] != "No")
 
+  df <- df |>
+    mutate(parameter_hd_from = ifelse(parameter_hd_from %in% c("Other", ""),
+                                      other_delay_start, parameter_hd_from),
+           parameter_hd_to = ifelse(parameter_hd_to %in% c("Other", ""),
+                                    other_delay_end, parameter_hd_to),
+           parameter_value_type = ifelse(parameter_value_type=="Central - unspecified",
+                                         "Unspecified", parameter_value_type)
+           )
+
   return (df)
 }
 # *============================================================================*
