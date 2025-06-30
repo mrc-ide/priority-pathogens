@@ -49,7 +49,7 @@ Parameter lower bound,parameters
 Parameter upper bound,parameters
 Parameter value type,parameters
 Parameter uncertainty - single value,parameters
-Parameter uncertainty - singe type,parameters
+Parameter uncertainty - single type,parameters
 Parameter uncertainty - lower value,parameters
 Parameter uncertainty - upper value,parameters
 Parameter uncertainty - type,parameters
@@ -126,3 +126,40 @@ ID,outbreaks
 Pathogen,outbreaks
 Covidence_ID,outbreaks
 Name_data_entry,outbreaks
+Distribution_2_type,parameters
+Distribution_2_par2_value,parameters
+Distribution_2_par2_uncertainty,parameters
+Distribution_2_par2_type,parameters
+Distribution_2_par1_value,parameters
+Distribution_2_par1_uncertainty,parameters
+Distribution_2_par1_type,parameters
+Data_available,parameters
+Case_definition,parameters
+Exponent_2,parameters
+Method_2_from_supplement,parameters
+Inverse_param_2,parameters
+Parameter 2 value type,parameters
+Parameter 2 value,parameters
+Parameter 2 upper bound,parameters
+Parameter 2 unit,parameters
+Parameter 2 uncertainty - upper value,parameters
+Parameter 2 uncertainty - type,parameters
+Parameter 2 uncertainty - single value,parameters
+Parameter 2 uncertainty - single type,parameters
+Parameter 2 uncertainty - lower value,parameters
+Parameter 2 statistical approach,parameters
+Parameter_2_sample_paired_upper,parameters
+Parameter_2_sample_paired_lower,parameters
+Parameter 2 lower bound,parameters
+Urban/Rural area,parameters
+Trimester_exposed,parameters
+Third_sample_param_yn,parameters
+seroprevalence_adjusted,parameters
+Parameter statistical approach,parameters
+Female_cases,outbreaks
+Male_cases,outbreaks
+Population_size,outbreaks
+Prop_female_cases,outbreaks
+Prop_male_cases,outbreaks
+Type_cases_sex_disagg,outbreaks
+Cases_unspecified,outbreaks

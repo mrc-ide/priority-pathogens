@@ -37,7 +37,8 @@ library(readr)
 articles <- read_csv("double_extraction_articles.csv")
 parameters <- read_csv("double_extraction_params.csv")
 models <- read_csv("double_extraction_models.csv")
-if (pathogen %in% c('LASSA', 'OROV', 'ZIKA')) {
+
+if (pathogen %in% c('LASSA', 'OROV', 'ZIKA', 'NIPAH')) {
   outbreaks <- read_csv("double_extraction_outbreaks.csv")
 } else {
   outbreaks <- NULL
@@ -45,71 +46,102 @@ if (pathogen %in% c('LASSA', 'OROV', 'ZIKA')) {
 
 source("sorting.R")
 
+qa_exlcude_cols <- c("Name_data_entry", "ID")
+qa_notes_col <- NULL
+qa_id_col <- NULL
+
+param_exclude_cols <- c("Name_data_entry",
+                        "ID",
+                        "Parameter_data_ID",
+                        "Article_ID")
+param_notes_col <- NULL
+param_id_col <- NULL
+
+outbreak_exclude_cols <- c("Name_data_entry",
+                           "ID",
+                           "Outbreak_ID",
+                           "Article_ID")
+outbreak_notes_col <- NULL
+outbreak_id_col <- NULL
+
+model_exclude_cols <- c("Name_data_entry",
+                        "ID",
+                        "Model_data_ID",
+                        "Article_ID")
+
+model_notes_col <- NULL
+model_id_col <- NULL
+
+if (pathogen %in% c("NIPAH")){
+  outbreak_exclude_cols <- c(outbreak_exclude_cols, "Outbreak_data_ID")
+
+  qa_notes_col <- "qa_notes"
+  qa_id_col <- "ID"
+  param_notes_col <- "parameter_notes"
+  param_id_col <- "Parameter_data_ID"
+  outbreak_notes_col <- "outbreak_notes"
+  outbreak_id_col <- "Outbreak_data_ID"
+  model_notes_col <- "model_notes"
+  model_id_col <- "Model_data_ID"
+}
+
+
 # Quality assessment
 qa_only <- articles %>% select(
   Covidence_ID, ID,
   Name_data_entry, starts_with("QA")
 )
 
-qa_match <- filter_qa(qa_only,
+qa_match <- filter_table(qa_only,
   matching = TRUE,
-  id_name1 = "Name_data_entry", id_name2 = "ID"
-)
+  exlcude_cols = qa_exlcude_cols)
 
-qa_discordant <- filter_qa(qa_only,
+qa_discordant <- filter_table(qa_only,
   matching = FALSE,
-  id_name1 = "Name_data_entry", id_name2 = "ID"
+  exlcude_cols = qa_exlcude_cols,
+  notes_col = qa_notes_col,
+  id_col = qa_id_col
 )
 
 # Parameters
-param_match <- filter_extracted(parameters,
+# parameters <- replace("No")
+param_match <- filter_table(parameters,
   matching = TRUE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Parameter_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols = param_exclude_cols
 )
 
-param_discordant <- filter_extracted(parameters,
+param_discordant <- filter_table(parameters,
   matching = FALSE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Parameter_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols = param_exclude_cols,
+  notes_col = param_notes_col,
+  id_col = param_id_col
 )
 
 # Models
-model_match <- filter_extracted(models,
+model_match <- filter_table(models,
   matching = TRUE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Model_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols=model_exclude_cols
 )
 
-model_discordant <- filter_extracted(models,
+model_discordant <- filter_table(models,
   matching = FALSE,
-  id_name1 = "Name_data_entry",
-  id_name2 = "ID",
-  id_name3 = "Model_data_ID",
-  id_name4 = "Article_ID"
+  exlcude_cols=model_exclude_cols,
+  notes_col = model_notes_col,
+  id_col = model_id_col
 )
 
-if (pathogen %in% c('LASSA', 'OROV', "ZIKA")){
-  outbreak_match <- filter_extracted(outbreaks,
+
+if (pathogen %in% c('LASSA', 'OROV',  "ZIKA", 'NIPAH')){
+  outbreak_match <- filter_table(outbreaks,
                                   matching = TRUE,
-                                  id_name1 = "Name_data_entry",
-                                  id_name2 = "ID",
-                                  id_name3 = "Outbreak_ID",
-                                  id_name4 = "Article_ID"
+                                  exlcude_cols=outbreak_exclude_cols
   )
-  
-  outbreak_discordant <- filter_extracted(outbreaks,
-                                       matching = FALSE,
-                                       id_name1 = "Name_data_entry",
-                                       id_name2 = "ID",
-                                       id_name3 = "Outbreak_ID",
-                                       id_name4 = "Article_ID"
+
+  outbreak_discordant <- filter_table(outbreaks,
+                                      matching = FALSE,
+                                      exlcude_cols=outbreak_exclude_cols,
+                                      notes_col = outbreak_notes_col,
+                                      id_col = outbreak_id_col
   )
 }
 
@@ -119,6 +151,7 @@ if (pathogen != 'LASSA' & pathogen != 'ZIKA') {
   qa_discordant <- qa_discordant %>% select(-ID)
   param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
   model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
+  outbreak_discordant <- outbreak_discordant |> select(-c(ID, Outbreak_data_ID))
   }
 
 # Create files
@@ -137,7 +170,7 @@ if (pathogen %in% c('EBOLA','SARS')) {
   file.create("outbreaks_fixing.csv")
 }
 
-if (pathogen %in% c('LASSA', 'OROV', "ZIKA")){
+if (pathogen %in% c('LASSA', 'OROV', "ZIKA", 'NIPAH')){
   write_csv(outbreak_match, "outbreaks_matching.csv")
   write_csv(outbreak_discordant, "outbreaks_fixing.csv")
 }
