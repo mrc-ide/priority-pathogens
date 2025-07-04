@@ -1,11 +1,11 @@
 #task to create zika risk factor plots
 
-library(dplyr) 
+library(dplyr)
 library(stringr)
 library(tibble)
 library(purrr)
 
-#orderly preparation 
+#orderly preparation
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen &&
@@ -14,7 +14,7 @@ orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen
 orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
 source("lassa_functions.R")
 
-orderly_artefact(files = c("figure_SI_risk_other.pdf", 
+orderly_artefact(files = c("figure_SI_risk_other.pdf",
                            "figure_SI_risk_panel.pdf"))
 
 ###################
@@ -31,15 +31,15 @@ parameters <- parameters %>% mutate(method_disaggregated_by = gsub(", ", ";", me
                                     population_country = gsub( ",", ";", population_country))
 
 parameters <- parameters %>% mutate(parameter_unit = replace_na(parameter_unit,""))
-parameters <- mutate_at(parameters, 
-                        vars(parameter_value, parameter_lower_bound, parameter_upper_bound, 
-                             parameter_uncertainty_lower_value, parameter_uncertainty_upper_value, 
+parameters <- mutate_at(parameters,
+                        vars(parameter_value, parameter_lower_bound, parameter_upper_bound,
+                             parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
                              parameter_uncertainty_single_value, distribution_par1_value, distribution_par2_value),
                         ~sub("\\.?0+$", "", sprintf("%.10f", round(., 10))))
 ##
 parameters <- parameters %>%
   mutate(parameter_value=
-           ifelse(parameter_value!="NA", 
+           ifelse(parameter_value!="NA",
                   parameter_value,
                   ifelse(parameter_lower_bound!="NA" & parameter_upper_bound!="NA",
                          paste(parameter_lower_bound, parameter_upper_bound, sep = " - "), "")))
@@ -69,10 +69,10 @@ parameters <- parameters %>% mutate(parameter_value = case_when(
 #                      values = paste0(values, parameter_unit, sep = " "))
 parameters <- parameters %>%
   mutate(unc_type=
-           ifelse(!is.na(distribution_par2_type), 
-                  paste(distribution_type, distribution_par2_type, sep = " "), 
+           ifelse(!is.na(distribution_par2_type),
+                  paste(distribution_type, distribution_par2_type, sep = " "),
                   ifelse(!is.na(parameter_uncertainty_type),
-                         paste(parameter_uncertainty_type),    
+                         paste(parameter_uncertainty_type),
                          ifelse(!is.na(parameter_uncertainty_singe_type),
                                 paste(parameter_uncertainty_singe_type),""))))
 parameters$unc_type <- gsub("Inter Quartile Range \\(IQR\\)", "IQR", parameters$unc_type)
@@ -105,9 +105,9 @@ parameters <- parameters %>%
 parameters <- parameters %>% mutate(unc_type = case_when(
   unc_type %in% c("Unspecified","") ~ "",
   TRUE ~  paste(unc_type, ": ", uncertainty, sep = "")))
-##                     
-#parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <- 
-#                                     parameters$population_sample_size[is.na(parameters$cfr_ifr_denominator)]        
+##
+#parameters$cfr_ifr_denominator[is.na(parameters$cfr_ifr_denominator)] <-
+#                                     parameters$population_sample_size[is.na(parameters$cfr_ifr_denominator)]
 parameters$population_country <- gsub(",", "", parameters$population_country)
 #new as well
 parameters <- parameters %>%
@@ -141,8 +141,8 @@ parameters <- parameters %>% mutate_all(~ ifelse(is.na(.), "", .))
 risk_params <- parameters %>%
   filter(qa_score >= 0.5) %>%
   filter(grepl("Risk factors", parameter_type, ignore.case = TRUE)) %>%
-  select(covidence_id, riskfactor_outcome, 
-         riskfactor_name,	riskfactor_significant, 
+  select(covidence_id, riskfactor_outcome,
+         riskfactor_name,	riskfactor_significant,
          riskfactor_adjusted, population_sample_size,
          population_country, dates,
          population_sample_type, population_group, refs)
@@ -154,14 +154,14 @@ table(risk_params$riskfactor_name)
 length(unique(risk_params$riskfactor_outcome))
 
 risk_table <- risk_params %>% select(-covidence_id) %>%
-  separate_longer_delim(riskfactor_name, delim = ";") %>% 
+  separate_longer_delim(riskfactor_name, delim = ";") %>%
   mutate(population_sample_size = replace_na(as.double(population_sample_size),0),
          riskfactor_adjusted    = case_when(riskfactor_adjusted=='' ~ 'Unspecified',
                                             TRUE ~ riskfactor_adjusted)) %>%
   group_by(riskfactor_outcome,riskfactor_name,riskfactor_significant,riskfactor_adjusted) %>%
   summarise(n=n(),
             pop_size = sum(population_sample_size)) %>%
-  unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ") 
+  unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
 
 length(unique(risk_table$riskfactor_name))
 
@@ -173,11 +173,11 @@ table(summ_risks$riskfactor_significant)
 
 # sum(summ_risks$n) # number of unique combos of risk factor, outcome, adjusted, significant
 
-summ_risks2 <- summ_risks %>% 
+summ_risks2 <- summ_risks %>%
   group_by(riskfactor_outcome,riskfactor_name) %>%
-  summarise(n=n()) 
+  summarise(n=n())
 
-nrow(summ_risks2) # number of unique combos of risk factor and outcome 
+nrow(summ_risks2) # number of unique combos of risk factor and outcome
 
 text_size <- 22
 custom_colours <- c('Significant / Adjusted'='blue4', 'Significant / Not adjusted' = 'lightblue', 'Significant / Unspecified'='blue',
@@ -186,61 +186,61 @@ custom_colours <- c('Significant / Adjusted'='blue4', 'Significant / Not adjuste
 
 # Zika congenital syndrome/other birth defects
 risk_table_plt_zcs <- risk_table %>% filter(riskfactor_outcome=='Zika congenital syndrome/other birth defects') %>%
-  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
+  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) +
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
   scale_color_manual(values = custom_colours) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
-  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() +
   theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
-         strip.text = element_text( color = "black"), 
+         strip.text = element_text( color = "black"),
          text = element_text(size = text_size),
          strip.background =element_rect(fill="grey90"))
 
 
 # Infection
 risk_table_plt_infection <- risk_table %>% filter(riskfactor_outcome=='Infection') %>%
-  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
+  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) +
   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
   scale_color_manual(values = custom_colours) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
-  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() +
   theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
-         strip.text = element_text( color = "black"),          
+         strip.text = element_text( color = "black"),
          strip.background =element_rect(fill="grey90"),
          text = element_text(size = text_size),
          legend.position = 'none')
 
 
-#Microcephaly                            
+#Microcephaly
 risk_table_plt_microcephaly <- risk_table %>% filter(riskfactor_outcome=='Microcephaly') %>%
-  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
-  geom_bar( stat='identity',position = position_dodge(preserve = "single")) + 
+  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) +
+  geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
   theme_light()+
   scale_color_manual(values = custom_colours) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
-  scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  + 
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  +
   theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
-         strip.text = element_text( color = "black"),          
+         strip.text = element_text( color = "black"),
          strip.background =element_rect(fill="grey90"),
          text = element_text(size = text_size),
-         legend.position = 'none') 
+         legend.position = 'none')
 
-#Serology                             
+#Serology
 risk_table_plt_serology  <- risk_table %>% filter(riskfactor_outcome=='Serology') %>%
-  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
-  geom_bar( stat='identity',position = position_dodge(preserve = "single")) + 
+  ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) +
+  geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
   theme_light()+
   scale_color_manual(values = custom_colours) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 16)) +
-  scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  + 
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  +
   theme( axis.text.x = element_text( angle = 35, hjust = 1, size = text_size ),
-         strip.text = element_text( color = "black"),          
+         strip.text = element_text( color = "black"),
          strip.background =element_rect(fill="grey90"),
          text = element_text(size = text_size),
-         legend.position = 'none') 
+         legend.position = 'none')
 
 # Everything else
-risk_table_plt_other <- risk_table %>% 
+risk_table_plt_other <- risk_table %>%
   filter(!(riskfactor_outcome %in% c('Infection', 'Microcephaly','Serology','Zika congenital syndrome/other birth defects'))) %>%
   mutate(riskfactor_outcome = case_when(
     riskfactor_outcome == 'Other neurological symptoms in general population' ~ 'Other neurological symptoms\nin general population',
@@ -249,13 +249,13 @@ risk_table_plt_other <- risk_table %>%
   )) %>%
   ggplot(aes(x = riskfactor_name, y = n,
              col = `Significant / Adjusted`,
-             fill = `Significant / Adjusted`)) + 
+             fill = `Significant / Adjusted`)) +
   geom_bar(stat='identity',
            position = position_dodge(preserve = "single")) +
   scale_color_manual(values = custom_colours) +
-  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
+  scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() +
   theme( axis.text.x = element_text( angle = 65, hjust = 1, size = text_size ),
-         strip.text = element_text( color = "black"),          
+         strip.text = element_text( color = "black"),
          strip.background =element_rect(fill="grey90"),
          text = element_text(size = text_size)) +
   facet_wrap(~riskfactor_outcome)

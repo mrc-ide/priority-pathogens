@@ -51,16 +51,16 @@ orderly_dependency(
   "db_double",
   "latest(parameter:pathogen == this:pathogen)",
   c(
-    "db2_qa_matching.csv" = 'qa_matching.csv', 
+    "db2_qa_matching.csv" = 'qa_matching.csv',
     "db2_models_matching.csv" = 'models_matching.csv',
-    "db2_params_matching.csv" = 'params_matching.csv', 
+    "db2_params_matching.csv" = 'params_matching.csv',
     "db2_outbreaks_matching.csv" = 'outbreaks_matching.csv'
   )
 )
 
 # Manually fixed files and "cleaning" script - these need to be in the
 # src/zika_compilation folder
-# second round of double 
+# second round of double
 orderly_resource(
   c('zika_cleaning.R' = 'zika_cleaning.R',
     # 'cleaning.R' = 'cleaning.R',
@@ -84,11 +84,11 @@ orderly_resource(
 source('zika_cleaning.R')
 
 # Get article information into qa_fixing files for double extraction round 1
-db1_articles_matching <- read_csv('zika_db1_qa_matching.csv') 
+db1_articles_matching <- read_csv('zika_db1_qa_matching.csv')
 db1_double_articles <- read_csv('zika_db1_double_extraction_articles.csv')
 
 qa_matching1 <- db1_articles_matching %>%
-  distinct(Covidence_ID, .keep_all = TRUE) 
+  distinct(Covidence_ID, .keep_all = TRUE)
 qa_fixing1 <- readxl::read_xlsx('zika_db1_qa_fixing.xlsx')
 qa_all1 <- db1_double_articles %>%
   select(-starts_with('QA'))
@@ -96,11 +96,11 @@ qa_all1 <- db1_double_articles %>%
 qa_combined_pt1 <- qa_all1 %>%
   filter(Covidence_ID %in% qa_matching1$Covidence_ID) %>%
   left_join(qa_matching1) %>%
-  filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values 
+  filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values
 qa_combined_pt2 <- qa_all1 %>%
   filter(Covidence_ID %in% qa_fixing1$Covidence_ID) %>%
   left_join(qa_fixing1 %>% select(-fixed)) %>%
-  filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values 
+  filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values
 db1_articles <- rbind(qa_combined_pt1, qa_combined_pt2) %>%
   select(-num_rows, -matching) %>%
   select(sort(names(.)))
@@ -116,10 +116,10 @@ db1_params <- readxl::read_xlsx('zika_db1_params_fixing.xlsx')%>%
   select(-fixed, -num_rows, -matching) %>%
   select(sort(names(.)))
 
-#' Get files for second round of double extractions 
+#' Get files for second round of double extractions
 db2_double_articles <- read_csv("db2_double_extraction_articles.csv") %>%
   select(sort(names(.))) %>%
-  # fix incorrect covidence ID 
+  # fix incorrect covidence ID
   mutate(Covidence_ID = case_when(
     Covidence_ID == 6882 & FirstAauthor_Surname == "Sasmono" ~ 6886,
     TRUE ~ Covidence_ID),
@@ -128,7 +128,7 @@ db2_double_articles <- read_csv("db2_double_extraction_articles.csv") %>%
       TRUE ~ Covidence_ID_text)
   )
 db2_double_params <- read_csv("db2_double_extraction_params.csv") %>%
-  select(sort(names(.))) 
+  select(sort(names(.)))
 db2_double_models <- read_csv("db2_double_extraction_models.csv") %>%
   select(sort(names(.)))
 db2_double_outbreaks <- read_csv("db2_double_extraction_outbreaks.csv") %>%
@@ -162,7 +162,7 @@ db2_fixing_outbreaks <- read_csv('zika_db2_outbreaks_fixing.csv')%>%
   select(sort(names(.)))
 
 
-# For the second round of double extractions, need to get article information 
+# For the second round of double extractions, need to get article information
 qa_2 <- db2_fixing_articles %>%
   distinct(Covidence_ID, .keep_all = TRUE)
 qa_all2 <- db2_double_articles %>%
@@ -171,7 +171,7 @@ qa_all2 <- db2_double_articles %>%
 
 db2_articles <- qa_all2 %>%
   left_join(qa_2 %>% select(-ID), by = c('Covidence_ID', 'Name_data_entry')) %>%
-  filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values 
+  filter(!is.na(QA_M1)) # this removes the rows with missing quality assessment values
 
 # Add in those that still have article information (from doing 'double' extraction in single dbs)
 db2_articles <- rbind(db2_articles, db2_double_articles %>% filter(!(Covidence_ID %in% qa_2$Covidence_ID) )) %>%
@@ -183,7 +183,7 @@ db2distinct <- distinct(db2_articles, Covidence_ID, .keep_all = TRUE)
 double_articles <- rbind(db1_articles, db2_articles) %>%
   distinct(Covidence_ID, .keep_all = TRUE)
 
-# Get files for single extractions 
+# Get files for single extractions
 single_articles <- read_csv("single_extraction_articles.csv") %>%
   select(sort(names(.)))
 single_params <- read_csv("single_extraction_params.csv") %>%
@@ -197,12 +197,12 @@ single_outbreaks <- read_csv("single_extraction_outbreaks.csv") %>%
 single_articles <- single_articles %>%
   filter(!(Covidence_ID %in% c(6893, 1369, 1652, 1658, 23300)))
 
-# Make a file with article notes 
+# Make a file with article notes
 articlenotes <- rbind(db1_articles, db2_articles, single_articles) %>%
   filter(!is.na(Notes))
 write_csv(articlenotes, 'articlenotes.csv')
 
-# Combine double 1, double 2, and single extractions together 
+# Combine double 1, double 2, and single extractions together
 articles_all <- rbind(double_articles, single_articles) %>%
   clean_names()
 models_all <- rbind(db1_models, db2_fixing_models, single_models) %>%
@@ -212,7 +212,7 @@ outbreaks_all <- rbind(db1_outbreaks, db2_fixing_outbreaks, single_outbreaks) %>
 params_all <- rbind(db1_params, db2_fixing_params, single_params) %>%
   clean_names()
 
-# Read in the cleaned file for CZS/miscarriage probabilities 
+# Read in the cleaned file for CZS/miscarriage probabilities
 czs_misc_cleaned <- readxl::read_excel("czs_misc_checked.xlsx")
 
 #' cleaning script for zika
@@ -232,7 +232,7 @@ saveRDS(articles_qa, 'articles.rds')
 saveRDS(models_clean, 'models.rds')
 saveRDS(outbreaks_clean, 'outbreaks.rds')
 saveRDS(params_clean, 'parameters.rds')
-write_csv(articles_qa, 'articles.csv')
-write_csv(models_clean, 'models.csv')
-write_csv(outbreaks_clean, 'outbreaks.csv')
-write_csv(params_clean, 'parameters.csv')
+write_csv(articles_qa, 'zika_articles.csv')
+write_csv(models_clean, 'zika_models.csv')
+write_csv(outbreaks_clean, 'zika_outbreaks.csv')
+write_csv(params_clean, 'zika_parameters.csv')

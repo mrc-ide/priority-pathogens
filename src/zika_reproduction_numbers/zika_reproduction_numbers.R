@@ -17,7 +17,7 @@ library(gridExtra)
 library(orderly2)
 library(countrycode)
 
-#orderly preparation 
+#orderly preparation
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 
@@ -41,19 +41,19 @@ models     <- readRDS("models_curated.rds")
 parameters <- readRDS("parameters_curated.rds")%>%
   mutate(population_sample_type = ifelse(is.na(population_sample_type), 'Unspecified',population_sample_type),
          population_group = ifelse(is.na(population_group), 'Unspecified',population_group)) %>%
-  # for plotting remove location that creates confusion 
+  # for plotting remove location that creates confusion
   mutate(population_location = ifelse(population_country_original == "Brazil;Colombia" & covidence_id == 268, NA, population_location),
          population_location = ifelse(population_location == "90 major cities across LAC", "90 major cities", population_location),
-         # shorten name of Micronesia 
+         # shorten name of Micronesia
          population_country = ifelse(population_country == 'Federated States of Micronesia', "Micronesia", population_country)) %>%
-  mutate(central2 = coalesce(central, round(0.5*(parameter_lower_bound+parameter_upper_bound),3))) #central value for 
+  mutate(central2 = coalesce(central, round(0.5*(parameter_lower_bound+parameter_upper_bound),3))) #central value for
 
-# 
+#
 # dfs <- data_curation(articles,tibble(),models,parameters, plotting = TRUE )
-# 
+#
 # articles   <- dfs$articles
 # qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
-# 
+#
 # models     <- dfs$models
 # parameters <- dfs$parameters %>% left_join(qa_scores) %>%
 #   mutate(article_label = make.unique(refs)) %>%
@@ -79,9 +79,9 @@ c25 <- c(
 # epireview::forest_plot_r0(parameters, shape_by = 'parameter_value_type', col_by = 'r_pathway')
 repronums <- parameters %>%
   filter(qa_score >= 0.5) %>%
-  filter(parameter_class == 'Reproduction number') 
+  filter(parameter_class == 'Reproduction number')
 repronumsnoqa <- parameters %>%
-  filter(parameter_class == 'Reproduction number') 
+  filter(parameter_class == 'Reproduction number')
 table(repronums$parameter_type)
 table(repronumsnoqa$parameter_type)
 length(unique(repronums[grepl('Basic',repronums$parameter_type),]$covidence_id))
@@ -96,7 +96,7 @@ repsum <-repronums %>%
   arrange(parameter_type, parameter_value)  %>%
   group_by(parameter_type) %>%
   # filter(parameter_value == max(parameter_value, na.rm = TRUE) | parameter_value == min(parameter_value, na.rm = TRUE)) %>%
-  select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label) 
+  select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, population_age_max:population_sex, survey_start_date, survey_end_date, article_label)
 
 r0 <- repronums %>%
   filter(parameter_type == 'Reproduction number (Basic R0)') %>%
@@ -104,12 +104,14 @@ r0 <- repronums %>%
          below1 = ifelse(central2 < 1, 1, 0))
 tabyl(r0$between)
 tabyl(r0$below1)
+min(r0$central2)
+max(r0$central2)
 
-r0 %>% 
+r0 %>%
   group_by(population_country) %>%
-  summarize(n = n(), 
+  summarize(n = n(),
             min = min(parameter_value, na.rm = TRUE),
-            max = max(parameter_value, na.rm = TRUE)) 
+            max = max(parameter_value, na.rm = TRUE))
 
 r0hh <- repronums %>%
   filter(parameter_type == 'Reproduction number (Basic R0) - Human') %>%
@@ -123,17 +125,17 @@ re <- repronums %>%
   filter(parameter_type == 'Reproduction number (Effective, Re)') %>%
   select(covidence_id, central2, parameter_type:case_definition,  method_r, method_moment_value, method_disaggregated, qa_score, population_age_max:population_sex, survey_start_date, survey_end_date, article_label)  %>%
   mutate(between = ifelse(central2 > 1 & central2 < 4, 1, 0),
-         below1 = ifelse(central2 < 1, 1, 0)) 
+         below1 = ifelse(central2 < 1, 1, 0))
 tabyl(re$between)
 tabyl(re$below1)
 table(re$population_country)
 length(unique(re$covidence_id))
 
-re %>% 
+re %>%
   group_by(population_country) %>%
-  summarize(n = n(), 
+  summarize(n = n(),
             min = min(parameter_value, na.rm = TRUE),
-            max = max(parameter_value, na.rm = TRUE)) 
+            max = max(parameter_value, na.rm = TRUE))
 
 # repro <- repronums %>%
 #   group_by(parameter_type) %>%
@@ -146,7 +148,7 @@ table(repronums$population_study_end_year, repronums$population_country)
 
 table(repronums$method_r)
 
-basicr0 <- repronums %>% filter(parameter_type == 'Reproduction number (Basic R0)') 
+basicr0 <- repronums %>% filter(parameter_type == 'Reproduction number (Basic R0)')
 
 r0_pc_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'),
                      label = "Basic reproduction number",
@@ -154,19 +156,19 @@ r0_pc_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction 
                      lims = c(0,17),
                      custom_colours = c25,
                      text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,17), expand = c(0, 0))
 r0_pc <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'),
                      label = "Basic reproduction number",
                      color_column = 'population_country',
                      lims = c(0,17),
                      custom_colours = c25,
                      text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,17), expand = c(0, 0))
 
 
 r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)') %>%
                                     mutate(population_location= ifelse(population_location == 'Belo Horizonte, Salvador, Laranjeiras, Fortaleza, Recife, Cuiaba and Campo Grande, Porto Velho',
-                                                                       '8 major cities', population_location)), 
+                                                                       '8 major cities', population_location)),
                              label = "Basic reproduction number",
                              ycol = 'label_group',
                              facet_by_continent = TRUE,
@@ -174,13 +176,13 @@ r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Repro
                              shape_column = 'population_group',
                              lims = c(0,12),
                              # custom_colours = c25,
-                             text_size = TEXT_SIZE) + 
+                             text_size = TEXT_SIZE) +
   scale_x_continuous(limits = c(0,12), expand = c(0, 0)) +
   theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
- 
+
 r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)') %>%
                                mutate(population_location= ifelse(population_location == 'Belo Horizonte, Salvador, Laranjeiras, Fortaleza, Recife, Cuiaba and Campo Grande, Porto Velho',
-                                                                  '8 major cities', population_location)), 
+                                                                  '8 major cities', population_location)),
                              label = "Basic reproduction number",
                              ycol = 'label_group',
                              facet_by_continent = TRUE,
@@ -193,19 +195,19 @@ r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_t
   theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
 
 
-# r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'), 
+# r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'),
 #                         label = "Basic reproduction number - human",
 #                         color_column = 'population_country',
 #                         lims = c(0,17),
 #                         custom_colours = c25)
-# r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Human'), 
+# r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Human'),
 #                         label = "Basic reproduction number - human",
 #                         color_column = 'population_country',
 #                         lims = c(0,17),
 #                         custom_colours = c25)
 
 
-r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Sexual'), 
+r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Sexual'),
                          label = "Basic reproduction number - sexual",
                          ycol = 'label_group',
                          # facet_by_country = TRUE,
@@ -214,8 +216,8 @@ r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproducti
                          lims = c(0,17),
                          # custom_colours = c25,
                          text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
-r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Sexual'), 
+  scale_x_continuous(limits = c(0,17), expand = c(0, 0))
+r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Sexual'),
                         label = "Basic reproduction number - sexual",
                         ycol = 'label_group',
                         # facet_by_country = TRUE,
@@ -224,21 +226,21 @@ r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type =
                         lims = c(0,17),
                         # custom_colours = c25,
                         text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,17), expand = c(0, 0))
 
-# r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Mosquito'), 
+# r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Mosquito'),
 #                            label = "Basic reproduction number - mosquito",
 #                            color_column = 'population_country',
 #                            lims = c(0,17),
 #                            custom_colours = c25)
-# r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Mosquito'), 
+# r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Mosquito'),
 #                            label = "Basic reproduction number - mosquito",
 #                            color_column = 'population_country',
 #                            lims = c(0,17),
 #                            custom_colours = c25)
 
 
-r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Vector-borne'), 
+r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Vector-borne'),
                            label = "Basic reproduction number - vector-borne",
                            ycol = 'label_group',
                            # facet_by_country = TRUE,
@@ -246,8 +248,8 @@ r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reprodu
                            lims = c(0,17),
                            # custom_colours = c25,
                            text_size = TEXT_SIZE) +
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
-r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Vector-borne'), 
+  scale_x_continuous(limits = c(0,17), expand = c(0, 0))
+r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Vector-borne'),
                             label = "Basic reproduction number - vector-borne",
                             ycol = 'label_group',
                            # facet_by_country = TRUE,
@@ -255,9 +257,9 @@ r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_typ
                             lims = c(0,17),
                             # custom_colours = c25,
                            text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,17), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,17), expand = c(0, 0))
 
-re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective, Re)'), 
+re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective, Re)'),
                   label = "Effective reproduction number",
                   ycol = 'label_group',
                   # facet_by_country = TRUE,
@@ -266,8 +268,8 @@ re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction num
                   lims = c(0,4),
                   # custom_colours = c25,
                   text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,4), expand = c(0, 0)) 
-re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective, Re)'), 
+  scale_x_continuous(limits = c(0,4), expand = c(0, 0))
+re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective, Re)'),
                   label = "Effective reproduction number",
                   ycol = 'label_group',
                   # facet_by_country = TRUE,
@@ -276,7 +278,7 @@ re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Rep
                   lims = c(0,4),
                   # custom_colours = c25,
                   text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,4), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,4), expand = c(0, 0))
 
 re_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
                         label = "Effective reproduction number - sexual",
@@ -287,7 +289,7 @@ re_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproducti
                         lims = c(0,6),
                         custom_colours = c25,
                         text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,6), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,6), expand = c(0, 0))
 re_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
                         label = "Effective reproduction number - sexual",
                         ycol = 'label_group',
@@ -297,7 +299,7 @@ re_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type =
                         lims = c(0,6),
                         custom_colours = c25,
                         text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,6), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,6), expand = c(0, 0))
 
 re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Vector-borne'),
                            label = "Effective reproduction number - vector-borne",
@@ -308,7 +310,7 @@ re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction
                            lims = c(0,2),
                            custom_colours = c25,
                            text_size = TEXT_SIZE)+
-  scale_x_continuous(limits = c(0,2), expand = c(0, 0)) 
+  scale_x_continuous(limits = c(0,2), expand = c(0, 0))
 # re_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Mosquito'),
 #                            label = "Effective reproduction number - mosquito",
 #                            color_column = 'population_country',
@@ -342,8 +344,8 @@ ggsave("re_human_noqa.pdf", re_human_noqa, height = 10, width = 12, bg = 'white'
 # ggsave("re_mosquito_noqa.pdf", re_mosquito, height = 10, width = 12, bg = 'white')
 
 
-# Combine the plots together 
-layout <- 
+# Combine the plots together
+layout <-
 "AAAAABBBB
 AAAAABBBB
 AAAAABBBB
@@ -361,9 +363,9 @@ r0__plnoqa <- r0_human_noqa + r0_mosquito_noqa +
 
 
 
-re_pl <- re + re_human + re_mosquito + 
+re_pl <- re + re_human + re_mosquito +
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-re_plnoqa <- re_noqa + re_human_noqa +# re_mosquito_noqa + 
+re_plnoqa <- re_noqa + re_human_noqa +# re_mosquito_noqa +
   plot_layout(design = "AAA
                         BBB") + plot_annotation(tag_levels = 'A')
 
