@@ -72,7 +72,7 @@ orderly_init()
 ###############
 
 # Extraction prep - access versus redcap
-# orderly_run("db_extraction_prep", parameter = list(pathogen = 'ZIKA'))
+orderly_run("db_extraction_prep", parameter = list(pathogen = 'ZIKA'))
 
 # # Extract databases from shared drive (ensure config file pathway matches your machine)
 orderly_run("db_extraction", parameters = list(pathogen = "ZIKA"))
