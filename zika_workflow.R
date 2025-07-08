@@ -22,7 +22,7 @@ args <- parse_args(parser)
 location <- args$location
 # 
 # ## Retrieve the full path from the location
- location <- normalizePath(location)
+location <- normalizePath(location)
 
 ## Check if the file already exists in the location, and if it does, stop and
 ## ask the user to delete the file before running the script
@@ -133,3 +133,6 @@ orderly_run('zika_outbreaks', parameters = list(pathogen = 'ZIKA'))
 
 # Collate figures and tables
 # orderly_run("zika_collate_plots", parameters = list(pathogen = "LASSA"))
+
+## Clean up user environment
+orderly_location_remove(name = loc_name)
