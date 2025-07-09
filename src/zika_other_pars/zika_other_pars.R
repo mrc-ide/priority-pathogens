@@ -389,7 +389,7 @@ metaanalysis_symp <- metaprop_wrap(dataframe = df_severity2 %>% filter(!qa_score
               plot_study = TRUE, digits = 4, colour = "dodgerblue3",
               width = 5000, height = 4500, resolution = 600)
 symp_meta <- metaanalysis_symp$plot
-symp_meta
+##symp_meta
 ggsave("Sympt_metaanalysis.png", plot = symp_meta, width = 9, height = 7)
 
 symp_meta <- metaanalysis_symp$plot

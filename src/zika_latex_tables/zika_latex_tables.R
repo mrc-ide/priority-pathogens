@@ -1,5 +1,5 @@
 #task to create lassa latex tables
-
+library(orderly2)
 library(dplyr) 
 library(stringr)
 library(tibble)
