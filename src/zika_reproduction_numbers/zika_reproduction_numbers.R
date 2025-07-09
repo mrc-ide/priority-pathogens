@@ -16,6 +16,7 @@ library(patchwork)
 library(gridExtra)
 library(orderly2)
 library(countrycode)
+library(janitor)
 
 #orderly preparation
 orderly_strict_mode()
@@ -188,10 +189,10 @@ r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_t
                              facet_by_continent = TRUE,
                              color_column = 'population_sample_type',
                              shape_column = 'population_group',
-                             lims = c(0,9),
+                             lims = c(0,10.1),
                              # custom_colours = c25,
                              text_size = TEXT_SIZE) +
-  scale_x_continuous(limits = c(0,9), expand = c(0, 0))  +
+  scale_x_continuous(limits = c(0,10.1), expand = c(0, 0))  +
   theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
 
 

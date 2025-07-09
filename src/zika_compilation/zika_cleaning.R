@@ -1012,6 +1012,9 @@ zika_clean_params <- function(df, pathogen){
       parameter_unit =  ifelse(covidence_id %in% c(3221, 5671, 11866) & parameter_type == "Attack rate", "Percentage (%)", parameter_unit)
     )
 
+   #Removing wrongly extracted symptomatic proportion
+  df <- df[!(df$covidence_id == 10318 & df$parameter_type == "Severity - proportion of symptomatic cases" ), ]
+
   # Add article id and parameter ids for new parameters
   #     id =
   #       case_when(
