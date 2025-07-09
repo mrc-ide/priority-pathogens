@@ -4,18 +4,14 @@
 .Ruserdata
 priority-pathogens.Rproj
 src/*.csv
+src/*/*.csv
+src/*/*/*.csv
 src/*/*.png
-src/*/*.rds
 src/*/lassa_functions.R
 pathway
 src/db_extraction/utils.R
 .Renviron
 Renviron
-src/*/*/.shp
-src/*/*/.shx
-src/*/*/.cpg
-src/*/*/.dbf
-src/*/*/.prj
 
 # ---VVV--- added by orderly ---VVV----------------
 # Don't manually edit content between these markers

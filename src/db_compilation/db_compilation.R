@@ -13,7 +13,7 @@ mode <- toupper(mode)
 # overwrite the default extraction method. For each pathogen, the necessary data
 # files and config files are available for the default extraction method.
 # If you use a different method, you need to provide the necessary files.
-if (pathogen %in% c("MARBURG", "EBOLA", "SARS") & mode!="REDCAP"|
+if (pathogen %in% c("MARBURG", "EBOLA", "SARS", "ZIKA") & mode!="REDCAP"|
     mode=="ACCESS"){
   orderly_resource("access_compilation.R")
   source(file.path("access_compilation.R"))

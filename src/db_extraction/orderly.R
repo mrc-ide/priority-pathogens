@@ -1,14 +1,11 @@
-#  orderly2::orderly_run(name = 'db_extraction', parameters = list(pathogen = 'ZIKA'))
-# Works as of 23 July 2024
 library(dplyr)
 library(orderly2)
-library(readr)
 
 orderly_parameters(pathogen = NULL)
 
 orderly_artefact(
-  description = "Merged data as csv and errors as RDS",
-  files = c(
+  "Merged data as csv and errors as RDS",
+  c(
     "single_extraction_articles.csv", "single_extraction_models.csv",
     "single_extraction_params.csv", "single_extraction_outbreaks.csv",
     "double_extraction_articles.csv", "double_extraction_models.csv",
@@ -30,7 +27,6 @@ extracted_tables_list <- readRDS("extracted_tables.rds")
 articles <- extracted_tables_list[["articles"]]
 models <- extracted_tables_list[["models"]]
 params <- extracted_tables_list[["parameters"]]
-
 
 outbreaks_ex <- ("outbreaks" %in% names(extracted_tables_list))
 

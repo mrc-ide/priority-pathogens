@@ -1,4 +1,3 @@
-# orderly2::orderly_run(name = 'db_double', parameters = list(pathogen = 'ZIKA'))
 # Task to identify entries of double extracted data that match or do not match
 # between extractors
 
@@ -6,8 +5,8 @@ library(orderly2)
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_artefact(
-  description = "Double extraction matches and mismatches as csv files",
-  files = c(
+  "Double extraction matches and mismatches as csv files",
+  c(
     "qa_fixing.csv", "models_fixing.csv", "params_fixing.csv",
     "outbreaks_fixing.csv", "qa_matching.csv", "models_matching.csv",
     "params_matching.csv", "outbreaks_matching.csv"
@@ -37,8 +36,7 @@ library(readr)
 articles <- read_csv("double_extraction_articles.csv")
 parameters <- read_csv("double_extraction_params.csv")
 models <- read_csv("double_extraction_models.csv")
-
-if (pathogen %in% c('LASSA', 'OROV', 'ZIKA', 'NIPAH')) {
+if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')) {
   outbreaks <- read_csv("double_extraction_outbreaks.csv")
 } else {
   outbreaks <- NULL
@@ -130,8 +128,7 @@ model_discordant <- filter_table(models,
   id_col = model_id_col
 )
 
-
-if (pathogen %in% c('LASSA', 'OROV',  "ZIKA", 'NIPAH')){
+if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
   outbreak_match <- filter_table(outbreaks,
                                   matching = TRUE,
                                   exlcude_cols=outbreak_exclude_cols
@@ -147,7 +144,7 @@ if (pathogen %in% c('LASSA', 'OROV',  "ZIKA", 'NIPAH')){
 
 # The fixing files don't need the new IDs for now as they change each time
 # db_extraction is run and they complicate merging the fixing files
-if (pathogen != 'LASSA' & pathogen != 'ZIKA') {
+if (pathogen != 'LASSA') {
   qa_discordant <- qa_discordant %>% select(-ID)
   param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
   model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
@@ -170,7 +167,7 @@ if (pathogen %in% c('EBOLA','SARS')) {
   file.create("outbreaks_fixing.csv")
 }
 
-if (pathogen %in% c('LASSA', 'OROV', "ZIKA", 'NIPAH')){
+if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
   write_csv(outbreak_match, "outbreaks_matching.csv")
   write_csv(outbreak_discordant, "outbreaks_fixing.csv")
 }
