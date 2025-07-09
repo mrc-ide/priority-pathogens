@@ -72,7 +72,7 @@ orderly_init()
 ###############
 
 # Extraction prep - access versus redcap
-orderly_run("db_extraction_prep", parameter = list(pathogen = 'ZIKA'))
+# orderly_run("db_extraction_prep", parameter = list(pathogen = 'ZIKA'))
 
 # # Extract databases from shared drive (ensure config file pathway matches your machine)
 orderly_run("db_extraction", parameters = list(pathogen = "ZIKA"))
@@ -114,7 +114,7 @@ orderly_run('zika_zcs_microcephaly', parameters = list(pathogen = 'ZIKA'))
 orderly_run('zika_other_pars', parameters = list(pathogen = 'ZIKA'))
 
 #Seroprevalence plots and maps
-orderly_run('zika_serop', parameters = list(pathogen = 'ZIKA'))
+# orderly_run('zika_serop', parameters = list(pathogen = 'ZIKA'))
 
 # # Summary figures
 # orderly_run("sars_summary", parameters = list(pathogen = "SARS"))
