@@ -142,14 +142,18 @@ if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
   )
 }
 
+
 # The fixing files don't need the new IDs for now as they change each time
 # db_extraction is run and they complicate merging the fixing files
 if (pathogen != 'LASSA') {
   qa_discordant <- qa_discordant %>% select(-ID)
   param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
   model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
-  outbreak_discordant <- outbreak_discordant |> select(-c(ID, Outbreak_data_ID))
+
+  if (pathogen != 'MERS'){
+    outbreak_discordant <- outbreak_discordant |> select(-c(ID, Outbreak_data_ID))
   }
+}
 
 # Create files
 write_csv(qa_match, "qa_matching.csv")
@@ -167,7 +171,7 @@ if (pathogen %in% c('EBOLA','SARS')) {
   file.create("outbreaks_fixing.csv")
 }
 
-if (pathogen %in% c('LASSA', 'OROV', 'NIPAH')){
+if (pathogen %in% c('LASSA', 'OROV', 'NIPAH', 'MERS')){
   write_csv(outbreak_match, "outbreaks_matching.csv")
   write_csv(outbreak_discordant, "outbreaks_fixing.csv")
 }
