@@ -1,10 +1,14 @@
 # Task to make summary figures and tables 
-
+library(orderly2)
 library(dplyr) 
 library(stringr)
 library(tibble)
 library(purrr)
 library(ggbreak)
+library(ggplot2)
+library(tidyr)
+library(patchwork)
+library(forcats)
 
 #orderly preparation 
 orderly_strict_mode()
