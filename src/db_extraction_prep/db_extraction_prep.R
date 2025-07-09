@@ -21,7 +21,7 @@ if (pathogen %in% c("MARBURG", "EBOLA", "SARS", "ZIKA") & mode!="REDCAP"|
     mode=="ACCESS"){
   orderly_resource("prepare_access.R")
   source("prepare_access.R")
-} else if (pathogen %in% c("OROV", "NIPAH") & mode!="ACCESS"|
+} else if (pathogen %in% c("OROV", "NIPAH", "MERS") & mode!="ACCESS"|
            mode=="REDCAP"){
   orderly_resource("prepare_redcap.R")
   source("prepare_redcap.R")
