@@ -782,7 +782,7 @@ update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
     values <- unique_value_list[[name]]
     if (NROW(values) > 1){
       cli_alert_danger(
-        paste0("Found a mismatch for ", name, "It has the following values: ",
+        paste0("Found a mismatch for ", name, ". It has the following values: ",
               paste(values, collapse=", "), ". The final value '", values[-1],
               "' will be used."))
     }
