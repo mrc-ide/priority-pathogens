@@ -341,6 +341,7 @@ add_article_cols <- function(input_df, article_df, cols_to_add, join_col, start)
 
 clean_dates <- function(date){
   # Correct possible common user input corrects
+  date <- gsub("/", "-", date)
   date <- gsub("-{2,}", "-", date)
   date <- gsub("(\\d{4})-(xx)(\\d{2})", "\\1-\\2-\\3", date)
   date <- gsub("(\\d{4})-(\\d{2})(xx)", "\\1-\\2-\\3", date)
