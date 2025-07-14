@@ -1550,7 +1550,13 @@ zika_clean_serop <- function(params_df){
       #remove 11853 because multiple tests combined
       filter(!(covidence_id == 11853 & parameter_type == "Seroprevalence - Unspecified")) %>%
       # remove 10652 because it is same paper as 2302
-      filter(!(covidence_id == 10652 & grepl("^Seroprevalence.+", parameter_type)))
+      filter(!(covidence_id == 10652 & grepl("^Seroprevalence.+", parameter_type))) %>%
+
+      # Fix levels of seroprevalence_adjusted
+      mutate(seroprevalence_adjusted = case_when(
+        seroprevalence_adjusted %in% c('Naive', 'naïve', 'Naïve') ~ "Naive",
+        TRUE ~ seroprevalence_adjusted
+      ))
 
     return(df)
 }
