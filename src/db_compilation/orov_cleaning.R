@@ -20,8 +20,21 @@ orov_cleaning_articles <- function(df) {
         covidence_id != 114 ~ issue
       ),
       article_label = as.character(
-      paste0(first_aauthor_surname, " ", year_publication))
-      )
+      paste0(first_aauthor_surname, " ", year_publication)),
+      article_preprint = case_when(
+        covidence_id == 690 ~ "No",
+        covidence_id == 901 ~ "No",
+        covidence_id == 665 ~ "No",
+    .default = article_preprint
+    )
+    )
+  
+  df <- df %>%
+    mutate(refs = paste(first_aauthor_surname," (",year_publication,")",sep="")) %>% #define references
+    group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
+    mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
+    select(-counter,-refs) %>% rename(refs = new_refs)
+  
 }
 
 
@@ -31,15 +44,35 @@ orov_cleaning_parameters <- function(df){
     parameter_type_broad = factor(case_when(
       grepl("Infection prevalence",parameter_type) ~ "Infection prevalence",
       parameter_type=="Attack rate" ~ "Attack rate",
-      grepl("Human delay",parameter_type) ~ "Human delay",
+      grepl("delay",parameter_type) ~ "Delays",
       grepl("Mutations",parameter_type) ~ "Genomic parameters",
       parameter_type=="Risk factors" ~ "Risk factors",
       grepl("Seroprevalence",parameter_type) ~ "Seroprevalence",
-      grepl("Severity",parameter_type) ~ "Severity"
+      grepl("Severity",parameter_type) ~ "Severity",
+      grepl("Reproduction",parameter_type) ~ "Transmissibility",
+      parameter_type=="Delay - human to mosquito generation time" ~ "Delays",
+      parameter_type=="Delay - mosquito to human generation time" ~ "Delays"
     )),
+    parameter_from_figure = ifelse(parameter_from_figure=="No",
+                                   FALSE,
+                                   ifelse(is.na(parameter_from_figure),
+                                          FALSE,TRUE)),
+    parameter_from_figure = ifelse(is.na(parameter_from_figure),
+                                   FALSE,parameter_from_figure),
+    inverse_param = ifelse(inverse_param=="No",
+                                   FALSE,
+                                   ifelse(is.na(inverse_param),
+                                          FALSE,TRUE)),
+    inverse_param = ifelse(is.na(inverse_param),
+                           FALSE,inverse_param),
+    exponent = case_when(
+      is.na(exponent) ~ 0,
+      .default = exponent
+    ),
     parameter_context_human = case_when(
       covidence_id==65&is.na(parameter_context_human) ~ "Human",
       covidence_id==29&is.na(parameter_context_human) ~ "Both",
+      covidence_id==665&is.na(parameter_context_human) ~ "Human",
       !is.na(parameter_context_human) ~ parameter_context_human
     ),
     riskfactor_outcome = case_when(
@@ -67,8 +100,18 @@ orov_cleaning_parameters <- function(df){
     ),
     parameter_statistical = case_when(
       access_param_id %in% c(330,365,368,379) ~ "Observed sample statistic",
-      access_param_id==321 ~ "Case study [Oropouche ONLY]",
-      !(access_param_id %in% c(321,330,365,368,379)) ~ parameter_statistical
+      access_param_id == 321 ~ "Case study [Oropouche ONLY]",
+      covidence_id == "571" ~ "Case study [Oropouche ONLY]",
+      covidence_id %in% c(682,704) ~ "Observed sample statistic",
+      .default = parameter_statistical
+    ),
+    parameter_value_type = case_when(
+      # only applicable to delays anyway
+      parameter_statistical=="Case study [Oropouche ONLY]" ~ "Case Study",
+      grepl("delay",parameter_type) & is.na(parameter_value_type) ~ "Unspecified",
+      grepl("Infection prevalence",parameter_type) & is.na(parameter_value_type) ~ "Central - unspecified",
+      grepl("Seroprevalence",parameter_type) & is.na(parameter_value_type) ~ "Central - unspecified",
+      .default = parameter_value_type
     ),
     population_sample_type = case_when(
       parameter_context_human=="Not human" ~ "Non-human",
@@ -87,32 +130,49 @@ orov_cleaning_parameters <- function(df){
     parameter_hd_from = case_when(
       covidence_id==54&parameter_type=="Human delay - other human delay (go to section)" ~ "Symptom Onset/Fever",
       covidence_id %in% c(208,551,35) & parameter_type=="Human delay - symptom onset>discharge/recovery" ~ NA,
-      covidence_id==c(571,17,109) & parameter_type_broad=="Human delay" ~ NA,
+      covidence_id %in% c(571,17,109) & parameter_type_broad=="Human delay" ~ NA,
+      covidence_id==718&parameter_type=="Human delay - other human delay (go to section)"&is.na(parameter_hd_from) ~ "Symptom Onset/Fever",
       .default = parameter_hd_from
     ),
     parameter_hd_to = case_when(
       covidence_id==54&parameter_type=="Human delay - other human delay (go to section)" ~ "Seeking Care",
       covidence_id %in% c(208,551,35) & parameter_type=="Human delay - symptom onset>discharge/recovery" ~ NA,
-      covidence_id==c(571,17,109) & parameter_type_broad=="Human delay" ~ NA,
+      covidence_id %in% c(571,17,109) & parameter_type_broad=="Human delay" ~ NA,
+      covidence_id==718&parameter_type=="Human delay - other human delay (go to section)"&is.na(parameter_hd_to) ~ "Symptom Resolution",
       .default = parameter_hd_to
     ),
     parameter_statistical = case_when(
       covidence_id==571 & parameter_type_broad=="Human delay" ~ "Case study [Oropouche ONLY]",
       .default = parameter_statistical
     ),
+    parameter_unit = case_when(
+      covidence_id==704&is.na(parameter_unit) ~ "Days",
+      .default = parameter_unit
+    ),
+    population_country = case_when(
+      covidence_id==169 & is.na(population_country) & parameter_type=="Seroprevalence - HAI/HI" ~ "Brazil",
+      .default = population_country
+    ),
+    parameter_context_unchanged = case_when(
+      covidence_id==321 & is.na(parameter_context_unchanged) ~ "No [context is the same as previous]",
+      .default = parameter_context_unchanged
+    ),
     parameter_notes = case_when(
-      covidence_id==9 & access_param_id==1 ~ "'Other' is environmental variables",
+      covidence_id==9 & access_param_id==1 ~ "'Other' is 15 environmental variables including annual mean temperature (BIO1); temperature annual range (BIO7); and annual mean specific humidity, other 'MERRAclim' variables, change in vegetation coverage",
       covidence_id==28 & access_param_id==68 ~ "'Other' is specific symptoms",
       covidence_id==28 & access_param_id==69 ~ "'Other' is specific symptoms",
       covidence_id==42 & access_param_id==259 ~ "'Other' is specific symptoms",
       covidence_id==64 & access_param_id==192 ~ "'Other' is vegetation coverage",
-      covidence_id==167 & access_param_id==375 ~ "'Other' occupations are those working in agriculture and housewives",
+      covidence_id==167 & access_param_id==375 ~ "'Other' occupations are those working in agriculture and housewives. 'Other' factors are place of travel, length of residence, and the number of reported malaria episodes",
       covidence_id==128 & access_param_id==110 ~ "'Other' is clinic location",
       covidence_id==179 & access_param_id==388 ~ "'Other' is neighbourhood and contact with pigs",
       covidence_id==128 & access_param_id==110 ~ "'Other' is clinic location",
-      covidence_id==521 & access_param_id==233 ~ "based on ~500 genomes sampled; 'Other' is environmental factors",
+      covidence_id==521 & access_param_id==233 ~ "based on ~500 genomes sampled; 'Other' is: population density; land use; annual mean temperature; elevation;
+ vegetation cover;	Ae. aegypti ecological suitability; land type (e.g. grass, shrub, savannah); agricultural use; forest loss; water occurrence; annual mean precipitation.",
       covidence_id==525 & access_param_id==315 ~ "'Other' is agricultural activities",
       covidence_id==525 & access_param_id==316 ~ "'Other' is agricultural activities",
+      covidence_id==179 & access_param_id==389 ~ "'Other' is region",
+      covidence_id==179 & access_param_id==390 ~ "'Other' is occupation; type of housing; travel or contact with chickens or rodents. No further details on specific occupation.",
       .default = parameter_notes
     ),
     cfr_ifr_denominator = case_when(
