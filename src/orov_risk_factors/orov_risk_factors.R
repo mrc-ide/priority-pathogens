@@ -54,12 +54,44 @@ risk_params <- parameters %>%
         article_qa_score,population_study_start_year,
         population_study_end_year,
         article_label,parameter_notes)
-#write.csv(risk_params,row.names = FALSE,"risk_factors_for_writing.csv")
+write.csv(risk_params,row.names = FALSE,"risk_factors_for_writing.csv")
 
 # what is happening in terms of number of obs per paper
 risk_params %>% group_by(covidence_id) %>% 
   summarise(n = length(covidence_id)) %>% 
   arrange(-n)
+
+## risk factor specific categorisations can go here
+risk_params <- risk_params %>% mutate(riskfactor_name = case_when(
+  covidence_id==9~"Environmental factors",
+  covidence_id==28&riskfactor_name=="Age,Sex,Other"~"Age,Sex,Symptoms",
+  covidence_id==28&riskfactor_name=="Other"~"Symptoms",
+  covidence_id==42&riskfactor_name=="Other"~"Symptoms",
+  covidence_id==42&riskfactor_name=="Sex,Other"~"Sex,Time,Symptoms,Arbovirus co-infection",
+  covidence_id==42&riskfactor_name=="Age,Other"~"Age,Location,Symptoms,Non-arbovirus co-infection",
+  covidence_id==47&riskfactor_name=="Age,Other"~"Age,Time",
+  covidence_id==64 ~ "Environmental factors",
+  covidence_id==128&riskfactor_name=="Sex,Other"~"Sex,Location",
+  covidence_id==136&riskfactor_name=="Age,Occupation,Other"~"Age,Occupation,Location",
+  covidence_id==136&riskfactor_adjusted=="Not adjusted"&riskfactor_significant=="Significant" ~ "Race,Other",
+  covidence_id==179&riskfactor_adjusted=="Adjusted"&riskfactor_significant=="Significant" ~ "Age,Sex,Location,Animal contact",
+  covidence_id==179&riskfactor_adjusted=="Not adjusted"&riskfactor_significant=="Significant"~"Age,Sex,Location",
+  covidence_id==179&riskfactor_adjusted=="Not adjusted"&riskfactor_significant=="Not significant" ~ "Occupation,Animal contact,Other",
+  covidence_id==525 ~ "Agricultural activities",
+  covidence_id==580 ~ "Location,Time",
+  covidence_id==665&population_country=="Peru"&riskfactor_name=="Other"~"Location,Time",
+  covidence_id==665&riskfactor_outcome=="Serology"&riskfactor_adjusted=="Not adjusted"&riskfactor_significant=="Significant"&riskfactor_name=="Other"~"Location",
+  covidence_id==665&riskfactor_outcome=="Serology"&riskfactor_significant=="Unspecified"&riskfactor_name=="Other"~"Environmental factors",
+  covidence_id==665&riskfactor_outcome=="Serology"&riskfactor_significant=="Significant"&riskfactor_name=="Other"~"Environmental factors,Other",
+  covidence_id==665&riskfactor_outcome=="Presence of Oropouche"&riskfactor_significant=="Unspecified"&riskfactor_name=="Other"~"Location,Environmental factors",
+  covidence_id==665&riskfactor_outcome=="Presence of Oropouche"&riskfactor_significant=="Significant"&riskfactor_name=="Other"~"Detection of vectors",
+  covidence_id==681~"Environmental factors",
+  covidence_id==690~"Location,Time",
+  covidence_id==521~"Environmental factors",
+  .default = riskfactor_name
+)
+)
+
 
 
 # risk_table <- risk_params %>%
@@ -118,6 +150,10 @@ risk_params %>% select(riskfactor_outcome) %>% group_by(riskfactor_outcome) %>%
 risk_params %>% filter(parameter_context_human=="Human") %>% select(riskfactor_outcome) %>% group_by(riskfactor_outcome) %>%
   summarise(length(riskfactor_outcome))
 
+# how many adjusted
+risk_params %>% select(riskfactor_adjusted) %>% group_by(riskfactor_adjusted) %>%
+  summarise(length(riskfactor_adjusted))
+
 
 # whats happening with infection
 risk_params %>% filter(riskfactor_outcome=="Infection")
@@ -136,6 +172,7 @@ risk_params %>% select(article_qa_score) %>% unlist() %>% mean()
 
 ## want to have a table where we have the risk factors individually, and tell us how many times it appears and in which of the 4 categorisations
 #risk_table$riskfactor_name %>% unique()
+# Age, Sex, Occupation, Symptoms, Environmental factors, Time, Location, Agricultural activities, comorbidities
 
 risk_table <- risk_params %>% mutate(
   age_ind = case_when(
@@ -146,6 +183,36 @@ risk_table <- risk_params %>% mutate(
   ),
   occ_ind = case_when(
     grepl("Occupation",riskfactor_name) ~ 1
+  ),
+  symptoms_ind = case_when(
+    grepl("Symptoms",riskfactor_name) ~ 1
+  ),
+  time_ind = case_when(
+    grepl("Time",riskfactor_name) ~ 1
+  ),
+  location_ind = case_when(
+    grepl("Location",riskfactor_name) ~ 1
+  ),
+  env_ind = case_when(
+    grepl("Environmental factors",riskfactor_name) ~ 1
+  ),
+  agr_ind = case_when(
+    grepl("Agricultural activities",riskfactor_name) ~ 1
+  ),
+  arbo_ind = case_when(
+    grepl("Arbovirus co-infection",riskfactor_name) ~ 1
+  ),
+  non_arbo_ind = case_when(
+    grepl("Non-arbovirus co-infection",riskfactor_name) ~ 1
+  ),
+  vect_det_ind = case_when(
+    grepl("Detection of vectors",riskfactor_name) ~ 1
+  ),
+  animal_cont_ind = case_when(
+    grepl("Animal contact",riskfactor_name) ~ 1
+  ),
+  race_ind = case_when(
+    grepl("Race",riskfactor_name) ~ 1
   ),
   other_ind = case_when(
     grepl("Other",riskfactor_name) ~ 1
@@ -158,8 +225,17 @@ risk_table <- risk_params %>% mutate(
            parameter_context_human) %>%
            unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
  
+
+## what are the most common risk factors considered
+risk_table %>% ungroup() %>% 
+  select(age_ind,sex_ind,occ_ind,time_ind,location_ind,
+         symptoms_ind,arbo_ind,non_arbo_ind,animal_cont_ind,race_ind,
+         env_ind,agr_ind,vect_det_ind,other_ind) %>% colSums(.,na.rm=TRUE)
+
+
 risk_table_filt <- risk_table %>% 
-  filter(riskfactor_outcome %in% c("Infection","Serology"))
+  filter(
+    riskfactor_outcome %in% c("Infection","Serology","Presence of Oropouche"))
 rf_for_plot <- rbind(
   risk_table_filt %>% filter(age_ind==1) %>% 
   group_by(`Significant / Adjusted`,
@@ -176,6 +252,56 @@ rf_for_plot <- rbind(
              riskfactor_outcome) %>%
     mutate(count = nrow(`Significant / Adjusted`),
            label = "Occupation"),
+  risk_table_filt %>% filter(symptoms_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Symptoms"),
+  risk_table_filt %>% filter(time_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Time"),
+  risk_table_filt %>% filter(location_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Location"),
+  risk_table_filt %>% filter(env_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Environmental factors"),
+  risk_table_filt %>% filter(agr_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Agricultural activities"),
+  risk_table_filt %>% filter(arbo_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Arbovirus co-infection"),
+  risk_table_filt %>% filter(non_arbo_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Non-arbovirus co-infection"),
+  risk_table_filt %>% filter(vect_det_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Detection of vectors"),
+  risk_table_filt %>% filter(animal_cont_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Animal contact"),
+  risk_table_filt %>% filter(race_ind==1) %>% 
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Race"),
   risk_table_filt %>% filter(other_ind==1) %>% 
     group_by(`Significant / Adjusted`,
              riskfactor_outcome) %>%
@@ -183,16 +309,37 @@ rf_for_plot <- rbind(
            label = "Other")
 ) %>%
   mutate(label = factor(label,
-                        levels=c("Age","Sex","Occupation","Other")))
+                        levels=c("Age","Agricultural activities",
+                                 "Animal contact","Arbovirus co-infection",
+                                 "Non-arbovirus co-infection",
+                                 "Detection of vectors",
+                                 "Environmental factors","Location","Occupation",
+                                 "Race","Sex","Symptoms","Time","Other")),
+         riskfactor_outcome = case_when(
+           riskfactor_outcome=="Presence of Oropouche" ~ "Occurrence of Oropouche",
+           .default = riskfactor_outcome
+         ),
+         riskfactor_outcome = factor(riskfactor_outcome,
+                                     levels=c("Infection","Serology",
+                                              "Occurrence of Oropouche")),
+         riskfactor_broad_cat = case_when(
+           riskfactor_outcome %in% c("Infection","Serology") ~ "Epidemiological",
+           riskfactor_outcome=="Occurrence of Oropouche" ~ "Ecological"),
+         riskfactor_broad_cat = factor(
+           riskfactor_broad_cat,
+           levels = c("Epidemiological","Ecological"))
+         )
 
-ggplot(rf_for_plot,aes(x=label,fill=`Significant / Adjusted`))+
+
+ggplot(rf_for_plot,aes(y=label,fill=`Significant / Adjusted`))+
   geom_bar()+
-  facet_wrap(~riskfactor_outcome,scales = "free_x")+theme_bw()+
+  facet_wrap(riskfactor_broad_cat~riskfactor_outcome)+theme_bw()+
   scale_fill_manual(values = custom_colours)+
-  labs(x="Risk factor",y="Number of risk factors extracted")+
+  labs(y="Risk factor",x="Number of risk factors extracted")+
   theme(strip.background = element_rect(fill="white"),
         legend.position = "bottom")+
-  scale_y_continuous(breaks = c(0,2,4,6,8,10))+
+  scale_x_continuous(breaks = c(0,2,4,6,8,10))+
+  scale_y_discrete(limits=rev)+
   guides(fill=guide_legend(nrow=3,byrow=TRUE))
 
 
