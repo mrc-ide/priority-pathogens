@@ -18,7 +18,6 @@ orderly_dependency(
             "inputs/parameters.csv"="parameters.csv",
             "inputs/outbreaks.csv"="outbreaks.csv"))
 
-
 # read in data
 articles <- read.csv("inputs/articles.csv")
 outbreaks <- read.csv("inputs/outbreaks.csv")
@@ -32,15 +31,21 @@ covidence$CovID %>% unique() %>% length()
 # do we have all the articles we are expecting?
 testthat::expect_true(
   nrow(articles) == length(unique(covidence$CovID)))
-#which(paste0("#",articles$covidence_id) %in% covidence$CovID)
-#articles[which(duplicated(articles$covidence_id)),]
 testthat::expect_length(
   which(!(paste0("#",articles$covidence_id) %in% covidence$CovID)),
   0)
 
+# which are missing 
+if(nrow(articles) != length(unique(covidence$CovID))){
+  all_ids <- covidence$CovID %>% sub('.', '', .) %>% as.numeric()
+  all_ids[which(!(unique(all_ids) %in% articles$covidence_id))]
+}
+
 # what are we dealing with in terms of parameters 
 parameters %>% select(parameter_type) %>% group_by(parameter_type) %>%
   summarise("total" = length(parameter_type))
+
+parameters %>% filter(is.na(parameter_context_human))
 
 ggplot(parameters,
        aes(x=fct_infreq(parameter_type_broad),
@@ -61,7 +66,7 @@ parameters %>% group_by(parameter_type_broad,parameter_context_human) %>%
 
 ## how many preprints
 articles %>% group_by(article_preprint) %>% summarise(length(article_preprint))
-
+#articles %>% filter(is.na(article_preprint))
 
 ## look at QA scores
 ggplot(articles,
@@ -105,16 +110,13 @@ ggplot(articles %>%
 
 
 
-
-
-
-
 ## need to see wtf is going on here
 parameters %>% filter(parameter_context_human=="Not human") %>% 
   select(population_sample_type) %>% unique()
 
 parameters %>% filter(parameter_context_human=="Not human") %>% 
   select(population_group) %>% unique()
+
 
 
 ## how many people from people with symptoms/who had Dengue 
