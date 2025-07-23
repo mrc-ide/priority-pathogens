@@ -56,8 +56,8 @@ parameter_unit,Parameter Data,Parameter unit,parameters
 parameter_range_low,Parameter Data,Parameter lower bound,parameters
 parameter_range_upper,Parameter Data,Parameter upper bound,parameters
 parameter_value_type,Parameter Data,Parameter value type,parameters
-parameter_unc_single_type,Parameter Data,Parameter uncertainty - single value,parameters
-parameter_unc_single_value,Parameter Data,Parameter uncertainty - singe type,parameters
+parameter_unc_single_type,Parameter Data,Parameter uncertainty - singe type,parameters
+parameter_unc_single_value,Parameter Data,Parameter uncertainty - single value,parameters
 parameter_unc_pair_value_low,Parameter Data,Parameter uncertainty - lower value,parameters
 parameter_unc_pair_value_up,Parameter Data,Parameter uncertainty - upper value,parameters
 parameter_unc_pair_type,Parameter Data,Parameter uncertainty - type,parameters
