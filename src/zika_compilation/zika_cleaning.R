@@ -405,14 +405,17 @@ zika_clean_params <- function(df, pathogen){
       population_location = str_replace_all(population_location, ";", ","),
 
       # Update parameter type values
-      parameter_type = case_when(parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
+      parameter_type = case_when(grepl('probability', parameter_type, ignore.case = TRUE) ~ "proportion",
+                                 parameter_type == 'Seroprevalence - PRNT' ~ 'Seroprevalence - Neutralisation/PRNT',
                                  parameter_type == "Growth rate ®" ~"Growth rate (r)",
                                  parameter_type == "Reproduction number (Effective; Re)" ~ "Reproduction number (Effective, Re)",
                                  parameter_type %in%
                                    c("Mutations ‚Äì substitution rate", "Mutations \x96 substitution rate", "Mutations â€“ substitution rate", "Mutations – substitution rate") ~ "Mutations - substitution rate",
                                  parameter_type %in% c("Mutations – mutation rate", "Mutations â€“ mutation rate") ~ "Mutations - mutation rate",
-                                 parameter_type == 'Miscarriage rate' ~ "Pregnancy loss probability",
-                                 parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ "Zika congenital syndrome (microcephaly) probability",
+                                 parameter_type == 'Miscarriage rate' ~ "Pregnancy loss proportion",
+                                 parameter_type == 'Pregnancy loss probability' ~ "Pregnancy loss proportion",
+                                 parameter_type == 'Zika congenital syndrome (microcephaly) risk' ~ "Zika congenital syndrome (microcephaly) proportion",
+                                 parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ "Zika congenital syndrome (microcephaly) proportion",
                                  parameter_type == "Relative contribution - zoonotic to human" ~ "Relative contribution - vector-borne",
                                  parameter_type == "Relative contribution - human to human" ~ "Relative contribution - sexual",
                                  parameter_type == 'Reproduction number (Basic R0) - Human' ~ "Reproduction number (Basic R0) - Sexual",
@@ -425,7 +428,7 @@ zika_clean_params <- function(df, pathogen){
     # Fix incorrect parameter types
     mutate(parameter_type = case_when(
       parameter_type == "Seroprevalence - Unspecified" & covidence_id == 6072 ~ "Risk factors",
-      parameter_type == "Zika congenital syndrome (microcephaly) probability" & covidence_id == 12202 ~ "Risk factors",
+      parameter_type == "Zika congenital syndrome (microcephaly) proportion" & covidence_id == 12202 ~ "Risk factors",
       covidence_id == 1954 & parameter_type == 'Mutations - mutation rate' ~ "Mutations - substitution rate",
       TRUE ~ parameter_type
     )) %>%
@@ -866,13 +869,13 @@ zika_clean_params <- function(df, pathogen){
                # Reproduction numbers
                grepl("Reproduction", parameter_type) & is.na(parameter_unit) ~ "No units",
                # others
-               covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ "Per 100,000 population",
+               covidence_id == 7047 & parameter_type == "Zika congenital syndrome (microcephaly) proportion" ~ "Per 100,000 population",
                covidence_id == 10933 & parameter_type == "Seroprevalence - IgG" ~ "Percentage (%)",
                covidence_id == 1679 & parameter_unit == "per 100;000 population" ~ "Per 100,000 population",
                covidence_id == 4032 & parameter_unit == "Per 10000 population" ~ "Per 10,000 population",
                covidence_id == 4268 & parameter_unit == "Per 100000" ~ "Per 100,000 population",
                parameter_unit == 'Per 1000 births' ~ "Per 1,000 births",
-               covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ NA, # this has been changed to be num/denomi
+               covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) proportion" ~ NA, # this has been changed to be num/denomi
                TRUE ~ parameter_unit
              )
     ) %>%
@@ -1240,41 +1243,6 @@ zika_clean_r <- function(params_df){
 }
 
 zika_clean_zcs_microcephaly <- function(df){
-  df <- df %>%
-    # Remove incorrect entry
-    filter(!(covidence_id == 12074 & cfr_ifr_numerator == 6)) %>%
-    # Change 6521 to report without units and in num/denominator columns instead
-    mutate(parameter_value = case_when(
-      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ NA,
-      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ NA, # was incorrrect
-      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 5.26, # was less precise (5 only)
-      TRUE ~ parameter_value
-    ),
-    cfr_ifr_denominator = case_when(
-      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ 11,
-      covidence_id == 4014  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 117, # mixed up num and denom
-      covidence_id == 4014  & parameter_type == 'Pregnancy loss probability' ~ 134, # mixed up num and denom
-      covidence_id == 18620  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 77, # mixed up num and denom
-      covidence_id == 10741  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 3, # missing
-      covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 154, # missing
-      TRUE ~ cfr_ifr_denominator
-    ),
-    cfr_ifr_numerator = case_when(
-      covidence_id == 6521 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ 2,
-      covidence_id == 4014 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 4, # mixed up num and denom
-      covidence_id == 4014 & parameter_type == 'Pregnancy loss probability' ~ 9, # mixed up num and denom
-      covidence_id == 18620 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 4, # mixed up num and denom
-      covidence_id == 6301 & parameter_type == "Zika congenital syndrome (microcephaly) probability" ~ 18, # missing
-      covidence_id == 6028 & parameter_type == "Pregnancy loss probability" ~ 11, # missing
-      covidence_id == 11966  & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 7, # missing
-      covidence_id == 6270 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 2, # was incorrrect
-      covidence_id == 12074 & parameter_type == 'Zika congenital syndrome (microcephaly) probability' ~ 5, # was incorrect (24)
-      TRUE ~ cfr_ifr_numerator
-    )) %>%
-    filter(!(covidence_id == 6993 & parameter_value %in% c(81.0, 16.7, 0.02))) %>% # not a ZCS probability
-    filter(!(covidence_id == 10681 & parameter_value %in% c(10, 6))) %>% #these were IgG prevalences not ZCS risks (Table 1)
-    mutate(population_sample_type = ifelse(covidence_id == 6993, 'Hospital based', population_sample_type),
-           population_group = ifelse(covidence_id == 6993, 'Pregnant women',population_group))
 
   # After cleaning that finished on 12 June, 2025, we decided to pull in the edited spreadsheet instead of cleaning it here (because of the many changes)
   covids_toedit <- c(5715, 5895, 6175, 10818, # these are cov ids with entries that we removed that didn't have another entry (for either CZS or misc),
@@ -1285,8 +1253,8 @@ zika_clean_zcs_microcephaly <- function(df){
 
   # remove the entries that we are editing
   df_filtered <- df %>%
-    filter(!(covidence_id %in% covids_toedit & (parameter_type == "Zika congenital syndrome (microcephaly) probability" |
-                                                  parameter_type == 'Pregnancy loss probability'))) %>%
+    filter(!(covidence_id %in% covids_toedit & (parameter_type == "Zika congenital syndrome (microcephaly) proportion" |
+                                                  parameter_type == 'Pregnancy loss proportion'))) %>%
     mutate(metaanalysis_inclusion = NA,
            women_or_infants = NA,
            pregnancy_outcome_type = NA)
