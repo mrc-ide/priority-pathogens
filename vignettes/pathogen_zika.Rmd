@@ -1,0 +1,629 @@
+---
+title: "Zika"
+date: "Latest update: `r Sys.Date()`"
+output: html_document
+---
+
+In 2018, the World Health Organization (WHO) published a list of nine known pathogens (in addition to an unknown _Pathogen X_) for research and development (R&D) prioritisation, due to both their epidemic and pandemic potential and the absence of licensed vaccines or therapeutics. Among these prioritised pathogens is Zika
+
+The Pathogen Epidemiology Review Group (PERG) has published a systematic review for Zika, if you use any of our results please cite our paper:
+
+> @article{,
+  author = {Kelly McCain, Anna Vicco, Christian Morgenstern, Thomas Rawson, Tristan M. Naidoo, Sangeeta Bhatia, Dominic P. Dee, Patrick Doohan,   Keith Fraser, Anna-Maria Hartner, Sequoia I. Leuba, Shazia Ruybal-Pesántez, Richard J. Sheppard, H. Juliette T. Unwin, Kelly Charniga, Zulma M. Cucunubá, Gina Cuomo-Dannenburg, Natsuko Imai-Eaton, Edward S. Knock, Adam Kucharski, Mantra Kusumgar, Paul Liétar, Rebecca K. Nash, Sabine van Elsland, Pathogen Epidemiology Review Group, Nuno R. Faria, Anne Cori, Ruth McCabe, Ilaria Dorigatti},
+ year={2025},  
+ title={},  
+ doi = {10.1101/2025.07.10.25331254},
+ URL = {},
+ eprint = {},
+ doi = {},
+ journal = {medRxiv}
+}
+
+All Figures from the paper are re-produced below on the **latest** available data in our data set. For convenience we label the Figures with the same numbers as in the paper.
+
+```{css echo=FALSE}
+.flextable-shadow-host{
+  overflow: scroll;
+  white-space: nowrap;
+}
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+source(file.path("..", "shared", "lassa_functions.R"))
+source(file.path("..", "shared", "zika_functions.R"))
+
+remotes::install_github("mrc-ide/epireview@develop")
+
+library(tidyverse)
+library(stringr)
+library(metafor)
+library(meta)
+library(estmeansd)
+library(mixdist)
+library(ggplot2)
+library(ggsci)
+library(sf)
+library(ragg)
+library(ggspatial)
+library(ggforce)
+library(png)
+library(grid)
+library(patchwork)
+library(gridExtra)
+library(readxl)
+library(harrypotter)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggrepel)
+library(gt)
+library(scales)
+library(rnaturalearth)
+library(gpkg)
+library(RSQLite)
+library(countrycode)
+library(ggpattern)
+
+zikadata_curation <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
+  
+     # this is due to legacy access database issue
+  if(switch_first_surname){
+    print('switched')
+    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+  }
+  
+  articles   <- articles %>%
+    mutate(refs = paste(first_author_surname," (",year_publication,")",sep="")) %>% #define references
+    group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
+    mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
+    select(-counter,-refs) %>% rename(refs = new_refs)
+  
+  if(dim(outbreaks)[1]>0)  {
+    outbreaks  <- outbreaks %>% 
+      mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+  }
+  
+  models     <- models %>% 
+    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
+  
+  parameters <- parameters %>% 
+    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
+    filter(!(as.logical(parameter_from_figure) & is.na(parameter_value) & is.na(parameter_lower_bound))) # ensure that parameter_from_figure is logical not character
+  
+  # if (pathogen == 'ZIKA'){
+  #   var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound", 
+  #                   "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
+  #                   "parameter_2_value", "parameter_2_lower_bound", "parameter_2_upper_bound", 
+  #                   "parameter_2_uncertainty_lower_value", "parameter_2_uncertainty_upper_value")
+  # } else {
+    var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound",
+                    "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value")
+  # }
+  # 
+  param4plot <- parameters %>%
+    mutate_at(vars(all_of(var_select)),
+              list(~ ifelse(inverse_param, round(1/.x, 2), .x))) %>%
+    # account for different units for inverse parameters 
+    mutate(parameter_unit = ifelse(parameter_unit == 'Per week','Weeks', 
+                                      ifelse(parameter_unit == 'Per day','Days', parameter_unit))) %>%
+    mutate(parameter_type = str_replace_all(parameter_type, ' (inverse parameter)', ''))%>% # we changed all inverse params to not be inverse so shouldn't be labled that way 
+    mutate_at(vars(all_of(var_select)),
+              list(~ .x * 10^exponent)) %>% 
+    mutate_at(vars(all_of(var_select)), #account for different units
+              list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>% 
+    mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
+    mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
+           parameter_uncertainty_lower_value = case_when(
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value-sqrt(parameter_uncertainty_single_value),
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
+             TRUE ~ parameter_uncertainty_lower_value),                                                 
+           parameter_uncertainty_upper_value = case_when(
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"maximum") & no_unc ~ parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard deviation") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"variance") & no_unc ~ parameter_value+sqrt(parameter_uncertainty_single_value),
+             str_detect(str_to_lower(parameter_uncertainty_singe_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2), 
+             TRUE ~ parameter_uncertainty_upper_value)) %>%
+    select(-c(no_unc)) %>%
+    mutate(central = coalesce(parameter_value, round(100*cfr_ifr_numerator/cfr_ifr_denominator, 3)), #central value for plotting, rmeoved this: , round(0.5*(parameter_lower_bound+parameter_upper_bound),3))
+           central = ifelse(grepl('Seroprevalence', parameter_type) | grepl('Miscarriage',parameter_type) | grepl('microcephaly',parameter_type), 
+                            coalesce(central, round(0.5*(parameter_lower_bound+parameter_upper_bound),3)), 
+                            central))
+  # 
+  # if (pathogen == 'ZIKA'){
+  #   # Zika database has extra variables for the variability -- all of these have _2
+  # 
+  #   param4plot <- param4plot %>%
+  #     mutate(no_unc = is.na(parameter_2_uncertainty_lower_value) & is.na(parameter_2_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
+  #            parameter_2_uncertainty_lower_value = case_when(
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_value,
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value - sqrt(parameter_2_uncertainty_single_value),
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
+  #              str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value / distribution_2_par2_value)^2, rate = distribution_2_par1_value / distribution_2_par2_value^2),
+  #              TRUE ~ parameter_2_uncertainty_lower_value),
+  #            parameter_2_uncertainty_upper_value = case_when(
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_uncertainty_single_value,
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value+sqrt(parameter_2_uncertainty_single_value),
+  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
+  #              str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2),
+  #              TRUE ~ parameter_2_uncertainty_upper_value))
+  # }
+
+  if (plotting) {
+    parameters <- param4plot
+  } else {
+    check_param_id <- (parameters$parameter_data_id == param4plot$parameter_data_id )    # check that parameter data ids didn't get scrambled
+    if(sum(check_param_id, na.rm = TRUE)==dim(parameters)[1]) {
+      parameters$central <- param4plot$central
+    } else {
+      errorCondition('parameters not in right order to match')
+    }
+  }
+
+  if(dim(outbreaks)[1]>0)  {
+    outbreaks  <- outbreaks  %>% mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
+  }
+
+  parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
+                                      population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
+
+  return(list(articles = articles, outbreaks = outbreaks,
+              models = models, parameters = parameters))
+}
+
+
+TEXT_SIZE <- 11
+```
+
+```{r prepare_data, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+articles   <- epireview::load_epidata_raw("zika", "article")
+articles   <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+models     <- epireview::load_epidata_raw("zika", "model")
+parameters <- epireview::load_epidata_raw("zika", "parameter")
+outbreaks <- epireview::load_epidata_raw("zika", "outbreak")
+
+dfs <- zikadata_curation(articles, outbreaks,models,parameters, plotting =  TRUE, switch_first_surname = TRUE )
+
+articles   <- dfs$articles
+
+articles   <- epireview::assign_qa_score(articles = articles)$articles
+qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
+
+outbreaks  <- dfs$outbreaks
+models     <- dfs$models
+
+parameters <- dfs$parameters %>% left_join(qa_scores)
+```
+
+
+**Figure 1:** Please see the pre-print for the the PRISMA flowchart. This will remain static as data in the database is updated.
+
+## Overview of the Zika outbreaks and seroprevalence 
+
+ZIKV outbreak and seroprevalence mapping: (A) Countries with studies reporting ZIKV outbreak information, coloured by number of studies. Outbreaks reported in France and the Netherlands reflect outbreaks in overseas regions. Countries with black diagonal stripes indicate locations where ZIKV
+transmission has been reported by the WHO. (B) Geolocated areas or regions with ZIKV seroprevalence studies (using IgG assay, HAI/HI, MIA, NS1 BOB ELISA, IFA, capture ELISA and neutralisation assays) conducted in the general population in the Americas (left), Africa (centre) and Asia (right). Each dot represents a location-specific estimate, while shaded areas indicate estimates at the administrative unit level (region, province, district, or entire country).
+
+**Figure A: Outbreaks**
+
+```{r Figure_2A, echo=FALSE, fig.height=10, fig.width=15, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+#Load world map
+world <- ne_countries(scale = 'medium', returnclass = 'sf')
+
+#Add cov ID to outbreaks
+outbreaks <- merge(outbreaks, articles, by = "covidence_id") 
+
+#filter based on QA score
+outbreaks <-   filter(outbreaks, !qa_score < 0.5)
+
+#list of countries that repot zika trasnmission according to WHO
+outbreaks.WHO <- c(
+  "Angola", "Burkina Faso", "Burundi", "Cabo Verde", "Cameroon", "Central African Republic",
+  "Côte d’Ivoire", "Ethiopia", "Gabon", "Guinea-Bissau", "Kenya", "Nigeria", "Senegal", "Uganda",
+  "Anguilla", "Antigua and Barbuda" , "Argentina", "Aruba", "Bahamas", "Barbados", "Belize", "Bolivia",
+  "Bonaire", "Sint Eustatius", "Saba", "Brazil", "British Virgin Islands",
+  "Cayman Islands", "Colombia", "Costa Rica", "Cuba", "Curaçao", "Dominica", "Dominican Republic", 
+  "Ecuador", "El Salvador", "French Guiana", "Grenada", "Guadeloupe", "Guatemala",
+  "Guyana", "Haiti", "Honduras", "Easter Island– Chile", "Jamaica", "Martinique", "Mexico",
+  "Montserrat", "Nicaragua", "Panama", "Paraguay", "Peru", "Puerto Rico", "Saint Barthélemy",
+  "Saint Kitts", "Nevis", "Saint Lucia", "Saint Martin", "Saint Vincent", "Grenadines",
+  "Saint Maarten", "Suriname", "Trinidad", "Tobago", "Turks", "Caicos", 
+  "United States of America", "United States Virgin Islands", "Venezuela", 
+  "Bangladesh", "India", "Indonesia", "Maldives", "Myanmar", "Thailand",
+  "American Samoa", "Cambodia", "Cook Islands", "Fiji", "French Polynesia", 
+  "Lao People’s Democratic Republic","Marshall Islands", "Malaysia", "Micronesia" ,
+   "New Caledonia", "Palau", "Papua New Guinea", "Philippines", "Samoa", "Singapore",
+  "Solomon Islands", "Tonga", "Vanuatu", "Vietnam", "France", "The Bahamas" 
+)
+
+#Update name for France
+outbreaks_agg <- outbreaks %>%
+  mutate(outbreak_country = case_when(
+    outbreak_country == 'France (Martinique)' ~ "France",
+    TRUE ~ outbreak_country
+  )) %>%
+  group_by(covidence_id, outbreak_country) %>%
+  count() %>%
+  group_by(outbreak_country) %>%
+  count()
+
+#Merge datasets
+out_sf <- world %>%
+  left_join(outbreaks_agg, by = c('admin' = 'outbreak_country')) %>%
+  mutate(admin = case_when(
+    admin == 'Federated States of Micronesia' ~ "Micronesia",
+    TRUE ~ admin
+  ))
+
+#add WHO info
+out_sf <- out_sf %>%
+  mutate(is_outbreak_who = admin %in% outbreaks.WHO)
+
+#Plot
+out_plt <- ggplot() +
+  # Layer based on n outbreaks
+  geom_sf(data = out_sf, aes(fill = as.factor(n)), color = "gray50", lwd = 0.3) +
+  
+  # Layer for outbreak.WHO
+  geom_sf_pattern(
+    data = filter(out_sf, is_outbreak_who),
+    aes(geometry = geometry),
+    inherit.aes = FALSE,
+    pattern = "stripe",
+    fill = NA,
+    pattern_fill = "black",
+    pattern_angle = 45,
+    pattern_density = 0.1,
+    pattern_spacing = 0.02,
+    pattern_size = 0.01,
+    color = NA
+  ) +
+  
+  # Viridis scale
+  scale_fill_viridis_d(na.value = 'grey90', guide = guide_legend(na.translate = FALSE)) +
+  theme_void() +
+  theme(axis.text = element_blank(),
+        text = element_text(size = 14)) +
+  labs(fill = 'Number of papers\nreporting outbreaks',
+       x = '',
+       y = '') +
+  
+  # labels
+  geom_label_repel(data = out_sf %>% filter(!is.na(n)),
+                   aes(x = label_x, y = label_y, label = paste0(admin, ": ", n)), 
+                   fontface = "bold", size = 3,
+                   max.overlaps = 50,
+                   label.padding = 0.2) +
+  
+  coord_sf(xlim = c(-180, 180), ylim = c(-60, 90))
+
+out_plt
+
+```
+
+**Figure B: Seroprevalence**
+
+```{r Figure_2B, echo=FALSE, fig.height=10, fig.width=15, message=FALSE, warning=FALSE, paged.print=TRUE}
+# Function to geocode locations (run once and save results)
+geocode_locations <- function(data, save_path = "geocoded_locations_zika.csv") {
+  data <- tidygeocoder::geocode(data, population_location, method = "osm")
+  write.csv(data, save_path, row.names = FALSE)
+  return(data)
+}
+
+# Function to load and merge shapefiles
+load_and_merge_shapefile <- function(data, country, shapefile_path, shapefile_col) {
+  result <- filter(data, population_country == country)
+  shapefile <- st_read((shapefile_path))
+  result <- merge(result, shapefile, by.x = "population_location", by.y = shapefile_col)
+  return(st_as_sf(result))
+}
+
+#Select Seroprevalence paramters
+serop_data <- parameters %>%
+  filter(str_starts(parameter_type, "Seroprevalence"))
+
+#Filter by QA score
+serop_data <- filter(serop_data, !qa_score < 0.5)
+
+#Select seroprevalence from General population only and tests for past exposure only
+serop_data_map <- serop_data %>%
+  filter(population_group == "General population" & population_sample_type == "Population based"&
+           parameter_type %in% c( "Seroprevalence - IgG", "Seroprevalence - HAI/HI" ,
+                                  "Seroprevalence - MIA" , "Seroprevalence - MIA",  
+                                  "Seroprevalence - Neutralisation/PRNT"))
+
+#geolocate locations
+locations <- geocode_locations(serop_data_map)
+
+#Mexico has one locations, France has one in French Guiana, Honduras and Puerto rico are at national level
+locations <- locations %>%
+  mutate(population_location = ifelse(population_location == "Chiapas State", "Chiapas", population_location),
+         population_location = ifelse(population_country == "Honduras", "Honduras", population_location),
+         population_location = ifelse(population_country == "Puerto Rico", "Puerto Rico", population_location),
+         population_country = ifelse(population_country ==  "France" & population_location ==  "French Guiana", "French Guiana", population_country))
+
+
+#Bangladesh and Thailand have only national estimates
+locations <- locations %>%
+  mutate(population_location = ifelse(is.na(population_location) & population_country == "Bangladesh", "Bangladesh", population_location),
+         population_location = ifelse(is.na(population_location) & population_country == "Thailand", "Thailand", population_location))
+
+
+#keep most recent estimates in case of multiple entry for same location
+locations <- locations %>%
+  group_by(population_location) %>%
+  slice_max(population_study_end_year, n = 1, with_ties = FALSE) %>% 
+  ungroup()
+
+
+###########################
+#
+#        AMERICAS
+#
+###########################
+
+#Colombia has both admin/national and cities
+result.COL <- filter(locations, population_country == "Colombia") %>% #national 
+  mutate(population_location = ifelse(is.na(population_location), "Colombia", population_location)) %>%
+  filter(population_location != "Barranquilla")  # town
+
+# Load country-level shapefiles
+result.BOL <- load_and_merge_shapefile(locations, "Bolivia", "gadm41_BOL_1.shp", "NAME_1")
+result.FG  <- load_and_merge_shapefile(locations, "French Guiana", "gadm41_GUF_0.shp", "COUNTRY")
+result.MEX <- load_and_merge_shapefile(locations, "Mexico", "gadm41_MEX_1.shp", "NAME_1")
+
+# Check if CRS is missing
+st_crs(result.BOL)       # should be NA as the others
+st_crs(result.MEX)
+st_crs(result.FG)
+result.BOL <- st_set_crs(result.BOL, NA)
+
+# Manually add coordinates for specific locations which were not found/missplaces
+locations <- locations %>%
+  mutate(long = ifelse(population_location == "Ribeirão Preto, São Paulo State", -47.820838, long),
+         lat = ifelse(population_location == "Ribeirão Preto, São Paulo State", -21.176631, lat),
+         
+         long = ifelse(population_location == "Pueblo Nuevo", -79.5136, long),
+         lat = ifelse(population_location == "Pueblo Nuevo", -7.189056, lat),
+         
+         long = ifelse(population_location == "Barranquilla", -74.82318, long),
+         lat = ifelse(population_location == "Barranquilla", 11.01019, lat),
+         
+         long = ifelse(population_location ==  "Puerto Rico", -66.1, long),
+         lat = ifelse(population_location ==  "Puerto Rico", 18.45, lat))
+
+
+# Combine geolocated data
+result.geoloc.americas <- filter(locations, population_country %in% c("Brazil", "Honduras", "Puerto Rico", "Peru")) %>% #city estimates
+  rbind(filter(locations, population_location == "Barranquilla")) #city estimate Colombia
+
+# Plot South America
+americas <- ggplot() +
+  borders("world", colour = "gray50", fill = "gray90") +
+  geom_sf(data = result.BOL, aes(fill = central), color = "white") +
+  geom_sf(data = result.FG, aes(fill = central), color = "white") +
+  geom_sf(data = result.MEX, aes(fill = central), color = "white") +
+  coord_sf(xlim = c(-100, -30), ylim = c(-30, 25)) +  # Adjusted limits for south america
+  geom_point(data = result.geoloc.americas, aes(x = long, y = lat, color = central), size = 3) +
+  scale_color_viridis_c(limits = c(0, 70),guide = "none") +
+  scale_fill_viridis_c(limits = c(0, 70),guide = "none") +
+  theme_bw()
+
+###########################
+#
+#       ASIA
+#
+###########################
+
+#Filter for thailand locations
+result.THA <- filter(locations, population_country == "Thailand")
+
+# Load country-level shapefiles
+result.BGD <- load_and_merge_shapefile(locations, "Bangladesh", "gadm41_BGD_0.shp", "COUNTRY")
+result.THA1 <- load_and_merge_shapefile(locations, "Thailand", "gadm41_THA_0.shp", "COUNTRY")
+result.THA2 <- load_and_merge_shapefile(locations, "Thailand", "gadm41_THA_1.shp", "NAME_1")
+
+# Manually add coordinates for Nanning City, China
+locations <- locations %>%
+  mutate(long = ifelse(population_location == "Nanning City, Guanxi", 108.316666, long),
+         lat = ifelse(population_location == "Nanning City, Guanxi", 22.816668, lat))
+
+# Filter other Asian locations
+result.geoloc.asia <- filter(locations, population_country %in% c("China", "Indonesia",  "Myanmar",  "Pakistan"))
+
+# Plot Asia 
+central_asia <- ggplot() +
+  borders("world", colour = "gray50", fill = "gray90") +
+  geom_sf(data = result.BGD, aes(fill = central), color = "white") +
+  geom_sf(data = result.THA1, aes(fill = central), color = "white") +
+  geom_sf(data = result.THA2, aes(fill = central), color = "white") +
+  coord_sf(xlim = c(70, 120), ylim = c(-5, 35)) +  # Adjusted limits for asia
+  geom_point(data = result.geoloc.asia, aes(x = long, y = lat, color = central), alpha = 0.7, size = 3) +
+  scale_fill_viridis_c(limits = c(0, 70), name = "none") +
+  scale_color_viridis_c(limits = c(0, 70), guide = "none") +
+  theme_bw()
+
+###########################
+#
+#         AFRICA
+#
+###########################
+
+# Update population_location for Kenya
+result.KEN <- locations %>%
+  filter(population_country == "Kenya" & population_location %in% c("Turkana", "Kitui District", "West Pokot" )) %>%
+  mutate(population_location = ifelse(population_location == "Kitui District", "Kutui", population_location))
+
+# Read Kenya shapefile and merge
+shapefile.KEN2 <- st_read("gadm41_KEN_1.shp")
+
+result.KEN <- merge(result.KEN, shapefile.KEN2, by.x = "population_location", by.y = "NAME_1") %>%
+  st_as_sf()
+
+# Manually update coordinates for specific locations
+result.KEN1 <- locations %>%
+  filter(population_country == "Kenya" & population_location %in% c("Malindi District", "Central Nyanza")) %>%
+  mutate(
+    long = case_when(
+      population_location == "Malindi District" ~ 40.117,
+      population_location == "Central Nyanza" ~ 34.477884280634,
+      TRUE ~ long
+    ),
+    lat = case_when(
+      population_location == "Malindi District" ~ -3.219186,
+      population_location == "Central Nyanza" ~ -0.489257579667,
+      TRUE ~ lat
+    )
+  )
+
+# Update Mali locations
+result.MAL <- locations %>%
+  filter(population_country == "Mali") %>%
+  mutate(
+    lat = case_when(
+      population_location == "Bamba, Sibirila, Bougouni, Sikasso" ~ 10.3833,
+      population_location == "Banzana, Sibirila, Bougouni, Sikasso" ~ 10.533,
+      population_location == "Soromba, Sibirila, Bougouni, Sikasso" ~ 10.583,
+      TRUE ~ lat
+    ),
+    long = case_when(
+      population_location == "Bamba, Sibirila, Bougouni, Sikasso" ~ -7.1500,
+      population_location == "Banzana, Sibirila, Bougouni, Sikasso" ~ -7.250,
+      population_location == "Soromba, Sibirila, Bougouni, Sikasso" ~ -7.150,
+      TRUE ~ long
+    )
+  )
+
+# Filter other African countries
+result.CABO <- locations %>%
+  filter(population_country == "Cabo Verde") %>%
+  mutate(long = -23.6167, lat = 15.1067)
+
+result.GAB <- filter(locations, population_country == "Gabon")
+
+result.RUW <- locations %>%
+  filter(population_country == "Rwanda") %>%
+  mutate(long = 29.75, lat = 2.080)
+
+# Combine African locations
+result.geoloc.africa <- rbind(result.CABO, result.GAB, result.KEN1, result.MAL, result.RUW)
+
+# Plot central africa
+central_africa <- ggplot() +
+  borders("world", colour="gray50", fill="gray90") +
+  geom_sf(data = result.KEN, aes(fill = central), color = "white") +
+  coord_sf(xlim = c(-25, 40), ylim = c(-15, 20)) + # Focused map
+  geom_point(data = result.geoloc.africa, aes(x = long, y = lat, color = central), alpha = 0.7, size = 3) +
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_viridis_c(limits = c(0, 70), name = "% Seroprevalence") +
+  scale_fill_viridis_c(limits = c(0, 70), guide = "none") +
+  theme_bw() +
+  theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank()
+    # legend.position = c(0.3,0.4)
+  )
+
+#add legend
+central_africa <- central_africa+
+  labs(fill = NULL, col = NULL) + 
+  theme(legend.position = c(0.2,0.3),
+        legend.text = element_text(size = 6),
+        legend.title = element_text(size = 6))+
+  theme(
+    axis.text = element_blank(),      # Remove text labels
+    axis.ticks = element_blank(),     # Remove tick marks
+    axis.title = element_blank()      # Remove axis titles
+  )
+americas <- americas + 
+  theme(legend.position = "none")+
+  labs(fill = NULL,  col = NULL) +
+  theme(
+    axis.text = element_blank(),      # Remove text labels
+    axis.ticks = element_blank(),     # Remove tick marks
+    axis.title = element_blank()      # Remove axis titles
+  )
+central_asia <- central_asia +
+  theme(legend.position = "none")+
+  labs(fill = NULL,  col = NULL) +
+  theme(
+    axis.text = element_blank(),      # Remove text labels
+    axis.ticks = element_blank(),     # Remove tick marks
+    axis.title = element_blank()      # Remove axis titles
+  )
+
+
+# Final multipanel plot
+final_plot <- wrap_plots(americas, central_africa, central_asia, ncol = 3) 
+
+final_plot
+```
+
+
+## Overview of zika reproduction numbers estimates
+
+R0 estimates by geographic location, type of sample, and population group. Sub-national estimates for Brazil, Colombia, and French Polynesia are shown in separate panels because of the high number of estimates; all other estimates are shown in the respective continent panels. Overall country estimates for Brazil, Colombia, and French Polynesia are shown in the corresponding continent panels. Points are central estimates reported in the published studies, error bars are 95% confidence or credible intervals, thicker shaded bars are ranges of central estimates over disaggregated groups. The grey vertical dotted line marks 1. When multiple estimates for the same location were available, the estimates were jittered.
+
+**Figure 3A: Basic Reproduction numbers**
+
+```{r Figure_3, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+#kelly
+```
+
+## Epidemiological delays in human and mosquitoes.
+
+Estimates by location and type of sample of Zika (A) intrinsic incubation period, (B) infectious period, (C) serial interval, symptom onset to admission, and symptom onset to recovery, and (D) admission to discharge/recovery. Estimates by location and study of ZIKV extrinsic incubation period in the mosquito (E). Points are the central estimates reported in the studies, error bars are 95% confidence or credible intervals, and shaded bars are ranges of central estimates over disaggregated groups.  
+
+
+**Figure 4: Incubation Period**
+```{r Figure_4A, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+#kelly
+```
+
+**Figure 4: Infectious Period**
+```{r Figure_4B, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+#kelly
+```
+
+**Figure 4: serial interval, symptom onset to admission, and symptom onset to recovery delays**
+```{r Figure_4C, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+#kelly
+```
+
+**Figure 4: Admission to discharge/recovery**
+```{r Figure_4D, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+#kelly
+```
+
+**Figure 4: Extrinsic incubation period**
+```{r Figure_4E, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+#kelly
+```
+
+
+
+## Proportion of Zika congenital syndrome (CZS)
+
+(A) Estimates of reported CZS proportions from Brazil (top) and the rest of the world (bottom). Points are central estimates, solid lines are confidence or credible intervals, and shaded segments are ranges of central estimates across multiple groups. (B) Meta-analysis of CZS risk stratified by population sample type.  Red squares represent the observed study effect sizes, the solid black horizontal lines are confidence intervals, and blue diamonds are the pooled estimates for each sub-group and overall. The vertical dashed line is the overall pooled estimate. 
+
+
+**Figure 5: CZS proportion given ZIKV-infected mothers** 
+```{r Figure_5A, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+#kelly
+```
+
+
+**Figure 5: meta-analysis on CZS proportion** 
+```{r Figure_5B, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
+#kelly
+```
