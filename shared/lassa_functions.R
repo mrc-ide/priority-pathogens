@@ -115,7 +115,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot_old <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
+forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
 
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
 
@@ -275,7 +275,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                           plot_study, digits, lims, colour, label,
                           width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
 
-  dataframe <- filter_df_for_metamean(dataframe)
+  dataframe <- epireview::filter_df_for_metamean(dataframe)
   dataframe <- dataframe[!is.na(dataframe$id),]
   if(!is.na(subgroup))
   {
@@ -511,7 +511,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
 metaprop_wrap <- function(dataframe, subgroup,
                           studylabels = "refs",
                           plot_pooled, sort_by_subg, plot_study, digits, colour,
-                          width, height, resolution,xlabel,
+                          width, height, resolution, xlabel = 'Case Fatality Ratio',
                           at = seq(0,1,by=0.2), xlim = c(0,1)){
 
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units

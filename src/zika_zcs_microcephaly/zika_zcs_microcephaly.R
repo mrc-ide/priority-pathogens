@@ -160,7 +160,7 @@ min(CZS_rate_qa$central, na.rm=TRUE)
 minmaxczs <- CZS_rate_qa %>% filter(central == 0 | central == 49) %>% select(covidence_id, central, population_sample_size, population_sample_type,
                                                                              population_country, population_location, survey_start_date, survey_end_date)
 
-CZSplot <- forest_plot(CZS_rate %>% filter(qa_score >= 0.5) %>% arrange(central) ,
+CZSplot <- forest_plot_zika(CZS_rate %>% filter(qa_score >= 0.5) %>% arrange(central) ,
                        label = "CZS proportion given ZIKV-infected mother (%)",
                        facet_by_trimester = TRUE,
                        ycol = 'label_group',
@@ -171,7 +171,7 @@ CZSplot <- forest_plot(CZS_rate %>% filter(qa_score >= 0.5) %>% arrange(central)
   theme(legend.position = 'inside', legend.position.inside =  c(.76, 0.485),
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 14))
-CZSplot_noqa <- forest_plot(CZS_rate %>% arrange(central) ,
+CZSplot_noqa <- forest_plot_zika(CZS_rate %>% arrange(central) ,
                             label = "CZS proportion given ZIKV-infected mother (%)",
                             facet_by_trimester = TRUE,
                             ycol = 'label_group',
@@ -185,14 +185,14 @@ ggsave(filename = 'CZS_plot_loc_country.pdf', CZSplot, height =24, width = 15, b
 # ggsave(filename = 'CZS_plot_loc_country_noqa.svg', CZSplot_noqa, height =32, width = 16, bg = 'white')
 ggsave(filename = 'CZS_plot_loc_country_noqa.pdf', CZSplot_noqa, height =32, width = 16, bg = 'white')
 
-# CZSplot_urefs <- forest_plot(CZS_rate %>% filter(qa_score >= 0.5)%>% arrange(refs),
+# CZSplot_urefs <- forest_plot_zika(CZS_rate %>% filter(qa_score >= 0.5)%>% arrange(refs),
 #                              label = "CZS proportion\ngiven ZIKV-infected mother (%)",
 #                              ycol = 'urefs',
 #                              shape_column = "case_definition",
 #                              color_column = "population_country", lims = c(0,100),
 #                              custom_colours = cols) +
 #   theme(legend.position = 'inside')
-# CZSplot__urefsnoqa <- forest_plot(CZS_rate %>% arrange(refs),
+# CZSplot__urefsnoqa <- forest_plot_zika(CZS_rate %>% arrange(refs),
 #                                   label = "CZS proportion\ngiven ZIKV-infected mother (%)",
 #                                   ycol = 'urefs',
 #                                   shape_column = "case_definition",
@@ -204,7 +204,7 @@ ggsave(filename = 'CZS_plot_loc_country_noqa.pdf', CZSplot_noqa, height =32, wid
 # ggsave(filename = 'CZS_plot_refs_country_noqa.png', CZSplot__urefsnoqa, height = 12, width = 10, bg = 'white')
 # ggsave(filename = 'CZS_plot_refs_country_noqa.pdf', CZSplot__urefsnoqa, height = 12, width = 10, bg = 'white')
 
-# forest_plot(CZS_rate,label = "Forest plot of microcephaly proportion (%)", color_column = "case_definition", lims = c(0,100),
+# forest_plot_zika(CZS_rate,label = "Forest plot of microcephaly proportion (%)", color_column = "case_definition", lims = c(0,100),
 #             custom_colours = cols)
 # combine the case_definitions -- suspected as clinicallly diagnosed, and combine confirmed and lab confirmed
 # large variability in brazil, uncertainty in honduras bc n?
@@ -404,13 +404,13 @@ miscarriagemeta <- misc_qa %>% filter(metaanalysis_inclusion == 'include') %>%# 
   # Remove any studies with n < 10
   filter(cfr_ifr_denominator >= 10 | population_sample_size  >= 10)
 length(unique(miscarriagemeta$covidence_id))
-# misc1<-forest_plot(miscarriage %>% filter(qa_score >= 0.5) %>% arrange(desc(central)),
+# misc1<-forest_plot_zika_zika(miscarriage %>% filter(qa_score >= 0.5) %>% arrange(desc(central)),
 #                    label = "Pregnancy loss proportion (%)",
 #                    shape_column = "population_sample_type",
 #                    color_column = "population_country",
 #                    lims = c(0,30),
 #                    custom_colours = cols)
-# misc1_noqa <-forest_plot(miscarriage  %>% arrange(desc(central)),
+# misc1_noqa <-forest_plot_zika_zika(miscarriage  %>% arrange(desc(central)),
 #                          label = "Pregnancy loss proportion (%)",
 #                          shape_column = "population_sample_type",
 #                          color_column = "population_country",
@@ -421,7 +421,7 @@ length(unique(miscarriagemeta$covidence_id))
 # ggsave(filename = 'miscarriage_refs_sample_country.pdf', misc1, height = 10, width = 6, bg = 'white')
 # ggsave(filename = 'miscarriage_refs_sample_country_noqa.pdf', misc1_noqa, height = 10, width = 6, bg = 'white')
 
-misc2 <-forest_plot(miscarriage%>% filter(qa_score >= 0.5),
+misc2 <-forest_plot_zika(miscarriage%>% filter(qa_score >= 0.5),
                     ycol = 'label_group',
                     label = "Pregnancy loss proportion (%)\ngiven ZIKV-infected mother",
                     facet_by_country = TRUE,
@@ -431,7 +431,7 @@ misc2 <-forest_plot(miscarriage%>% filter(qa_score >= 0.5),
                     color_column = "refs",
                     lims = c(0,30),
                     custom_colours = cols)
-misc2_noqa <-forest_plot(miscarriage%>% arrange(desc(central)),
+misc2_noqa <-forest_plot_zika(miscarriage%>% arrange(desc(central)),
                          ycol = 'label_group',
                          facet_by_country = TRUE,
                          label = "Pregnancy loss proportion (%)\ngiven ZIKV-infected mother",

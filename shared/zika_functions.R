@@ -1,6 +1,6 @@
 # function to produce forest plot for given dataframe - modified from lassa_functions.R
 
-forest_plot <- function(df, ycol = "urefs", label, shape_column = 'parameter_value_type',
+forest_plot_zika <- function(df, ycol = "urefs", label, shape_column = 'parameter_value_type',
                         color_column, lims, text_size = 12, show_label = FALSE,
                         custom_colours = NA,
                         facet_by_country = FALSE, facet_by_continent = FALSE, facet_by_poptype = FALSE, facet_by_delay = FALSE,facet_by_trimester = FALSE,

@@ -79,7 +79,7 @@ df_rel_contrib <- df_rel_contrib %>%
 # parameter_uncertainty_lower_value = ifelse(covidence_id == 422 & parameter_type %in% c("Relative contribution - human to human",
 # "Relative contribution - zoonotic to human"), parameter_uncertainty_lower_value * 100 , parameter_uncertainty_lower_value))
 # p1 <- save_plot(df_rel_contrib, "Relative contribution", height = 100, width = 200)
-p1_qa<- forest_plot(df_rel_contrib %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
+p1_qa<- forest_plot_zika(df_rel_contrib %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
                                      ycol = 'label_group',
                                      label = 'Relative contribution to transmission',
                                      color_column="population_sample_type",
@@ -92,7 +92,7 @@ ggsave("Relative_contribution_QA.png", plot =p1_qa, width = 10, height = 6, bg =
 
 # p1_qa
 
-p1 <- forest_plot(df_rel_contrib |> arrange(desc(parameter_value)),
+p1 <- forest_plot_zika(df_rel_contrib |> arrange(desc(parameter_value)),
                     ycol = 'label_group',
                     label = 'Relative contribution to transmission',
                     color_column="population_sample_type",
@@ -167,7 +167,7 @@ df_attack_rate <- df_attack_rate %>%
 
 # p2 <- save_plot(df_attack_rate, "Attack rate", height = 200, width = 100)
 # p2
-p1_qa<- forest_plot(df_attack_rate %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
+p1_qa<- forest_plot_zika(df_attack_rate %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
                     ycol = 'label_group',
                     label = 'Attack rate',
                     color_column="population_sample_type",
@@ -180,7 +180,7 @@ ggsave("Attack_rate_QA.png", plot =p1_qa, width = 15, height = 25, bg = 'white')
 
 # p1_qa
 
-p1 <- forest_plot(df_attack_rate |> arrange(desc(parameter_value)),
+p1 <- forest_plot_zika(df_attack_rate |> arrange(desc(parameter_value)),
                   ycol = 'label_group',
                   label = 'Attack rate',
                   color_column="population_sample_type",
@@ -231,7 +231,7 @@ df_growth_rate <- df_growth_rate %>%
 # log(2) / 0.82
 # log(2) / 5.8
 
-p1_qa<- forest_plot(df_growth_rate %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
+p1_qa<- forest_plot_zika(df_growth_rate %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
                     ycol = 'label_group',
                     label = 'Growth rate',
                     color_column="population_sample_type",
@@ -244,7 +244,7 @@ ggsave("Growth_rate_QA.png", plot =p1_qa, width = 10, height = 6, bg = 'white')
 
 # p1_qa
 
-p1 <- forest_plot(df_growth_rate |> arrange(desc(parameter_value)),
+p1 <- forest_plot_zika(df_growth_rate |> arrange(desc(parameter_value)),
                   ycol = 'label_group',
                   label = 'Growth rate',
                   color_column="population_sample_type",
@@ -295,7 +295,7 @@ df_severity1 <- params_clean.d5 %>% #clean_data(params_clean.d5) %>%
 
 # p4 <- save_plot(df_severity1, "CFR", height = 100, width = 200)
 # p4
-p1_qa<- forest_plot(df_severity1 %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
+p1_qa<- forest_plot_zika(df_severity1 %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
                     ycol = 'label_group',
                     label = 'CFR',
                     color_column="population_sample_type",
@@ -308,7 +308,7 @@ ggsave("CFR_QA.png", plot =p1_qa, width = 10, height = 12, bg = 'white')
 
 # p1_qa
 
-p1 <- forest_plot(df_severity1 |> arrange(desc(parameter_value)),
+p1 <- forest_plot_zika(df_severity1 |> arrange(desc(parameter_value)),
                   ycol = 'label_group',
                   label = 'CFR',
                   color_column="population_sample_type",
@@ -339,7 +339,7 @@ df_severity2 <- params_clean.d6  %>% #clean_data(params_clean.d6) %>%
 
 # p5 <- save_plot(df_severity2, "Proportion of Symptomatic", height = 100, width = 200)
 # p5
-p1_qa<- forest_plot(df_severity2 %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
+p1_qa<- forest_plot_zika(df_severity2 %>% filter(!qa_score<0.5)|> arrange(desc(parameter_value)),
                     ycol = 'label_group',
                     label = "Proportion of Symptomatic",
                     color_column="population_sample_type",
@@ -352,7 +352,7 @@ ggsave("sympt_prop_QA.png", plot =p1_qa, width = 10, height = 12, bg = 'white')
 
 # p1_qa
 
-p1 <- forest_plot(df_severity2 |> arrange(desc(parameter_value)),
+p1 <- forest_plot_zika(df_severity2 |> arrange(desc(parameter_value)),
                   ycol = 'label_group',
                   label = "Proportion of Symptomatic",
                   color_column="population_sample_type",

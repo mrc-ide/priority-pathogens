@@ -151,14 +151,14 @@ table(repronums$method_r)
 
 basicr0 <- repronums %>% filter(parameter_type == 'Reproduction number (Basic R0)')
 
-r0_pc_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'),
+r0_pc_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)'),
                      label = "Basic reproduction number",
                      color_column = 'population_country',
                      lims = c(0,17),
                      custom_colours = c25,
                      text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0))
-r0_pc <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'),
+r0_pc <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)'),
                      label = "Basic reproduction number",
                      color_column = 'population_country',
                      lims = c(0,17),
@@ -167,7 +167,7 @@ r0_pc <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == '
   scale_x_continuous(limits = c(0,17), expand = c(0, 0))
 
 
-r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)') %>%
+r0_sampletype_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)') %>%
                                     mutate(population_location= ifelse(population_location == 'Belo Horizonte, Salvador, Laranjeiras, Fortaleza, Recife, Cuiaba and Campo Grande, Porto Velho',
                                                                        '8 major cities', population_location)),
                              label = "Basic reproduction number",
@@ -181,7 +181,7 @@ r0_sampletype_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Repro
   scale_x_continuous(limits = c(0,12), expand = c(0, 0)) +
   theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
 
-r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)') %>%
+r0_sampletype <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)') %>%
                                mutate(population_location= ifelse(population_location == 'Belo Horizonte, Salvador, Laranjeiras, Fortaleza, Recife, Cuiaba and Campo Grande, Porto Velho',
                                                                   '8 major cities', population_location)),
                              label = "Basic reproduction number",
@@ -196,19 +196,19 @@ r0_sampletype <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_t
   theme(legend.position = 'inside', legend.position.inside =  c(.8, 0.9))
 
 
-# r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'),
+# r0_human_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Human'),
 #                         label = "Basic reproduction number - human",
 #                         color_column = 'population_country',
 #                         lims = c(0,17),
 #                         custom_colours = c25)
-# r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Human'),
+# r0_human <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Human'),
 #                         label = "Basic reproduction number - human",
 #                         color_column = 'population_country',
 #                         lims = c(0,17),
 #                         custom_colours = c25)
 
 
-r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Sexual'),
+r0_human_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Sexual'),
                          label = "Basic reproduction number - sexual",
                          ycol = 'label_group',
                          # facet_by_country = TRUE,
@@ -218,7 +218,7 @@ r0_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproducti
                          # custom_colours = c25,
                          text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0))
-r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Sexual'),
+r0_human <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Sexual'),
                         label = "Basic reproduction number - sexual",
                         ycol = 'label_group',
                         # facet_by_country = TRUE,
@@ -229,19 +229,19 @@ r0_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type =
                         text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0))
 
-# r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Mosquito'),
+# r0_mosquito_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Mosquito'),
 #                            label = "Basic reproduction number - mosquito",
 #                            color_column = 'population_country',
 #                            lims = c(0,17),
 #                            custom_colours = c25)
-# r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Mosquito'),
+# r0_mosquito <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Mosquito'),
 #                            label = "Basic reproduction number - mosquito",
 #                            color_column = 'population_country',
 #                            lims = c(0,17),
 #                            custom_colours = c25)
 
 
-r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Vector-borne'),
+r0_mosquito_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Basic R0) - Vector-borne'),
                            label = "Basic reproduction number - vector-borne",
                            ycol = 'label_group',
                            # facet_by_country = TRUE,
@@ -250,7 +250,7 @@ r0_mosquito_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reprodu
                            # custom_colours = c25,
                            text_size = TEXT_SIZE) +
   scale_x_continuous(limits = c(0,17), expand = c(0, 0))
-r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Vector-borne'),
+r0_mosquito <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0) - Vector-borne'),
                             label = "Basic reproduction number - vector-borne",
                             ycol = 'label_group',
                            # facet_by_country = TRUE,
@@ -260,7 +260,7 @@ r0_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_typ
                            text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,17), expand = c(0, 0))
 
-re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective, Re)'),
+re_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Effective, Re)'),
                   label = "Effective reproduction number",
                   ycol = 'label_group',
                   # facet_by_country = TRUE,
@@ -270,7 +270,7 @@ re_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction num
                   # custom_colours = c25,
                   text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,4), expand = c(0, 0))
-re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective, Re)'),
+re <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective, Re)'),
                   label = "Effective reproduction number",
                   ycol = 'label_group',
                   # facet_by_country = TRUE,
@@ -281,7 +281,7 @@ re <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Rep
                   text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,4), expand = c(0, 0))
 
-re_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
+re_human_noqa <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
                         label = "Effective reproduction number - sexual",
                         ycol = 'label_group',
                         # facet_by_country = TRUE,
@@ -291,7 +291,7 @@ re_human_noqa <- forest_plot(parameters %>% filter(parameter_type == 'Reproducti
                         custom_colours = c25,
                         text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,6), expand = c(0, 0))
-re_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
+re_human <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Sexual'),
                         label = "Effective reproduction number - sexual",
                         ycol = 'label_group',
                         # facet_by_country = TRUE,
@@ -302,7 +302,7 @@ re_human <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type =
                         text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,6), expand = c(0, 0))
 
-re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Vector-borne'),
+re_mosquito <- forest_plot_zika(parameters %>% filter(parameter_type == 'Reproduction number (Effective; Re) - Vector-borne'),
                            label = "Effective reproduction number - vector-borne",
                            ycol = 'label_group',
                            # facet_by_country = TRUE,
@@ -312,7 +312,7 @@ re_mosquito <- forest_plot(parameters %>% filter(parameter_type == 'Reproduction
                            custom_colours = c25,
                            text_size = TEXT_SIZE)+
   scale_x_continuous(limits = c(0,2), expand = c(0, 0))
-# re_mosquito <- forest_plot(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Mosquito'),
+# re_mosquito <- forest_plot_zika(parameters %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Effective; Re) - Mosquito'),
 #                            label = "Effective reproduction number - mosquito",
 #                            color_column = 'population_country',
 #                            lims = c(0,17),

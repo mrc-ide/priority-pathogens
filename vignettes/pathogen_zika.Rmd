@@ -479,7 +479,7 @@ df <- parameters %>%
          population_country = ifelse(population_country == 'Federated States of Micronesia', "Micronesia", population_country)) %>%
   mutate(central2 = coalesce(central, round(0.5*(parameter_lower_bound+parameter_upper_bound),3))) #central value for
 
-r0_sampletype <- forest_plot(df %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)') %>%
+r0_sampletype <- forest_plot_zika(df %>% filter(qa_score >= 0.5 & parameter_type == 'Reproduction number (Basic R0)') %>%
                                mutate(population_location= ifelse(population_location == 'Belo Horizonte, Salvador, Laranjeiras, Fortaleza, Recife, Cuiaba and Campo Grande, Porto Velho',
                                                                   '8 major cities', population_location)),
                              label = "Basic reproduction number",
@@ -531,7 +531,7 @@ m1 <- parameters %>% filter(grepl("extrinsic", parameter_type)) %>%
 
 **Figure 4: Intrinsic incubation Period**
 ```{r Figure_4A, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
-incp2 <- forest_plot(d1 %>% filter(qa_score>=0.5) |> arrange(parameter_value,desc(parameter_value)),
+incp2 <- forest_plot_zika(d1 %>% filter(qa_score>=0.5) |> arrange(parameter_value,desc(parameter_value)),
                     label = 'Intrinsic incubation Period (days)',
                     ycol = 'label_group',
                     color_column = "population_group", # had these backwards initially
@@ -545,7 +545,7 @@ incp2
 
 **Figure 4: Infectious Period**
 ```{r Figure_4B, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
-IP_forest <- forest_plot(d6 %>% filter(qa_score>=0.5)|> arrange(desc(parameter_value)),
+IP_forest <- forest_plot_zika(d6 %>% filter(qa_score>=0.5)|> arrange(desc(parameter_value)),
                          ycol = 'label_group',
                          label = 'Infectious Period (days)',
                          color_column = 'population_group',#population_sample_type',
@@ -579,7 +579,7 @@ lat_onset_serial_admission <- rbind(d2, d5, d4, d8) %>% mutate(parameter_unit = 
       population_location == "Travellers in Americas or Caribbean" ~ 'Unspecified',
       TRUE ~ population_country))
 
-lat_onset_serialplt <- forest_plot(lat_onset_serial_admission %>% filter(qa_score >= 0.5) |> arrange(parameter_value,desc(parameter_value)),
+lat_onset_serialplt <- forest_plot_zika(lat_onset_serial_admission %>% filter(qa_score >= 0.5) |> arrange(parameter_value,desc(parameter_value)),
             label = 'Delay in days',
             ycol = 'label_group',
             shape_column = "population_sample_type",
@@ -594,7 +594,7 @@ lat_onset_serialplt
 
 **Figure 4: Admission to discharge/recovery**
 ```{r Figure_4D, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
-outcome_forest <- forest_plot(d3 %>% filter(qa_score>=0.5) |> arrange(parameter_type,desc(parameter_value)) %>%
+outcome_forest <- forest_plot_zika(d3 %>% filter(qa_score>=0.5) |> arrange(parameter_type,desc(parameter_value)) %>%
                                 mutate(parameter_type = stringr::str_to_title(str_replace(parameter_type,'Human delay - ','')),
                                        population_location = str_replace(population_location, 'VA',"Veterans Affairs")),
                               ycol = 'label_group',
@@ -610,7 +610,7 @@ outcome_forest
 
 **Figure 4: Extrinsic incubation period**
 ```{r Figure_4E, echo=FALSE, fig.height=5, fig.width=9, message=FALSE, warning=FALSE, paged.print=FALSE}
-eip_forest <- forest_plot(m1 %>% filter(qa_score>=0.5)|> arrange(population_sample_type,desc(parameter_value)),
+eip_forest <- forest_plot_zika(m1 %>% filter(qa_score>=0.5)|> arrange(population_sample_type,desc(parameter_value)),
                              label = 'Extrinsic incubation period (days)',
                           ycol = 'label_group',
                           # shape_column = 'popultio',
@@ -731,7 +731,7 @@ cols<-c(
   "gray30", "hotpink3", "seagreen", "cornflowerblue"
 )
 
-CZSplot <- forest_plot(CZS_rate %>% filter(qa_score >= 0.5) %>% arrange(central) ,
+CZSplot <- forest_plot_zika(CZS_rate %>% filter(qa_score >= 0.5) %>% arrange(central) ,
                        label = "CZS proportion given ZIKV-infected mother (%)",
                        facet_by_trimester = TRUE,
                        ycol = 'label_group',
