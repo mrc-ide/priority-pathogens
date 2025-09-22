@@ -16,7 +16,7 @@ library(patchwork)
 library(gridExtra)
 library(orderly2)
 
-#orderly preparation 
+#orderly preparation
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 # orderly_dependency("zika_compilation", "latest(parameter:pathogen == this:pathogen)",
@@ -27,47 +27,43 @@ orderly_dependency("zika_prep_data", "latest(parameter:pathogen == this:pathogen
 
 
 orderly_shared_resource("zika_functions.R" = "zika_functions.R",
-                        "gadm41_BOL_1.shp" = "shapefile/gadm41_BOL_shp/gadm41_BOL_1.shp",
-                        "gadm41_BOL_1.dbf" = "shapefile/gadm41_BOL_shp/gadm41_BOL_1.dbf",
-                        "gadm41_BOL_1.shx" = "shapefile/gadm41_BOL_shp/gadm41_BOL_1.shx",
-                        
-                        "gadm41_MEX_1.shp" = "shapefile/gadm41_MEX_shp/gadm41_MEX_1.shp",
-                        "gadm41_MEX_1.dbf" = "shapefile/gadm41_MEX_shp/gadm41_MEX_1.dbf",
-                        "gadm41_MEX_1.shx" = "shapefile/gadm41_MEX_shp/gadm41_MEX_1.shx",
-                        
-                        "gadm41_KEN_1.shp" = "shapefile/gadm41_KEN_shp/gadm41_KEN_1.shp",
-                        "gadm41_KEN_1.dbf" = "shapefile/gadm41_KEN_shp/gadm41_KEN_1.dbf",
-                        "gadm41_KEN_1.shx" = "shapefile/gadm41_KEN_shp/gadm41_KEN_1.shx",
-                        
-                        "gadm41_THA_1.shp" = "shapefile/gadm41_THA_shp/gadm41_THA_1.shp",
-                        "gadm41_THA_1.dbf" = "shapefile/gadm41_THA_shp/gadm41_THA_1.dbf",
-                        "gadm41_THA_1.shx" = "shapefile/gadm41_THA_shp/gadm41_THA_1.shx",
-                        
-                        # "gadm41_KEN_1.shp" = "shapefile/gadm41_KEN_shp/gadm41_KEN_1.shp",
-                        # "gadm41_KEN_1.dbf" = "shapefile/gadm41_KEN_shp/gadm41_KEN_1.dbf",
-                        # "gadm41_KEN_1.shx" = "shapefile/gadm41_KEN_shp/gadm41_KEN_1.shx",
-                        
-                        "gadm41_COL_0.shp" = "shapefile/gadm41_COL_shp/gadm41_COL_0.shp",
-                        "gadm41_COL_0.dbf" = "shapefile/gadm41_COL_shp/gadm41_COL_0.dbf",
-                        "gadm41_COL_0.shx" = "shapefile/gadm41_COL_shp/gadm41_COL_0.shx",
-                        
-                        "gadm41_GUF_0.shp" = "shapefile/gadm41_GUF_shp/gadm41_GUF_0.shp",
-                        "gadm41_GUF_0.dbf" = "shapefile/gadm41_GUF_shp/gadm41_GUF_0.dbf",
-                        "gadm41_GUF_0.shx" = "shapefile/gadm41_GUF_shp/gadm41_GUF_0.shx",
-                        
-                        "gadm41_HND_0.shp" = "shapefile/gadm41_HND_shp/gadm41_HND_0.shp",
-                        "gadm41_HND_0.dbf" = "shapefile/gadm41_HND_shp/gadm41_HND_0.dbf",
-                        "gadm41_HND_0.shx" = "shapefile/gadm41_HND_shp/gadm41_HND_0.shx",
-                        
-                        "gadm41_BGD_0.shp" = "shapefile/gadm41_BGD_shp/gadm41_BGD_0.shp",
-                        "gadm41_BGD_0.dbf" = "shapefile/gadm41_BGD_shp/gadm41_BGD_0.dbf",
-                        "gadm41_BGD_0.shx" = "shapefile/gadm41_BGD_shp/gadm41_BGD_0.shx",
-                        
-                        "gadm41_THA_0.shp" = "shapefile/gadm41_THA_shp/gadm41_THA_0.shp",
-                        "gadm41_THA_0.dbf" = "shapefile/gadm41_THA_shp/gadm41_THA_0.dbf",
-                        "gadm41_THA_0.shx" = "shapefile/gadm41_THA_shp/gadm41_THA_0.shx")
+                        "gadm41_BOL_1.shp" = "shapefile/gadm41_BOL_1.shp",
+                        "gadm41_BOL_1.dbf" = "shapefile/gadm41_BOL_1.dbf",
+                        "gadm41_BOL_1.shx" = "shapefile/gadm41_BOL_1.shx",
 
-                                       
+                        "gadm41_MEX_1.shp" = "shapefile/gadm41_MEX_1.shp",
+                        "gadm41_MEX_1.dbf" = "shapefile/gadm41_MEX_1.dbf",
+                        "gadm41_MEX_1.shx" = "shapefile/gadm41_MEX_1.shx",
+
+                        "gadm41_KEN_1.shp" = "shapefile/gadm41_KEN_1.shp",
+                        "gadm41_KEN_1.dbf" = "shapefile/gadm41_KEN_1.dbf",
+                        "gadm41_KEN_1.shx" = "shapefile/gadm41_KEN_1.shx",
+
+                        "gadm41_THA_1.shp" = "shapefile/gadm41_THA_1.shp",
+                        "gadm41_THA_1.dbf" = "shapefile/gadm41_THA_1.dbf",
+                        "gadm41_THA_1.shx" = "shapefile/gadm41_THA_1.shx",
+
+                        "gadm41_COL_0.shp" = "shapefile/gadm41_COL_0.shp",
+                        "gadm41_COL_0.dbf" = "shapefile/gadm41_COL_0.dbf",
+                        "gadm41_COL_0.shx" = "shapefile/gadm41_COL_0.shx",
+
+                        "gadm41_GUF_0.shp" = "shapefile/gadm41_GUF_0.shp",
+                        "gadm41_GUF_0.dbf" = "shapefile/gadm41_GUF_0.dbf",
+                        "gadm41_GUF_0.shx" = "shapefile/gadm41_GUF_0.shx",
+
+                        "gadm41_HND_0.shp" = "shapefile/gadm41_HND_0.shp",
+                        "gadm41_HND_0.dbf" = "shapefile/gadm41_HND_0.dbf",
+                        "gadm41_HND_0.shx" = "shapefile/gadm41_HND_0.shx",
+
+                        "gadm41_BGD_0.shp" = "shapefile/gadm41_BGD_0.shp",
+                        "gadm41_BGD_0.dbf" = "shapefile/gadm41_BGD_0.dbf",
+                        "gadm41_BGD_0.shx" = "shapefile/gadm41_BGD_0.shx",
+
+                        "gadm41_THA_0.shp" = "shapefile/gadm41_THA_0.shp",
+                        "gadm41_THA_0.dbf" = "shapefile/gadm41_THA_0.dbf",
+                        "gadm41_THA_0.shx" = "shapefile/gadm41_THA_0.shx")
+
+
 source("zika_functions.R")
 
 # Function to geocode locations (run once and save results)
@@ -89,7 +85,7 @@ load_and_merge_shapefile <- function(data, country, shapefile_path, shapefile_co
   return(st_as_sf(result))
 }
 
-params_clean <- readRDS("parameters_curated.rds") 
+params_clean <- readRDS("parameters_curated.rds")
 
 serop_data <- params_clean %>%
   filter(str_starts(parameter_type, "Seroprevalence"))
@@ -101,7 +97,7 @@ serop_data <- filter(serop_data, !qa_score < 0.5)
 #                         "population_group",
 #                         "population_sample_type", "population_study_start_year",
 #                         "population_study_end_year")]
-                        
+
 # write.csv(serop_data, "zika_serop_data.csv")
 serop_data_map <- serop_data %>%
   filter(population_group == "General population" & population_sample_type == "Population based"&
@@ -134,7 +130,7 @@ locations <- locations %>%
   ungroup()
 
 #Colombia has both admin/national and cities, change location to be Colombia when national
-result.COL <- filter(locations, population_country == "Colombia") %>% #national 
+result.COL <- filter(locations, population_country == "Colombia") %>% #national
   mutate(population_location = ifelse(is.na(population_location), "Colombia", population_location)) %>%
   filter(population_location != "Barranquilla")  # town
 
@@ -158,13 +154,13 @@ result.BOL <- st_set_crs(result.BOL, NA)
 locations <- locations %>%
   mutate(long = ifelse(population_location == "Ribeirão Preto, São Paulo State", -47.820838, long),
          lat = ifelse(population_location == "Ribeirão Preto, São Paulo State", -21.176631, lat),
-         
+
          long = ifelse(population_location == "Pueblo Nuevo", -79.5136, long),
          lat = ifelse(population_location == "Pueblo Nuevo", -7.189056, lat),
-         
+
          long = ifelse(population_location == "Barranquilla", -74.82318, long),
          lat = ifelse(population_location == "Barranquilla", 11.01019, lat),
-         
+
          long = ifelse(population_location ==  "Puerto Rico", -66.1, long),
          lat = ifelse(population_location ==  "Puerto Rico", 18.45, lat))
 
@@ -309,7 +305,7 @@ central_africa <- ggplot() +
 # central_africa
 
 central_africa <- central_africa+
-  labs(fill = NULL, col = NULL) + 
+  labs(fill = NULL, col = NULL) +
   theme(legend.position = c(0.2,0.3),
         legend.text = element_text(size = 6),
         legend.title = element_text(size = 6))+
@@ -321,7 +317,7 @@ central_africa <- central_africa+
     axis.ticks = element_blank(),     # Remove tick marks
     axis.title = element_blank()      # Remove axis titles
   )
-south_america <- south_america + 
+south_america <- south_america +
   theme(legend.position = "none")+
   labs(fill = NULL,  col = NULL) +
   theme(
@@ -340,11 +336,11 @@ central_asia <- central_asia +
 
 
 # Final multipanel plot
-final_plot <- wrap_plots(south_america, central_africa, central_asia, ncol = 3) 
+final_plot <- wrap_plots(south_america, central_africa, central_asia, ncol = 3)
 # +
 #   plot_layout(guides = "none")
 final_plot
-# + 
+# +
 #   plot_layout(guides = "collect")
 
 # final_plot
@@ -357,7 +353,7 @@ ggsave(
   width = 200,
   units = "mm",
   dpi = 300)
-# 
+#
 ggsave(
   paste0("ZIKA_serop_map_QA.svg"),
   plot = final_plot,
@@ -373,10 +369,10 @@ ggsave(
 # Fix missing study years and countries
 year_fixes <- data.frame(
   covidence_id = c(5863, 18107, 1993, 7654, 22284, 10010, 174, 6423, 10168, 6689, 6731, 10094, 10094),
-  parameter_type = c("Seroprevalence - IgG", "Seroprevalence - IgG", "Seroprevalence - Neutralisation/PRNT", 
-                     "Seroprevalence - IgG", "Seroprevalence - IgG", "Seroprevalence - IgM", 
-                     "Seroprevalence - Western blot", "Seroprevalence - IgM", "Seroprevalence - IgM", 
-                     "Seroprevalence - IgG", "Seroprevalence - Neutralisation/PRNT", 
+  parameter_type = c("Seroprevalence - IgG", "Seroprevalence - IgG", "Seroprevalence - Neutralisation/PRNT",
+                     "Seroprevalence - IgG", "Seroprevalence - IgG", "Seroprevalence - IgM",
+                     "Seroprevalence - Western blot", "Seroprevalence - IgM", "Seroprevalence - IgM",
+                     "Seroprevalence - IgG", "Seroprevalence - Neutralisation/PRNT",
                      "Seroprevalence - IgM", "Seroprevalence - Neutralisation/PRNT"),
   population_study_end_year = c(2020, 2022, 1978, 2018, 2019, 2022, 2015, 2021, 2016, 2017, 2016, 2016, 2016)
 )
@@ -407,7 +403,7 @@ seroprevalence_data <- seroprevalence_data %>%
       TRUE ~ as.character(population_study_end_year)
     ),
     year_group = factor(year_group, levels = c("Pre-2016", as.character(2016:2019), "Post-2019")),
-    population_group = factor(population_group, 
+    population_group = factor(population_group,
                               levels = c("General population", "Blood donors", "Persons under investigation",
                                          "Pregnant women", "Mixed groups", "Children", "Other"))
   )
