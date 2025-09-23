@@ -1,12 +1,12 @@
-# This script is to be run after zika_compilation which provides basic cleaning 
-# In this script, we will do general preparation of data for tables and figures 
+# This script is to be run after zika_compilation which provides basic cleaning
+# In this script, we will do general preparation of data for tables and figures
 
 # It will take the place of the data_curation() function currently housed in lassa_function.R
 # as well as the ad-hoc data cleaning in each of the analysis orderly tasks
 library(dplyr)
 library(stringr)
 
-#orderly preparation 
+#orderly preparation
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL,
                    plotting = NULL) # can be TRUE or FALSE; TRUE outputs plotting-ready dfs
@@ -68,16 +68,16 @@ parameters <- dfs$parameters %>% left_join(qa_scores) %>%
   mutate(article_label = make.unique(refs)) %>%
   mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
 
-# once i add in the extra cleaning in each task, then can remove that from the analsysi tasks as well 
+# once i add in the extra cleaning in each task, then can remove that from the analsysi tasks as well
 # (Especially the latex tables one)
 
-# Save genomic data 
+# Save genomic data
 genomic <- parameters %>%
   filter(parameter_class == 'Mutations') %>%
   left_join(articles %>% select(-c(name_data_entry, qa_score, article_label, refs, id)), by = c('covidence_id', 'pathogen'))  %>%
   select( -c(starts_with('riskfactor'), r_pathway, seroprevalence_adjusted, third_sample_param_yn,
-             contains('delay'), method_2_from_supplement, #starts_with('cfr'), 
-             starts_with('distribution'), case_definition, exponent_2, 
+             contains('delay'), method_2_from_supplement, #starts_with('cfr'),
+             starts_with('distribution'), case_definition, exponent_2,
              inverse_param, inverse_param_2, name_data_entry, trimester_exposed, starts_with('parameter_2')))
 
 saveRDS(genomic, "zika_genomic.rds")
