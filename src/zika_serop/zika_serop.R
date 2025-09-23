@@ -339,7 +339,7 @@ central_asia <- central_asia +
 final_plot <- wrap_plots(south_america, central_africa, central_asia, ncol = 3)
 # +
 #   plot_layout(guides = "none")
-final_plot
+# final_plot
 # +
 #   plot_layout(guides = "collect")
 
