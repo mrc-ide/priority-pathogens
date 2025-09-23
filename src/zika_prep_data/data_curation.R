@@ -3,7 +3,7 @@
 
 # curated data should be used for plotting but not for the final epireview dataset (i.e. we have changed to inverse parameters, exponentiated, etc)
 
-data_curation <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
+data_curation_zika <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
 
      # this is due to legacy access database issue
   if(switch_first_surname){
@@ -118,7 +118,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
 
 curation <- function(articles, outbreaks, models, parameters, plotting) {
   #call data_curation function (which at some stage will move to epireview) but keep curation to be backward compatible
-  df <- data_curation(articles,outbreaks,models,parameters,plotting)
+  df <- data_curation_zika(articles,outbreaks,models,parameters,plotting)
 
   return(list(articles = df$articles, outbreaks = df$outbreaks,
               models = df$models, parameters = df$parameters))
