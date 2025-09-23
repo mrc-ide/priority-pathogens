@@ -116,10 +116,7 @@ orderly_run('zika_other_pars', parameters = list(pathogen = 'ZIKA'))
 #Seroprevalence plots and maps
 orderly_run('zika_serop', parameters = list(pathogen = 'ZIKA'))
 
-# # Summary figures
-orderly_run("sars_summary", parameters = list(pathogen = "SARS"))
-#
-# # Latex tables
+# Latex tables
 orderly_run("zika_latex_tables", parameters = list(pathogen = "ZIKA"))
 
 # summary figures
