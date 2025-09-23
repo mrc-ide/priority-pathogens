@@ -39,7 +39,7 @@ download.file(url, destfile = file.path(location, "zika-outputs.zip"), mode = "w
 ## The outputs are zipped in a folder called lassa-outputs
 ## Check that the folder does not already exist in the location
 if (dir.exists(file.path(location, "zika-outputs"))) {
-  stop("The folder lassa-outputs-test-location already exists in the location.
+  stop("The folder zika-outputs already exists in the location.
   Please delete the folder and run the script again.")
 }
 unzip(zipfile = file.path(location, "zika-outputs.zip"), exdir = location)
