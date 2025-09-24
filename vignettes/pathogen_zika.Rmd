@@ -32,6 +32,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 source(file.path("..", "shared", "lassa_functions.R"))
 source(file.path("..", "shared", "zika_functions.R"))
+source(file.path('..', 'src','zika_prep_data','data_curation.R'))
 
 remotes::install_github("mrc-ide/epireview@develop")
 
@@ -75,9 +76,9 @@ articles   <- epireview::load_epidata_raw("zika", "article")
 articles   <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
 models     <- epireview::load_epidata_raw("zika", "model")
 parameters <- epireview::load_epidata_raw("zika", "parameter")
-outbreaks <- epireview::load_epidata_raw("zika", "outbreak")
+outbreaks  <- epireview::load_epidata_raw("zika", "outbreak")
 
-dfs <- data_curation(articles, outbreaks,models,parameters, plotting =  TRUE, switch_first_surname = TRUE )
+dfs <- data_curation_zika(articles, outbreaks,models,parameters, plotting =  TRUE, switch_first_surname = TRUE )
 
 articles   <- dfs$articles
 
@@ -457,7 +458,7 @@ central_asia <- central_asia +
 final_plot <- wrap_plots(americas, central_africa, central_asia, ncol = 3) 
 ```
 
-```{r Figure_2B, echo=FALSE, fig.height=10, fig.width=15, message=FALSE, warning=FALSE, paged.print=TRUE, include = FALSE}
+```{r Figure_2B, echo=FALSE, fig.height= 7, fig.width=15}
 final_plot
 ```
 
