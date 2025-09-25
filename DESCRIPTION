@@ -50,6 +50,7 @@ Imports:
     scales,
     sf,
     stringr,
+    tidygeocoder,
     tidyverse,
     tm,
     webshot2
