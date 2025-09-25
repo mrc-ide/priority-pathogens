@@ -65,6 +65,7 @@ library(ggpattern)
 library(tidyverse)
 library(stringr)
 library(maps)
+library(tidygeocoder)
 
 
 TEXT_SIZE <- 11
