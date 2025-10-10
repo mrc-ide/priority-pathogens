@@ -22,6 +22,17 @@ model_cleaning <- function(df){
 }
 
 outbreak_cleaning <- function(df){
+
+  df <- df %>%
+    mutate(outbreak_location = str_to_title(outbreak_location),
+           outbreak_location = str_replace_all(outbreak_location, " And", ";" ),
+           outbreak_location = str_replace_all(outbreak_location, ",", ";" ),
+           outbreak_location = str_replace_all(outbreak_location, "Kerela", "Kerala" ),
+           outbreak_location = case_when(outbreak_location == "Serembna Hospital" ~ "Seremban Hospital",
+                                         outbreak_location == "University Of Malaya Medical Center" ~ "University Of Malaya Medical Centre",
+                                         outbreak_location == "Suspected To Be Infected With The Virus From Pig Farms Situated In Bukit Pelandok" ~ "Bukit Pelandok" ,
+                                         TRUE ~ outbreak_location))
+
   return (df)
 }
 
@@ -39,6 +50,18 @@ param_cleaning <- function(df){
 
   df[no_true_false] <- lapply(no_true_false,
                               function(col) df[[col]] != "No")
+
+  df <- df |>
+    mutate(population_location = str_to_title(population_location),
+           population_location = str_replace_all(population_location, " And", ";"),
+           population_location = str_replace_all(population_location, ",", ";"),
+           population_location = str_replace_all(population_location, "[(]Bangladesh[)]", ";"),
+           population_location = str_replace_all(population_location, "[(]India[)]", ";"),
+           population_location = str_replace_all(population_location, "Serembna Hospital", "Seremban Hospital"),
+           population_location = str_replace_all(population_location, "Kerela", "Kerala"),
+           population_location = str_replace_all(population_location, "Suspected To Be Infected With The Virus From Pig Farms Situated In Bukit Pelandok", "Bukit Pelandok"),
+           population_location = str_trim(population_location, side = "both")
+    )
 
   df <- df |>
     mutate(parameter_hd_from = ifelse(parameter_hd_from %in% c("Other", ""),
