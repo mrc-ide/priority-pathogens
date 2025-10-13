@@ -21,6 +21,10 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
 
   parameters <- parameters %>%
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
+    mutate(parameter_from_figure = case_when(parameter_from_figure=='Yes'~ TRUE,
+                                             parameter_from_figure=='No'~FALSE,
+                                             is.na(parameter_from_figure)~FALSE,
+                                             TRUE ~ FALSE)) %>%
     filter(!parameter_from_figure)
 
   param4plot <- parameters %>%
