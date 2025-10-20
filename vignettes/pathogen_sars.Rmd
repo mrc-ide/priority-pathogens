@@ -58,6 +58,7 @@ library(rnaturalearthdata)
 library(ggrepel)
 library(gt)
 library(scales)
+library(webshot2)
 
 create_inset_png <- function(data=non_imported_cnts_short,location='SGP')
 {
