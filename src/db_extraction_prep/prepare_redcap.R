@@ -187,7 +187,7 @@ subset_long_df <- function(input_df, mapping_df, table_name){
   return (subset_df)
 }
 
-stack_rows <- function(df, id_col = "record_id"){
+stack_rows <- function(df, repeat_id_col, id_col = "record_id"){
   colnames_table <- colnames(df)
   colnames_table <- colnames_table[!(colnames_table == id_col)]
   repeat_ids <- sub("^.*_(\\d+)$", "\\1", colnames_table)
@@ -209,10 +209,10 @@ stack_rows <- function(df, id_col = "record_id"){
     # get names time to make reduce dependency on column order
     colnames(temp_df) <- gsub("_\\d+", "", colnames(temp_df))
 
-    repeat_id_vec <- rep(repeat_id, NROW(temp_df))
+    repeat_id_vec <- rep(as.numeric(repeat_id), NROW(temp_df))
 
     df_to_rbind <- cbind(temp_df[,1, drop=FALSE],
-                         "repeat_id"=repeat_id_vec,
+                         setNames(list(repeat_id_vec), repeat_id_col),
                          temp_df[-1])
 
     combined_df <- rbind(combined_df, df_to_rbind)
@@ -285,6 +285,80 @@ update_records <- function(df, id_mapping_list, id_col){
 
   return (df)
 }
+
+update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
+                                   notes_cols, continuation_col, id_col,
+                                   incomplete_col, incomplete_col_key,
+                                   continuation_table){
+  ids_to_combine <- c(as.numeric(id_to_map_to), ids_to_map)
+  to_combine_df <- df[df[[id_col]] %in% ids_to_combine, ]
+
+  cli_alert_info(
+    paste0("Attempting to merge ", continuation_table, " rows with ", id_col,
+           ": ", paste(ids_to_combine, collapse=", ")))
+
+  notes_list <- lapply(
+    notes_cols,
+    function(col) paste(get_unique_na_preserve(to_combine_df[[col]]),
+                        collapse="; ")
+  )
+  names(notes_list) <- notes_cols
+  id_list <- setNames(list(as.numeric(id_to_map_to)), id_col)
+  continuation_list <- setNames(list(NA), continuation_col)
+
+  unqiue_col_df <- to_combine_df[, !(colnames(to_combine_df) %in%
+                                       c(notes_cols, continuation_col, id_col))]
+  unique_value_list <- lapply(unqiue_col_df,
+                              function(col) get_unique_na_preserve(col))
+
+  unique_incomplete_col <- unique_value_list[[incomplete_col]]
+  unique_value_list[[incomplete_col]] <- ifelse(
+    length(unique_incomplete_col)>1,
+    unique_incomplete_col[unique_incomplete_col!=incomplete_col_key],
+    unique_incomplete_col)
+
+  for (name in names(unique_value_list)){
+    values <- unique_value_list[[name]]
+    if (NROW(values) > 1){
+      cli_alert_danger(
+        paste0("Found a mismatch for ", name, ". It has the following values: ",
+               paste(values, collapse=", "), ". The final value '", values[-1],
+               "' will be used."))
+    }
+    unique_value_list[[name]] <- values[NROW(values)]
+  }
+
+  final_return_list <- c(id_list, unique_value_list, notes_list, continuation_list)
+  return (final_return_list)
+}
+
+update_repeat_ids <- function(df,
+                              tbl_name,
+                              id_mapping_list,
+                              id_col,
+                              repeat_id_col){
+  row_len = sum(df[,id_col]==names(id_mapping_list)[1])
+  cli_inform(
+    paste0("Updating repeat ids for ", tbl_name ,
+    " to generate distinct extraction row ids.",
+    "\nAssuming the max number of rows that can be extracted is: ", row_len)
+  )
+
+  for (i in 1:length(id_mapping_list)){
+    # Update in ascending order
+    ids_to_update <- c(id_mapping_list[[i]], names(id_mapping_list)[i])
+    ids_to_update <- sort(as.numeric(ids_to_update))[-1]
+
+    for (j in 1:length(ids_to_update)){
+      id <- ids_to_update[j]
+      id_filter <- df[,id_col]==id
+      df[id_filter, repeat_id_col] <- (df[id_filter, repeat_id_col] + row_len * j)
+      }
+  }
+
+  return (df)
+}
+
 # *----------------------- Target generation functions ------------------------*
 generate_target_table <- function(input_df_list, mapping_df, target_table,
                                   input_table_col_name="input_table",
@@ -717,6 +791,9 @@ date_cols_to_split <- config_list[["date_cols_to_split"]]
 article_cols_to_add_start <- config_list[["article_cols_to_add_start"]]
 article_cols_to_add_end <- config_list[["article_cols_to_add_end"]]
 
+# Hard-coded repeat id column name. Column is created to create a unique id for
+# extracted data tables
+repeat_id_col <- "repeat_id"
 
 # *------------------------------- Read in data -------------------------------*
 mapping_df <- read_csv(mapping_filename, show_col_types = FALSE)
@@ -747,54 +824,6 @@ get_unique_na_preserve  <- function(vec){
   }
 }
 
-update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
-                                   notes_cols, continuation_col, id_col,
-                                   incomplete_col, incomplete_col_key,
-                                   continuation_table){
-  ids_to_combine <- c(as.numeric(id_to_map_to), ids_to_map)
-  to_combine_df <- df[df[[id_col]] %in% ids_to_combine, ]
-
-  cli_alert_info(
-    paste0("Attempting to merge ", continuation_table, " rows with ", id_col,
-           ": ", paste(ids_to_combine, collapse=", ")))
-
-  notes_list <- lapply(
-    notes_cols,
-    function(col) paste(get_unique_na_preserve(to_combine_df[[col]]),
-                        collapse="; ")
-  )
-  names(notes_list) <- notes_cols
-  id_list <- setNames(list(as.numeric(id_to_map_to)), id_col)
-  continuation_list <- setNames(list(NA), continuation_col)
-
-  unqiue_col_df <- to_combine_df[, !(colnames(to_combine_df) %in%
-                                       c(notes_cols, continuation_col, id_col))]
-  unique_value_list <- lapply(unqiue_col_df,
-                              function(col) get_unique_na_preserve(col))
-
-  unique_incomplete_col <- unique_value_list[[incomplete_col]]
-    unique_value_list[[incomplete_col]] <- ifelse(
-      length(unique_incomplete_col)>1,
-      unique_incomplete_col[unique_incomplete_col!=incomplete_col_key],
-      unique_incomplete_col)
-
-  for (name in names(unique_value_list)){
-    values <- unique_value_list[[name]]
-    if (NROW(values) > 1){
-      cli_alert_danger(
-        paste0("Found a mismatch for ", name, ". It has the following values: ",
-              paste(values, collapse=", "), ". The final value '", values[-1],
-              "' will be used."))
-    }
-    unique_value_list[[name]] <- values[NROW(values)]
-  }
-
-  final_return_list <- c(id_list, unique_value_list, notes_list, continuation_list)
-  return (final_return_list)
-}
-
-
-
 if (!is.null(tables_to_stack)){
   distinct_input_tables <- unique(mapping_df[["input_table"]])
 
@@ -817,16 +846,26 @@ if (!is.null(tables_to_stack)){
 
   id_mapping_list <- id_mapping_rep_list$id_mapping_list
 
+  df_raw_list[tables_to_stack] <- lapply(
+    df_raw_list[tables_to_stack],
+    function(df) stack_rows(df=df, repeat_id_col=repeat_id_col, id_col=id_col))
+
   # Data tables
   if(NROW(id_mapping_list)>0){
+    df_raw_list[tables_to_stack] <- lapply(
+      tables_to_stack,
+      function(tbl_to_stack) update_repeat_ids(df=df_raw_list[[tbl_to_stack]],
+                                               tbl_name=tbl_to_stack,
+                                               id_mapping_list=id_mapping_list,
+                                               id_col=id_col,
+                                               repeat_id_col=repeat_id_col))
+
     df_raw_list[tables_to_stack] <- lapply(
       df_raw_list[tables_to_stack],
       function(df) update_records(df=df,
                                   id_mapping_lis=id_mapping_list,
                                   id_col=id_col))
   }
-
-  df_raw_list[tables_to_stack] <- lapply(df_raw_list[tables_to_stack], stack_rows)
 
   # Continuation table
   if(NROW(id_mapping_list)>0){
@@ -966,7 +1005,7 @@ if (!is.null(pk_col_names)){
   # repeat ids are created within this script and are required for pk generation
   # new name to suppress mapping warning (quick fix)
   repeat_id_rows_df <- data.frame(
-    rep("repeat_id", length(data_table_names)),
+    rep(repeat_id_col, length(data_table_names)),
     input_names,
     rep(new_repeat_id_name, length(data_table_names)),
     data_table_names)
