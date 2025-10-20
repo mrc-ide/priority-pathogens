@@ -4,6 +4,7 @@
 tables <- c("articles", "outbreaks", "models", "params")
 
 # *------------------------ Update column types action ------------------------*
+# Update column types; the list element names are column names
 # Columns which are completely NA will default to logical
 # (e.g. exponent 2 for Nipah)
 type_map_list <- list("cfr_ifr_numerator" = as.integer,
@@ -11,11 +12,16 @@ type_map_list <- list("cfr_ifr_numerator" = as.integer,
                       "exponent_2"=as.numeric)
 
 # *---------------------------- Update punctuation ----------------------------*
+# Replace commas with semi-colons
 cols_to_punctuate_vec <- c("method_disaggregated_by",
                            "population_location",
                            "population_country")
 
 # *--------------------------- Update values action ---------------------------*
+# The name of the entries in update_values_list are the names of the columns
+# each column will related to a named vector, where names are the name to map
+# to and the values are values to map
+
 uncertainty_interval_lookup_values <- c(
   "CI95%" = "95% CI",
   "CRI95%" = "95% CrI",
@@ -39,6 +45,7 @@ update_values_list <- list(
 )
 
 # *---------------------------- Group types action ----------------------------*
+#
 group_mapping_vec <- c(
   "Human delay" = "Human delay",
   "Seroprevalence" = "Seroprevalence",
@@ -55,6 +62,10 @@ group_mapping_vec <- c(
 )
 
 # *------------------------- Combine intervals action -------------------------*
+# The name of list item is the new column names
+# The values in the vector are the columns to combine
+# Combined as "value_1 - value_2", only if both col values are not NA
+
 interval_combine_list <- list(
   "parameter_bounds"=c("parameter_lower_bound", "parameter_upper_bound"),
   "uncertainty_bounds"=c("parameter_uncertainty_lower_value",
@@ -67,6 +78,11 @@ interval_combine_list <- list(
 )
 
 # *-------------------------- Combine columns action --------------------------*
+# The name of list item is the new column names
+# The first vector is the values to check and the the second vector is the
+# corresponding value to coalesce if non-NA
+# For cases where the vector is repeated (e.g. comb_par1_uncertainty), this is
+# the same as a standard coalesce
 col_combine_list <- list(
   "comb_par1_uncertainty_type"=list(
     c("parameter_uncertainty_lower_value",
