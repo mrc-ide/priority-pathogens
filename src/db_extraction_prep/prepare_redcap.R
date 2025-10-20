@@ -332,6 +332,33 @@ update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
   return (final_return_list)
 }
 
+update_repeat_ids <- function(df,
+                              tbl_name,
+                              id_mapping_list,
+                              id_col,
+                              repeat_id_col){
+  row_len = sum(df[,id_col]==names(id_mapping_list)[1])
+  cli_inform(
+    paste0("Updating repeat ids for ", tbl_name ,
+    " to generate distinct extraction row ids.",
+    "\nAssuming the max number of rows that can be extracted is: ", row_len)
+  )
+
+  for (i in 1:length(id_mapping_list)){
+    # Update in ascending order
+    ids_to_update <- c(id_mapping_list[[i]], names(id_mapping_list)[i])
+    ids_to_update <- sort(as.numeric(ids_to_update))[-1]
+
+    for (j in 1:length(ids_to_update)){
+      id <- ids_to_update[j]
+      id_filter <- df[,id_col]==id
+      df[id_filter, repeat_id_col] <- (df[id_filter, repeat_id_col] + row_len * j)
+      }
+  }
+
+  return (df)
+}
+
 # *----------------------- Target generation functions ------------------------*
 generate_target_table <- function(input_df_list, mapping_df, target_table,
                                   input_table_col_name="input_table",
@@ -824,6 +851,14 @@ if (!is.null(tables_to_stack)){
 
   # Data tables
   if(NROW(id_mapping_list)>0){
+    df_raw_list[tables_to_stack] <- lapply(
+      tables_to_stack,
+      function(tbl_to_stack) update_repeat_ids(df=df_raw_list[[tbl_to_stack]],
+                                               tbl_name=tbl_to_stack,
+                                               id_mapping_list=id_mapping_list,
+                                               id_col=id_col,
+                                               repeat_id_col=repeat_id_col))
+
     df_raw_list[tables_to_stack] <- lapply(
       df_raw_list[tables_to_stack],
       function(df) update_records(df=df,
