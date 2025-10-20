@@ -187,7 +187,7 @@ subset_long_df <- function(input_df, mapping_df, table_name){
   return (subset_df)
 }
 
-stack_rows <- function(df, id_col = "record_id"){
+stack_rows <- function(df, repeat_id_col, id_col = "record_id"){
   colnames_table <- colnames(df)
   colnames_table <- colnames_table[!(colnames_table == id_col)]
   repeat_ids <- sub("^.*_(\\d+)$", "\\1", colnames_table)
@@ -209,10 +209,10 @@ stack_rows <- function(df, id_col = "record_id"){
     # get names time to make reduce dependency on column order
     colnames(temp_df) <- gsub("_\\d+", "", colnames(temp_df))
 
-    repeat_id_vec <- rep(repeat_id, NROW(temp_df))
+    repeat_id_vec <- rep(as.numeric(repeat_id), NROW(temp_df))
 
     df_to_rbind <- cbind(temp_df[,1, drop=FALSE],
-                         "repeat_id"=repeat_id_vec,
+                         setNames(list(repeat_id_vec), repeat_id_col),
                          temp_df[-1])
 
     combined_df <- rbind(combined_df, df_to_rbind)
@@ -763,6 +763,9 @@ date_cols_to_split <- config_list[["date_cols_to_split"]]
 article_cols_to_add_start <- config_list[["article_cols_to_add_start"]]
 article_cols_to_add_end <- config_list[["article_cols_to_add_end"]]
 
+# Hard-coded repeat id column name. Column is created to create a unique id for
+# extracted data tables
+repeat_id_col <- "repeat_id"
 
 # *------------------------------- Read in data -------------------------------*
 mapping_df <- read_csv(mapping_filename, show_col_types = FALSE)
@@ -815,6 +818,10 @@ if (!is.null(tables_to_stack)){
 
   id_mapping_list <- id_mapping_rep_list$id_mapping_list
 
+  df_raw_list[tables_to_stack] <- lapply(
+    df_raw_list[tables_to_stack],
+    function(df) stack_rows(df=df, repeat_id_col=repeat_id_col, id_col=id_col))
+
   # Data tables
   if(NROW(id_mapping_list)>0){
     df_raw_list[tables_to_stack] <- lapply(
@@ -823,8 +830,6 @@ if (!is.null(tables_to_stack)){
                                   id_mapping_lis=id_mapping_list,
                                   id_col=id_col))
   }
-
-  df_raw_list[tables_to_stack] <- lapply(df_raw_list[tables_to_stack], stack_rows)
 
   # Continuation table
   if(NROW(id_mapping_list)>0){
@@ -964,7 +969,7 @@ if (!is.null(pk_col_names)){
   # repeat ids are created within this script and are required for pk generation
   # new name to suppress mapping warning (quick fix)
   repeat_id_rows_df <- data.frame(
-    rep("repeat_id", length(data_table_names)),
+    rep(repeat_id_col, length(data_table_names)),
     input_names,
     rep(new_repeat_id_name, length(data_table_names)),
     data_table_names)
