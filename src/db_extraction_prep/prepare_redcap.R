@@ -285,6 +285,53 @@ update_records <- function(df, id_mapping_list, id_col){
 
   return (df)
 }
+
+update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
+                                   notes_cols, continuation_col, id_col,
+                                   incomplete_col, incomplete_col_key,
+                                   continuation_table){
+  ids_to_combine <- c(as.numeric(id_to_map_to), ids_to_map)
+  to_combine_df <- df[df[[id_col]] %in% ids_to_combine, ]
+
+  cli_alert_info(
+    paste0("Attempting to merge ", continuation_table, " rows with ", id_col,
+           ": ", paste(ids_to_combine, collapse=", ")))
+
+  notes_list <- lapply(
+    notes_cols,
+    function(col) paste(get_unique_na_preserve(to_combine_df[[col]]),
+                        collapse="; ")
+  )
+  names(notes_list) <- notes_cols
+  id_list <- setNames(list(as.numeric(id_to_map_to)), id_col)
+  continuation_list <- setNames(list(NA), continuation_col)
+
+  unqiue_col_df <- to_combine_df[, !(colnames(to_combine_df) %in%
+                                       c(notes_cols, continuation_col, id_col))]
+  unique_value_list <- lapply(unqiue_col_df,
+                              function(col) get_unique_na_preserve(col))
+
+  unique_incomplete_col <- unique_value_list[[incomplete_col]]
+  unique_value_list[[incomplete_col]] <- ifelse(
+    length(unique_incomplete_col)>1,
+    unique_incomplete_col[unique_incomplete_col!=incomplete_col_key],
+    unique_incomplete_col)
+
+  for (name in names(unique_value_list)){
+    values <- unique_value_list[[name]]
+    if (NROW(values) > 1){
+      cli_alert_danger(
+        paste0("Found a mismatch for ", name, ". It has the following values: ",
+               paste(values, collapse=", "), ". The final value '", values[-1],
+               "' will be used."))
+    }
+    unique_value_list[[name]] <- values[NROW(values)]
+  }
+
+  final_return_list <- c(id_list, unique_value_list, notes_list, continuation_list)
+  return (final_return_list)
+}
+
 # *----------------------- Target generation functions ------------------------*
 generate_target_table <- function(input_df_list, mapping_df, target_table,
                                   input_table_col_name="input_table",
@@ -745,54 +792,6 @@ get_unique_na_preserve  <- function(vec){
     return (unique_vec)
   }
 }
-
-update_id_rows_to_keep <- function(df, id_to_map_to, ids_to_map,
-                                   notes_cols, continuation_col, id_col,
-                                   incomplete_col, incomplete_col_key,
-                                   continuation_table){
-  ids_to_combine <- c(as.numeric(id_to_map_to), ids_to_map)
-  to_combine_df <- df[df[[id_col]] %in% ids_to_combine, ]
-
-  cli_alert_info(
-    paste0("Attempting to merge ", continuation_table, " rows with ", id_col,
-           ": ", paste(ids_to_combine, collapse=", ")))
-
-  notes_list <- lapply(
-    notes_cols,
-    function(col) paste(get_unique_na_preserve(to_combine_df[[col]]),
-                        collapse="; ")
-  )
-  names(notes_list) <- notes_cols
-  id_list <- setNames(list(as.numeric(id_to_map_to)), id_col)
-  continuation_list <- setNames(list(NA), continuation_col)
-
-  unqiue_col_df <- to_combine_df[, !(colnames(to_combine_df) %in%
-                                       c(notes_cols, continuation_col, id_col))]
-  unique_value_list <- lapply(unqiue_col_df,
-                              function(col) get_unique_na_preserve(col))
-
-  unique_incomplete_col <- unique_value_list[[incomplete_col]]
-    unique_value_list[[incomplete_col]] <- ifelse(
-      length(unique_incomplete_col)>1,
-      unique_incomplete_col[unique_incomplete_col!=incomplete_col_key],
-      unique_incomplete_col)
-
-  for (name in names(unique_value_list)){
-    values <- unique_value_list[[name]]
-    if (NROW(values) > 1){
-      cli_alert_danger(
-        paste0("Found a mismatch for ", name, "It has the following values: ",
-              paste(values, collapse=", "), ". The final value '", values[-1],
-              "' will be used."))
-    }
-    unique_value_list[[name]] <- values[NROW(values)]
-  }
-
-  final_return_list <- c(id_list, unique_value_list, notes_list, continuation_list)
-  return (final_return_list)
-}
-
-
 
 if (!is.null(tables_to_stack)){
   distinct_input_tables <- unique(mapping_df[["input_table"]])
