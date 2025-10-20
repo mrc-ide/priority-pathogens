@@ -4,8 +4,11 @@
 tables <- c("articles", "outbreaks", "models", "params")
 
 # *------------------------ Update column types action ------------------------*
+# Columns which are completely NA will default to logical
+# (e.g. exponent 2 for Nipah)
 type_map_list <- list("cfr_ifr_numerator" = as.integer,
-                      "population_study_start_day" = as.numeric)
+                      "population_study_start_day" = as.numeric,
+                      "exponent_2"=as.numeric)
 
 # *---------------------------- Update punctuation ----------------------------*
 cols_to_punctuate_vec <- c("method_disaggregated_by",
