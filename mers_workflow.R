@@ -33,3 +33,16 @@ orderly_run("db_double",list(pathogen="MERS"))
 # Merge double_extraction, fixing, and single extraction files to create a final
 # dataset
 orderly_run("db_compilation", list(pathogen="MERS"))
+
+# *-------------------------------- Clean data --------------------------------*
+# debug_mode = TRUE keeps "article_id" and "name_data_entry" columns included in
+# the cleaned output. Useful for debugging but shouldn't be included in the
+# final version
+orderly_run("db_cleaning",list(pathogen="MERS", debug_mode=TRUE))
+
+# *------------------------------- Latex tables -------------------------------*
+# Add cleaning mode
+orderly_run("mers_latex_tables", list(pathogen="MERS"))
+
+# *---------------------------- Plots and analysis ----------------------------*
+orderly_run("mers_transmission", list(pathogen="MERS"))
