@@ -44,6 +44,10 @@ d1 <- parameters %>% filter(parameter_type == 'Human delay - incubation period')
 # # Nikolay (2019) is duplicated (reference below is a subset of the first)
 # d1 <- d1 |>
 #   filter(parameter_data_id!="bb5bdf26abeda50067007b8db5d4bb15")
+# Remove Chua (only range and quantile no central)
+d1 <- d1 |>
+  filter(covidence_id!=271)
+
 d1 <- d1 |>
   arrange(population_group, desc(central))
 
