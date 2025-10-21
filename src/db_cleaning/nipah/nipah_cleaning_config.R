@@ -108,8 +108,8 @@ col_combine_list <- list(
   ),
   "comb_par2_uncertainty"=list(
     c("uncertainty_2_bounds",
-      "parameter_uncertainty_single_value"),
-    c("uncertainty_bounds",
+      "parameter_2_uncertainty_single_value"),
+    c("uncertainty_2_bounds",
       "parameter_2_uncertainty_single_value")
   )
 )
