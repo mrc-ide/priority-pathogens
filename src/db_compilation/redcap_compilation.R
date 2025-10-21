@@ -87,6 +87,10 @@ check_info_ids <- function(extraction_table,
                            cov_id_col,
                            extraction_table_name,
                            info_table_name){
+  # During double extraction, the same article may be extracted by two people.
+  # As a result, a single covidence ID might refer to two different article IDs.
+  # Since the article table is deduplicated, we need to update any orphaned IDs.
+  # This function performs that update.
   cli_h3(paste("Checking whether", info_uuid_col, "correspond between",
                info_table_name, "table and", extraction_table_name))
 
