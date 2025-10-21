@@ -2,42 +2,58 @@
 
 data_curation <- function(articles, outbreaks, models, parameters, plotting,switch_first_surname=FALSE) {
 
-  articles   <- articles %>%
-    mutate(refs = paste(first_author_surname," (",year_publication,")",sep="")) %>% #define references use what we have from epireview function to be consistent
-    group_by(refs) %>% mutate(counter = row_number()) %>% ungroup() %>% #distinguish same-author-same-year references
-    mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
-    select(-counter,-refs) %>%
+  articles   <- articles |>
+    mutate(refs = paste(first_author_surname,
+                        " (",year_publication,")",sep="")) |> #define references use what we have from epireview function to be consistent
+    group_by(refs) |>
+    mutate(counter = row_number()) |>
+    ungroup() |> #distinguish same-author-same-year references
+    mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)],
+                             paste0(sub("\\)$", "", refs),letters[counter],")"),
+                             refs)) |>
+    select(-counter,-refs) |>
     rename(refs = new_refs) |>
     mutate(refs = str_to_title(refs))
 
   if(dim(outbreaks)[1]>0)
   {
-    outbreaks  <- outbreaks %>%
+    outbreaks  <- outbreaks |>
       mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
   }
 
-  models     <- models %>%
+  models <- models |>
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
 
-  parameters <- parameters %>%
-    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
+  parameters <- parameters |>
+    mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) |>
     filter(!parameter_from_figure)
 
-  param4plot <- parameters %>%
+  param4plot <- parameters |>
     mutate(across(
-      c(parameter_value, parameter_lower_bound, parameter_upper_bound,
-        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+      c(parameter_value,
+        parameter_lower_bound,
+        parameter_upper_bound,
+        parameter_uncertainty_lower_value,
+        parameter_uncertainty_upper_value,
         parameter_uncertainty_single_value),
-      ~ ifelse(inverse_param, 1 / ., .) * 10^exponent * ifelse(parameter_unit %in% "Weeks", 7, 1))
+      ~ ifelse(inverse_param, 1 / ., .) *
+        10^exponent *
+        ifelse(parameter_unit %in% "Weeks", 7, 1))
     ) |>
     mutate(across(
-      c(parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound,
-        parameter_2_sample_paired_lower, parameter_2_sample_paired_upper,
-        parameter_2_uncertainty_upper_value, parameter_2_uncertainty_lower_value,
+      c(parameter_2_value,
+        parameter_2_lower_bound,
+        parameter_2_upper_bound,
+        parameter_2_sample_paired_lower,
+        parameter_2_sample_paired_upper,
+        parameter_2_uncertainty_upper_value,
+        parameter_2_uncertainty_lower_value,
         parameter_2_uncertainty_single_value),
-      ~ ifelse(inverse_param, 1 / ., .) * 10^exponent * ifelse(parameter_unit %in% "Weeks", 7, 1))
-    ) %>%
-    mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
+      ~ ifelse(inverse_param, 1 / ., .) *
+        10^exponent *
+        ifelse(parameter_unit %in% "Weeks", 7, 1))
+    ) |>
+    mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) |>
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
            custom_se = case_when(str_detect(str_to_lower(parameter_2_value_type),"standard deviation") & no_unc & !is.na(population_sample_size) ~ parameter_2_value/sqrt(population_sample_size),
                                  TRUE ~ NA),
@@ -50,7 +66,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
              str_detect(str_to_lower(parameter_uncertainty_single_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
              !is.na(custom_se) & no_unc ~ parameter_value+custom_se,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),
-             TRUE ~ parameter_uncertainty_upper_value)) %>%
+             TRUE ~ parameter_uncertainty_upper_value)) |>
     mutate(central = coalesce(parameter_value,
                               100*cfr_ifr_numerator/cfr_ifr_denominator,
                               0.5*(parameter_lower_bound+parameter_upper_bound))) |>
@@ -70,15 +86,15 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
 
   if(dim(outbreaks)[1]>0)
   {
-    outbreaks  <- outbreaks  %>% mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
+    outbreaks  <- outbreaks  |> mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
   }
 
-  parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
-                                      population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
+  # parameters <- parameters |> mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
+  #                                     population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
 
   if(switch_first_surname)   # this is due to legacy access database issue
   {
-    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+    articles <- articles |> rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
   }
 
   return(list(articles = articles, outbreaks = outbreaks,
@@ -101,7 +117,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                         show.legend=NA) {
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
 
-  df   <- df %>% mutate(urefs = make.unique(refs)) %>%
+  df   <- df |> mutate(urefs = make.unique(refs)) |>
     mutate(urefs = factor(urefs, levels = rev(unique(urefs))))
   cats <- length(unique(df[[color_column]]))
 
@@ -174,21 +190,21 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
 
   country_list <- unique(l0$COUNTRY)
 
-  df           <- df %>% separate_longer_delim(population_country, delim = ",") %>% mutate(population_country = str_trim(population_country, side = "left"))#dataframe with expanded list of countries
+  df           <- df |> separate_longer_delim(population_country, delim = ",") |> mutate(population_country = str_trim(population_country, side = "left"))#dataframe with expanded list of countries
   regional_dat <- unique(df$population_country[!is.na(df$population_location)])#countries with regional data
   regional_dat <- intersect(country_list,regional_dat)#only countries in country_list are plotted
   country_dat  <- country_list[!(country_list %in% regional_dat)]#countries with national data only
 
-  shp_regional <- l1 %>% filter(COUNTRY %in% regional_dat)
-  shp_country  <- l0 %>% filter(COUNTRY %in% country_dat) %>% mutate(REG_CODE = str_replace_all(COUNTRY," ",""))
+  shp_regional <- l1 |> filter(COUNTRY %in% regional_dat)
+  shp_country  <- l0 |> filter(COUNTRY %in% country_dat) |> mutate(REG_CODE = str_replace_all(COUNTRY," ",""))
   shapes       <- bind_rows(shp_country,shp_regional)
 
-  regional_NA  <- shp_regional %>% group_by(COUNTRY) %>% summarise(all_codes = str_c(REG_CODE, collapse = ","))#plot all regions for non-location-specific values for countries with OTHER location-specific values
+  regional_NA  <- shp_regional |> group_by(COUNTRY) |> summarise(all_codes = str_c(REG_CODE, collapse = ","))#plot all regions for non-location-specific values for countries with OTHER location-specific values
 
-  df <- df %>% mutate(parameter_value = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator)) %>%
+  df <- df |> mutate(parameter_value = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator)) |>
     mutate(parameter_value = if(range_mp) {
       coalesce(parameter_value, (parameter_lower_bound + parameter_upper_bound)/2)
-    } else {parameter_value}) %>%
+    } else {parameter_value}) |>
     mutate(REG_CODE =
              ifelse(
                population_country %in% country_dat,
@@ -207,27 +223,27 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
                    population_country == "Central African Republic" ~ str_replace_all(population_location, c("Nola And Ikaumba" = "CF23,CF12", "The Pre\nForest\nGrassland Of Bozo And Bangassou" = "CF11,CF62", "The Moist\nWooded Grassland Of Bouar And Obo" = "CF22,CF63", "The Dry Wooded\nRassland Near Mbre" = "CF51", "And The Dry Grassland-Of Birao." = "CF53")),#map in article
                    population_country == "Gabon" ~ str_replace_all(population_location, c("Haut-Ogooue" = "GA02")),
                    population_country == "Liberia" ~ str_replace_all(population_location, c("Zigida" = "LR08","Lofa County" = "LR08", "Montserrado County" = "LR11")),
-                   TRUE ~ population_location)))) %>%
-    mutate(REG_CODE = str_replace_all(REG_CODE, " ", "")) %>%
-    mutate(REG_CODE = sapply(str_split(REG_CODE, ","), function(x) paste(unique(x), collapse = ","))) %>% #remove duplicate regions for each value
+                   TRUE ~ population_location)))) |>
+    mutate(REG_CODE = str_replace_all(REG_CODE, " ", "")) |>
+    mutate(REG_CODE = sapply(str_split(REG_CODE, ","), function(x) paste(unique(x), collapse = ","))) |> #remove duplicate regions for each value
     separate_longer_delim(REG_CODE, delim = ",")#broadcast multi-region values
 
   if (summ_dups=="mean") {
-    df <- df %>% group_by(REG_CODE) %>%
-      mutate(value = mean(parameter_value)) %>% distinct(REG_CODE,value)
+    df <- df |> group_by(REG_CODE) |>
+      mutate(value = mean(parameter_value)) |> distinct(REG_CODE,value)
   } else if (summ_dups=="most_recent") {
-    df <- df %>% group_by(REG_CODE) %>%
+    df <- df |> group_by(REG_CODE) |>
       mutate(value = ifelse(all(is.na(population_study_start_year)),
                             first(parameter_value),
-                            parameter_value[which.max(!is.na(population_study_start_year))])) %>% distinct(REG_CODE, value)
+                            parameter_value[which.max(!is.na(population_study_start_year))])) |> distinct(REG_CODE, value)
   } else if (summ_dups=="max_sample") {
-    df <- df %>% group_by(REG_CODE) %>%
+    df <- df |> group_by(REG_CODE) |>
       mutate(value = ifelse(all(is.na(population_sample_size)),
                             first(parameter_value),
-                            parameter_value[which.max(!is.na(population_sample_size))])) %>% distinct(REG_CODE, value)
+                            parameter_value[which.max(!is.na(population_sample_size))])) |> distinct(REG_CODE, value)
   } else {stop("Error: choose summary option for duplicate REG_CODEs")}
 
-  shapes <- shapes %>% left_join(df,by=c('REG_CODE'))
+  shapes <- shapes |> left_join(df,by=c('REG_CODE'))
 
   gg <- ggplot() +
     geom_sf(data = shapes, lwd = 0.3, col = "grey40", aes(fill = value)) +
@@ -246,7 +262,7 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
     annotation_custom(grob = rectGrob(gp = gpar(col = "black", fill = NA, lwd = 3)),
                       xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
     ggtitle(title)
-  #geom_text(data = f %>% filter(type == "Treatment Centre"), aes(x = longitude, y = latitude, color = type), label = "T", size = 5, fontface='bold') +
+  #geom_text(data = f |> filter(type == "Treatment Centre"), aes(x = longitude, y = latitude, color = type), label = "T", size = 5, fontface='bold') +
   #scale_color_manual(values = c(Outbreak = "green1", "Treatment Centre" = "blue")) +
   #guides(fill = guide_colorbar(title = NULL), color = guide_legend(title = NULL, override.aes = list(shape = c(8,NA)))) +
   #scale_shape_manual(values = c(circle = 21, square = 22, triangle = 24)) +
@@ -378,8 +394,8 @@ metagen_wrap <- function(dataframe, estmeansd_method,
   }
 
   # For this meta analysis don't enforce that we need to have sample sizes
-  # df <- df %>% filter(!is.na(.data[["population_sample_size"]])) %>%
-  #   filter(!is.na(.data[["parameter_value"]])) %>%
+  # df <- df |> filter(!is.na(.data[["population_sample_size"]])) |>
+  #   filter(!is.na(.data[["parameter_value"]])) |>
   #   filter(
   #     (.data[["parameter_value_type"]] == 'Mean' &
   #        grepl(x = tolower(.data[["parameter_uncertainty_single_type"]]),
@@ -426,7 +442,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
   SE[ln_case]  <- (df$parameter_uncertainty_upper_value[ln_case]-df$parameter_uncertainty_lower_value[ln_case])/(2* qlnorm(CI_level_adj[ln_case]))
   df$SE        <- SE
 
-  dataframe <- df %>% filter(!is.na(SE))
+  dataframe <- df |> filter(!is.na(SE))
 
   if(!is.na(subgroup))
   {
@@ -502,8 +518,8 @@ metaprop_wrap <- function(dataframe, subgroup,
 
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
 
-  dataframe <- dataframe %>% filter(!is.na(cfr_ifr_denominator)) %>%
-    filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) %>%
+  dataframe <- dataframe |> filter(!is.na(cfr_ifr_denominator)) |>
+    filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) |>
     mutate(cfr_ifr_numerator = case_when(
       is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
       TRUE ~ cfr_ifr_numerator))
@@ -639,7 +655,7 @@ insert_blank_rows <- function(dataframe, column) {
   dataframe[inds,1]    <- tlabels
   dataframe[[1]][inds] <- paste0("\\bfseries{", dataframe[[1]][inds], "}")
 
-  dataframe            <- dataframe %>% mutate_all(~ ifelse(is.na(.), "", .))
+  dataframe            <- dataframe |> mutate_all(~ ifelse(is.na(.), "", .))
 
   dataframe
 }
