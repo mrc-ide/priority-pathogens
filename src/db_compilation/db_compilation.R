@@ -17,7 +17,7 @@ if (pathogen %in% c("MARBURG", "EBOLA", "SARS") & mode!="REDCAP"|
     mode=="ACCESS"){
   orderly_resource("access_compilation.R")
   source(file.path("access_compilation.R"))
-} else if (pathogen %in% c("OROV", "NIPAH") & mode!="ACCESS"|
+} else if (pathogen %in% c("OROV", "NIPAH", "MERS") & mode!="ACCESS"|
            mode=="REDCAP"){
   orderly_resource("redcap_compilation.R")
   source("redcap_compilation.R")
