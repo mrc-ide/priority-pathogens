@@ -96,8 +96,9 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 # function to produce forest plot for given dataframe
 
-forest_plot <- function(df, label, color_column, lims, text_size = 11, show_label = FALSE, custom_colours = NA) {
-
+forest_plot <- function(df, label, color_column, lims, text_size = 11,
+                        show_label = FALSE, custom_colours = NA,
+                        show.legend=NA) {
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
 
   df   <- df %>% mutate(urefs = make.unique(refs)) %>%
@@ -107,10 +108,13 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   gg <- ggplot(df) +
     geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
                      y = urefs, yend = urefs, color = .data[[color_column]]),
-                 size = 3, alpha = 0.65) +
+                 size = 3, alpha = 0.65, show.legend = show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       y = urefs),
                   width = 0.15, lwd=0.5, color = "black", alpha = 1) +
+    geom_errorbar(aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                      y = urefs),
+                  width = 0.15, lwd=0.5, color = "black", alpha = 1, linetype="dashed") +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_value_type, fill = .data[[color_column]]),
                size = 3, stroke = 1,
