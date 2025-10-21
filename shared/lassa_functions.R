@@ -1,11 +1,6 @@
 #function to tidy-up all dataframes
 
-data_curation <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
-
-  if(switch_first_surname)   # this is due to legacy access database issue
-  {
-    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
-  }
+data_curation <- function(articles, outbreaks, models, parameters, plotting,switch_first_surname=FALSE) {
 
   articles   <- articles %>%
     mutate(refs = paste(first_author_surname," (",year_publication,")",sep="")) %>% #define references use what we have from epireview function to be consistent
@@ -13,7 +8,8 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
     mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)], paste0(sub("\\)$", "", refs),letters[counter],")"), refs)) %>%
     select(-counter,-refs) %>% rename(refs = new_refs)
 
-  if(dim(outbreaks)[1]>0)  {
+  if(dim(outbreaks)[1]>0)
+  {
     outbreaks  <- outbreaks %>%
       mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)])
   }
@@ -23,24 +19,17 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
 
   parameters <- parameters %>%
     mutate(refs = articles$refs[match(covidence_id, articles$covidence_id)]) %>%
-    filter(!as.logical(parameter_from_figure)) # ensure that parameter_from_figure is logical not character
-
-  # if (pathogen == 'ZIKA'){
-  #   var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound",
-  #                   "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value",
-  #                   "parameter_2_value", "parameter_2_lower_bound", "parameter_2_upper_bound",
-  #                   "parameter_2_uncertainty_lower_value", "parameter_2_uncertainty_upper_value")
-  # } else {
-    var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound",
-                    "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value")
-  # }
+    filter(!parameter_from_figure)
 
   param4plot <- parameters %>%
-    mutate_at(vars(all_of(var_select)),
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound,
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
               list(~ ifelse(inverse_param, 1/.x, .x))) %>%
-    mutate_at(vars(all_of(var_select)),
+    mutate_at(vars(parameter_value, parameter_lower_bound, parameter_upper_bound,
+                   parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
               list(~ .x * 10^exponent)) %>%
-    mutate_at(vars(all_of(var_select)), #account for different units
+    mutate_at(vars(parameter_value,parameter_lower_bound,parameter_upper_bound,
+                   parameter_uncertainty_lower_value,parameter_uncertainty_upper_value), #account for different units
               list(~ ifelse(parameter_unit %in% "Weeks", . * 7, .))) %>%
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
@@ -59,46 +48,32 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting, swi
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),
              TRUE ~ parameter_uncertainty_upper_value)) %>%
     select(-c(no_unc)) %>%
-    mutate(central = coalesce(parameter_value, 100*cfr_ifr_numerator/cfr_ifr_denominator, 0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
-
-  # if (pathogen == 'ZIKA'){
-  #   # Zika database has extra variables for the variability -- all of these have _2
-  #
-  #   param4plot <- param4plot %>%
-  #     mutate(no_unc = is.na(parameter_2_uncertainty_lower_value) & is.na(parameter_2_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
-  #            parameter_2_uncertainty_lower_value = case_when(
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_value,
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value - sqrt(parameter_2_uncertainty_single_value),
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value - parameter_2_uncertainty_single_value,
-  #              str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_2_par1_value / distribution_2_par2_value)^2, rate = distribution_2_par1_value / distribution_2_par2_value^2),
-  #              TRUE ~ parameter_2_uncertainty_lower_value),
-  #            parameter_2_uncertainty_upper_value = case_when(
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"maximum") & no_unc ~ parameter_2_uncertainty_single_value,
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"variance") & no_unc ~ parameter_2_value+sqrt(parameter_2_uncertainty_single_value),
-  #              str_detect(str_to_lower(parameter_2_uncertainty_single_type),"standard error") & no_unc ~ parameter_2_value+parameter_2_uncertainty_single_value,
-  #              str_detect(str_to_lower(distribution_2_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_2_par1_value/distribution_2_par2_value)^2, rate = distribution_2_par1_value/distribution_2_par2_value^2),
-  #              TRUE ~ parameter_2_uncertainty_upper_value))
-  # }
+    mutate(central = coalesce(parameter_value,100*cfr_ifr_numerator/cfr_ifr_denominator,0.5*(parameter_lower_bound+parameter_upper_bound))) #central value for plotting
 
   if (plotting) {
     parameters <- param4plot
   } else {
     check_param_id <- (parameters$parameter_data_id == param4plot$parameter_data_id )    # check that parameter data ids didn't get scrambled
-    if(sum(check_param_id, na.rm = TRUE)==dim(parameters)[1]) {
+    if(sum(check_param_id)==dim(parameters)[1])
+    {
       parameters$central <- param4plot$central
     } else {
       errorCondition('parameters not in right order to match')
     }
   }
 
-  if(dim(outbreaks)[1]>0)  {
+  if(dim(outbreaks)[1]>0)
+  {
     outbreaks  <- outbreaks  %>% mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
   }
 
   parameters <- parameters %>% mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
                                       population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
+
+  if(switch_first_surname)   # this is due to legacy access database issue
+  {
+    articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
+  }
 
   return(list(articles = articles, outbreaks = outbreaks,
               models = models, parameters = parameters))
@@ -124,32 +99,30 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
   cats <- length(unique(df[[color_column]]))
 
   gg <- ggplot(df) +
-    geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
-                     y = urefs, yend = urefs, color = .data[[color_column]]),
-                 linewidth = 3, alpha = 0.65) +
-    geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      y = urefs),
-                  width = 0.15, lwd=0.5, color = "black", alpha = 1) +
-    geom_point(aes(x = central, y = urefs,
-                   shape = parameter_value_type, fill = .data[[color_column]]),
-               size = 3, stroke = 1,
-               color = "black", alpha = 1)
+        geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
+                         y = urefs, yend = urefs, color = .data[[color_column]]),
+                     size = 3, alpha = 0.65) +
+        geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
+                          y = urefs),
+                      width = 0.15, lwd=0.5, color = "black", alpha = 1) +
+        geom_point(aes(x = parameter_value, y = urefs,
+                       shape = df$parameter_value_type, fill = .data[[color_column]]),
+                   size = 3, stroke = 1,
+                   color = "black", alpha = 1)
 
   if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
 
   if(sum(!is.na(custom_colours)))
   {
     gg <- gg +
-      scale_shape_manual(name = "Parameter Type",
-                         values = c(Mean = 21, Median = 22, Central = 25, Unspecified = 24, Other = 23),
-                         breaks = c("Mean", "Median", "Unspecified", "Central", "Other")) +
+      scale_shape_manual(name = "Parameter Type",values = c(Mean = 21, Median = 22, Unspecified = 24, Other = 23),breaks = c("Mean", "Median", "Unspecified", "Other")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
       scale_color_manual(values = custom_colours) +
       scale_fill_manual(values = custom_colours) +
       theme_minimal() +
-      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
             text = element_text(size = text_size))
   } else {
     gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
@@ -160,7 +133,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
       theme_minimal() +
-      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
             text = element_text(size = text_size))
   }
 
@@ -171,7 +144,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11, show_labe
 
   if(show_label)
     gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" )
-  #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" )
+    #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" )
 
   return(gg)
 }
@@ -241,40 +214,36 @@ map_generic <- function(l0, l1, df, f, n, range_mp, summ_dups,
   shapes <- shapes %>% left_join(df,by=c('REG_CODE'))
 
   gg <- ggplot() +
-    geom_sf(data = shapes, lwd = 0.3, col = "grey40", aes(fill = value)) +
-    geom_sf(data = l0, lwd = 0.7, col = "black",  fill = NA) +
-    scale_fill_viridis_c(option = color_opt, direction = -1, na.value = "grey80",
-                         limits = col_lim) +
-    geom_point(data = f, aes(x = longitude, y = latitude, color = "Outbreak"), shape = 8, size = 2.5, stroke = 1.5) +
-    scale_color_manual(values = c("Outbreak" = "green1")) +
-    geom_text(data = n, aes(x = longitude, y = latitude, label = c_name), size = 3.4, fontface = 'italic', color = "black") +
-    coord_sf(xlim = long_lim, ylim = lat_lim) +
-    theme_void() +
-    guides(fill = guide_colorbar(title = NULL,order = 1), color = guide_legend(title = NULL)) +
-    theme(legend.key.size = unit(2, "lines"), legend.position = c(0.07, 0.5), legend.text = element_text(size = 12)) +
-    annotation_scale(location = "bl", width_hint = 0.2) +
-    annotation_north_arrow(location = "bl", which_north = "true", pad_y = unit(0.4, "in"), style = north_arrow_fancy_orienteering) +
-    annotation_custom(grob = rectGrob(gp = gpar(col = "black", fill = NA, lwd = 3)),
-                      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-    ggtitle(title)
-  #geom_text(data = f %>% filter(type == "Treatment Centre"), aes(x = longitude, y = latitude, color = type), label = "T", size = 5, fontface='bold') +
-  #scale_color_manual(values = c(Outbreak = "green1", "Treatment Centre" = "blue")) +
-  #guides(fill = guide_colorbar(title = NULL), color = guide_legend(title = NULL, override.aes = list(shape = c(8,NA)))) +
-  #scale_shape_manual(values = c(circle = 21, square = 22, triangle = 24)) +
-  #scale_color_manual(values = c(blue = "blue", green = "green")) +
-  #geom_emoji(data=f, aes(longitude,latitude), emoji = "", size=0.03) +
+        geom_sf(data = shapes, lwd = 0.3, col = "grey40", aes(fill = value)) +
+        geom_sf(data = l0, lwd = 0.7, col = "black",  fill = NA) +
+        scale_fill_viridis_c(option = color_opt, direction = -1, na.value = "grey80",
+                             limits = col_lim) +
+        geom_point(data = f, aes(x = longitude, y = latitude, color = "Outbreak"), shape = 8, size = 2.5, stroke = 1.5) +
+        scale_color_manual(values = c("Outbreak" = "green1")) +
+        geom_text(data = n, aes(x = longitude, y = latitude, label = c_name), size = 3.4, fontface = 'italic', color = "black") +
+        coord_sf(xlim = long_lim, ylim = lat_lim) +
+        theme_void() +
+        guides(fill = guide_colorbar(title = NULL,order = 1), color = guide_legend(title = NULL)) +
+        theme(legend.key.size = unit(2, "lines"), legend.position = c(0.07, 0.5), legend.text = element_text(size = 12)) +
+        annotation_scale(location = "bl", width_hint = 0.2) +
+        annotation_north_arrow(location = "bl", which_north = "true", pad_y = unit(0.4, "in"), style = north_arrow_fancy_orienteering) +
+        annotation_custom(grob = rectGrob(gp = gpar(col = "black", fill = NA, lwd = 3)),
+                          xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+        ggtitle(title)
+        #geom_text(data = f %>% filter(type == "Treatment Centre"), aes(x = longitude, y = latitude, color = type), label = "T", size = 5, fontface='bold') +
+        #scale_color_manual(values = c(Outbreak = "green1", "Treatment Centre" = "blue")) +
+        #guides(fill = guide_colorbar(title = NULL), color = guide_legend(title = NULL, override.aes = list(shape = c(8,NA)))) +
+        #scale_shape_manual(values = c(circle = 21, square = 22, triangle = 24)) +
+        #scale_color_manual(values = c(blue = "blue", green = "green")) +
+        #geom_emoji(data=f, aes(longitude,latitude), emoji = "", size=0.03) +
 
   return(gg)
 }
 
 #wrapper function for metamean
-
-
-
 metamean_wrap <- function(dataframe, estmeansd_method,
-                          plot_study, digits, lims, colour, label,
-                          width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
-
+                             plot_study, digits, lims, colour, label,
+                             width, height, resolution, subgroup = NA, sort_by_subg = FALSE, colgap_shift = 0){
   dataframe <- epireview::filter_df_for_metamean(dataframe)
   dataframe <- dataframe[!is.na(dataframe$id),]
   if(!is.na(subgroup))
@@ -293,7 +262,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                      method.sd = estmeansd_method,
                      subgroup = dataframe[[subgroup]],
                      sm = "MRAW",
-                     method.tau = "ML")
+                     method.tau = "ML" ) #,method.random.ci = 'HK',method.predict = 'HK',prediction = TRUE)
 
     png(file = "temp.png", width = width, height = height, res = resolution)
     forest(mtan, layout = "RevMan5",
@@ -303,7 +272,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10, colgap.forest.left = paste0( colgap_shift,"cm"))
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10, colgap.forest.left = paste0( colgap_shift,"cm") ) #,prediction = TRUE)
+
     dev.off()
   } else {
     mtan <- metamean(data = dataframe,
@@ -319,7 +289,8 @@ metamean_wrap <- function(dataframe, estmeansd_method,
                      method.mean = estmeansd_method,
                      method.sd = estmeansd_method,
                      sm = "MRAW",
-                     method.tau = "ML")
+                     method.tau = "ML" ) #,method.random.ci = 'HK',method.predict = 'HK',prediction = TRUE)
+
 
     png(file = "temp.png", width = width, height = height, res = resolution)
     forest(mtan, layout = "RevMan5",
@@ -328,7 +299,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10 ) #, prediction = TRUE)
     dev.off()
   }
 
@@ -338,10 +309,11 @@ metamean_wrap <- function(dataframe, estmeansd_method,
   return(list(result = mtan, plot = gg))
 }
 
+
 ## THIS IS INITIAL VERSION ONLY -- WORK IN PROGRESS
 metagen_wrap <- function(dataframe, estmeansd_method,
-                         plot_study, digits, lims, colour, label,
-                         width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
+                          plot_study, digits, lims, colour, label,
+                          width, height, resolution, subgroup = NA, sort_by_subg = FALSE){
 
   #dataframe <- epireview::filter_df_for_metamean(dataframe)
   # must have the correct columns
@@ -487,7 +459,8 @@ metagen_wrap <- function(dataframe, estmeansd_method,
                     method.sd = estmeansd_method,
                     sm = "R0",
                     method.tau = "REML"
-    )
+                    )
+
 
     png(file = "temp.png", width = width, height = height, res = resolution)
     forest(mtan, layout = "RevMan5",
@@ -509,23 +482,22 @@ metagen_wrap <- function(dataframe, estmeansd_method,
 #wrapper function for metaprop
 
 metaprop_wrap <- function(dataframe, subgroup,
-                          studylabels = "refs",
-                          plot_pooled, sort_by_subg, plot_study, digits, colour,
-                          width, height, resolution, xlabel = 'Case Fatality Ratio',
-                          at = seq(0,1,by=0.2), xlim = c(0,1)){
+                             plot_pooled, sort_by_subg, plot_study, digits, colour,
+                             width, height, resolution,
+                             at = seq(0,1,by=0.2), xlim = c(0,1)){
 
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
 
   dataframe <- dataframe %>% filter(!is.na(cfr_ifr_denominator)) %>%
-    filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) %>%
-    mutate(cfr_ifr_numerator = case_when(
-      is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
-      TRUE ~ cfr_ifr_numerator))
+                             filter(!(is.na(cfr_ifr_numerator)&is.na(parameter_value))) %>%
+                             mutate(cfr_ifr_numerator = case_when(
+                                    is.na(cfr_ifr_numerator) & !is.na(parameter_value) ~ round((parameter_value/100)*cfr_ifr_denominator),
+                                    TRUE ~ cfr_ifr_numerator))
 
   if(!is.na(subgroup))
   {
     mtan <- metaprop(data = dataframe,
-                     studlab = dataframe[[studylabels]],
+                     studlab = refs,
                      event = cfr_ifr_numerator,
                      n = cfr_ifr_denominator,
                      subgroup = dataframe[[subgroup]],
@@ -538,16 +510,16 @@ metaprop_wrap <- function(dataframe, subgroup,
            overall = plot_pooled, pooled.events = TRUE,
            print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
            study.results = plot_study,
-           sortvar = TE,
+           sortvar = TE,q
            digits = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-           col.subgroup = "black", col.inside = "black",
+           col.subgroup = "black", col.inside = "black", col.predict = 'purple',
            weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab=xlabel, fontsize=11)
+           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11 ) #,prediction=TRUE)
     dev.off()
   } else {
     mtan <- metaprop(data = dataframe,
-                     studlab = dataframe[[studylabels]],
+                     studlab = refs,
                      event = cfr_ifr_numerator,
                      n = cfr_ifr_denominator,
                      sm = "PLOGIT",
@@ -561,9 +533,9 @@ metaprop_wrap <- function(dataframe, subgroup,
            sortvar = TE,
            digits = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-           col.subgroup = "black", col.inside = "black",
+           col.subgroup = "black", col.inside = "black",col.predict = 'purple',
            weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab=xlabel, fontsize=11)
+           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11 ) #,prediction=TRUE)
     dev.off()
   }
 
@@ -650,7 +622,7 @@ insert_blank_rows <- function(dataframe, column) {
   dataframe <- dataframe[-nrow(dataframe),]#remove NAs at bottom
   dataframe[[column]] <- NULL#remove column
 
-  inds                 <- which(is.na(dataframe[,1]))#which(!complete.cases(dataframe))
+  inds                 <- which(!complete.cases(dataframe))
   dataframe[inds,1]    <- tlabels
   dataframe[[1]][inds] <- paste0("\\bfseries{", dataframe[[1]][inds], "}")
   dataframe            <- dataframe %>% mutate_all(~ ifelse(is.na(.), "", .))
