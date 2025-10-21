@@ -26,30 +26,35 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
   param4plot <- parameters %>%
     mutate(across(
       c(parameter_value, parameter_lower_bound, parameter_upper_bound,
-        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value),
+        parameter_uncertainty_lower_value, parameter_uncertainty_upper_value,
+        parameter_uncertainty_single_value),
       ~ ifelse(inverse_param, 1 / ., .) * 10^exponent * ifelse(parameter_unit %in% "Weeks", 7, 1))
-      ) %>%
+    ) |>
+    mutate(across(
+      c(parameter_2_value, parameter_2_lower_bound, parameter_2_upper_bound,
+        parameter_2_sample_paired_lower, parameter_2_sample_paired_upper,
+        parameter_2_uncertainty_upper_value, parameter_2_uncertainty_lower_value,
+        parameter_2_uncertainty_single_value),
+      ~ ifelse(inverse_param, 1 / ., .) * 10^exponent * ifelse(parameter_unit %in% "Weeks", 7, 1))
+    ) %>%
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) %>%
     mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
+           custom_se = case_when(str_detect(str_to_lower(parameter_2_value_type),"standard deviation") & no_unc & !is.na(population_sample_size) ~ parameter_2_value/sqrt(population_sample_size),
+                                 TRUE ~ NA),
            parameter_uncertainty_lower_value = case_when(
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"maximum") & no_unc ~ parameter_value,
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"variance") & no_unc ~ parameter_value-sqrt(parameter_uncertainty_single_value),
              str_detect(str_to_lower(parameter_uncertainty_single_type),"standard error") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
+             !is.na(custom_se) & no_unc ~ parameter_value-custom_se,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),
              TRUE ~ parameter_uncertainty_lower_value),
            parameter_uncertainty_upper_value = case_when(
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"maximum") & no_unc ~ parameter_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"standard deviation") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"variance") & no_unc ~ parameter_value+sqrt(parameter_uncertainty_single_value),
              str_detect(str_to_lower(parameter_uncertainty_single_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
+             !is.na(custom_se) & no_unc ~ parameter_value+custom_se,
              str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),
              TRUE ~ parameter_uncertainty_upper_value)) %>%
     mutate(central = coalesce(parameter_value,
                               100*cfr_ifr_numerator/cfr_ifr_denominator,
-                              0.5*(parameter_lower_bound+parameter_upper_bound))
-           ) |> #central value for plotting
-  select(-c(no_unc))
+                              0.5*(parameter_lower_bound+parameter_upper_bound))) |>
+    select(-c(no_unc))
 
   if (plotting) {
     parameters <- param4plot
