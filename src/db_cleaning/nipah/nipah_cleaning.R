@@ -57,6 +57,13 @@ article_cleaning <- function(df){
 }
 
 model_cleaning <- function(df){
+
+  df[(df$covidence_id==2800) & (df$stoch_deter=="Deterministic model"),
+     "stoch_deter"] <- "Stochastic model"
+
+  df[(df$covidence_id==4124) & is.na(df$theoretical_model),
+     "theoretical_model"] <- "Yes"
+
   return (df)
 }
 
@@ -371,6 +378,25 @@ param_cleaning <- function(df){
   df[delay_2886_filter, ] <- uncert_to_varb(df[delay_2886_filter, ],
                                             PAIRED_MAP_FROM_TO_VEC,
                                             PAIRED_SET_TO_NA_VEC)
+
+
+  df[(df$covidence_id==1007) & df$population_study_start_year=='xxxx',
+     "population_study_start_year"] <- NA
+
+  df[(df$covidence_id==1007) & df$population_study_end_year=='xxxx',
+     "population_study_start_year"] <- NA
+
+  df[(df$covidence_id==4046) & as.double(df$population_study_start_day)>31,
+     "population_study_start_day"] <- NA
+
+  df[(df$covidence_id==4046) & as.double(df$population_study_end_day)>31,
+     "population_study_end_day"] <- NA
+
+  df[(df$covidence_id==4046) & as.double(df$population_study_start_month)>31,
+     "population_study_start_month"] <- NA
+
+  df[(df$covidence_id==4046) & as.double(df$population_study_end_month)>31,
+     "population_study_end_month"] <- NA
 
   # CovID 3065, incubation period, 5c96779d606434a611beb693d0d6c2c1
   # Assumes that +- is Other uncertainty; since it's not estimated it must be
