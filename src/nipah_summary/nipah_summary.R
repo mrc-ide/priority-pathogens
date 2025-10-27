@@ -21,10 +21,10 @@ library(ggbreak)
 #orderly preparation
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
-orderly_dependency("db_compilation", "latest(parameter:pathogen == this:pathogen)",
-                   c("articles.csv", "models.csv", "parameters.csv","outbreaks.csv"))
-orderly_shared_resource("lassa_functions.R" = "lassa_functions.R")
-source("lassa_functions.R")
+orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
+                   c("articles.csv", "models.csv", "params.csv","outbreaks.csv"))
+orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
+source("nipah_functions.R")
 
 orderly_artefact("sars-specific figures",
                  c("figure_S1.png","figure_S2.png","figure_S3.png"))
@@ -35,7 +35,7 @@ orderly_artefact("sars-specific figures",
 
 articles   <- read_csv("articles.csv")
 models     <- read_csv("models.csv")
-parameters <- read_csv("parameters.csv")
+parameters <- read_csv("params.csv")
 outbreaks  <- read_csv("outbreaks.csv")
 
 dfs <- data_curation(articles,outbreaks,models,parameters, plotting = TRUE)
@@ -115,7 +115,7 @@ if( FALSE )
 
 
   parameters %>%
-    filter(parameter_class == 'Human delay') %>%
+    filter(parameter_class == 'Delays') %>%
     group_by(parameter_type) %>%
     mutate(parameter_uncertainty_lower_value = case_when(is.infinite(parameter_uncertainty_lower_value) ~ NA,
                                                          TRUE ~ parameter_uncertainty_lower_value ),
@@ -129,7 +129,7 @@ if( FALSE )
               uncertainty_max = max(parameter_uncertainty_upper_value,na.rm = TRUE ))
 
 
-  parameters %>% filter(parameter_type == 'Reproduction number (Basic R0)') %>%
+  parameters %>% filter(parameter_type == 'Basic (R0)') %>%
     filter(qa_score>0.5) %>%
     summarise(min=min(parameter_value),
               max=max(parameter_value))
@@ -139,10 +139,10 @@ if( FALSE )
     summarise(n_param   = n(),
               n_article = length(unique(refs)))
 
-  parameters %>% filter(parameter_type=='Risk factors' &
-                          riskfactor_outcome %in% c('Death','Severe disease','Infection') &
+  parameters %>% filter(parameter_type=='Risk Factors' &
+                          riskfactor_outcome %in% c('Death (in general population)','Spillover risk','Infection','Other','Serology','Other neurological symptoms in general population') &
                           riskfactor_significant == 'Significant' ) %>%
-    filter(str_detect(riskfactor_name,'Sex')) %>%
+    #filter(str_detect(riskfactor_name,'Sex')) %>%
     group_by(riskfactor_outcome) %>%
     summarise(n_param   = n(),
               n_article = length(unique(refs)))
@@ -163,11 +163,11 @@ if( FALSE )
     filter(qa_score>0.5) %>%
     #  filter(population_group %in% c("Children","General Population","Mixed Groups")) %>%
     #  filter(population_group %in% c("Healthcare Workers")) %>%
-    filter(population_group %in% c("Persons Under Investigation")) %>%
+    filter(population_group %in% c("Persons under investigation")) %>%
     summarise(n_param   = n(),
               n_article = length(unique(refs)))
 
-  parameters %>% filter(parameter_type == 'Human delay - incubation period' ) %>%
+  parameters %>% filter(parameter_type == 'Incubation Period' ) %>%
     filter(qa_score>0.5) %>%
     #  filter(population_group %in% c("Children","General Population","Mixed Groups")) %>%
     #  filter(population_group %in% c("Healthcare Workers")) %>%
@@ -281,30 +281,39 @@ models <- models %>% mutate(stoch_deter = replace_na(stoch_deter,'Unspecified'),
                      mutate(model_type = case_when(model_type=="Agent / Individual based" ~ 'IBM',
                                                    model_type%in%c("Agent / Individual based;Branching Process","Compartmental;Other" ) ~ 'Other',
                                                    TRUE ~ model_type),
-                            assumptions = case_when( assumptions %in% c("Age dependent susceptibility;Heterogenity in transmission rates - between groups",
-                                                                        "Heterogenity in transmission rates - over time;Homogeneous mixing",
-                                                                        "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time;Homogeneous mixing",
-                                                                        "Heterogenity in transmission rates - between groups;Homogeneous mixing",
-                                                                        "Age dependent susceptibility;Heterogenity in transmission rates - between groups;Homogeneous mixing",
-                                                                        "Heterogenity in transmission rates - over time;Unspecified") ~ 'Several assumptions',
-                                                     TRUE ~ assumptions),
-                            compartmental_type = case_when(compartmental_type %in% c("Other compartmental;SEIR", "SIR;SIS") ~ 'Other compartmental',
+                              transmission_route = case_when(transmission_route %in% c("Airborne or close contact,Human to human (direct contact),Vector/Animal to human",
+                                                                 "Airborne or close contact;Vector/Animal to human",
+                                                                 "Human to human (direct contact),Vector/Animal to human",
+                                                                 "Human to human (direct contact),Vector/Animal to human,Sexual") ~ 'Both Human to human (direct contact) and Vector/Animal to human',
+                                                           transmission_route %in% c('Human to human (direct contact),Sexual','Human to human (direct contact),Unspecified') ~ 'Human to human (direct contact)',
+                                                           TRUE ~ transmission_route ),
+                            assumptions = case_when(assumptions %in% c("Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time",
+                                                                        "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time;",
+                                                                       "Heterogenity in transmission rates - between human groups","Heterogenity in transmission rates - between human and vector",
+                                                                       "Heterogenity in transmission rates - between human groups,Heterogenity in transmission rates - between human and vector",
+                                                                       "Heterogenity in transmission rates - between human groups,Other") ~ 'Heterogenity in transmission rates',
+                                                    assumptions %in% c('Homogeneous mixing,Heterogenity in transmission rates - between human and vector','Homogeneous mixing,Heterogenity in transmission rates - over time,Other') ~ 'Homogeneous mixing, Heterogenity in transmission rates',
+                                                    assumptions == "Homogeneous mixing,Other" ~ 'Homogeneous mixing',
+                                                    assumptions %in% c('Other','Unspecified') ~ 'Unspecified/Other',
+                                                    TRUE ~ assumptions ),
+                            compartmental_type = case_when(compartmental_type %in% c("Other compartmental;SEIR", "SIR;SIS", "Other compartmental, please specify", "Unspecified","Other compartmental","Unspecified/Other compartmental") ~ 'Unspecified/Other',
                                                            TRUE ~ compartmental_type))
 
 p1 <- ggplot() +
   geom_bar(data = models, aes(x = model_type, fill = stoch_deter), color = "black") +
-  scale_y_continuous(limits = c(0,30), breaks = seq(0,30,by = 5), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,40), breaks = seq(0,30,by = 5), expand = c(0,0)) +
   xlab("Model Type") + ylab("Model Count") +
-  scale_fill_manual(values = c("Deterministic" = "steelblue4","Stochastic" = "red", 'Unspecified' = 'grey40', 'Other'='grey80'), name = NULL) +
+  scale_fill_manual(values = c("Deterministic model" = "steelblue4","Stochastic model" = "red", 'Unspecified' = 'grey40', 'Other'='grey80'), name = NULL) +
   theme_minimal() +
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
         legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
 
 p2 <- ggplot() +
-  geom_bar(data = models, aes(x = factor(transmission_route, levels = c("Human to human (direct contact)", "Airborne or close contact",
-                                                                        "Airborne or close contact;Human to human (direct contact)",
+  geom_bar(data = models, aes(x = factor(transmission_route, levels = c("Human to human (direct contact)", "Vector/Animal to human",
+                                                                        "Both Human to human (direct contact) and Vector/Animal to human",
                                                                         "Unspecified")), fill = model_type), color = "black") +
   scale_x_discrete(labels = c("Airborne or close contact;Human to human (direct contact)" = "Airborne",
+                              "Both Human to human (direct contact) and Vector/Animal to human" = "Human \n(direct contact) & \nVector/Animal",
                               "Human to human (direct contact)" = "Human \n(direct contact)",
                               "Airborne or close contact" = 'Airbone or \n close contact')) +
   scale_y_continuous(limits = c(0,30), breaks = seq(0,30,by = 5), expand = c(0,0)) +
@@ -316,17 +325,12 @@ p2 <- ggplot() +
 
 p3 <- ggplot() +
   geom_bar(data = models, aes(x = factor(assumptions, levels = c("Homogeneous mixing",
-                                                                 "Heterogenity in transmission rates - over time",
-                                                                 "Heterogenity in transmission rates - between groups",
-                                                                 "Age dependent susceptibility",
-                                                                 "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time",
-                                                                 'Unspecified', 'Several assumptions')), fill = model_type), color = "black") +
-  scale_x_discrete(labels = c("Homogeneous mixing" = "Homogeneous",
-                              "Heterogenity in transmission rates - over time" = "Time-\nHetero-\ngeneous",
-                              "Heterogenity in transmission rates - between groups" = "Subgroup-\nHetero-\ngeneous",
-                              "Age dependent susceptibility" = "Age-\nHetero-\ngeneous",
-                              "Several assumptions" = "Several \nassumptions",
-                              "Heterogenity in transmission rates - between groups;Heterogenity in transmission rates - over time" = "Time- & \nSubgroup-\nHetero-\ngeneous")) +
+                                                                 "Heterogenity in transmission rates",
+                                                                 "Homogeneous mixing, Heterogenity in transmission rates",
+                                                                 "Unspecified/Other")), fill = model_type), color = "black") +
+  scale_x_discrete(labels = c("Homogeneous mixing" = "Homogeneous\nmixing",
+                              "Heterogenity in transmission rates" = "Heterogenity in\ntransmission rates",
+                              "Homogeneous mixing, Heterogenity in transmission rates" = "Homogeneous mixing,\nHeterogenity in\ntransmission rates")) +
   scale_y_continuous(limits = c(0,30), breaks = seq(0,30,by = 5), expand = c(0,0)) +
   xlab("Human Transmission Heterogeneity") + ylab("Model Count") +
   scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3", 'IBM' = 'steelblue' , 'Unspecified' = 'grey'), name = NULL) +
@@ -335,25 +339,24 @@ p3 <- ggplot() +
         legend.position = "none")
 
 p4 <- ggplot() +
-  geom_bar(data = models, aes(x = factor(compartmental_type, levels = c( "SIS",
-                                                                         "SIR",
-                                                                        "SEIR",
-                                                                        "Other compartmental",
-                                                                        "Not compartmental",
-                                                                        "Unspecified")), fill = model_type), color = "black") +
-  scale_x_discrete(labels = c("Other compartmental" = "Other")) +
+  geom_bar(data = models, aes(x = factor(compartmental_type, levels = c( "SIR",
+                                                                         "SEIR",
+                                                                        "SEIR-SEI",
+                                                                        "Unspecified/Other",
+                                                                        "Not compartmental")), fill = model_type), color = "black") +
+  #scale_x_discrete(labels = c("Other compartmental" = "Other")) +
   scale_y_continuous(limits = c(0,30), breaks = seq(0,30,by = 5), expand = c(0,0)) +
-  xlab("Human Compartments") + ylab("Model Count") +
+  xlab("Compartments") + ylab("Model Count") +
   scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3", 'IBM' = 'steelblue' , 'Unspecified' = 'grey'), name = NULL) +
   theme_minimal() +
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
         legend.position = "none")
 
 p5 <- ggplot() +
-  geom_bar(data = models, aes(x = factor(theoretical_model, levels = c("FALSE",
-                                                                       "TRUE")), fill = model_type), color = "black") +
-  scale_x_discrete(labels = c("FALSE" = "Fitted to Data",
-                              "TRUE" = "Theoretical")) +
+  geom_bar(data = models, aes(x = factor(theoretical_model, levels = c("No",
+                                                                       "Yes")), fill = model_type), color = "black") +
+  scale_x_discrete(labels = c("No" = "Fitted to Data",
+                              "Yes" = "Theoretical")) +
   scale_y_continuous(limits = c(0,60), breaks = seq(0,60,by = 5), expand = c(0,0)) +
   xlab("Model Calibration") + ylab("Model Count") +
   scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3", 'IBM' = 'steelblue' , 'Unspecified' = 'grey'), name = NULL) +
@@ -362,14 +365,18 @@ p5 <- ggplot() +
         legend.position = "none")
 
 p6 <- ggplot() +
-  geom_bar(data = models %>% separate_rows(interventions_type, sep = ";"),
-           aes(x = factor(interventions_type, levels = c("Vector/Animal control","Behaviour changes","Quarantine",
-                                                         "Contact tracing","Treatment","Hospitals",
+  geom_bar(data = models %>% separate_rows(interventions_type, sep = ",") |>
+             mutate(interventions_type = case_when(interventions_type %in% c("Hospitals", "Treatment centres") ~ "Hospitals, Treatment centres",
+                                                TRUE ~ interventions_type)),
+           aes(x = factor(interventions_type, levels = c("Vector/Animal control","Behaviour changes","Quarantine","Safe burials",
+                                                         "Contact tracing","Treatment","Hospitals, Treatment centres",
                                                          "Vaccination","Other")), fill = model_type), color = "black") +
-  scale_x_discrete(labels = c("Behaviour changes" = "Behaviour\nChanges",
+  scale_x_discrete(labels = c("Vector/Animal control" = "Vector/Animal\ncontrol",
+                              "Hospitals, Treatment centres" = "Hospitals,\nTreatment\ncentres",
+                              "Behaviour changes" = "Behaviour\nChanges",
                               "Contact tracing" = "Contact\nTracing",
                               "Other" = "Other &\nUnspecified")) +
-  scale_y_continuous(limits = c(0,80), breaks = seq(0,80,by = 5), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,25), breaks = seq(0,25,by = 5), expand = c(0,0)) +
   xlab("Interventions") + ylab("Model Count") +
   scale_fill_manual(values = c("Branching Process" = "purple","Compartmental" = "orange", "Other" = "springgreen3", 'IBM' = 'steelblue' , 'Unspecified' = 'grey'), name = NULL) +
   theme_minimal() +
@@ -378,7 +385,7 @@ p6 <- ggplot() +
 
 patchwork <- (p1 + p2 + p3 + p4 + p5 + p6) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork <- patchwork + plot_annotation(tag_levels = 'A')
-ggsave("figure_S2.png", plot = patchwork, width = 12, height = 16)
+ggsave("figure_S2.png", plot = patchwork, width = 16, height = 16)
 
 ################
 ## PARAMETERS ##
@@ -416,10 +423,10 @@ parameters <- parameters %>% mutate(parameter_class = case_when(
     TRUE ~ parameter_type),
   population_country = ifelse(is.na(population_country),"Unspecified",population_country),
   study_midyear = ifelse(!is.na(population_study_start_year) & !is.na(population_study_end_year),
-                         round((population_study_start_year + population_study_end_year) / 2),
-                         population_study_start_year),
+                         round((as.integer(population_study_start_year) + as.integer(population_study_end_year)) / 2),
+                         as.integer(population_study_start_year)),
   study_midyear_cat = case_when(
-    study_midyear %in% 2000:2004 ~ "2000-2004",
+    study_midyear %in% 1998:2004 ~ "1998-2004",
     study_midyear %in% 2005:2009 ~ "2005-2009",
     study_midyear %in% 2010:2014 ~ "2010-2014",
     study_midyear %in% 2015:2019 ~ "2015-2019",
@@ -436,8 +443,9 @@ p1 <- ggplot() +
   geom_bar(data = parameters,
            aes(x = reorder(fct_infreq(parameter_type), parameter_class), fill = parameter_class), color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_break(c(125,240), scales = 0.1) +
-  scale_y_continuous(limits = c(0,270), breaks = seq(0,270,by = 30), expand = c(0,0)) +
+  #scale_y_break(c(125,240), scales = 0.1) +
+  #scale_y_continuous(limits = c(0,270), breaks = seq(0,270,by = 30), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,90), breaks = seq(0,90,by = 10), expand = c(0,0)) +
   xlab("Parameter Type") + ylab("Parameter Count") +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal() +
@@ -461,10 +469,10 @@ p2 <- ggplot() +
   coord_flip()
 
 p3 <- ggplot() +
-  geom_bar(data = parameters, aes(x = factor(study_midyear_cat, levels = c("2000-2004", "2005-2009", "2010-2014",
+  geom_bar(data = parameters, aes(x = factor(study_midyear_cat, levels = c("1998-2004", "2005-2009", "2010-2014",
                                                                            "2015-2019", "2020-Present",'Unspecified')), fill = parameter_class), color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_continuous(limits = c(0,180), breaks = seq(0,180,by = 30), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,150), breaks = seq(0,180,by = 30), expand = c(0,0)) +
   xlab("Study Year") + ylab("Parameter Count") +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal() +
@@ -475,7 +483,7 @@ p3 <- ggplot() +
 p4 <- ggplot() +
   geom_bar(data = parameters, aes(x = fct_infreq(population_sample_type), fill = parameter_class), color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_continuous(limits = c(0,300), breaks = seq(0,300,by = 30), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,150), breaks = seq(0,300,by = 30), expand = c(0,0)) +
   xlab("Study Setting") + ylab("Parameter Count") +
   scale_fill_viridis_d(option = "magma", begin=0.15, end=0.95, name = NULL) +
   theme_minimal() +
@@ -484,8 +492,8 @@ p4 <- ggplot() +
   coord_flip()
 
 patchwork <- p1 / p2 / p3 / p4 + plot_layout(ncol = 1,
-                                             heights = c(2.5,2,0.5,0.7),
-                                             guides = "collect") + plot_annotation(tag_levels = 'A')
+                                             heights = c(2.5,2,0.5,0.7) ) +#,guides = "collect") +
+  plot_annotation(tag_levels = 'A')
 dev.set(dev.next())
 ggsave("figure_S3.png", plot = patchwork, width = 14, height = 18)
 
