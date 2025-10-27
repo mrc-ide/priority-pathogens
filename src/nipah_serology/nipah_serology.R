@@ -232,218 +232,7 @@ subcolumns_outbreak <- outbreaks %>% dplyr::select(outbreak_country,outbreak_loc
          total_cases = total_cases/num_loc,
          deaths = deaths / num_loc)    # for location where we split report the AVERAGE number of cases
 
-location_agg <- subcolumns_outbreak %>% group_by(outbreak_location) %>%
-  summarise(tot_cases = sum(total_cases),
-            tot_deaths = sum(deaths)) %>%
-  left_join(location_mapping, by = c("outbreak_location" = "location")) %>%
-  mutate(map_location=coalesce(district, division_or_state, outbreak_location)) %>%
-  dplyr::select(map_location,tot_cases,tot_deaths)
 
-
-# what is the 'true' number of cases we assign, how do we demonstrate time dimension?
-
-#outbreaks %>% filter(!is_duplicate) %>% group_by(outbreak_location, outbreak_start_year) %>% summarise(n=n()) %>% filter(n>1)
-
-#world               <- ne_countries(scale = "medium", returnclass = "sf")
-#worldmap            <- st_transform(world, crs = st_crs(l0))
-
-#southeast_asia_cropped <- st_crop(worldmap, xmin = -20, xmax = 45,
-#                          ymin = 30, ymax = 73)
-
-
-l0 <- l0_in %>% left_join(location_agg %>% rename(tc_l0=tot_cases,td_l0=tot_deaths),by=c('COUNTRY'='map_location')) %>%
-  mutate(total_cases = tc_l0,
-         total_deaths = td_l0)
-
-l1 <- l1_in %>% left_join(location_agg %>% rename(tc_l1=tot_cases,td_l1=tot_deaths),by=c('NAM_1'='map_location')) %>%
-  mutate(total_cases = tc_l1,
-         total_deaths = td_l1)
-
-l2 <- l2_in %>% left_join(location_agg %>% rename(tc_l2=tot_cases,td_l2=tot_deaths),by=c('NAM_2'='map_location')) %>%
-  left_join(location_agg %>% rename(tc_l1=tot_cases,td_l1=tot_deaths),by=c('NAM_1'='map_location')) %>%
-  left_join(location_agg %>% rename(tc_l0=tot_cases,td_l0=tot_deaths),by=c('COUNTRY'='map_location')) %>%
-  mutate(total_cases = coalesce(tc_l2, tc_l1, tc_l0),
-         total_deaths = coalesce(td_l2, td_l1, td_l0)) %>%
-  filter(!is.na(total_cases))     # remove visual noise
-
-
-
-location_mapping_bangladesh <- tribble(
-  ~location, ~iso3, ~adm2_code, ~district, ~division,
-  # ---- Bangladesh Districts ----
-  "Jhalakati", "BGD", "BGD008004", "Jhalokathi", "Barishal",
-  "Cumilla", "BGD", "BGD002003", "Cumilla", "Chittagong",
-  "Dhaka", "BGD", "BGD003009", "Dhaka", "Dhaka",
-  "Faridpur", "BGD", "BGD003002", "Faridpur", "Dhaka",
-  "Gopalganj", "BGD", "BGD008002", "Gopalganj", "Barishal",
-  "Madaripur", "BGD", "BGD008003", "Madaripur", "Barishal",
-  "Manikganj", "BGD", "BGD003006", "Manikganj", "Dhaka",
-  "Rajbari", "BGD", "BGD003008", "Rajbari", "Dhaka",
-  "Sariatpur", "BGD", "BGD003011", "Shariatpur", "Dhaka",
-  "Tangail", "BGD", "BGD003010", "Tangail", "Dhaka",
-  "Chuadanga", "BGD", "BGD004007", "Chuadanga", "Khulna",
-  "Jhenaidah", "BGD", "BGD004006", "Jhenaidah", "Khulna",
-  "Khulna", "BGD", "BGD004005", "Khulna", "Khulna",
-  "Kushtia", "BGD", "BGD004008", "Kushtia", "Khulna",
-  "Magura", "BGD", "BGD004009", "Magura", "Khulna",
-  "Meherpur", "BGD", "BGD004004", "Meherpur", "Khulna",
-  "Norail", "BGD", "BGD004010", "Narail", "Khulna",
-  "Mymensingh", "BGD", "BGD009003", "Mymensingh", "Mymensingh",
-  "Bogura", "BGD", "BGD006001", "Bogra", "Rajshahi",
-  "Chapainawabganj", "BGD", "BGD006008", "Chapai Nawabganj", "Rajshahi",
-  "Naogaon", "BGD", "BGD006004", "Naogaon", "Rajshahi",
-  "Natore", "BGD", "BGD006003", "Natore", "Rajshahi",
-  "Pabna", "BGD", "BGD006007", "Pabna", "Rajshahi",
-  "Rajshahi", "BGD", "BGD006006", "Rajshahi", "Rajshahi",
-  "Dinajpur", "BGD", "BGD005004", "Dinajpur", "Rangpur",
-  "Gaibandha", "BGD", "BGD005002", "Gaibandha", "Rangpur",
-  "Jaipurhat", "BGD", "BGD006002", "Joypurhat", "Rajshahi",
-  "Kurigram", "BGD", "BGD005006", "Kurigram", "Rangpur",
-  "Lalmonirhat", "BGD", "BGD005002", "Lalmonirhat", "Rangpur",
-  "Nilphamari", "BGD", "BGD005003", "Nilphamari", "Rangpur",
-  "Panchagarh", "BGD", "BGD005008", "Panchagarh", "Rangpur",
-  "Rangpur", "BGD", "BGD005005", "Rangpur", "Rangpur",
-  "Thakurgaon", "BGD", "BGD005007", "Thakurgaon", "Rangpur"
-)
-
-
-hospitals <- data.frame(
-  name = c(
-    "Rajshahi Medical College Hospital",
-    "Rangpur Medical College Hospital",
-    "Bangabandhu Sheikh Mujib Medical College Hospital",
-    "Tangail General Hospital",
-    "Rajbari General Hospital",
-    "Chattogram Medical College Hospital",
-    "Khulna Medical College Hospital",
-    "Sher e Bangla Medical College Hospital",
-    "Mymensingh Medical College Hospital",
-    "Sythet IMG Osmani Medical College Hospital",
-    "Naogaon Sadar Hospital",
-    "Joypurhat Sadar Hospital",
-    "Meherpur Sadar Hospital",
-    "Manikganj Sadar Hospital",
-    "Bogra Medical College Hospital"
-  ),
-  `Surveillance period` = c(
-    "2006 - ongoing",
-    "2006 - ongoing",
-    "2006 - ongoing",
-    "2006 - ongoing",
-    "2006 - ongoing",
-    "2018 - ongoing",
-    "2018 - ongoing",
-    "2020 - ongoing",
-    "2020 - ongoing",
-    "2021 - ongoing",
-    "2006 - 2009",
-    "2006 - 2009",
-    "2006 - 2009",
-    "2006 - 2009",
-    "2006 - 2009"
-  )
-)
-
-manual_coords <- data.frame(
-  name = hospitals$name,
-  lat = c(24.3645, 25.7439, 23.6010, 24.2513, 23.7610, 22.3569, 22.8456, 22.7010, 24.7471, 24.8918, 24.8136, 25.0947, 23.7669, 23.8603, 24.8510),
-  long = c(88.6283, 89.2752, 89.8337, 89.9167, 89.6410, 91.7832, 89.5403, 90.3535, 90.4203, 91.8800, 88.9314, 89.0944, 88.6622, 90.0058, 89.3711),
-  `Surveillance period` = hospitals$Surveillance.period
-)
-
-
-nipah_bangladesh <- nipah_bangladesh %>% left_join(location_mapping_bangladesh, by = c("District" = "location"))
-
-l2_bangladesh <- l2_in %>% filter(COUNTRY=='Bangladesh') %>% left_join( nipah_bangladesh %>% rename(tc_l2=`Grand Total`),by=c('ADM2CD_c'='adm2_code')) %>%
-  left_join(nipah_bangladesh %>% dplyr::select(-Division) %>% rename(tc_l1=`Grand Total`),by=c('NAM_1'='District')) %>%
-  mutate(total_cases = coalesce(tc_l2, tc_l1)) #%>%
-  #filter(!is.na(total_cases))     # remove visual noise
-
-nipah_country <- l2$COUNTRY |> unique()
-
-# Need to fix India, include Bangladesh as a panel so that it can be seen more easily.
-# Maybe split this into a multi-panel figure??? Chat with Tristan
-gg <- ggplot() +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  geom_sf(data = l0_in, lwd = 0.7, col = "black",  fill = NA) +
-  coord_sf(xlim = c(70, 130), ylim = c(-5, 30), expand = FALSE) +
-  scale_fill_continuous(na.value="white") +
-  theme_bw()
-
-
-# Bangladesh inset
-gg_bangladesh <- ggplot() +
-  geom_sf(data = l2_bangladesh, lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  geom_sf(data = l0_in, lwd = 0.7, col = "black",  fill = NA) +
-  coord_sf(xlim = c(87.9, 93), ylim = c(21, 26.7), expand = FALSE) +
-  geom_point(data = manual_coords, aes(x = long, y = lat, color = Surveillance.period), size = 2, shape = 18) +
-  geom_text(data = manual_coords, aes(x = long, y = lat, label = name), hjust = 0, vjust = 0, nudge_y = 0.05, size = 2.5) +
-  scale_fill_gradient(low='palegreen', high="darkblue", name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  ggsci::scale_color_lancet() + xlab('') + ylab('') +
-  labs(title='Bangladesh IEDCR Surveillance Data',color = "Surveillance Period") +
-  theme_bw()
-
-# North India + Bangladesh from outbreak data
-gg_northern_india_bangladesh <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('India','Bangladesh')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('India','Bangladesh')), lwd = 0.7, col = "black",  fill = NA) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  coord_sf(xlim = c(83, 92), ylim = c(20, 28), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue", name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Northern India & Bangladesh\nreported outbreaks' ) +
-  theme_bw()
-
-# Kerala
-gg_kerala <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('India')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('India')), lwd = 0.7, col = "black",  fill = NA) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  coord_sf(xlim = c(74, 78), ylim = c(8, 13), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue", name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Kerala\nreported outbreaks' ) +
-  theme_bw()
-
-
-# Malaysia & Singapore
-gg_malaysia_singapore <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('Malaysia','Singapore')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('Malaysia','Singapore')), lwd = 0.7, col = "black",  fill = NA) +
-  geom_sf(data = l0 %>% filter(COUNTRY %in% c('Singapore')), lwd = 0.7, col = "black",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  coord_sf(xlim = c(100, 105), ylim = c(1, 7), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue", name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Malaysia & Singapore\nreported outbreaks' ) +
-  theme_bw()
-
-
-# Philippines
-gg_philippines <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('Philippines')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('Philippines')), lwd = 0.7, col = "black",  fill = NA) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  coord_sf(xlim = c(115, 130), ylim = c(5, 20), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue", name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Philippines\nreported outbreaks' ) +
-  theme_bw()
-
-layout_design <-
-  "AAAEE
-   AAAEE
-   AAAEE
-   AAAEE
-   AAAEE
-   #BCD#
-   #BCD#"
-
-map_plot <-  gg_northern_india_bangladesh + gg_kerala + gg_malaysia_singapore + gg_philippines + gg_bangladesh +
-plot_layout(guides = 'collect', design = layout_design) + plot_annotation(tag_levels = 'A')
-
-ggsave("nipha_outbreaks_map.png", plot = map_plot, width = 17, height = 13)
 
 # *============================================================================*
 #extract data to be plotted
@@ -518,7 +307,7 @@ cfr_from_bangladesh_surveillance <- cfr_bangladesh %>%
 
 cfr_from_bangladesh_surveillance_ma <- metaprop_wrap(cfr_from_bangladesh_surveillance, subgroup = NA,
                                  plot_pooled = TRUE, sort_by_subg = FALSE, plot_study = TRUE, digits = 3, colour = 'red',
-                                 width = 4000, height = 4750, resolution = 500)
+                                 width = 5500, height = 3750, resolution = 500)
 
 cfr_forest_country <- forest_plot(cfr |> mutate(parameter_value = coalesce(parameter_value,central)) |>
                                   arrange(population_country,desc(parameter_value)),
@@ -582,17 +371,22 @@ sero_forest_country <- forest_plot(sero_studies |> mutate(parameter_value = coal
 #why is seroprevalence so low in people under investigation??
 
 d0 <- parameters %>% filter(parameter_class == 'Seroprevalence') %>%
-  filter( (population_sample_type == 'Population based' | population_sample_type == 'Community based') &
+  filter( (population_sample_type == 'Population-Based' | population_sample_type == 'Community-Based') &
            population_group == 'General population')
 
+forest_plot(d0 |> mutate(parameter_value = coalesce(parameter_value,central)) |>
+              arrange(population_country,desc(parameter_value)),
+            'Serology (%)','population_country',c(0,25),text_size = 13)
+
+
 d1 <- parameters %>% filter(parameter_class == 'Seroprevalence' &
-                              parameter_type != 'Seroprevalence - IgG' &
-                              parameter_type != 'Seroprevalence - IgM' &
-                              (population_sample_type == 'Population based' |
-                                 population_sample_type == 'Community based') &
+                              parameter_type != 'IgG' &
+                              parameter_type != 'IgM' &
+                              (population_sample_type == 'Population-Based' |
+                                 population_sample_type == 'Community-Based') &
                               population_group == 'General population')
-d2 <- parameters %>% filter(parameter_type == 'Seroprevalence - IgG' &
-                              (population_sample_type == 'Population based' |
-                                 population_sample_type == 'Community based') &
+d2 <- parameters %>% filter(parameter_type == 'IgG' &
+                              (population_sample_type == 'Population-Based' |
+                                 population_sample_type == 'Community-Based') &
                               population_group == 'General population')
 
