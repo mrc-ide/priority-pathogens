@@ -113,266 +113,306 @@ model_list <- list(
   weibull   = bsl_create_model("weibull", theta0_weibull)
 )
 
-# --------------------------
-# Parallel setup
-# --------------------------
-num_cores <- max(1, detectCores() - 1)
-cl <- makeCluster(num_cores)
-registerDoParallel(cl)
+if( interactive() )
+{
+  # --------------------------
+  # Parallel setup
+  # --------------------------
+  num_cores <- max(1, detectCores() - 1)
+  cl <- makeCluster(num_cores)
+  registerDoParallel(cl)
 
-clusterExport(cl, varlist = c("bsl_make_simulator_matrix", "bsl_simulate_dataset",
-                              "summaries_fun", "summary_names_used",
-                              "datasets", "bsl_fnPrior_hier"))
-
-
-# --------------------------
-# Run BSL in parallel
-# --------------------------
-set.seed(2025)
-
-chains_per_model <- 4
-
-fits_multi <- foreach(
-  mdl = names(model_list),
-  .export = c("S_obs", "model_list", "summaries_fun",
-              "bsl_fnPrior_hier", "bsl_simulate_dataset",
-              "bsl_make_simulator_matrix"),
-  .packages = c("BSL", "MASS"),
-  .noexport = c("S_obs", "model_list")
-) %dopar% {
-  set.seed(2025 + which(names(model_list) == mdl))  # ensure different chains per model
-
-  replicate(chains_per_model, {
-    bsl(
-      S_obs,
-      n = if(TESTING) 1000 else 10000,
-      M = 2000,
-      model = model_list[[mdl]],
-      covRandWalk = diag(0.125, 3),
-      verbose = FALSE
-    )
-  }, simplify = FALSE)
-}
-
-# Assign model names
-names(fits_multi) <- names(model_list)
-stopCluster(cl)
+  clusterExport(cl, varlist = c("bsl_make_simulator_matrix", "bsl_simulate_dataset",
+                                "summaries_fun", "summary_names_used",
+                                "datasets", "bsl_fnPrior_hier"))
 
 
-# --- Check structure
-str(fits_multi, 1)
+  # --------------------------
+  # Run BSL in parallel
+  # --------------------------
+  set.seed(2025)
 
-# --- Extract posterior samples per model (combine chains)
-posterior_samples <- lapply(fits_multi, function(chain_list) {
-  do.call(rbind, lapply(chain_list, function(f) as.data.frame(f@theta)))
-})
+  chains_per_model <- 4
 
-mcmc_lists <- bsl_to_mcmc_list_multi(fits_multi)
+  fits_multi <- foreach(
+    mdl = names(model_list),
+    .export = c("S_obs", "model_list", "summaries_fun",
+                "bsl_fnPrior_hier", "bsl_simulate_dataset",
+                "bsl_make_simulator_matrix"),
+    .packages = c("BSL", "MASS"),
+    .noexport = c("S_obs", "model_list")
+  ) %dopar% {
+    set.seed(2025 + which(names(model_list) == mdl))  # ensure different chains per model
 
-# --- Gelman-Rubin (R-hat) diagnostics per model
-gelman_results <- lapply(mcmc_lists, function(ml) gelman.diag(ml, autoburnin = FALSE))
-print(gelman_results)
-
-# --- Effective sample size
-ess_results <- lapply(mcmc_lists, effectiveSize)
-print(ess_results)
-
-# --- Trace plots for visual check
-par(mfrow = c(3, 3))
-for (mdl in names(mcmc_lists)) {
-  for (p in 1:ncol(as.matrix(mcmc_lists[[mdl]][[1]]))) {
-    traceplot(mcmc_lists[[mdl]], varname = colnames(as.matrix(mcmc_lists[[mdl]][[1]]))[p],
-              main = paste("Trace:", mdl, "-", colnames(as.matrix(mcmc_lists[[mdl]][[1]]))[p]))
+    replicate(chains_per_model, {
+      bsl(
+        S_obs,
+        n = if(TESTING) 1000 else 10000,
+        M = 2000,
+        model = model_list[[mdl]],
+        covRandWalk = diag(0.125, 3),
+        verbose = FALSE
+      )
+    }, simplify = FALSE)
   }
+
+  # Assign model names
+  names(fits_multi) <- names(model_list)
+  stopCluster(cl)
+
+
+  # --- Check structure
+  str(fits_multi, 1)
+
+  # --- Extract posterior samples per model (combine chains)
+  posterior_samples <- lapply(fits_multi, function(chain_list) {
+    do.call(rbind, lapply(chain_list, function(f) as.data.frame(f@theta)))
+  })
+
+  mcmc_lists <- bsl_to_mcmc_list_multi(fits_multi)
+
+  # --- Gelman-Rubin (R-hat) diagnostics per model
+  gelman_results <- lapply(mcmc_lists, function(ml) gelman.diag(ml, autoburnin = FALSE))
+  print(gelman_results)
+
+  # --- Effective sample size
+  ess_results <- lapply(mcmc_lists, effectiveSize)
+  print(ess_results)
+
+  # --- Trace plots for visual check
+  par(mfrow = c(3, 3))
+  for (mdl in names(mcmc_lists)) {
+    for (p in 1:ncol(as.matrix(mcmc_lists[[mdl]][[1]]))) {
+      traceplot(mcmc_lists[[mdl]], varname = colnames(as.matrix(mcmc_lists[[mdl]][[1]]))[p],
+                main = paste("Trace:", mdl, "-", colnames(as.matrix(mcmc_lists[[mdl]][[1]]))[p]))
+    }
+  }
+
+  # --------------------------
+  # Inspect results
+  # --------------------------
+
+  log_evidences <- sapply(names(fits_multi), function(mdl) {
+    chain_evids <- sapply(fits_multi[[mdl]], function(f) bsl_bridge_estimate(f@loglike))
+    mean(chain_evids)  # average across chains
+  })
+
+  # --- Relative Bayes factors
+  delta <- log_evidences - max(log_evidences)
+  bayes_factors <- exp(delta)
+  model_comparison <- data.frame(
+    model = names(fits_multi),
+    log_evidence = log_evidences,
+    rel_prob = bayes_factors / sum(bayes_factors)
+  )
+  print(model_comparison)
+
+  # --- Parallel Convergence summary
+  conv_summary <- lapply(names(mcmc_lists), function(m) {
+    g <- gelman_results[[m]]$psrf
+    e <- ess_results[[m]]
+    data.frame(
+      model = m,
+      param = names(e),
+      Rhat = g[, 1],
+      ESS = e
+    )
+  }) %>% bind_rows() %>% remove_rownames()
+
+  print(conv_summary)
+
+  # Example usage (uses your posterior_samples variable from earlier)
+  set.seed(2025)
+  posterior_summaries <- bsl_summarise_posteriors(posterior_samples, L = 50)
+  print(posterior_summaries)
+
+
+
+  # Combine for all models
+  density_summary <- do.call(rbind, lapply(names(posterior_samples), function(nm)
+    bsl_make_density_summary(nm, posterior_samples[[nm]], n_draws = 200, L = 20)
+  ))
+
+  # --------------------------
+  # Posterior summaries for plotting (use predictive mean & CI)
+  # --------------------------
+  posterior_summaries_long <- posterior_summaries %>%
+    mutate(
+      median_value = mean_mean,
+      low_value    = mean_low,
+      high_value   = mean_high
+    ) %>%
+    select(model, median_value, low_value, high_value)
+
+  posterior_summaries_median_long <- posterior_summaries %>%
+    mutate(
+      median_value = median_mean,
+      low_value    = median_low,
+      high_value   = median_high
+    ) %>%
+    select(model, median_value, low_value, high_value)
+
+  posterior_summaries_90th_long <- posterior_summaries %>%
+    mutate(
+      median_value = q90_mean,
+      low_value    = q90_low,
+      high_value   = q90_high
+    ) %>%
+    select(model, median_value, low_value, high_value)
+
+  # --------------------------
+  # Observed summaries from datasets (extract summary-list values)
+  # --------------------------
+  observed_summary <- do.call(rbind, lapply(names(datasets), function(nm) {
+    d <- datasets[[nm]]
+    data.frame(
+      dataset = nm,
+      median_obs = ifelse(!is.null(d$median), d$median, NA_real_),
+      min_obs    = ifelse(!is.null(d$min), d$min, NA_real_),
+      max_obs    = ifelse(!is.null(d$max), d$max, NA_real_)
+    )
+  }))
+  # Note: observed_summary$dataset are d1,d2,... (not model names). We'll map them visually below.
+
+  # --------------------------
+  # Plot: density + predictive mean CI + observed medians/ranges
+  # --------------------------
+  obs_plot_df <- observed_summary
+
+  posterior_summaries_long$y_jitter <- jitter(rep(0.02, nrow(posterior_summaries_long)), amount = 0.02)
+  posterior_summaries_median_long$y_jitter <- jitter(rep(0.02, nrow(posterior_summaries_median_long)), amount = 0.02)
+  posterior_summaries_90th_long$y_jitter <- jitter(rep(0.02, nrow(posterior_summaries_90th_long)), amount = 0.02)
+  obs_plot_df$y_jitter <- jitter(rep(0, nrow(obs_plot_df)), amount = 0.015)
+
+  ggplot(density_summary, aes(x = x, y = mean, color = model, fill = model)) +
+    # Posterior densities
+    geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.15, colour = NA) +
+    geom_line(size = 1) +
+
+    # Posterior medians + 95% CrIs (as points and horizontal bars above the curves)
+    geom_errorbarh(
+      data = posterior_summaries_median_long,
+      aes(y = y_jitter + 0.15, xmin = low_value, xmax = high_value, color = model),
+      height = 0.005, size = 0.8, inherit.aes = FALSE
+    ) +
+    geom_point(
+      data = posterior_summaries_median_long,
+      aes(x = median_value, y = y_jitter + 0.15, fill = model, color = model),
+      shape = 8, size = 2, inherit.aes = FALSE
+    ) +
+
+    geom_point(
+      data = posterior_summaries_90th_long,
+      aes(x = median_value, y = y_jitter + 0.11, fill = model, color = model),
+      shape = 4, size = 2, inherit.aes = FALSE
+    ) +
+
+    # Observed data medians + ranges (at bottom, in black)
+    geom_errorbarh(
+      data = obs_plot_df,
+      aes(y = y_jitter - 0.01, xmin = min_obs, xmax = max_obs),
+      height = 0.005, color = "black", size = 0.8,
+      inherit.aes = FALSE
+    ) +
+    geom_point(
+      data = obs_plot_df,
+      aes(x = median_obs, y = y_jitter - 0.01),
+      shape = 18, fill = "white", color = "black", size = 2,
+      inherit.aes = FALSE
+    ) +
+
+    geom_text(
+      data = data.frame(x = 19, y = 0.135, label = "90th\npercentiles"),
+      aes(x = x, y = y, label = label),
+      color = "black",
+      size = 3.5,
+      inherit.aes = FALSE
+    ) +
+
+    geom_text(
+      data = data.frame(x = 10, y = 0.19, label = "Medians"),
+      aes(x = x, y = y, label = label),
+      color = "black",
+      size = 3.5,
+      inherit.aes = FALSE
+    ) +
+
+    scale_color_lancet() +
+    scale_fill_lancet() +
+    labs(
+      title = "Posterior Predictive Densities with Medians\n and 95% Credible Bands",
+      x = "Days",
+      y = "Density"
+    ) +
+    theme_bw(base_size = 14) +
+    theme(legend.position = "right")
+
+
+  # ===============================
+  # AUTOMATED BSL DIAGNOSTIC REPORT
+  # ===============================
+
+  diagnostic_dir <- "bsl_diagnostics"
+  if (!dir.exists(diagnostic_dir)) dir.create(diagnostic_dir)
+
+  diag_results <- bsl_run_diagnostics(fits_multi)
+  trace_df     <- bsl_make_trace_df(fits_multi)
+
+  trace_long   <- trace_df %>%
+    pivot_longer(cols = starts_with("theta"),
+                 names_to = "parameter", values_to = "value")
+
+  ggplot(trace_long, aes(x = iter, y = value, color = chain)) +
+    geom_line(alpha = 0.7, linewidth = 0.5) +
+    facet_grid(model ~ parameter, scales = "free_y") +
+    labs(
+      title = "Traceplots for BSL posterior samples",
+      x = "Iteration",
+      y = "Parameter value",
+      color = "Chain"
+    ) +
+    scale_color_lancet() +
+    theme_bw(base_size = 12) +
+    theme(
+      legend.position = "bottom",
+      strip.background = element_rect(fill = "grey90", color = "grey60"),
+      panel.spacing = unit(0.8, "lines")
+    )
+
+  param_summaries <- summarise_parameters(posterior_samples)
+
+  # Print to console
+  print(param_summaries)
+
+  # Save csv to diagnostics folder
+  write.csv(param_summaries, file = file.path(diagnostic_dir, "parameter_summaries_per_model.csv"), row.names = FALSE)
+
+  # Optional: pretty table print using knitr::kable if running in RMarkdown / Notebook
+  if (interactive() && requireNamespace("knitr", quietly = TRUE)) {
+    message("\nParameter summaries (95% CrI):\n")
+    print(knitr::kable(param_summaries[, c("model", "parameter", "mean", "median", "ci_95")],
+                       digits = 3, caption = "Posterior summaries for hierarchical parameters"))
+  }
+
+
+  # This will plot median and 95% CrI for each parameter grouped by model.
+  param_plot_df <- param_summaries %>%
+    mutate(parameter = factor(parameter, levels = c("mu0", "tau", "phi")))
+
+  ggplot(param_plot_df, aes(x = parameter, y = median, ymin = low_2.5, ymax = high_97.5, color = model)) +
+    geom_pointrange(position = position_dodge(width = 0.6), size = 0.7) +
+    geom_errorbar(position = position_dodge(width = 0.6), width = 0.2, size = 0.5) +
+    facet_wrap(~ model, nrow = 1, scales = "free_y") +
+    labs(title = "Posterior parameter medians and 95% credible intervals",
+         y = "Parameter value (tau & phi shown on natural scale)",
+         x = "Parameter") +
+    theme_bw(base_size = 13) +
+    theme(legend.position = "none")
+
+  # Save the plot
+  ggsave(file.path(diagnostic_dir, "parameter_forestplot.png"), width = 10, height = 3.5)
+} else {
+  # NEED SOME PRE-CANNED RESULTS FOR NON-INTERACTIVE RUNS TO KEEP ORDERLY HAPPY
 }
 
-# --------------------------
-# Inspect results
-# --------------------------
 
-log_evidences <- sapply(names(fits_multi), function(mdl) {
-  chain_evids <- sapply(fits_multi[[mdl]], function(f) bsl_bridge_estimate(f@loglike))
-  mean(chain_evids)  # average across chains
-})
-
-# --- Relative Bayes factors
-delta <- log_evidences - max(log_evidences)
-bayes_factors <- exp(delta)
-model_comparison <- data.frame(
-  model = names(fits_multi),
-  log_evidence = log_evidences,
-  rel_prob = bayes_factors / sum(bayes_factors)
-)
-print(model_comparison)
-
-# --- Parallel Convergence summary
-conv_summary <- lapply(names(mcmc_lists), function(m) {
-  g <- gelman_results[[m]]$psrf
-  e <- ess_results[[m]]
-  data.frame(
-    model = m,
-    param = names(e),
-    Rhat = g[, 1],
-    ESS = e
-  )
-}) %>% bind_rows() %>% remove_rownames()
-
-print(conv_summary)
-
-# Example usage (uses your posterior_samples variable from earlier)
-set.seed(2025)
-posterior_summaries <- bsl_summarise_posteriors(posterior_samples, L = 50)
-print(posterior_summaries)
-
-
-
-# Combine for all models
-density_summary <- do.call(rbind, lapply(names(posterior_samples), function(nm)
-  bsl_make_density_summary(nm, posterior_samples[[nm]], n_draws = 200, L = 20)
-))
-
-# --------------------------
-# Posterior summaries for plotting (use predictive mean & CI)
-# --------------------------
-posterior_summaries_long <- posterior_summaries %>%
-  mutate(
-    median_value = mean_mean,
-    low_value    = mean_low,
-    high_value   = mean_high
-  ) %>%
-  select(model, median_value, low_value, high_value)
-
-posterior_summaries_median_long <- posterior_summaries %>%
-  mutate(
-    median_value = median_mean,
-    low_value    = median_low,
-    high_value   = median_high
-  ) %>%
-  select(model, median_value, low_value, high_value)
-
-posterior_summaries_90th_long <- posterior_summaries %>%
-  mutate(
-    median_value = q90_mean,
-    low_value    = q90_low,
-    high_value   = q90_high
-  ) %>%
-  select(model, median_value, low_value, high_value)
-
-# --------------------------
-# Observed summaries from datasets (extract summary-list values)
-# --------------------------
-observed_summary <- do.call(rbind, lapply(names(datasets), function(nm) {
-  d <- datasets[[nm]]
-  data.frame(
-    dataset = nm,
-    median_obs = ifelse(!is.null(d$median), d$median, NA_real_),
-    min_obs    = ifelse(!is.null(d$min), d$min, NA_real_),
-    max_obs    = ifelse(!is.null(d$max), d$max, NA_real_)
-  )
-}))
-# Note: observed_summary$dataset are d1,d2,... (not model names). We'll map them visually below.
-
-# --------------------------
-# Plot: density + predictive mean CI + observed medians/ranges
-# --------------------------
-obs_plot_df <- observed_summary
-
-posterior_summaries_long$y_jitter <- jitter(rep(0.02, nrow(posterior_summaries_long)), amount = 0.02)
-posterior_summaries_median_long$y_jitter <- jitter(rep(0.02, nrow(posterior_summaries_median_long)), amount = 0.02)
-posterior_summaries_90th_long$y_jitter <- jitter(rep(0.02, nrow(posterior_summaries_90th_long)), amount = 0.02)
-obs_plot_df$y_jitter <- jitter(rep(0, nrow(obs_plot_df)), amount = 0.015)
-
-ggplot(density_summary, aes(x = x, y = mean, color = model, fill = model)) +
-  # Posterior densities
-  geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.15, colour = NA) +
-  geom_line(size = 1) +
-
-  # Posterior medians + 95% CrIs (as points and horizontal bars above the curves)
-  geom_errorbarh(
-    data = posterior_summaries_median_long,
-    aes(y = y_jitter + 0.15, xmin = low_value, xmax = high_value, color = model),
-    height = 0.005, size = 0.8, inherit.aes = FALSE
-  ) +
-  geom_point(
-    data = posterior_summaries_median_long,
-    aes(x = median_value, y = y_jitter + 0.15, fill = model, color = model),
-    shape = 8, size = 2, inherit.aes = FALSE
-  ) +
-
-  geom_point(
-    data = posterior_summaries_90th_long,
-    aes(x = median_value, y = y_jitter + 0.11, fill = model, color = model),
-    shape = 4, size = 2, inherit.aes = FALSE
-  ) +
-
-  # Observed data medians + ranges (at bottom, in black)
-  geom_errorbarh(
-    data = obs_plot_df,
-    aes(y = y_jitter - 0.01, xmin = min_obs, xmax = max_obs),
-    height = 0.005, color = "black", size = 0.8,
-    inherit.aes = FALSE
-  ) +
-  geom_point(
-    data = obs_plot_df,
-    aes(x = median_obs, y = y_jitter - 0.01),
-    shape = 18, fill = "white", color = "black", size = 2,
-    inherit.aes = FALSE
-  ) +
-
-  geom_text(
-    data = data.frame(x = 19, y = 0.135, label = "90th\npercentiles"),
-    aes(x = x, y = y, label = label),
-    color = "black",
-    size = 3.5,
-    inherit.aes = FALSE
-  ) +
-
-  geom_text(
-    data = data.frame(x = 10, y = 0.19, label = "Medians"),
-    aes(x = x, y = y, label = label),
-    color = "black",
-    size = 3.5,
-    inherit.aes = FALSE
-  ) +
-
-  scale_color_lancet() +
-  scale_fill_lancet() +
-  labs(
-    title = "Posterior Predictive Densities with Medians\n and 95% Credible Bands",
-    x = "Days",
-    y = "Density"
-  ) +
-  theme_bw(base_size = 14) +
-  theme(legend.position = "right")
-
-
-# ===============================
-# AUTOMATED BSL DIAGNOSTIC REPORT
-# ===============================
-
-diagnostic_dir <- "bsl_diagnostics"
-if (!dir.exists(diagnostic_dir)) dir.create(diagnostic_dir)
-
-diag_results <- bsl_run_diagnostics(fits_multi)
-trace_df     <- bsl_make_trace_df(fits_multi)
-
-trace_long   <- trace_df %>%
-  pivot_longer(cols = starts_with("theta"),
-               names_to = "parameter", values_to = "value")
-
-ggplot(trace_long, aes(x = iter, y = value, color = chain)) +
-  geom_line(alpha = 0.7, linewidth = 0.5) +
-  facet_grid(model ~ parameter, scales = "free_y") +
-  labs(
-    title = "Traceplots for BSL posterior samples",
-    x = "Iteration",
-    y = "Parameter value",
-    color = "Chain"
-  ) +
-  scale_color_lancet() +
-  theme_bw(base_size = 12) +
-  theme(
-    legend.position = "bottom",
-    strip.background = element_rect(fill = "grey90", color = "grey60"),
-    panel.spacing = unit(0.8, "lines")
-  )
