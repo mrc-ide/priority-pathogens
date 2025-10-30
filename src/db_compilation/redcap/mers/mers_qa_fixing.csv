@@ -1,0 +1,64 @@
+fixed,Covidence_ID,Name_data_entry,QA_M1,QA_M2,QA_A3,QA_A4,QA_D5,QA_D6,QA_D7,qa_notes,num_rows,matching
+1,1078,Gina Cuomo-Dannenburg,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Case-control comparing non-MERS and MERS SARI across multiple centres. Naïve CFRs but they follow up all participants and have the outcomes so is equivalent to adjusted,1,0
+1,1461,Gina Cuomo-Dannenburg,Yes,No,Yes,No,Yes,Yes,No,Used a bias adjusted logistic regression for OR but this is actually unadjusted analysis.,1,0
+1,1466,Gina Cuomo-Dannenburg,Yes,Yes,Yes,Yes,Yes,Yes,Yes,"Delays are from observed statistics without adjustments. Paper contains same individuals as other Arabi study from multisite MERS study. These are the same patients but disaggregated differently -- by treatment rather than outcome (as in other study). The other study contains the disaggregated parameters for the delays. Additional info in study on source of infection (community, hospital etc.); Continuation of previous record. Disaggregated for patients who receive corticosteroid therapy (CT) and did not receive CT. Source of infection broken down into 1) Community acquired: 47% for CT, 38% for did not receive CT  2) Healthcare worker, hospital acquired: 9.9% for CT, 10.8% for did not receive CT ",1,0
+1,1549,Tini Garske,No,Yes,Yes,Yes,Yes,No,No,NA,1,0
+1,1568,Julia Halder,No,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,1587,Yiran Wang,Yes,No,Not Applicable,Not Applicable,Yes,No,No,"unadjusted univariate analysis but due to the small sample size, acknowledged may not be generalisable to other settings. Maybe there are some issues in data due to the small sample size and didn't consider the heterogeneity in admission criteria across different hospitals?",1,0
+1,1594,Rhys Earl,Yes,Yes,Yes,Yes,Not Applicable,Not Applicable,Not Applicable,NA,1,0
+1,1613,Kieran Chopra,Yes,Yes,Yes,Yes,No,No,No,case data from transmission clusters from https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(13)70304-9/fulltext,1,0
+1,1657,Joseph Hicks,Yes,No,Yes,No,Yes,Yes,Yes,Hard to say the value of the parameters given the choice of methods and models with an unspecified intervention effect.,1,0
+1,1677,Richard Sheppard,No,No,Yes,No ,Yes,Yes,No,Estimating R0 and Re together and calling it R0,1,0
+1,1678,Richard Sheppard,Yes,No,No,No,Yes,No,No,NA,1,0
+1,1683,Richard Sheppard,Yes,Yes,Yes,Yes,Yes,Yes,No,NA,1,0
+1,1687,Tini Garske,No,No,No,No,No,No,No,"I think they did the math wrong in the calculation of the asymptomatic proportion, so marked down in the data issues section for this.",1,0
+1,1700,Julia Halder,Yes,No,No,No,No,No,No,"Some issues discussed such as lack of knowledge of local seroprevalence/community outbreak. The paper also reports average secondary infections, which is equivalent to Re, but I don't think we extract this.",1,0
+1,1704,Christian Morgenstern,Yes,Yes,No,Not Applicable,Yes,Yes,No,NA,1,0
+1,1815,Christian Morgenstern,No,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,1821,Christian Morgenstern,Yes,Yes,Yes,No,Yes,Yes,No,NA,1,0
+1,1830,Christian Morgenstern,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,Yes,NA,1,0
+1,1843,Kieran Chopra,Yes,No,Yes,Yes,Yes,Yes,No,NA,1,0
+1,1845,Thomas Rawson,No,No,Not Applicable,Not Applicable,Yes,No,No,NA,1,0
+1,1850,Amy Dighe,No,Yes,Yes,Not Applicable,Yes,No,Not Applicable,"The approach is robust for their purposes, and for the delays extracted, though they do not clarify how date of symptom onset was defined. Their mortality estimate is not a robust estimate of CFR as it is just among the severe cases with ARDS, but they did not set out with the intent of estimating CFR. They do not mention limitations or issues with the data.",1,0
+1,1852,Thomas Rawson,No,Yes,No,Yes,Yes,Yes,Yes,Thoughts given to right-censoring.,1,0
+1,1863,Thomas Rawson,No,Yes,No,Yes,Yes,Yes,No,CFR not at all clear. Nor are some of the delay definitions entirely clear. Or the risk factor methodology,1,0
+1,1874,Thomas Rawson,Yes,No,Yes,Yes,No,No,No,"Improper fitting, unclear risk factors. Inappropriate definition of basic R number. Must be low QA. ; Mortality rates don't match table they are said to be calculated from.",1,0
+1,1883,David Jorgensen,Yes,No,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,1891,Tini Garske,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,1904,Julia Halder,Yes,Yes,Yes,Yes,No,Yes,Yes,Seems like a small number of events to model on.,1,0
+1,1905,Anh Pham,No,No,No,No,Not Applicable,Not Applicable,Not Applicable,NA,1,0
+1,1925,Yiran Wang,Yes,Yes,Not Applicable,Not Applicable,Yes,No,No,"For secondary attack rate, CFR, and proportion of symptomatic cases all good; for incubation period it was a bit tricky - as it only gave an approximate number (and only median) without consideration of the heterogenerity.",1,0
+1,1933,Haowei (Vivi) Wang,No,No,No,Yes,Yes,No,Yes,"While some key assumptions are justified by previous studies (e.g., generation time), several major simplifying assumptions are not fully justified by external data and are acknowledged by the authors as limitations.  the model relies on several key simplifying assumptions that I think may worth to be mentioned here. 1. The model assumes the detection rate (p) is constant across all geographical regions and throughout the entire study period. 2. Homogeneous transmission 3. Uniform case transmissibility - the analysis does not account for potential differences in transmissibility or detection probability between mild/asymptomatic and severe cases.",1,0
+1,1943,Kieran Chopra,No,Yes,Yes,Yes,Yes,Yes,No,"methods mostly reproducible, but it's slightly unclear to me how they estimated the probability density function for the time illness -> death",1,0
+1,1947,Megan Ruffle,No,Yes,Yes,Yes,Yes,No,No,NA,1,0
+1,1958,Amy Dighe,Yes,No,Yes,Yes,No,No,No,"Not the most robust modelling study, no uncertainty estimated, but for the R0 estimate it is a sufficient approach to be included in analysis I think. Odd to have a second model with interventions. Major limitation is not accounting for superspreading since this was a major characteristic of this outbreak.",1,0
+1,1959,Gemma Nedjati-Gilani,Yes,Yes,Not Applicable,Not Applicable,Yes,No,Not Applicable,NA,1,0
+1,1963,Victoria Cox,No,No,Not Applicable,Not Applicable,Yes,No,No,NA,1,0
+1,1973,Anne Cori,No,Yes,Not Applicable,Not Applicable,Yes,Yes,Not Applicable,NA,1,0
+1,1985,Tini Garske,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,No,"there is an oddity in that an inclusion criteria was being symptomatic with ILI, but then there were patients with no symptoms in the dataset. I haven't punished this in the QA as I'm not sure where it would fit?",1,0
+1,2005,Julia Halder,No,No,No,No,No,Yes,No,"The assumption that a constant proportion of human cases is primary is not justified given that they do try a varying beta and a varying rho (which is the spillover). The paper is generally unclear, and the Supplementary material could not be found. Reporting of the uncertainty in R0 seems inconsistent, with CI for two estimates and not others.",1,0
+1,2011,Thomas Rawson,No,Yes,Yes,Yes,Yes,No,Yes,"1. cited methodological papers; 2. accounted for time delay from illness onset to death in CFR; 3. account for right censoring; 4. cited the source paper for delay distributions; 5. used cumulative data but accounted for the time delay of illness onset to death; 6,7. mentioned and adjusted for right-censoring",1,0
+1,2020,Thomas Rawson,No,Yes,Yes,Yes,Yes,Yes,Yes,NA,1,0
+1,2046,Thomas Rawson,No,Yes,Not Applicable,Not Applicable,Yes,No,No,"As a sero measure, it's not great as it's in a positive-testing (by PCR) population.",1,0
+1,2047,Kieran Chopra,Yes,No,No,Yes,Yes,Yes,No,"Does not account for asymptomatic cases in calculation of CFR. Otherwise, seems OK. They seemed to have rich data (which I can't see available!) and it's a shame they didn't do more analysis on it",1,0
+1,2049,Megan Ruffle,Yes,Yes,Yes,Yes,Yes,No,No,NA,1,0
+1,2050,Amy Dighe,Yes,Yes,No,Yes,Yes,Yes,Yes,They do not adequately describe how they settled on the variables included in the prediction model I think. But otherwise sufficient. They loose value by combining contact with camels and cases but they say they had to do this due to small sample sizes.,1,0
+1,2058,Hailin Feng,Yes,Yes,Not Applicable,Not Applicable,Yes,No,No,NA,1,0
+1,2067,Victoria Cox,Yes,No,Yes,No,Yes,No,No,NA,1,0
+1,2073,Christian Morgenstern,No,No,No,Yes,Yes,Yes,No,NA,1,0
+1,2079,Christian Morgenstern,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,Not Applicable,NA,1,0
+1,2091,Tini Garske,Yes,No,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,2105,Christian Morgenstern,No,Yes,No,Not Applicable,Yes,Yes,Yes,NA,1,0
+1,2109,Thomas Rawson,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,No,"Should be low QA because this is an odd sort of study, and not immediately clear how all data is gathered.",1,0
+1,2116,Hailin Feng,No,No,Yes,No,Yes,Yes,No,The analysis assumed the weather effects on virus transmission were immediate which they set the exposure window equal to the MERS incubation periods. They didn't cite any literature to support it.,1,0
+1,2136,Thomas Rawson,No,No,No,Not Applicable,Yes,Yes,No,"The primary issue is that due to the retrospective chart-review design, the analysis could not account for potentially significant confounding variables, most notably the type of antiviral or supportive treatments patients received.",1,0
+1,2140,Thomas Rawson,Yes,Yes,Yes,Yes,Yes,Yes,No,NA,1,0
+1,2141,Thomas Rawson,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,Yes,NA,1,0
+1,2144,Gina Cuomo-Dannenburg,No,No,No,No,No,No,No,NA,1,0
+1,2185,Christian Morgenstern,Yes,No,No,Not Applicable,No,No,Not Applicable,Extraction to be continued....,1,0
+1,2186,Rhys Earl,Yes,No,Yes,Yes,Yes,No,No,NA,1,0
+1,2197,Gina Cuomo-Dannenburg,Yes,No,No,No,No,Yes,No,Comparison of the two outbreaks in KSA and SK. Unclear if they have adjusted for known outcome or not,1,0
+1,2212,Gemma Nedjati-Gilani,Yes,Yes,Yes,Yes,Yes,No,No,NA,1,0
+1,2214,Joseph Hicks,No,No,Yes,Yes,Yes,No,No,NA,1,0
+1,2215,Amy Dighe,Yes,Yes,Yes,Yes,Yes,No,No,The result is just an observed number of deaths among secondary cases. I would say the least robust aspect of this is that the paper doesn't describe how cases were deifned (though conextually we know that cases were laboratory confirmed in South Korea). No issues in the data are mentioned or discussed pertaining to CFR but this was not the papers main aim.,1,0
+1,14039,Gemma Nedjati-Gilani,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
