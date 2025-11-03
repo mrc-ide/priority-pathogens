@@ -620,6 +620,8 @@ generate_report <- function(df_list,
                                         decorator_char="-",
                                         header_length,
                                         newline=TRUE)
+    tnm_text <- ""
+
     if(length(id_mapping_rep_list[["cov_id_error_list"]])>0){
       cov_id_error_ids <- unlist(id_mapping_rep_list[["cov_id_error_list"]])
       cov_id_error_names <- names(cov_id_error_ids)
