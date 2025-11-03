@@ -467,9 +467,9 @@ check_raw_cols_mapping <- function(raw_df_list,
                                    raw_in_mapping=TRUE){
   if(!is.null(tables_to_stack)){
     colnames_vec <- unlist(
-      sapply(df_raw_list, function(df) unique(gsub("_\\d+", "", colnames(df)))))
+      sapply(raw_df_list, function(df) unique(gsub("_\\d+", "", colnames(df)))))
   }else{
-    colnames_vec <- unlist(sapply(df_raw_list, colnames))
+    colnames_vec <- unlist(sapply(raw_df_list, colnames))
   }
 
   input_col_vec <- mapping_df[["input_col"]]
