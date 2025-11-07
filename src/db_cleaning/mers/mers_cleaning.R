@@ -39,14 +39,21 @@ param_cleaning <- function(df){
   df[no_true_false] <- lapply(no_true_false,
                               function(col) df[[col]] != "No")
 
+  # Removed parameter_hd_to, parameter_hd_from since these were introduced in
+  # Redcap and somewhat duplicates capturing non standard human delays.
+  # The field other_delay_* is included in epireview, so combine columns and
+  # keep other_delay_*
   df <- df |>
-    mutate(parameter_hd_from = ifelse(parameter_hd_from %in% c("Other", ""),
-                                      other_delay_start, parameter_hd_from),
-           parameter_hd_to = ifelse(parameter_hd_to %in% c("Other", ""),
-                                    other_delay_end, parameter_hd_to),
-           parameter_value_type = ifelse(parameter_value_type=="Central - unspecified",
-                                         "Unspecified", parameter_value_type)
-           )
+    mutate(other_delay_start = ifelse(
+      parameter_hd_from=="Other" | is.na(parameter_hd_from),
+      other_delay_start, parameter_hd_from),
+      other_delay_end = ifelse(
+        parameter_hd_to=="Other" | is.na(parameter_hd_to),
+        other_delay_end, parameter_hd_to),
+      parameter_value_type = ifelse(parameter_value_type=="Central - unspecified",
+                                    "Unspecified", parameter_value_type)
+    ) |>
+    select(-c(parameter_hd_to, parameter_hd_from))
 
   df <- df |>
     mutate(parameter_upper_bound = ifelse(
