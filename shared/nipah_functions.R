@@ -114,9 +114,12 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 
 forest_plot <- function(df, label, color_column, lims, text_size = 11,
                         show_label = FALSE, custom_colours = NA,
-                        show.legend=NA) {
+                        segment_show.legend=NA, sort=FALSE) {
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
 
+  if (sort){
+    df <- df |> arrange(.data[[color_column]], central)
+  }
   df   <- df |> mutate(urefs = make.unique(refs)) |>
     mutate(urefs = factor(urefs, levels = rev(unique(urefs))))
   cats <- length(unique(df[[color_column]]))
