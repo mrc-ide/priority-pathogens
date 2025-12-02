@@ -37,6 +37,29 @@ uncert_to_varb <- function(df, map_to_from_vec, set_to_na_vec){
   return(df)
 }
 
+generate_new_id <- function(df, id_col_name, iterations){
+  # different seed used to generate ids, try `iterations` seeds and then abort.
+  # Assumes that this code has not been used `iterations` times already.
+  seed_start <- 1110
+  for (i in 1:iterations){
+    set.seed(seed_start + i)
+    new_row_id <- random_id(1)
+
+    if (!(new_row_id %in% df[[id_col_name]])){
+      break
+    }
+    else{
+      new_row_id <- ""
+    }
+  }
+
+  if (new_row_id == ""){
+    cli_abort(paste("Too many clashes, cannot allocate a new", id_col_name))
+  }
+
+  return(new_row_id)
+}
+
 article_cleaning <- function(df){
   # Update Not Applicable so that epireview assign_qa_score works
   df[df$covidence_id==207, "first_author_first_name"] <- "Khean Jin"
