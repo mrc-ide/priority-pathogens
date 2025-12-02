@@ -47,3 +47,7 @@ orderly_run("nipah_transmission", list(pathogen="NIPAH"))
 orderly_run("nipah_severity", list(pathogen="NIPAH"))
 
 orderly_run("nipah_delays", list(pathogen="NIPAH"))
+
+orderly_run("nipah_summary", list(pathogen="NIPAH"))
+
+orderly_run("nipah_supp_tables", list(pathogen="NIPAH"))
