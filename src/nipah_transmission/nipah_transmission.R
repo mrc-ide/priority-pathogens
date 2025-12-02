@@ -135,7 +135,7 @@ for (i in seq_along(qa_thresh_vec)){
                     expression(Evolutionary~Rate~(s/s/y ~10^{-4})),
                     "genome_site",
                     c(-0.01,15), custom_colours = custom_colour_genome_groups,
-                    show.legend=TRUE,
+                    show.legend=FALSE,
                     text_size=text_size) +
     scale_color_manual(values=custom_colour_genome_groups,
                        limits=names(custom_colour_genome_groups)) +
@@ -184,7 +184,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "Basic Reproduction Number",
                     "population_group",
                     c(0, 1.5), custom_colours = custom_colour_pop_groups,
-                    show.legend=TRUE, text_size=text_size) +
+                    show.legend=c(color=TRUE, shape=FALSE), text_size=text_size) +
     scale_color_manual(values=custom_colour_pop_groups,
                        limits=names(custom_colour_pop_groups)) +
     scale_fill_manual(values=custom_colour_pop_groups,
@@ -195,7 +195,7 @@ for (i in seq_along(qa_thresh_vec)){
            shape=guide_none())
 
   # Save plots
-  patchwork <- (p6 + p5 + p4 + p3 + p1 + p2) +
+  patchwork <- (p6 + p3 + p4 + p5 + p1 + p2) +
     plot_layout(ncol = 2, widths = c(1,1), guides = "collect")
 
   patchwork <- patchwork + plot_annotation(tag_levels = "A")
