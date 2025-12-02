@@ -232,16 +232,19 @@ param_cleaning <- function(df){
 
   # Convert to exp -4 for consistent scale across params - not strictly necessary
   # Currently in ^-3 scale
-  df[evolutionary_rate_2760_filter, "parameter_value"] <- df[
-    evolutionary_rate_2760_filter, "parameter_value"] * 10
-  df[evolutionary_rate_2760_filter, "parameter_uncertainty_lower_value"] <- df[
-    evolutionary_rate_2760_filter, "parameter_uncertainty_lower_value"] * 10
-  df[evolutionary_rate_2760_filter, "parameter_uncertainty_upper_value"] <- df[
-    evolutionary_rate_2760_filter, "parameter_uncertainty_upper_value"] * 10
-  df[evolutionary_rate_2760_filter, "parameter_lower_bound"] <- df[
-    evolutionary_rate_2760_filter, "parameter_lower_bound"] * 10
-  df[evolutionary_rate_2760_filter, "parameter_upper_bound"] <- df[
-    evolutionary_rate_2760_filter, "parameter_upper_bound"] * 10
+  df[evolutionary_rate_2760_filter, c(
+    "parameter_value",
+    "parameter_uncertainty_lower_value",
+    "parameter_uncertainty_upper_value",
+    "parameter_lower_bound",
+    "parameter_upper_bound"
+  )] <- df[evolutionary_rate_2760_filter, c(
+    "parameter_value",
+    "parameter_uncertainty_lower_value",
+    "parameter_uncertainty_upper_value",
+    "parameter_lower_bound",
+    "parameter_upper_bound"
+  )] * 10
 
   df[evolutionary_rate_2760_filter, "exponent"] <- -4
   df[evolutionary_rate_2760_filter, "genome_site"] <- "Nucleocapsid"
