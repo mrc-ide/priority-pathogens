@@ -120,8 +120,16 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   if (sort){
     df <- df |> arrange(.data[[color_column]], central)
   }
+
+  # Assume that if a single type was displayed it would be converted to a
+  # lower + upper value
   df   <- df |> mutate(urefs = make.unique(refs)) |>
-    mutate(urefs = factor(urefs, levels = rev(unique(urefs))))
+    mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
+           uncertainty_present = (
+             !(is.na(parameter_uncertainty_lower_value) &
+                 is.na(parameter_uncertainty_upper_value)))
+           )
+
   cats <- length(unique(df[[color_column]]))
 
   gg <- ggplot(df) +
@@ -130,10 +138,17 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                  size = 3, alpha = 0.65, show.legend = show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       y = urefs),
-                  width = 0.15, lwd=0.5, color = "black", alpha = 1) +
-    geom_errorbar(aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                  width = 0.25, lwd=0.5, color = "black", alpha = 1) +
+    geom_errorbar(data= df |> filter(!uncertainty_present),
+                  aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
                       y = urefs),
-                  width = 0.15, lwd=0.5, color = "black", alpha = 1, linetype="dashed") +
+                  width = 0.25, lwd=0.5, color = "black", alpha = 1, linetype="dashed",
+                  lineend = "square") +
+    geom_errorbar(data= df |> filter(uncertainty_present),
+                  aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                      y = urefs),
+                  width = 0.25, lwd=0.5, color = "black", alpha = 1, linetype="dashed",
+                  lineend = "square", position = position_nudge(y=-0.25)) +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_value_type, fill = .data[[color_column]]),
                size = 3, stroke = 1,
