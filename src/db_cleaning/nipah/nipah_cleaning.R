@@ -43,7 +43,7 @@ generate_new_id <- function(df, id_col_name, iterations){
   seed_start <- 1110
   for (i in 1:iterations){
     set.seed(seed_start + i)
-    new_row_id <- random_id(1)
+    new_row_id <- ids::random_id(1)
 
     if (!(new_row_id %in% df[[id_col_name]])){
       break
