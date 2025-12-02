@@ -64,7 +64,7 @@ d1 <- d1 |> arrange(genome_site,-central)
 d2 <- d2 |>
   mutate(across(
     c(parameter_upper_bound, parameter_lower_bound),
-    ~ ifelse(covidence_id %in% c(2752, 2760), NA, .))
+    ~ ifelse(covidence_id == 2760, NA, .))
     )
 
 d2 <- d2 |> arrange(genome_site,-central)
