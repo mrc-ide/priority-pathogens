@@ -111,7 +111,6 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 }
 
 # function to produce forest plot for given dataframe
-
 forest_plot <- function(df, label, color_column, lims, text_size = 11,
                         show_label = FALSE, custom_colours = NA,
                         segment_show.legend=NA, sort=FALSE) {
@@ -135,7 +134,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   gg <- ggplot(df) +
     geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
                      y = urefs, yend = urefs, color = .data[[color_column]]),
-                 size = 3, alpha = 0.65, show.legend = show.legend) +
+                 linewidth=3, alpha = 0.65, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       y = urefs),
                   width = 0.25, lwd=0.5, color = "black", alpha = 1) +
@@ -151,10 +150,12 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                   lineend = "square", position = position_nudge(y=-0.25)) +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_value_type, fill = .data[[color_column]]),
-               size = 3, stroke = 1,
-               color = "black", alpha = 1)
+               size = 3, stroke = 1, color = "black", alpha = 1)
 
-  if (all(df$parameter_class=="Reproduction number")) {gg <- gg + geom_vline(xintercept = 1, linetype = "dashed", colour = "dark grey")}
+  if (all(df$parameter_class=="Reproduction number")) {
+    gg <- gg +
+      geom_vline(xintercept = 1,linetype = "dashed", colour = "dark grey")
+    }
 
   if(sum(!is.na(custom_colours)))
   {
@@ -170,7 +171,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
       scale_color_manual(values = custom_colours) +
       scale_fill_manual(values = custom_colours) +
       theme_minimal() +
-      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))
   } else {
     gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
@@ -183,12 +184,12 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
       theme_minimal() +
-      theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))
   }
 
   if (cats == 1) {
-    gg <- gg + guides(fill = "none", color = FALSE, shape = guide_legend(title = NULL,order = 1))
+    gg <- gg + guides(fill = "none", color="none", shape = guide_legend(title = NULL,order = 1))
   } else {
     gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
 
@@ -646,7 +647,7 @@ pdf_generic <- function(meta, model, dists, lims, label) {
     scale_y_continuous(limits = c(0, 0.151), expand = c(0, 0)) +
     labs(x = label, y = "Probability Density") +
     theme_minimal() +
-    theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+    theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
           legend.position = c(1,1), legend.justification = c(1,1), legend.box.just = "left") +
     guides(color = "none", fill = guide_legend(title = NULL,order = 1))
 
@@ -655,7 +656,7 @@ pdf_generic <- function(meta, model, dists, lims, label) {
 
 #function to create latex-readable csv files for tables
 
-insert_blank_rows <- function(dataframe, column) {
+insert_blank_rows <- function(dataframe, column){
   tlabels <- as.character(unique(dataframe[[column]]))
 
   df_split <- split(dataframe, dataframe[[column]])
