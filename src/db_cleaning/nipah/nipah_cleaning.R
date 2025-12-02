@@ -230,15 +230,24 @@ param_cleaning <- function(df){
   evolutionary_rate_2760_filter <- ((df$covidence_id == 2760) &
                                       (df$parameter_type=="Mutations - substitution rate"))
 
-  # Parameter bounds for the below will be incorrect
-  # Convert to exp -4
-  df[evolutionary_rate_2760_filter, "parameter_value"] <- 11
-  df[evolutionary_rate_2760_filter, "parameter_uncertainty_lower_value"] <- 7.37
-  df[evolutionary_rate_2760_filter, "parameter_uncertainty_upper_value"] <- 15
+  # Convert to exp -4 for consistent scale across params - not strictly necessary
+  # Currently in ^-3 scale
+  df[evolutionary_rate_2760_filter, "parameter_value"] <- df[
+    evolutionary_rate_2760_filter, "parameter_value"] * 10
+  df[evolutionary_rate_2760_filter, "parameter_uncertainty_lower_value"] <- df[
+    evolutionary_rate_2760_filter, "parameter_uncertainty_lower_value"] * 10
+  df[evolutionary_rate_2760_filter, "parameter_uncertainty_upper_value"] <- df[
+    evolutionary_rate_2760_filter, "parameter_uncertainty_upper_value"] * 10
+  df[evolutionary_rate_2760_filter, "parameter_lower_bound"] <- df[
+    evolutionary_rate_2760_filter, "parameter_lower_bound"] * 10
+  df[evolutionary_rate_2760_filter, "parameter_upper_bound"] <- df[
+    evolutionary_rate_2760_filter, "parameter_upper_bound"] * 10
+
   df[evolutionary_rate_2760_filter, "exponent"] <- -4
   df[evolutionary_rate_2760_filter, "genome_site"] <- "Nucleocapsid"
 
   # CovID 3058 substitution rate
+  # Listed as actual values i.e. 0.00029 and 0.0006
   evolutionary_rate_3058_filter <- ((df$covidence_id == 3058) &
                                       (df$parameter_type=="Mutations - substitution rate"))
   df[evolutionary_rate_3058_filter, "parameter_uncertainty_lower_value"] <- 2.9
