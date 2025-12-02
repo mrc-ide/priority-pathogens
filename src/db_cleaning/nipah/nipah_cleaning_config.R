@@ -6,10 +6,8 @@ tables <- c("articles", "outbreaks", "models", "params")
 # *------------------------ Update column types action ------------------------*
 # Update column types; the list element names are column names
 # Columns which are completely NA will default to logical
-# (e.g. exponent 2 for Nipah)
 type_map_list <- list("cfr_ifr_numerator" = as.integer,
-                      "population_study_start_day" = as.numeric,
-                      "exponent_2"=as.numeric)
+                      "population_study_start_day" = as.numeric)
 
 # *---------------------------- Update punctuation ----------------------------*
 # Replace commas with semi-colons
