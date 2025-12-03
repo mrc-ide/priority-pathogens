@@ -57,9 +57,8 @@ models <- dfs$models
 # Last ID possibly to remove?
 # Foodborne (captured as Vector/Animal to human)
 # "134c4f546d4fe709e5752e14eba11272" foodborne but already has animal-to-human
-foodbourne_trans_filter <- (
-  models$model_data_id %in% c("592197401710708859c1641f18a31489",
-                              "76c2f49565f95ba18aa9a92a544b4497"))
+foodbourne_trans_filter <- (models$access_model_id %in% c("042_001", "041_001"))
+
 
 models[foodbourne_trans_filter, "transmission_route"] <- str_replace_all(
   models[foodbourne_trans_filter, ][["transmission_route"]],
@@ -68,9 +67,8 @@ models[foodbourne_trans_filter, "transmission_route"] <- str_replace_all(
 
 # From notes transmission route, foodborne and contact with dead cases
 # Currently listed as Human to human (direct contact),Vector/Animal to human
-# Model data id: 619c5766134ee60cda4a40178628f505
+branching_process_filter <- models$access_model_id == "133_001"
 
-branching_process_filter <- models$model_data_id == "8924cda7694600756535db9ff817171a"
 models[branching_process_filter,"transmission_route"] <- "Human to human (direct contact)"
 
 mods <- models |>
@@ -95,7 +93,8 @@ select(model_type,
        model_readme,
        model_notes,
        refs,
-       id)
+       id,
+       access_model_id)
 
 # Replace all commas with semicolons
 mods <- mods |>
@@ -209,6 +208,7 @@ create_cleaning_table(mods, "cleaning_models.csv", articles)
 
 mods <- mods |>
   select(-c(id,
+            access_model_id,
             model_language,
             model_readme,
             code_available,
@@ -307,7 +307,8 @@ outs <- outbreaks |>
          refs,
          sdate,
          edate,
-         id)
+         id,
+         outbreak_id)
 
 # Replace all commas with semicolons
 outs <- outs |>
@@ -345,7 +346,8 @@ outs <- outs |> arrange(
 create_cleaning_table(outs, "cleaning_outbreaks.csv", articles)
 
 outs <- outs |>
-  select(-c(id, cases_asymptomatic, asymptomatic_transmission, superscript,
+  select(-c(id, outbreak_id,
+            cases_asymptomatic, asymptomatic_transmission, superscript,
             sdate, edate))
 
 # Latex table
@@ -671,7 +673,8 @@ trns_params <- parameters |>
          population_group,
          refs,
          central,
-         id)
+         id,
+         access_param_id)
 
 trns_params_pt_replacements <- c(
   "Reproduction number \\(Basic R0\\)" = "Reproduction number R0",
@@ -705,7 +708,7 @@ trns_params <- trns_params |>
 create_cleaning_table(trns_params, "cleaning_transmission.csv", articles)
 
 trns_params <- trns_params |>
-  select(-id)
+  select(-c(id, access_param_id))
 
 # Latex table
 trns_params <- insert_blank_rows(trns_params,"parameter_type")
@@ -729,7 +732,8 @@ hdel_params <- parameters |>
          method_disaggregated_by,
          population_sample_size,
          population_country, dates,
-         population_sample_type, population_group, refs, central, id)
+         population_sample_type, population_group, refs, central, id,
+         access_param_id)
 
 hdel_params$parameter_type <- sub("^.* - ", "", hdel_params$parameter_type)
 hdel_params$parameter_type <- sub(">", " - ", hdel_params$parameter_type)
@@ -818,7 +822,7 @@ hdel_params <- hdel_params |>
 create_cleaning_table(hdel_params, "cleaning_delays.csv", articles)
 
 hdel_params <- hdel_params |>
-  select(-id)
+  select(-c(id, access_param_id))
 
 # Latex table
 hdel_params <- insert_blank_rows(hdel_params, "parameter_type")
@@ -846,7 +850,7 @@ cfrs_params <- parameters |>
          cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
          population_sample_type, population_group,
-         parameter_notes, parameter_data_id, refs, central, id)
+         parameter_notes, refs, central, id, access_param_id)
 
 cfrs_params[, c("parameter_value", "unc_type")] <- sapply(
   c("parameter_value", "unc_type"),
@@ -891,7 +895,7 @@ cfrs_params <- cfrs_params |> select(-c(parameter_2_value,
 create_cleaning_table(cfrs_params, "cleaning_severity.csv", articles)
 
 cfrs_params <- cfrs_params |>
-  select(-c(parameter_notes, parameter_data_id, central, id))
+  select(-c(parameter_notes, id, access_param_id, central))
 
 # Latex table
 cfrs_params <- insert_blank_rows(cfrs_params, "population_country")
@@ -914,7 +918,7 @@ sero_params <- parameters |>
          parameter_type,cfr_ifr_numerator,cfr_ifr_denominator,
          population_country, dates,
          population_sample_type, population_group,
-         parameter_notes, parameter_data_id, refs, central, id)
+         parameter_notes, refs, central, id, access_param_id)
 
 sero_params[, c("parameter_value", "unc_type")] <- sapply(
   c("parameter_value", "unc_type"),
@@ -957,7 +961,7 @@ sero_params <- sero_params |>
 create_cleaning_table(sero_params, "cleaning_seroprevalence.csv", articles)
 
 sero_params <- sero_params |>
-  select(-c(parameter_notes, parameter_data_id, central, id))
+  select(-c(parameter_notes, id, access_param_id, central))
 
 # Latex table
 sero_params <- insert_blank_rows(sero_params,"population_country")
@@ -979,7 +983,7 @@ risk_params <- parameters |>
          riskfactor_adjusted, population_sample_size,
          population_country, dates,
          population_sample_type, population_group,
-         parameter_notes, parameter_data_id, refs, id)
+         parameter_notes, refs, id, access_param_id)
 
 risk_params |> count(riskfactor_outcome)
 
@@ -1031,7 +1035,7 @@ risk_params$riskfactor_adjusted <- as.character(risk_params$riskfactor_adjusted)
 create_cleaning_table(risk_params, "cleaning_riskfactors.csv", articles)
 
 risk_params <- risk_params |>
-  select(-c(parameter_notes, parameter_data_id, id))
+  select(-c(parameter_notes, id, access_param_id))
 
 # Latex table
 risk_params <- insert_blank_rows(risk_params,"riskfactor_outcome")
