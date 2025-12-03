@@ -16,8 +16,35 @@ orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
 orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
 source("nipah_functions.R")
 
-# orderly_artefact(description="Nipah delay figures",
-#                  c("figure_5SI_incubation.pdf"))
+orderly_artefact(description="Nipah delay figures",
+                 c("figure_5_delays.pdf",
+                   "figure_5_delays.png",
+                   "figure_5SI_allqa_delays.pdf",
+                   "figure_5SI_allqa_delays.png",
+                   "all/figure_5SI_allqa_admis_outcome_pt.pdf",
+                   "all/figure_5SI_allqa_incubation_pc.pdf",
+                   "all/figure_5SI_allqa_incubation_pg.pdf",
+                   "all/figure_5SI_allqa_incubation_pst.pdf",
+                   "all/figure_5SI_allqa_onset_admis_outcome_pt.pdf",
+                   "all/figure_5SI_allqa_onset_admis_pc.pdf",
+                   "all/figure_5SI_allqa_onset_admis_pg.pdf",
+                   "all/figure_5SI_allqa_onset_admis_pst.pdf",
+                   "all/figure_5SI_allqa_onset_death_pc.pdf",
+                   "all/figure_5SI_allqa_onset_death_pg.pdf",
+                   "all/figure_5SI_allqa_onset_death_pst.pdf",
+                   "all/figure_5SI_allqa_onset_outcome_pt.pdf",
+                   "qa/figure_5_admis_outcome_pt.pdf",
+                   "qa/figure_5_incubation_pc.pdf",
+                   "qa/figure_5_incubation_pg.pdf",
+                   "qa/figure_5_incubation_pst.pdf",
+                   "qa/figure_5_onset_admis_outcome_pt.pdf",
+                   "qa/figure_5_onset_admis_pc.pdf",
+                   "qa/figure_5_onset_admis_pg.pdf",
+                   "qa/figure_5_onset_admis_pst.pdf",
+                   "qa/figure_5_onset_death_pc.pdf",
+                   "qa/figure_5_onset_death_pg.pdf",
+                   "qa/figure_5_onset_death_pst.pdf",
+                   "qa/figure_5_onset_outcome_pt.pdf"))
 
 # *------------------------------ Data curation -------------------------------*
 articles   <- read_csv("articles.csv")
@@ -45,16 +72,16 @@ parameters |>
   write_csv("delay_temp_check.csv")
 
 # Symptom Onset/Fever -> Recovery/Death
-parameters[parameters$parameter_data_id=="9cc8ddde50fc49e8516e5fd84d407a60",
+parameters[parameters$access_param_id=="121_003",
            "parameter_type"] <- "Human delay - symptom onset>recovery/death"
 
-severe_illness_ids <- c("71ba7265b159faa21d40066c0c721c17",
-                        "7d53b2303ad59179430204465c7f5e40",
-                        "087df63276dc74e9489b4fec1c6f8173",
-                        "8de15b956e5a565cac8795de6a275c3e",
-                        "5fb4fa900bd11eef3aa4b9c5cb0fb6dc",
-                        "dfbd013eac450fa86af2398ac5fa2593")
-parameters[parameters$parameter_data_id%in% severe_illness_ids,
+severe_illness_ids <- c("046_001",
+                        "040_002",
+                        "040_004",
+                        "040_005",
+                        "033_007",
+                        "033_008")
+parameters[parameters$access_param_id%in% severe_illness_ids,
            "parameter_type"] <- "Human delay - symptom onset>severe illness"
 
 parameters <- parameters |>
@@ -200,7 +227,7 @@ lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 text_size <- 28
 
 qa_thresh_vec <- c("all"=-1, "qa"=0.5)
-labels <- c("SI_allqa_", "")
+labels <- c("SI_allqa", "")
 colour_columns <- c("parameter_type",
                     "population_group",
                     "population_country",
@@ -318,10 +345,10 @@ for (i in seq_along(qa_thresh_vec)){
 
     # Sim is duplicated
     sim_duplicated_row <- d4_plot |>
-      filter(parameter_data_id=="317c065a5846f6eac7b2548ee887bf60")
+      filter(access_param_id=="171_002")
 
     d4_plot <- d4_plot |>
-      filter(parameter_data_id!="317c065a5846f6eac7b2548ee887bf60")
+      filter(access_param_id!="171_002")
 
     p4_oo <- forest_plot(
       d4_plot |> filter(qa_score>qa_threshold),
