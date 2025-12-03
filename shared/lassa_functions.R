@@ -510,7 +510,7 @@ metaprop_wrap <- function(dataframe, subgroup,
            overall = plot_pooled, pooled.events = TRUE,
            print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
            study.results = plot_study,
-           sortvar = TE,q
+           sortvar = TE,
            digits = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            col.subgroup = "black", col.inside = "black", col.predict = 'purple',
