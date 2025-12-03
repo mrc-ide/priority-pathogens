@@ -90,7 +90,8 @@ model_cleaning <- function(df){
   # Captured as Airborne or close contact,Human to human (direct contact),
   # Vector/Animal to human, which is incorrect based on the paper
   # Spillover risk mapping - debatable whether to include?
-  air_trans_filter <- df$model_data_id == "134c4f546d4fe709e5752e14eba11272"
+  air_trans_filter <- df$access_model_id == "137_001"
+
   df[air_trans_filter,"transmission_route"] <- "Vector/Animal to human,Unspecified"
 
 
@@ -174,32 +175,34 @@ param_cleaning <- function(df){
 
   # Risk factors:
   # CovID: issing risk_factor_name 345
-  rf_name_345_filter <- df$parameter_data_id=="4fe0bcac648be47c0c8d0e5d3b96d34e"
+  rf_name_345_filter <- df$access_param_id=="025_008"
   df[rf_name_345_filter, "riskfactor_name"] <- "Other"
 
   # CovID 906 missing risk_factor_outcome
-  rf_out_906_filter <- df$parameter_data_id=="d5ec26b742179d129b2756258cad67af"
+  rf_out_906_filter <- df$access_param_id=="093_007"
   df[rf_out_906_filter, "riskfactor_outcome"] <- "Infection"
 
-  rf_906_new_row_filter <- df$parameter_data_id=="3b58c6409e7bdda9c743dbd19584e249"
+  # Missing a risk factor
+  rf_906_new_row_filter <- df$access_param_id=="093_005"
   new_906_row <- df[rf_906_new_row_filter, ]
 
   new_906_row$parameter_data_id  <- generate_new_id(df, "parameter_data_id", 10)
+  # No corresponding redcap entry so make an ID
+  new_906_row$access_param_id  <- "093_3141"
   new_906_row$riskfactor_name <- "Environmental;Other"
   new_906_row$riskfactor_significant <- "Not significant"
   df <- rbind(df, new_906_row)
 
-  # Missing a risk factor
-
   # 1150 - 101 CFR - data entry mistake
-  cfr_101_1150_filter <-df$parameter_data_id  %in% c("905153f64953884bd05cd0f5de7552e6",
-                                                     "ac8209ed2df561b8c92f0f7243630bff",
-                                                     "66a2b5ea97e02365e39eb3b47f730957")
+  cfr_101_1150_filter <-df$access_param_id  %in% c("109_013",
+                                                   "109_016",
+                                                   "109_012")
   df[cfr_101_1150_filter, "parameter_value"] <- 100
 
   # Parameter_statistical approach error (currently Case study [Oropouche ONLY])
-  df[df$parameter_data_id=="905153f64953884bd05cd0f5de7552e6",
+  df[df$access_param_id=="109_013",
      "parameter_statistical_approach"] <- "Unspecified"
+
 
   # TODO: Derived rows such as parameter_bounds should be created after cleaning
   # Transmission
@@ -291,8 +294,9 @@ param_cleaning <- function(df){
   delay_filter <- grepl("Human delay", df$parameter_type)
 
   # CovID: 271: parameter_2_value_type is blank
-  df[df$parameter_data_id=="ece79cd53c0bed654a74fdf4b280b8ef",
+  df[df$access_param_id=="027_002",
      "parameter_2_value_type"] <- "Range"
+
   # Only variability
   df[df$covidence_id==271 & delay_filter, "parameter_value_type"] <- NA
 
@@ -316,7 +320,7 @@ param_cleaning <- function(df){
       "explicitly stated")
   )
 
-  pair_sing_varb <- df$parameter_data_id=="3f22cc21917075a5f1153c9a8563c57f"
+  pair_sing_varb <- df$access_param_id=="040_001"
 
   df[pair_sing_varb, "parameter_notes"] <- paste0(
     df[pair_sing_varb, "parameter_notes"], ";",
@@ -327,22 +331,16 @@ param_cleaning <- function(df){
   # means but not explicitly stated and so extracted as reported.
   df[pair_sing_varb, "parameter_value_type"] <- "Mean"
 
-  other_delay_vent_274_filter <- (
-    df$parameter_data_id=="ab8bc967fe110c5a76b4e6fd0059da71")
+  other_delay_vent_274_filter <- df$access_param_id=="040_003"
+
   df[other_delay_vent_274_filter, "paramater_value_type"] <- "Mean"
 
 
   # 274: Other delays as reported in paper, but paper has a typo
-  other_delay_lymp_274_filter <- (
-    df$parameter_data_id=="087df63276dc74e9489b4fec1c6f8173")
+  other_delay_lymp_274_filter <- df$access_param_id=="040_004"
   df[other_delay_lymp_274_filter, "other_delay_end"] <- "Lymphopenia"
 
-  other_delay_thro_274_filter <- (
-    df$parameter_data_id=="8de15b956e5a565cac8795de6a275c3e")
-  df[other_delay_thro_274_filter, "other_delay_end"] <- "Thrombocytopenia"
-
-  other_delay_thro_274_filter <- (
-    df$parameter_data_id=="8de15b956e5a565cac8795de6a275c3e")
+  other_delay_thro_274_filter <- df$access_param_id=="040_005"
   df[other_delay_thro_274_filter, "other_delay_end"] <- "Thrombocytopenia"
 
   # CovID: 207, Nadir delay filter
@@ -377,14 +375,16 @@ param_cleaning <- function(df){
   df[delay_956_filter, "parameter_2_value_type"] <- "Range"
 
   # CovID 167 so_d row:
-  so_d_167_filter <- df$parameter_data_id == "04e6e787b667c1eca4ff110bbb274a82"
+  so_d_167_filter <- df$access_param_id == "047_003"
+
   df[so_d_167_filter, "parameter_2_value_type"] <- df[so_d_167_filter, "parameter_uncertainty_type"]
   df[so_d_167_filter, "parameter_uncertainty_type"] <- NA
 
   # CovID 275 so_d row:
   # Missing parameter_2_value_type checked from paper
   # Upper bound likely 32?
-  so_d_275_filter <- df$parameter_data_id == "79ec019c7a249cf86a85a17cd1e12500"
+  so_d_275_filter <- df$access_param_id == "054_002"
+
   df[so_d_275_filter, "parameter_2_value_type"] <- "Range"
 
   # CovID 833 so_d row:
@@ -411,7 +411,8 @@ param_cleaning <- function(df){
                                            PAIRED_SET_TO_NA_VEC)
 
   # Duration between neurological episodes
-  delay_345_dne_filter <- df$parameter_data_id == "1048c95b02719626d563e887d51e690b"
+  delay_345_dne_filter <- df$access_param_id == "025_001"
+
   df[delay_345_dne_filter, "parameter_2_lower_bound"] <- 9
   df[delay_345_dne_filter, "parameter_2_upper_bound"] <- 365
   df[delay_345_dne_filter, "parameter_2_unit"] <- "days"
@@ -420,10 +421,12 @@ param_cleaning <- function(df){
     "Variability upper bound reported as 12 months in the paper.")
 
   # Time until first neurological episode
-  delay_345_fne_filter <- df$parameter_data_id == "31eee995f6fd838e73fd39f05780f627"
+  delay_345_fne_filter <- df$access_param_id == "025_002"
+
   df[delay_345_fne_filter, "parameter_2_lower_bound"] <- 1
 
-  problem_row_851_filter <- df$parameter_data_id == "4219e8649aeb55c796dc05fa8c7accc2"
+  problem_row_851_filter <- df$access_param_id == "033_005"
+
   delay_851_filter <- (df$covidence_id==851 &
                          delay_filter &
                          !problem_row_851_filter)
@@ -431,8 +434,6 @@ param_cleaning <- function(df){
                                            PAIRED_MAP_FROM_TO_VEC,
                                            PAIRED_SET_TO_NA_VEC)
   # SD removed - favour SD?
-  problem_row_851_filter <- df$parameter_data_id == "4219e8649aeb55c796dc05fa8c7accc2"
-
   # To remove SD: (Also rmeove problem row from filter above)
   # df[problem_row_851_filter,
   #    c("parameter_uncertainty_single_value_type",
@@ -455,8 +456,7 @@ param_cleaning <- function(df){
   # CovID: 271, param data ID 048b23e7de13b62f87c16b04a4887711
   # Incubation period parameter_value_type set to unspecified by cleaning code
   # but should be NA; is this allowed?
-
-  p2_unc_var_167_filter <- (df$parameter_data_id=="a594f96baf779b62d63430eaadfb8d58")
+  p2_unc_var_167_filter <- df$access_param_id=="044_008"
 
   # Inverse and exponent are blank
   df[p2_unc_var_167_filter, ] <- uncert_to_varb(
@@ -471,7 +471,7 @@ param_cleaning <- function(df){
       "parameter_2_uncertainty_lower_value",
       "parameter_2_uncertainty_upper_value"))
 
-  unc_p2_var_167_filter <- (df$parameter_data_id=="858c08fd00f061d9845d1ea5d3b836a3")
+  unc_p2_var_167_filter <- (df$access_param_id=="047_003")
 
   df[unc_p2_var_167_filter, ] <- uncert_to_varb(
     df[unc_p2_var_167_filter, ],
@@ -570,7 +570,8 @@ param_cleaning <- function(df){
   df[delay_4365_filter, "parameter_2_value_type"] <- "Range"
 
   # Only variablity
-  delay_4365_varb_only_filter<- df$parameter_data_id=="d40430087d526cd7ac3fe1b26e78eb05"
+  delay_4365_varb_only_filter<- df$access_param_id=="171_005"
+
   df[delay_4365_varb_only_filter, "parameter_unit"] <- NA
   df[delay_4365_varb_only_filter, "parameter_value_type"] <- NA
   df[delay_4365_varb_only_filter, "parameter_statistical_approach"] <- NA
@@ -598,8 +599,8 @@ param_cleaning <- function(df){
   df[delay_4358_filter, "parameter_2_value_type"] <- "Range"
 
   # CovID: 292
-  delay_292_onset_test_filter <- (
-    df$parameter_data_id=="e997fb68799ea08e3b31281d5b71c19d")
+  delay_292_onset_test_filter <- df$access_param_id=="002_003"
+
   df[delay_292_onset_test_filter, ] <- uncert_to_varb(
     df[delay_292_onset_test_filter, ],
     c("parameter_2_lower_bound"="parameter_lower_bound",
@@ -619,7 +620,7 @@ param_cleaning <- function(df){
   df[delay_292_onset_test_filter, "parameter_2_value_type"] <- "Range"
 
   # CovID: 976 - range is empirical
-  so_d_delay_976_filter <- df$parameter_data_id=="519adf0939501de6e05bc75c42df4477"
+  so_d_delay_976_filter <- df$access_param_id=="167_002"
 
   df[so_d_delay_976_filter, ] <- uncert_to_varb(
     df[so_d_delay_976_filter, ],
@@ -656,20 +657,19 @@ param_cleaning <- function(df){
   # Assumes that +- is Other uncertainty; since it's not estimated it must be
   # variability? Also Parameter_2_value_type is blank but a range provided for
   # variability
-  df[df$parameter_data_id=="5c96779d606434a611beb693d0d6c2c1",
-     "parameter_2_value_type"] <- "Range (paired)"
+  df[df$access_param_id=="173_002","parameter_2_value_type"] <- "Range (paired)"
+
 
   # CovID 3065:
   # "Average duration of hospital stay for the deceased" => admission to death
   # (not time in case as exactracted)
-  df[df$parameter_data_id=="69b9c2b889184a964beefb16f39c0b57",
+  df[df$access_param_id=="173_003",
      "parameter_type"] <- "Human delay - admission to care>death"
-  df[df$parameter_data_id=="69b9c2b889184a964beefb16f39c0b57",
-     "parameter_value_type"] <- "Mean"
+  df[df$access_param_id=="173_003", "parameter_value_type"] <- "Mean"
 
   # CovID: 960, Human delay - symptom onset>death,
   # 4c8cb9c84f098338aedd1800f75b7e3f
-  so_d_delay_960_filter <- df$parameter_data_id=="4c8cb9c84f098338aedd1800f75b7e3f"
+  so_d_delay_960_filter <- df$access_param_id=="166_002"
 
   df[so_d_delay_960_filter, "parameter_value"] <- df[so_d_delay_960_filter,
                                                      "exponent"]
@@ -690,14 +690,12 @@ param_cleaning <- function(df){
   df[so_d_delay_960_filter, "parameter_2_value_type"] <- "Range"
 
   # R0 NA - no units CovID: 1030, 3679, 833
-  df[df$parameter_data_id %in% c("7bbba6a459e8e222d8bb8665b99fcd0f",
-                                 "282ad8bba50737c60d12d597a2531318",
-                                 "88e905b58514400524f8f20f8268dc81"),
+  df[df$access_param_id %in% c("101_001", "095_001","030_001"),
      "parameter_unit"] <- "No units"
 
   # CovID 906, missing unit
-  df[df$parameter_data_id=="ba6b69d8ccc55f225485449f11818097",
-     "parameter_unit"] <- "Percentage (%)"
+  df[df$access_param_id=="093_003", "parameter_unit"] <- "Percentage (%)"
+
 
   # Labels for IQR and Range are different for variability so copying from
   # uncertainty results in different labels
