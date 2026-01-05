@@ -87,9 +87,11 @@ if (oubreak_table_name %in% tables){
   outbreaks_rds_filename <- rds_inputs[[oubreak_table_name]]
   outbreak_df <- readRDS(outbreaks_rds_filename)
   outbreak_df <- filter_cols(outbreak_df,
-                             c(article_filter_cols, "outbreak_id"))
+                             article_filter_cols)
   outbreak_df <- relocate_and_arrange(outbreak_df,
-                                      c(base_relocate_cols, "outbreak_data_id"),
+                                      c(base_relocate_cols,
+                                        "outbreak_id",
+                                        "outbreak_data_id"),
                                       order_col)
 
   outbreak_df <- outbreak_cleaning(outbreak_df)
@@ -105,9 +107,12 @@ if (model_table_name %in% tables){
   model_df <- readRDS(models_rds_filename)
 
   model_df <- filter_cols(model_df,
-                          c(article_filter_cols, "access_model_id"))
+                          article_filter_cols)
+
   model_df <- relocate_and_arrange(model_df,
-                                   c(base_relocate_cols, "model_data_id"),
+                                   c(base_relocate_cols,
+                                     "access_model_id",
+                                     "model_data_id"),
                                    order_col)
 
   model_df <- model_cleaning(model_df)
@@ -171,10 +176,12 @@ if (param_table_name %in% tables){
 
 # *--------------------------- Filter and relocate ----------------------------*
   param_df <- filter_cols(param_df,
-                          c(article_filter_cols, "access_param_id"))
+                          article_filter_cols)
   param_df <- relocate_and_arrange(
     param_df,
-    c(base_relocate_cols, "parameter_data_id"),
+    c(base_relocate_cols,
+      "access_param_id",
+      "parameter_data_id"),
     order_col)
 
   param_df <- param_cleaning(param_df)
