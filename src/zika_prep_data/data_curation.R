@@ -5,7 +5,7 @@
 
 data_curation_zika <- function(articles, outbreaks, models, parameters, plotting, switch_first_surname=FALSE) {
 
-     # this is due to legacy access database issue
+  # this is due to legacy access database issue
   if(switch_first_surname){
     print('switched')
     articles <- articles %>% rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
@@ -35,8 +35,8 @@ data_curation_zika <- function(articles, outbreaks, models, parameters, plotting
   #                   "parameter_2_value", "parameter_2_lower_bound", "parameter_2_upper_bound",
   #                   "parameter_2_uncertainty_lower_value", "parameter_2_uncertainty_upper_value")
   # } else {
-    var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound",
-                    "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value")
+  var_select <- c("parameter_value", "parameter_lower_bound", "parameter_upper_bound",
+                  "parameter_uncertainty_lower_value", "parameter_uncertainty_upper_value")
   # }
 
   param4plot <- parameters %>%
@@ -44,7 +44,7 @@ data_curation_zika <- function(articles, outbreaks, models, parameters, plotting
               list(~ ifelse(inverse_param, round(1/.x, 2), .x))) %>%
     # account for different units for inverse parameters
     mutate(parameter_unit = ifelse(parameter_unit == 'Per week','Weeks',
-                                      ifelse(parameter_unit == 'Per day','Days', parameter_unit))) %>%
+                                   ifelse(parameter_unit == 'Per day','Days', parameter_unit))) %>%
     mutate(parameter_type = str_replace_all(parameter_type, ' (inverse parameter)', ''))%>% # we changed all inverse params to not be inverse so shouldn't be labled that way
     mutate_at(vars(all_of(var_select)),
               list(~ .x * 10^exponent)) %>%
