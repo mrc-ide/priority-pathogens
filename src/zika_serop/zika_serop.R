@@ -307,8 +307,8 @@ central_africa <- ggplot() +
 central_africa <- central_africa+
   labs(fill = NULL, col = NULL) +
   theme(legend.position = c(0.2,0.3),
-        legend.text = element_text(size = 6),
-        legend.title = element_text(size = 6))+
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12))+
   # theme(legend.position = "none")+
         # legend.background = element_rect(fill = "transparent"))+
   #theme(legend.position = c(0.1,0.2))+
@@ -334,9 +334,22 @@ central_asia <- central_asia +
     axis.title = element_blank()      # Remove axis titles
   )
 
+# coord <- coord_sf(expand = FALSE)
+
+# south_america <- south_america + coord
+# central_africa <- central_africa + coord
+# central_asia <- central_asia + coord
+
+final_plot <- ggarrange(
+  south_america,
+  central_africa,
+  central_asia,
+  ncol = 3,
+  align = "hv"
+)
 
 # Final multipanel plot
-final_plot <- wrap_plots(south_america, central_africa, central_asia, ncol = 3)
+final_plot <- ggarrange(south_america, central_africa, central_asia, ncol = 3)
 # +
 #   plot_layout(guides = "none")
 # final_plot
@@ -348,8 +361,42 @@ ggsave(
   paste0("ZIKA_serop_map_QA.png"),
   plot = final_plot,
   device = png,
+
   scale = 1,
-  height = 50,
+  height = 100,
+  width = 200,
+  units = "mm",
+  dpi = 300)
+
+ggsave(
+  paste0("ZIKA_serop_map_QA_AF.pdf"),
+  plot = central_africa,
+  # device = pdf,
+  device = cairo_pdf,
+  scale = 1,
+  height = 200,
+  width = 200,
+  units = "mm",
+  dpi = 300)
+
+ggsave(
+  paste0("ZIKA_serop_map_QA_SA.pdf"),
+  plot = south_america,
+  # device = pdf,
+  device = cairo_pdf,
+  scale = 1,
+  height = 200,
+  width = 200,
+  units = "mm",
+  dpi = 300)
+
+ggsave(
+  paste0("ZIKA_serop_map_QA_AS.pdf"),
+  plot = central_asia,
+  device = cairo_pdf,
+  # device = pdf,
+  scale = 1,
+  height = 200,
   width = 200,
   units = "mm",
   dpi = 300)
