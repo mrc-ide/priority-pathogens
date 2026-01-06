@@ -9,6 +9,29 @@ library(ggsci)
 library(coda)
 library(bridgesampling)
 
+# *--------------------------------- Orderly ----------------------------------*
+orderly_parameters(pathogen = NULL)
+
+orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
+                   c("articles.csv", "outbreaks.csv", "models.csv", "params.csv"))
+
+orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
+source("nipah_functions.R")
+
+orderly_artefact(description="Nipah data synthesis figures",
+                 c())
+
+# *------------------------------ Data curation -------------------------------*
+articles   <- read_csv("articles.csv")
+outbreaks  <- read_csv("outbreaks.csv")
+models     <- read_csv("models.csv")
+parameters <- read_csv("params.csv")
+
+dfs <- curation(articles, outbreaks, models, parameters, plotting = TRUE)
+parameters <- dfs$parameters
+
+# *--------------------------------- BSL Hierarchical Model ----------------------------------*
+
 TESTING <- TRUE
 
 # --------------------------
@@ -37,7 +60,9 @@ if(TRUE){
     d3 = list(median =  9.0, min = 6.0, max = 14.0, n = 11),
     d4 = list(median =  9.5, min = 4.0, max = 14.0, n = 22),
     d5 = list(median =  8.0, min = 3.0, max = 20.0, n = 15),
-    d6 = list(median =  9.0, min = 6.0, max = 11.0, n = 11)
+    d6 = list(median =  9.0, min = 6.0, max = 11.0, n = 11),
+    d7 = list(median = 10.0, min = 8.0, max = 15.0, n = 14),
+    d8 = list(median =  9.0, min = 6.0, max = 11.0, n = 11)
   )
 } else {    #testing only
   datasets <- list(
@@ -415,4 +440,40 @@ if( interactive() )
   # NEED SOME PRE-CANNED RESULTS FOR NON-INTERACTIVE RUNS TO KEEP ORDERLY HAPPY
 }
 
+COMPARITIVE_ANALYSIS <- FALSE
 
+if(COMPARITIVE_ANALYSIS)
+{
+  # Comparison to meta-analysis ---------------------------------------------
+  datasets <- list(
+    d1 = list(median = 10.0, min = 9.0, max = 12.0, n = 4),
+    d2 = list(median =  4.0, min = 2.0, max =  7.0, n = 6),
+    d3 = list(median =  9.0, min = 6.0, max = 14.0, n = 11),
+    d4 = list(median =  9.5, min = 4.0, max = 14.0, n = 22),
+    d5 = list(median =  8.0, min = 3.0, max = 20.0, n = 15),
+    d6 = list(median =  9.0, min = 6.0, max = 11.0, n = 11),
+    d7 = list(median = 10.0, min = 8.0, max = 15.0, n = 14),
+    d8 = list(median =  9.0, min = 6.0, max = 11.0, n = 11)
+  )
+
+  params_in <- as_tibble(parameters) %>% filter(parameter_type == 'Human delay - incubation period' &
+                                                  parameter_value_type == 'Median' &
+                                                  !is.na(population_sample_size) &
+                                                  population_sample_size < 23 )
+
+  params_in %>% dplyr::select(covidence_id, parameter_value, population_sample_size, parameter_2_lower_bound, parameter_2_upper_bound)
+
+  params_in$parameter_uncertainty_type <- 'range'
+  params_in$parameter_uncertainty_lower_value <- params_in$parameter_2_lower_bound
+  params_in$parameter_uncertainty_upper_value <- params_in$parameter_2_upper_bound
+
+  d_in <- bind_rows(datasets, .id = "dataset")
+  d_in$parameter_type <- 'median'
+  d_in <- d_in %>% rename(parameter_value=median)
+
+  m2 <- metamean_wrap(dataframe = params_in, estmeansd_method = "Cai",
+                      plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
+                      width = 9500, height = 4200, resolution = 1000)
+
+
+}
