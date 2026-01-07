@@ -125,18 +125,20 @@ names(custom_colour_genome_groups) <- all_genomes
 # Repeat twice - with and without QA filter
 # -1 to include all articles
 qa_thresh_vec <- c(-1, 0.5)
+qa_alpha_vec <- c(0.3, 1)
 labels <- c("SI_allqa_", "")
 
 for (i in seq_along(qa_thresh_vec)){
   label <- labels[i]
   qa_threshold <- qa_thresh_vec[i]
+  qa_alpha <- qa_alpha_vec[i]
 
   p1 <- forest_plot(d1 |> filter(qa_score>qa_threshold),
                     expression(Evolutionary~Rate~(s/s/y ~10^{-4})),
                     "genome_site",
                     c(-0.01,15), custom_colours = custom_colour_genome_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
-                    text_size=text_size) +
+                    text_size=text_size, qa_alpha=qa_alpha) +
     scale_color_manual(values=custom_colour_genome_groups,
                        limits=names(custom_colour_genome_groups)) +
     scale_fill_manual(values=custom_colour_genome_groups,
@@ -151,7 +153,7 @@ for (i in seq_along(qa_thresh_vec)){
                     expression(Substitution~Rate~(s/s/y ~10^{-4})),
                     "genome_site",
                     c(0,16), custom_colours = custom_colour_genome_groups,
-                    text_size=text_size) +
+                    text_size=text_size, qa_alpha=qa_alpha) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
            fill = guide_none(),
            color = guide_none())
@@ -160,7 +162,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "Overdispersion (max nr. of cases related to a case)",
                     "population_group", c(0,35),
                     custom_colours = custom_colour_pop_groups,
-                    text_size=text_size) +
+                    text_size=text_size, qa_alpha=qa_alpha) +
     guides(color = guide_none(),
            shape = guide_none())
 
@@ -168,7 +170,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "Primary Attack Rate (%)",
                     "population_group",
                     c(-0.01,3), custom_colours = custom_colour_pop_groups,
-                    text_size=text_size) +
+                    text_size=text_size, qa_alpha=qa_alpha) +
     guides(color = guide_none(),
            shape = guide_none())
 
@@ -176,7 +178,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "Proportion of Symptomatic Cases (%)",
                     "population_group",
                     c(-5, 110), custom_colours = custom_colour_pop_groups,
-                    text_size=text_size) +
+                    text_size=text_size, qa_alpha=qa_alpha) +
     guides(color = guide_none(),
            shape = guide_none())
 
@@ -185,7 +187,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "population_group",
                     c(0, 1.5), custom_colours = custom_colour_pop_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
-                    text_size=text_size) +
+                    text_size=text_size, qa_alpha=qa_alpha) +
     scale_color_manual(values=custom_colour_pop_groups,
                        limits=names(custom_colour_pop_groups)) +
     scale_fill_manual(values=custom_colour_pop_groups,

@@ -227,6 +227,8 @@ lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 text_size <- 28
 
 qa_thresh_vec <- c("all"=-1, "qa"=0.5)
+qa_alpha_vec <- c(0.3, 1)
+
 labels <- c("SI_allqa", "")
 colour_columns <- c("parameter_type",
                     "population_group",
@@ -244,6 +246,7 @@ p7_oo_reduced_plots <- list("all"=list())
 for (i in seq_along(qa_thresh_vec)){
   label <- labels[i]
   qa_threshold <- qa_thresh_vec[i]
+  qa_alpha <- qa_alpha_vec[i]
   plot_type <- names(qa_thresh_vec)[i]
   dir.create(plot_type, showWarnings = FALSE)
   for (colour_col in colour_columns){
@@ -273,7 +276,7 @@ for (i in seq_along(qa_thresh_vec)){
       p1_incb_plots[[plot_type]][[colour_col]] <- forest_plot(
         d1 |> filter(qa_score>qa_threshold), "Incubation period (days)",
         colour_col, c(0,35), text_size=text_size, segment_show.legend = NA,
-        sort=TRUE, custom_colours = custom_colours)
+        sort=TRUE, custom_colours = custom_colours, qa_alpha=qa_alpha)
 
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_incubation_",
@@ -285,7 +288,8 @@ for (i in seq_along(qa_thresh_vec)){
       p2_oa_plots[[plot_type]][[colour_col]] <- forest_plot(
         d2 |> filter(qa_score>qa_threshold),
         'Symptom onset-to-hospitalisation delay (days)', colour_col, c(0,20),
-        text_size = text_size, sort=TRUE, custom_colours = custom_colours)
+        text_size = text_size, sort=TRUE, custom_colours = custom_colours,
+        qa_alpha=qa_alpha)
 
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_onset_admis_",
@@ -309,7 +313,7 @@ for (i in seq_along(qa_thresh_vec)){
       p3_ao_plots[[plot_type]][[colour_col]] <- forest_plot(
         d3 |> filter(qa_score>qa_threshold), 'Hospitalisation-to-outcome (days)',
         colour_col, c(0,45), text_size = text_size, sort=TRUE,
-        custom_colours = custom_colours)
+        custom_colours = custom_colours, qa_alpha=qa_alpha)
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_admis_outcome_",
                               colour_col_label, ".pdf")),
@@ -355,7 +359,8 @@ for (i in seq_along(qa_thresh_vec)){
       d4_x_axis_label, colour_col, xlim,
       text_size = text_size, sort=TRUE,
       segment_show.legend = c(shape=FALSE, colour=TRUE),
-      custom_colours = custom_colours) +
+      custom_colours = custom_colours,
+      qa_alpha=qa_alpha) +
       # Showing Sim overlaid
       geom_point(data=sim_duplicated_row,
                  aes(x = parameter_value, y = refs,
@@ -402,7 +407,7 @@ for (i in seq_along(qa_thresh_vec)){
         d6 |> filter(qa_score>qa_threshold),
         'Symptom onset/Hospitalisation-to-outcome (days)',
         colour_col, xlim, text_size = text_size, sort=TRUE,
-        custom_colours = custom_colours)
+        custom_colours = custom_colours, qa_alpha=qa_alpha)
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_onset_admis_outcome_",
                               colour_col_label, ".pdf")),
@@ -434,7 +439,7 @@ for (i in seq_along(qa_thresh_vec)){
         d7 |> filter(qa_score>qa_threshold),
         'Symptom onset-to-outcome (days)',
         colour_col, c(0,85), text_size = text_size, sort=TRUE,
-        custom_colours = custom_colours)
+        custom_colours = custom_colours, qa_alpha=qa_alpha)
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_onset_outcome_reduced_",
                               colour_col_label, ".pdf")),
