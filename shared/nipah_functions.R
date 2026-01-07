@@ -113,7 +113,7 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 # function to produce forest plot for given dataframe
 forest_plot <- function(df, label, color_column, lims, text_size = 11,
                         show_label = FALSE, custom_colours = NA,
-                        segment_show.legend=NA, sort=FALSE) {
+                        segment_show.legend=NA, sort=FALSE, qa_alpha=1) {
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
 
   if (sort){
@@ -128,29 +128,36 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
              !(is.na(parameter_uncertainty_lower_value) &
                  is.na(parameter_uncertainty_upper_value)))
            )
+  df$plot_alpha <- 1
+  df$segment_alpha <- 1
+
+  if(qa_alpha!=1){
+    df[df$qa_score<0.5, ]$plot_alpha <- qa_alpha
+    df[df$qa_score<0.5, ]$segment_alpha <- 0.65 * qa_alpha
+  }
 
   cats <- length(unique(df[[color_column]]))
-
   gg <- ggplot(df) +
     geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
-                     y = urefs, yend = urefs, color = .data[[color_column]]),
-                 linewidth=3, alpha = 0.65, show.legend = segment_show.legend) +
+                     y = urefs, yend = urefs, color = .data[[color_column]],),
+                 linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
                       y = urefs),
-                  width = 0.25, lwd=0.5, color = "black", alpha = 1) +
-    geom_errorbar(data= df |> filter(!uncertainty_present),
+                  width = 0.25, lwd=0.5, color = "black", alpha=df$plot_alpha) +
+    geom_errorbar(data= df[!df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
                       y = urefs),
-                  width = 0.25, lwd=0.5, color = "black", alpha = 1, linetype="dashed",
-                  lineend = "square") +
-    geom_errorbar(data= df |> filter(uncertainty_present),
+                  width = 0.25, lwd=0.5, color = "black", linetype="dashed",
+                  lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
+    geom_errorbar(data= df[df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
                       y = urefs),
-                  width = 0.25, lwd=0.5, color = "black", alpha = 1, linetype="dashed",
-                  lineend = "square", position = position_nudge(y=-0.25)) +
+                  width = 0.25, lwd=0.5, color = "black", linetype="dashed",
+                  lineend = "square", position = position_nudge(y=-0.25),
+                  alpha=df[df$uncertainty_present,]$plot_alpha) +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_value_type, fill = .data[[color_column]]),
-               size = 3, stroke = 1, color = "black", alpha = 1)
+               alpha=df$plot_alpha, size = 3, stroke = 1, color = "black")
 
   if (all(df$parameter_class=="Reproduction number")) {
     gg <- gg +
