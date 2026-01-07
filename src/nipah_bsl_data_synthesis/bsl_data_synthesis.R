@@ -273,7 +273,7 @@ bsl_to_mcmc <- function(fit) {
 }
 
 bsl_combine_chains <- function(fit_list) {
-  mcmc.list(lapply(fit_list, to_mcmc))
+  mcmc.list(lapply(fit_list, bsl_to_mcmc))
 }
 
 bsl_run_diagnostics <- function(fits_multi, diagnostic_dir = "bsl_diagnostics") {
@@ -285,7 +285,7 @@ bsl_run_diagnostics <- function(fits_multi, diagnostic_dir = "bsl_diagnostics") 
     if (!dir.exists(model_dir)) dir.create(model_dir)
 
     fit_list <- fits_multi[[model_name]]
-    mcmc_obj <- combine_chains(fit_list)
+    mcmc_obj <- bsl_combine_chains(fit_list)
 
     # === TRACEPLOT ===
     png(file.path(model_dir, paste0("traceplot_", model_name, ".png")),
@@ -364,3 +364,42 @@ bsl_make_trace_df <- function(fits_multi) {
 }
 
 
+bsl_summarise_parameters <- function(posterior_samples_list) {
+  require(dplyr)
+  out_list <- lapply(names(posterior_samples_list), function(model_name) {
+    post <- as.matrix(posterior_samples_list[[model_name]])
+    if (ncol(post) < 3) stop("Posterior matrix must have 3 columns: mu0, log_tau, log_phi")
+
+    mu0_draws  <- post[, 1]
+    tau_draws  <- exp(post[, 2])    # on natural scale
+    phi_draws  <- exp(post[, 3])    # on natural scale
+
+    df <- data.frame(
+      model = model_name,
+      parameter = c("mu0", "tau", "phi"),
+      mean = c(mean(mu0_draws, na.rm = TRUE),
+               mean(tau_draws, na.rm = TRUE),
+               mean(phi_draws, na.rm = TRUE)),
+      median = c(median(mu0_draws, na.rm = TRUE),
+                 median(tau_draws, na.rm = TRUE),
+                 median(phi_draws, na.rm = TRUE)),
+      low_2.5 = c(quantile(mu0_draws, 0.025, na.rm = TRUE),
+                  quantile(tau_draws, 0.025, na.rm = TRUE),
+                  quantile(phi_draws, 0.025, na.rm = TRUE)),
+      high_97.5 = c(quantile(mu0_draws, 0.975, na.rm = TRUE),
+                    quantile(tau_draws, 0.975, na.rm = TRUE),
+                    quantile(phi_draws, 0.975, na.rm = TRUE))
+    )
+
+    # Add readable formatted CI string
+    df <- df %>%
+      mutate(
+        ci_95 = paste0(round(low_2.5, 3), " — ", round(high_97.5, 3)),
+        mean = round(mean, 3),
+        median = round(median, 3)
+      ) %>%
+      select(model, parameter, mean, median, ci_95, low_2.5, high_97.5)
+    df
+  })
+  do.call(rbind, out_list)
+}
