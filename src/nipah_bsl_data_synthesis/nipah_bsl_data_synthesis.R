@@ -273,7 +273,7 @@ posterior_summaries_long <- posterior_summaries %>%
     low_value    = mean_low,
     high_value   = mean_high
   ) %>%
-  select(model, median_value, low_value, high_value)
+  dplyr::select(model, median_value, low_value, high_value)
 
 posterior_summaries_median_long <- posterior_summaries %>%
   mutate(
@@ -281,7 +281,7 @@ posterior_summaries_median_long <- posterior_summaries %>%
     low_value    = median_low,
     high_value   = median_high
   ) %>%
-  select(model, median_value, low_value, high_value)
+  dplyr::select(model, median_value, low_value, high_value)
 
 posterior_summaries_90th_long <- posterior_summaries %>%
   mutate(
@@ -289,7 +289,7 @@ posterior_summaries_90th_long <- posterior_summaries %>%
     low_value    = q90_low,
     high_value   = q90_high
   ) %>%
-  select(model, median_value, low_value, high_value)
+  dplyr::select(model, median_value, low_value, high_value)
 
 # --------------------------
 # Observed summaries from datasets (extract summary-list values)
@@ -476,9 +476,22 @@ if(COMPARITIVE_ANALYSIS)
   d_in$parameter_type <- 'median'
   d_in <- d_in %>% rename(parameter_value=median)
 
-  m2 <- metamean_wrap(dataframe = params_in, estmeansd_method = "Cai",
-                      plot_study = TRUE, digits = 2, lims = c(0,10), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
-                      width = 9500, height = 4200, resolution = 1000)
+  ip_same_data <- metamean_wrap(dataframe = params_in, estmeansd_method = "Cai",
+                                plot_study = TRUE, digits = 2, lims = c(2,15), colour = "dodgerblue3", label = "Mean Onset-Admission Delay (days)",
+                                width = 9500, height = 4200, resolution = 1000)
 
 
+  params_ip_all <- as_tibble(parameters) %>% filter(parameter_type == 'Human delay - incubation period' &
+                                                      !is.na(population_sample_size) & !is.na(parameter_value) ) %>%
+    mutate(parameter_uncertainty_type = replace_na(parameter_uncertainty_type, 'range'),
+           parameter_uncertainty_lower_value = coalesce(parameter_uncertainty_lower_value, parameter_2_lower_bound),
+           parameter_uncertainty_upper_value = coalesce(parameter_uncertainty_upper_value, parameter_2_upper_bound)
+    )
+
+  ip_all_data <- metamean_wrap(dataframe = params_ip_all, estmeansd_method = "Cai",
+                               plot_study = TRUE, digits = 2, lims = c(2,15), colour = "darkorange2", label = "Median Incubation Period (days)",
+                               width = 9500, height = 4200, resolution = 1000)
+
+  ggsave("nipah_ip_meta_analysis_same_data.pdf", ip_same_data$plot, width = 12, height = 6 )
+  ggsave("nipah_ip_meta_analysis_all_data.pdf", ip_all_data$plot, width = 12, height = 6 )
 }
