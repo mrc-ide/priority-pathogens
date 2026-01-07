@@ -279,6 +279,11 @@ param_cleaning <- function(df){
     paste0("Proportion asymptomatic is reported in the paper.",
            "Denominator is contacts of Nipah patients who gave blood specimen")
 
+  # CovID: 3057
+  delay_3057_incp_filter <- df$access_param_id=="151_001"
+  df[delay_3057_incp_filter, "parameter_2_value_type"] <- "Range (paired)"
+  df[delay_3057_incp_filter, "parameter_2_upper_bound"] <- 15
+
   # CovID: 3025
   prop_symp_3025_filter <- (df$covidence_id==3025 & prop_symp_filter)
 
