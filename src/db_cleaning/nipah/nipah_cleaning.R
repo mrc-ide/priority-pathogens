@@ -701,6 +701,33 @@ param_cleaning <- function(df){
   # CovID 906, missing unit
   df[df$access_param_id=="093_003", "parameter_unit"] <- "Percentage (%)"
 
+  # Split 2931 incubation row
+  hd_2931_row_filter <- df$access_param_id=="138_016"
+  df[hd_2931_row_filter, "distribution_type"] <- NA
+  df[hd_2931_row_filter, "distribution_par1_type"] <- NA
+  df[hd_2931_row_filter, "distribution_par1_value"] <- NA
+  df[hd_2931_row_filter, "distribution_par1_uncertainty"] <- NA
+  df[hd_2931_row_filter, "distribution_par2_type"] <- NA
+  df[hd_2931_row_filter, "distribution_par2_value"] <- NA
+  df[hd_2931_row_filter, "distribution_par2_uncertainty"] <- NA
+
+  new_2931_row <- df[hd_2931_row_filter, ]
+  new_2931_row$parameter_data_id  <- generate_new_id(df, "parameter_data_id", 10)
+  # No corresponding redcap entry so make an ID
+  new_2931_row$access_param_id  <- "138_3141"
+  new_2931_row$parameter_value <- 9.7
+  new_2931_row$parameter_value_type <- "Mean"
+
+  new_2931_row$parameter_statistical_approach <- "Estimated model parameter"
+  new_2931_row$parameter_paired <- "No"
+  new_2931_row$parameter_2_unit <- NA
+  new_2931_row$method_2_from_supplement <- NA
+  new_2931_row$parameter_2_statistical_approach <- NA
+
+  new_2931_row$parameter_2_value_type <- NA
+  new_2931_row$parameter_2_lower_bound <- NA
+  new_2931_row$parameter_2_upper_bound <- NA
+  df <- rbind(df, new_2931_row)
 
   # Labels for IQR and Range are different for variability so copying from
   # uncertainty results in different labels
