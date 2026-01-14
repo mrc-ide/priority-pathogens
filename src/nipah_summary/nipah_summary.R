@@ -52,7 +52,7 @@ colour_palette[8] <- "#f0e68c"
 
 colour_palette <- c(colour_palette, temp, temp_2)
 
-scales::show_col(colour_palette)
+## scales::show_col(colour_palette)
 # *--------------------------------- Articles ---------------------------------*
 # convert to a %
 quality <- articles |>

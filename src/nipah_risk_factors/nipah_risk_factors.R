@@ -7,7 +7,7 @@ library(patchwork)
 library(readr)
 library(stringr)
 library(tidyr)
-
+library(tidytext)
 # *--------------------------------- Orderly ----------------------------------*
 orderly_parameters(pathogen = NULL)
 
@@ -90,7 +90,7 @@ temp_2 <-colour_palette[8]
 colour_palette[8] <- "#f0e68c"
 
 colour_palette <- c(colour_palette, temp, temp_2)
-scales::show_col(colour_palette)
+##scales::show_col(colour_palette)
 
 custom_colours <- c('Significant / Adjusted'= colour_palette[3],
                     'Significant / Not adjusted' = colour_palette[1],
@@ -153,11 +153,11 @@ risk_table_plt <- (risk_table_plt_infection  / risk_table_plt_sero / risk_table_
   ( risk_table_plt_death/ risk_table_plt_spill / risk_table_plt_other) +
   plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect")
 
-risk_table_plt
+##risk_table_plt
 left_col  <- risk_table_plt_infection / risk_table_plt_sero/ risk_table_plt_neuro
 right_col <- risk_table_plt_death / risk_table_plt_spill / risk_table_plt_other
 
-(left_col | right_col) +
+risk_table_plt <- (left_col | right_col) +
   plot_annotation(tag_levels = 'A') +
   plot_layout(guides = "collect", widths = c(1, 1), heights = c(7/15, 1.5, 1.5))
 
@@ -256,7 +256,7 @@ rf_facet_o2 <- rt_plot |>
   guides(fill=guide_legend(nrow=4,byrow=TRUE)) +
   facet_wrap(~riskfactor_outcome, scales="free", ncol=2)
 
-rf_facet_o2
+##rf_facet_o2
 
 ggsave("figure_SI_risk_facet_option_2.pdf", plot = rf_facet_o2,
        width = 17, height = 12)
