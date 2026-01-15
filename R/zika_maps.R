@@ -1,3 +1,5 @@
+# moved to an orderly task within priority pathogens project
+
 library(ggplot2)
 library(sf)
 library(rnaturalearth)

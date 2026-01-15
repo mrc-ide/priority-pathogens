@@ -3,7 +3,7 @@
 # install.packages('rio')
 library(dplyr)
 library(janitor)
-library(orderly2)
+library(orderly)
 library(readr)
 library(stringr)
 library(stringi)
