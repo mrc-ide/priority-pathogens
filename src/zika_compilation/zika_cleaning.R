@@ -164,6 +164,7 @@ zika_clean_articles <- function(df, pathogen){
   df <- df %>%
     mutate(# Fix issues with dois
       doi = str_remove_all(doi, 'doi:'),
+      doi = str_remove_all(doi, 'DOI: '),
       doi = str_remove_all(doi, 'http://dx.doi.org/'),
       doi = str_remove_all(doi, 'https://doi.org/'),
       doi = str_remove(doi, "^/"),
@@ -173,7 +174,17 @@ zika_clean_articles <- function(df, pathogen){
         covidence_id %in% 1154 ~ "10.1136/bmjgh-2017-000309",
         covidence_id %in% 1993 ~ "10.1080/00034983.1983.11811687",
         covidence_id %in% 3042 ~ "10.1371/journal.pntd.0004726",
+        covidence_id %in% 5695 ~ '10.3390/ijerph18041831',
+        covidence_id %in% 8141 ~ '10.1016/j.ijid.2023.01.033',
+        covidence_id %in% 11565 ~ '10.3390/v13030523',
+        covidence_id %in% 31965 ~ '10.1001/jamanetworkopen.2019.8124',
         TRUE ~ doi
+      ),
+      journal = case_when(
+        covidence_id %in% 5695 ~ 'INTERNATIONAL JOURNAL OF ENVIRONMENTAL RESEARCH AND PUBLIC HEALTH',
+        covidence_id %in% 8141 ~ 'INTERNATIONAL JOURNAL OF INFECTIOUS DISEASES',
+        covidence_id %in% 11565 ~ 'Viruses',
+        TRUE ~ journal
       )) #%>%
   # # Update article label
   #   # for different articles by the same author in the same year
