@@ -69,6 +69,13 @@ d4 <- d4 |> mutate(across(all_of(variables_to_mutate),
   mutate(parameter_unit = ifelse(parameter_unit == "No units",
                                  "Percentage (%)", parameter_unit))
 
+# Presti reports this metric as an evolutionary rate
+# Rahman refers to the metric as both a substitution and evolutionary rate in
+# the same text
+d1 <- d1 |>
+  mutate(refs=str_replace(refs, "Lo Presti \\(2016\\)",
+                          "'Lo Presti (2016\\)'^'*'"))
+
 d1 <- d1 |> arrange(genome_site,-central)
 
 # TODO: check Upper and lower bound - zero out for now
@@ -153,6 +160,7 @@ for (i in seq_along(qa_thresh_vec)){
                     segment_show.legend=c(color=TRUE, shape=FALSE),
                     text_size=text_size, qa_alpha=qa_alpha,
                     sort=TRUE) +
+    scale_y_discrete(labels = function(x) parse(text = x)) +
     scale_color_manual(values=custom_colour_genome_groups,
                        limits=names(custom_colour_genome_groups)) +
     scale_fill_manual(values=custom_colour_genome_groups,
