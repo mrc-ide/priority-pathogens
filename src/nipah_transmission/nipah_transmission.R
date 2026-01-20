@@ -133,36 +133,40 @@ for (i in seq_along(qa_thresh_vec)){
   qa_threshold <- qa_thresh_vec[i]
   qa_alpha <- qa_alpha_vec[i]
 
-  p1 <- forest_plot(d1 |> filter(qa_score>qa_threshold),
-                    expression(Evolutionary~Rate~(s/s/y ~10^{-4})),
+  p1 <- forest_plot(d1 |>
+                      rbind(d2) |>
+                      filter(qa_score>qa_threshold),
+                    expression(Evolutionary~Substitution~Rate~(s/s/y ~10^{-4})),
                     "genome_site",
-                    c(-0.01,15), custom_colours = custom_colour_genome_groups,
+                    c(-0.01,16), custom_colours = custom_colour_genome_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha,
+                    sort=TRUE) +
     scale_color_manual(values=custom_colour_genome_groups,
                        limits=names(custom_colour_genome_groups)) +
     scale_fill_manual(values=custom_colour_genome_groups,
                       limits=names(custom_colour_genome_groups)) +
     guides(fill = guide_none(),
            color = guide_legend(title = "Genome type", order = 1,
-                                override.aes = list(fill = custom_colour_genome_groups)),
-           shape=guide_none())
+                                override.aes = list(
+                                  fill = custom_colour_genome_groups)),
+           shape=guide_legend(title = "Parameter type", order=1))
 
-  # Should this be segment?
-  p2 <- forest_plot(d2 |> filter(qa_score>qa_threshold),
-                    expression(Substitution~Rate~(s/s/y ~10^{-4})),
-                    "genome_site",
-                    c(0,16), custom_colours = custom_colour_genome_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
-    guides(shape = guide_legend(title = "Parameter type", order=1),
-           fill = guide_none(),
-           color = guide_none())
+  # p2 <- forest_plot(d2 |> filter(qa_score>qa_threshold),
+  #                   expression(Substitution~Rate~(s/s/y ~10^{-4})),
+  #                   "genome_site",
+  #                   c(0,16), custom_colours = custom_colour_genome_groups,
+  #                   text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
+  #   guides(shape = guide_legend(title = "Parameter type", order=1),
+  #          fill = guide_none(),
+  #          color = guide_none())
 
   p3 <- forest_plot(d3 |> filter(qa_score>qa_threshold),
                     "Overdispersion (max nr. of cases related to a case)",
                     "population_group", c(0,35),
                     custom_colours = custom_colour_pop_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha,
+                    sort=TRUE) +
     guides(color = guide_none(),
            shape = guide_none())
 
@@ -170,7 +174,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "Primary Attack Rate (%)",
                     "population_group",
                     c(-0.01,3), custom_colours = custom_colour_pop_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
     guides(color = guide_none(),
            shape = guide_none())
 
@@ -178,7 +182,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "Proportion of Symptomatic Cases (%)",
                     "population_group",
                     c(-5, 110), custom_colours = custom_colour_pop_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
     guides(color = guide_none(),
            shape = guide_none())
 
@@ -187,7 +191,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "population_group",
                     c(0, 1.5), custom_colours = custom_colour_pop_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
     scale_color_manual(values=custom_colour_pop_groups,
                        limits=names(custom_colour_pop_groups)) +
     scale_fill_manual(values=custom_colour_pop_groups,
@@ -198,10 +202,14 @@ for (i in seq_along(qa_thresh_vec)){
            shape=guide_none())
 
   # Save plots
-  patchwork <- (p6 + p3 + p4 + p5 + p1 + p2) +
+  patchwork <- (p6 + p3 + p4 + p5 + p1 + guide_area()) +
     plot_layout(ncol = 2, widths = c(1,1), guides = "collect")
 
-  patchwork <- patchwork + plot_annotation(tag_levels = "A")
+  patchwork <- patchwork +
+    plot_annotation(tag_levels = "A",
+                    theme = theme(legend.position = "bottom",
+                                  legend.direction = "horizontal"))
+
   ggsave(paste0("figure_",label,"trans.png"),
          plot = patchwork, width = 14, height = 10)
   ggsave(paste0("figure_",label,"trans.pdf"),

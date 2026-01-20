@@ -132,8 +132,8 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   df$segment_alpha <- 1
 
   if(qa_alpha!=1){
-    df[df$qa_score<0.5, ]$plot_alpha <- qa_alpha
-    df[df$qa_score<0.5, ]$segment_alpha <- 0.65 * qa_alpha
+    df[df$qa_score<=0.5, ]$plot_alpha <- qa_alpha
+    df[df$qa_score<=0.5, ]$segment_alpha <- 0.65 * qa_alpha
   }
 
   cats <- length(unique(df[[color_column]]))
