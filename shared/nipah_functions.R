@@ -11,7 +11,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)],
                              paste0(sub("\\)$", "", refs),letters[counter],")"),
                              refs)) |>
-    select(-counter,-refs) |>
+    dplyr::select(-counter,-refs) |>
     rename(refs = new_refs) |>
     mutate(refs = str_to_title(refs))
 
@@ -70,7 +70,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     mutate(central = coalesce(parameter_value,
                               100*cfr_ifr_numerator/cfr_ifr_denominator,
                               0.5*(parameter_lower_bound+parameter_upper_bound))) |>
-    select(-c(no_unc))
+    dplyr::select(-c(no_unc))
 
   if (plotting) {
     parameters <- param4plot
