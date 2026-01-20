@@ -75,6 +75,7 @@ parameter_pair_unc_pair_value_up,parameters,Parameter 2 uncertainty - upper valu
 parameter_distr_type,parameters,Distribution_type,parameters
 parameter_distr_a_type,parameters,Distribution_par1_type,parameters
 parameter_distr_a_value,parameters,Distribution_par1_value,parameters
+parameter_distr_a_uncertainty,parameters,Distribution_par1_uncertainty,parameters
 parameter_distr_b_type,parameters,Distribution_par2_type,parameters
 parameter_distr_b_value,parameters,Distribution_par2_value,parameters
 parameter_distr_b_uncertainty,parameters,Distribution_par2_uncertainty,parameters
@@ -87,9 +88,10 @@ parameter_pair_distr_a_value,parameters,Distribution_2_par1_value,parameters
 parameter_pair_distr_b_type,parameters,Distribution_2_par2_type,parameters
 parameter_pair_distr_b_value,parameters,Distribution_2_par2_value,parameters
 parameter_pair_distr_b_uncertainty,parameters,Distribution_2_par2_uncertainty,parameters
-parameter_distr_a_uncertainty,parameters,Distribution_par1_uncertainty,parameters
 parameter_pair_unc_single_type,parameters,Parameter 2 uncertainty - single type,parameters
 parameter_pair_distr_a_uncertainty,parameters,Distribution_2_par1_uncertainty,parameters
+parameter_pair_uncert_yn,parameters,,parameters
+parameter_pair_distr_yn,parameters,,parameters
 parameter_cfr_num,parameters,CFR_IFR_numerator,parameters
 parameter_cfr_denom,parameters,CFR_IFR_denominator,parameters
 parameter_supplement,parameters,Method_from_supplement,parameters
@@ -105,6 +107,8 @@ parameter_rf_significant,parameters,Riskfactor_significant,parameters
 parameter_rf_adjusted,parameters,Riskfactor_adjusted,parameters
 parameter_hd_from,parameters,,parameters
 parameter_hd_to,parameters,,parameters
+parameter_hd_from_other,parameters,Other_delay_start,parameters
+parameter_hd_to_other,parameters,Other_delay_end,parameters
 parameter_cfr_definition,parameters,Case_definition,parameters
 parameter_cfr_seroprev,parameters,seroprevalence_adjusted,parameters
 parameter_context_sex,parameters,Population_sex,parameters
@@ -115,6 +119,7 @@ parameter_context_age_max,parameters,Population_age_max,parameters
 parameter_context_sample,parameters,Population_sample_size,parameters
 parameter_context_country,parameters,Population_country,parameters
 parameter_context_location,parameters,Population_location,parameters
+parameter_context_location_type,parameters,,parameters
 parameter_context_start,parameters,Population_study_start,parameters
 parameter_context_end,parameters,Population_study_end,parameters
 parameter_context_timing,parameters,Method_moment_value,parameters
@@ -122,8 +127,6 @@ parameter_context_urban,parameters,Urban/Rural area,parameters
 parameter_context_data,parameters,Data_available,parameters
 parameter_gene,parameters,Genome_site,parameters
 parameter_gene_data,parameters,Genomic_sequence_available,parameters
-parameter_hd_from_other,parameters,Other_delay_start,parameters
-parameter_hd_to_other,parameters,Other_delay_end,parameters
 parameter_inverse,parameters,Inverse_param,parameters
 parameter_figure,parameters,Parameter_FromFigure,parameters
 parameter_r_pathway,parameters,R_pathway,parameters
@@ -143,7 +146,6 @@ outbreak_location_type,outbreaks,,outbreaks
 outbreak_source,outbreaks,,outbreaks
 parameter_notes,parameters,,parameters
 qa_notes,articles,,articles
-parameter_context_location_type,parameters,,parameters
 outbreak_notes,outbreaks,,outbreaks
 outbreak_probable,outbreaks,,outbreaks
 model_uncertainty,models,,models
@@ -153,16 +155,11 @@ model_language,models,,models
 model_data,models,,models
 model_readme,models,,models
 model_spatial,models,,models
-parameter_linked,parameters,,parameters
-model_linked,models,,models
-outbreak_linked,outbreaks,,outbreaks
-article_continuation,articles,,articles
-pathogen_epidemiology_review_complete,articles,,articles
-parameter_pair_uncert_yn,parameters,,parameters
-parameter_pair_distr_yn,parameters,,parameters
-extractor_email,articles,,articles
-rec_id_confirm,articles,,articles
-pathogen_other,articles,,articles
 model_seasonality,models,,models
 model_vector_type,models,,models
 model_vertical_trans,models,,models
+parameter_linked,parameters,,
+model_linked,models,,
+outbreak_linked,outbreaks,,
+article_continuation,articles,,
+pathogen_epidemiology_review_complete,articles,,
