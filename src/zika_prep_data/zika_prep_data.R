@@ -56,8 +56,7 @@ cols_to_convert <- c(
 articles[cols_to_convert] <- lapply(articles[cols_to_convert], convert_to_utf)
 
 dfs <- curation(articles,outbreaks,models,parameters, plotting = plotting)
-articles <- dfs$articles %>%
-  select(-name_data_entry, -notes)
+articles <- dfs$articles
 
 
 qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
@@ -68,8 +67,7 @@ models     <- dfs$models
 
 parameters <- dfs$parameters %>% left_join(qa_scores) %>%
   mutate(article_label = make.unique(refs)) %>%
-  mutate(article_label = factor(article_label,levels=rev(unique(article_label)))) %>%
-  select(-name_data_entry)
+  mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
 
 # once i add in the extra cleaning in each task, then can remove that from the analsysi tasks as well
 # (Especially the latex tables one)
@@ -77,11 +75,11 @@ parameters <- dfs$parameters %>% left_join(qa_scores) %>%
 # Save genomic data
 genomic <- parameters %>%
   filter(parameter_class == 'Mutations') %>%
-  left_join(articles %>% select(-c(qa_score, article_label, refs, id)), by = c('covidence_id', 'pathogen'))  %>%
+  left_join(articles %>% select(-c(name_data_entry, qa_score, article_label, refs, id)), by = c('covidence_id', 'pathogen'))  %>%
   select( -c(starts_with('riskfactor'), r_pathway, seroprevalence_adjusted, third_sample_param_yn,
              contains('delay'), method_2_from_supplement, #starts_with('cfr'),
              starts_with('distribution'), case_definition, exponent_2,
-             inverse_param, inverse_param_2, trimester_exposed, starts_with('parameter_2')))
+             inverse_param, inverse_param_2, name_data_entry, trimester_exposed, starts_with('parameter_2')))
 
 saveRDS(genomic, "zika_genomic.rds")
 write_csv(genomic, "zika_genomic.csv")
