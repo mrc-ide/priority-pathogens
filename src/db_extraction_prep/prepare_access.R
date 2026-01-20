@@ -1,7 +1,7 @@
 library(dplyr)
 library(ids)
 library(odbc)
-library(orderly2)
+library(orderly)
 library(orderly.sharedfile)
 library(purrr)
 library(readr)

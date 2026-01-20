@@ -1,4 +1,4 @@
-library(orderly2)
+library(orderly)
 
 orderly_strict_mode()
 

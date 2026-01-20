@@ -17,7 +17,6 @@ src/*/*/.cpg
 src/*/*/.dbf
 src/*/*/.prj
 src/zika_serop/shapefile/*
-
 # ---VVV--- added by orderly ---VVV----------------
 # Don't manually edit content between these markers
 .outpack
@@ -25,3 +24,4 @@ orderly_envir.yml
 draft
 archive
 # ---^^^--- added by orderly ---^^^----------------
+.Rbuildignore

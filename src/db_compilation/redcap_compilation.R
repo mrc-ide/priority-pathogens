@@ -3,7 +3,7 @@ library(cli)
 library(dplyr)
 library(ids)
 library(janitor)
-library(orderly2)
+library(orderly)
 library(readr)
 library(yaml)
 

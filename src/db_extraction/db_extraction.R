@@ -1,7 +1,7 @@
-#  orderly2::orderly_run(name = 'db_extraction', parameters = list(pathogen = 'ZIKA'))
+#  orderly::orderly_run(name = 'db_extraction', parameters = list(pathogen = 'ZIKA'))
 # Works as of 23 July 2024
 library(dplyr)
-library(orderly2)
+library(orderly)
 library(readr)
 
 orderly_parameters(pathogen = NULL)
