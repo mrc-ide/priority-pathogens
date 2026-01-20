@@ -90,9 +90,9 @@ orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
 ##############
 
 # Data curation for analysis
-orderly2::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
+orderly::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
                                                           plotting = TRUE))
-orderly2::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
+orderly::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
                                                           plotting = FALSE))
 
 # Delay figures
