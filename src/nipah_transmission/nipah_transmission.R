@@ -35,6 +35,17 @@ parameters <- dfs$parameters |>
   left_join(qa_scores)
 
 # *----------------------------- Data preparation -----------------------------*
+# Sort population sample type to match legend where Other, Unspecified, or NA
+# are included. A neater solution would be to do this during cleaning or for the
+# relevant subset of population groups included in the params considered in
+# this script.
+parameters <- parameters  |>
+  mutate(population_group = factor(
+    population_group,
+    levels = c(sort(setdiff(unique(population_group),
+                            c("Other", "Unspecified"))),
+               "Other", "Unspecified")))
+
 d1 <- parameters |> filter(parameter_type == "Mutations - evolutionary rate")
 d2 <- parameters |> filter(parameter_type == "Mutations - substitution rate")
 d3 <- parameters |> filter(parameter_class == "Overdispersion")
