@@ -13,6 +13,10 @@ orderly_parameters(pathogen = NULL)
 orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "outbreaks.csv", "models.csv", "params.csv"))
 
+orderly_dependency("nipah_bsl_data_synthesis",
+                   "latest(parameter:pathogen == this:pathogen)",
+                   c("bsl_model_plot.RDS"))
+
 orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
 source("nipah_functions.R")
 
@@ -243,6 +247,18 @@ p6_oa_o_plots <- list("all"=list(), "qa"=list())
 p7_o_a_plots <- list("all"=list())
 p7_oo_reduced_plots <- list("all"=list())
 
+# Read in BSL plot - incubation period
+bsl_model_plot <- readRDS("bsl_model_plot.RDS")
+
+bsl_model_plot <- bsl_model_plot +
+  labs(title="", x="Incubation period (days)", color="Model", fill="Model") +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", linewidth = 1.25,
+                                    fill = NA),
+        text = element_text(size = text_size),
+        legend.position=c(0.45, 0.95),
+        legend.direction = "horizontal")
+
 for (i in seq_along(qa_thresh_vec)){
   label <- labels[i]
   qa_threshold <- qa_thresh_vec[i]
@@ -417,6 +433,7 @@ for (i in seq_along(qa_thresh_vec)){
       p6_oa_o_plots[[plot_type]][[colour_col]] <-
         p6_oa_o_plots[[plot_type]][[colour_col]] +
         guides(shape =  guide_none(),
+               linetype = guide_none(),
                color = guide_legend(title = "Outcome"))
     }
 
@@ -448,8 +465,9 @@ for (i in seq_along(qa_thresh_vec)){
 
       p7_oo_reduced_plots[[plot_type]][[colour_col]] <-
         p7_oo_reduced_plots[[plot_type]][[colour_col]] +
-        guides(shape =  guide_none(),
-               color = guide_legend(title = "Outcome"))
+        guides(shape =  guide_legend(title = "Parameter type", order=1),
+               color = guide_legend(title = "Outcome"),
+               linetype = guide_legend(title = "Variation type"))
     }
 
     # Update legends for final plot
@@ -458,7 +476,8 @@ for (i in seq_along(qa_thresh_vec)){
         p1_incb_plots[[plot_type]][["population_country"]] +
         guides(shape = guide_none(),
                fill = guide_none(),
-               color = guide_none())
+               color=guide_legend(title="Country"),
+               linetype = guide_none())
 
       p4_oo_plots[[plot_type]][["population_country"]] <-
         p4_oo_plots[[plot_type]][["population_country"]] +
@@ -466,7 +485,8 @@ for (i in seq_along(qa_thresh_vec)){
                             limits=all_groups) +
         scale_fill_manual(values=custom_colours,
                           limits=all_groups) +
-        guides(shape = guide_legend(title = "Parameter type", order=1),
+        guides(shape = guide_none(),
+               linetype = guide_none(),
                color=guide_legend(title="Country"))
     }
   }
@@ -494,8 +514,9 @@ for (i in seq_along(qa_thresh_vec)){
     # Alternative is to use guides="collect" (legends) in plot_layout
     delays_plot <-  (p1_incb_plots[[plot_type]][["population_country"]] +
                        p4_oo_plots[[plot_type]][["population_country"]])/(
-                         p6_oa_o_plots[[plot_type]][["parameter_type"]]) +
-      plot_layout(heights = c(2, 1), widths = c(2, 1)) +
+                         bsl_model_plot +
+                           p6_oa_o_plots[[plot_type]][["parameter_type"]]) +
+      plot_layout(heights = c(1, 1), widths = c(1, 1)) +
       plot_annotation(tag_levels = 'A')
 
     ggsave(paste0("figure_5", label,"_delays.pdf"), plot = delays_plot,
@@ -508,6 +529,7 @@ for (i in seq_along(qa_thresh_vec)){
     p3_ao_plots[[plot_type]][["parameter_type"]] <-
       p3_ao_plots[[plot_type]][["parameter_type"]] +
       guides(shape =  guide_none(),
+             linetype = guide_none(),
              color = guide_legend(title = "Outcome")) + common_left_legend
 
     # p7_oo_reduced_plots[[plot_type]][["parameter_type"]] <-
@@ -519,13 +541,18 @@ for (i in seq_along(qa_thresh_vec)){
     #   p6_oa_o_plots[[plot_type]][["parameter_type"]] +
     #   plot_annotation(tag_levels = 'A')
 
-    delays_plot <- (p1_incb_plots[[plot_type]][["population_country"]] +
-      p4_oo_plots[[plot_type]][["population_country"]]) / (
-        p7_oo_reduced_plots[[plot_type]][["parameter_type"]] +
-         p3_ao_plots[[plot_type]][["parameter_type"]]) +
-      plot_layout(heights = c(1.25, 1), widths = c(1.25, 1)) +
-      plot_annotation(tag_levels = 'A')
+    left_col <- p1_incb_plots[[plot_type]][["population_country"]] /
+      bsl_model_plot +
+      plot_layout(heights = c(17, 20))
 
+    right_col <- p7_oo_reduced_plots[[plot_type]][["parameter_type"]] /
+        p4_oo_plots[[plot_type]][["population_country"]]/
+        p3_ao_plots[[plot_type]][["parameter_type"]]  +
+      plot_layout(heights = c(14, 17, 6))
+
+    delays_plot <- (left_col | right_col) +
+      plot_layout(widths = c(1, 1)) +
+      plot_annotation(tag_levels = "A")
 
     ggsave(paste0("figure_5", label,"_delays.pdf"), plot = delays_plot,
            width = 28, height = 15)
@@ -535,6 +562,7 @@ for (i in seq_along(qa_thresh_vec)){
 }
 
 # ==============================================================================
+# *--------------------------------- Not used ---------------------------------*
 # Incubation facet:
 incubation_pc_facet <- forest_plot(d1,
                                    "Incubation period (days)",
