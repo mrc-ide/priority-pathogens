@@ -251,17 +251,28 @@ bsl_make_density_summary <- function(dist_name, post,
         scale <- exp(loc_d); dweibull(x_seq, shape = phi, scale = scale)
       }
     })
+
     dens_mat[i, ] <- rowMeans(dens_l)
+    # dens_mat[i, ] <- t(apply(dens_l, 1, median))
+
   }
-  data.frame(
+
+  if (posterior_cdf){
+    dx <- c(x_seq[1], diff(x_seq))
+    dens_mat <- dens_mat * dx
+    dens_mat <- t(apply(dens_mat, 1, cumsum))
+  }
+
+  summary_df <- data.frame(
     x = x_seq,
-    mean = apply(dens_mat, 2, mean, na.rm = TRUE),
+    mean = apply(dens_mat, 2, median, na.rm = TRUE),
     low  = apply(dens_mat, 2, quantile, 0.025, na.rm = TRUE),
     high = apply(dens_mat, 2, quantile, 0.975, na.rm = TRUE),
     model = dist_name
   )
-}
 
+  return (summary_df)
+}
 
 # ===============================
 # AUTOMATED BSL DIAGNOSTIC REPORT
