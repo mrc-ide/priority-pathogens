@@ -279,6 +279,12 @@ param_cleaning <- function(df){
     paste0("Proportion asymptomatic is reported in the paper.",
            "Denominator is contacts of Nipah patients who gave blood specimen")
 
+  # Sero uncert issue: Reported as 8.35 in the paper but this is clearly a typo;
+  # other estimates in the table have the same estimate but a 95% CI upper bound
+  # of 38.35
+  sero_2892_sero_uncert_filter <- df$access_param_id=="008_003"
+  df[sero_2892_sero_uncert_filter, "parameter_uncertainty_upper_value"] <- 38.35
+
   # CovID: 3057
   delay_3057_incp_filter <- df$access_param_id=="151_001"
   df[delay_3057_incp_filter, "parameter_2_value_type"] <- "Range (paired)"
@@ -702,32 +708,69 @@ param_cleaning <- function(df){
   df[df$access_param_id=="093_003", "parameter_unit"] <- "Percentage (%)"
 
   # Split 2931 incubation row
-  hd_2931_row_filter <- df$access_param_id=="138_016"
-  df[hd_2931_row_filter, "distribution_type"] <- NA
-  df[hd_2931_row_filter, "distribution_par1_type"] <- NA
-  df[hd_2931_row_filter, "distribution_par1_value"] <- NA
-  df[hd_2931_row_filter, "distribution_par1_uncertainty"] <- NA
-  df[hd_2931_row_filter, "distribution_par2_type"] <- NA
-  df[hd_2931_row_filter, "distribution_par2_value"] <- NA
-  df[hd_2931_row_filter, "distribution_par2_uncertainty"] <- NA
+  hd_2931_incp_row_filter <- df$access_param_id=="138_016"
 
-  new_2931_row <- df[hd_2931_row_filter, ]
-  new_2931_row$parameter_data_id  <- generate_new_id(df, "parameter_data_id", 10)
+  new_2931_incp_row <- df[hd_2931_incp_row_filter, ]
+  new_2931_incp_row$parameter_data_id  <- generate_new_id(
+    df, "parameter_data_id", 10)
   # No corresponding redcap entry so make an ID
-  new_2931_row$access_param_id  <- "138_3141"
-  new_2931_row$parameter_value <- 9.7
-  new_2931_row$parameter_value_type <- "Mean"
+  new_2931_incp_row$access_param_id  <- "138_3141"
+  new_2931_incp_row$parameter_value <- 9.7
+  new_2931_incp_row$parameter_value_type <- "Mean"
 
-  new_2931_row$parameter_statistical_approach <- "Estimated model parameter"
-  new_2931_row$parameter_paired <- "No"
-  new_2931_row$parameter_2_unit <- NA
-  new_2931_row$method_2_from_supplement <- NA
-  new_2931_row$parameter_2_statistical_approach <- NA
+  new_2931_incp_row$parameter_statistical_approach <- "Estimated model parameter"
+  new_2931_incp_row$parameter_paired <- "No"
+  new_2931_incp_row$parameter_2_unit <- NA
+  new_2931_incp_row$method_2_from_supplement <- NA
+  new_2931_incp_row$parameter_2_statistical_approach <- NA
 
-  new_2931_row$parameter_2_value_type <- NA
-  new_2931_row$parameter_2_lower_bound <- NA
-  new_2931_row$parameter_2_upper_bound <- NA
-  df <- rbind(df, new_2931_row)
+  new_2931_incp_row$parameter_2_value_type <- NA
+  new_2931_incp_row$parameter_2_lower_bound <- NA
+  new_2931_incp_row$parameter_2_upper_bound <- NA
+
+  # Remove dist param values
+  df[hd_2931_incp_row_filter, "distribution_type"] <- NA
+  df[hd_2931_incp_row_filter, "distribution_par1_type"] <- NA
+  df[hd_2931_incp_row_filter, "distribution_par1_value"] <- NA
+  df[hd_2931_incp_row_filter, "distribution_par1_uncertainty"] <- NA
+  df[hd_2931_incp_row_filter, "distribution_par2_type"] <- NA
+  df[hd_2931_incp_row_filter, "distribution_par2_value"] <- NA
+  df[hd_2931_incp_row_filter, "distribution_par2_uncertainty"] <- NA
+
+  df <- rbind(df, new_2931_incp_row)
+
+  # Split 2931 serial interval row
+  hd_2931_si_row_filter <- df$access_param_id=="138_015"
+
+  new_2931_si_row <- df[hd_2931_si_row_filter, ]
+  new_2931_si_row$parameter_data_id  <- generate_new_id(
+    df, "parameter_data_id", 10)
+
+  # No corresponding redcap entry so make an ID
+  new_2931_si_row$access_param_id  <- "138_2718"
+  new_2931_si_row$parameter_value <- 13
+  new_2931_si_row$parameter_value_type <- "Median"
+
+  new_2931_si_row$parameter_statistical_approach <- "Estimated model parameter"
+  new_2931_si_row$parameter_paired <- "No"
+  new_2931_si_row$parameter_2_unit <- NA
+  new_2931_si_row$method_2_from_supplement <- NA
+  new_2931_si_row$parameter_2_statistical_approach <- NA
+
+  new_2931_si_row$parameter_2_value_type <- NA
+  new_2931_si_row$parameter_2_lower_bound <- NA
+  new_2931_si_row$parameter_2_upper_bound <- NA
+
+  # Remove dist param values
+  df[hd_2931_si_row_filter, "distribution_type"] <- NA
+  df[hd_2931_si_row_filter, "distribution_par1_type"] <- NA
+  df[hd_2931_si_row_filter, "distribution_par1_value"] <- NA
+  df[hd_2931_si_row_filter, "distribution_par1_uncertainty"] <- NA
+  df[hd_2931_si_row_filter, "distribution_par2_type"] <- NA
+  df[hd_2931_si_row_filter, "distribution_par2_value"] <- NA
+  df[hd_2931_si_row_filter, "distribution_par2_uncertainty"] <- NA
+
+  df <- rbind(df, new_2931_si_row)
 
   # Labels for IQR and Range are different for variability so copying from
   # uncertainty results in different labels
