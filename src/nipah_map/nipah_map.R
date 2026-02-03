@@ -381,7 +381,8 @@ gg_bangladesh <- ggplot() +
                       name = 'Total cases',na.value="grey95",limits=c(0,240)) +
   ggsci::scale_color_lancet() + xlab('') + ylab('') +
   labs(title='Bangladesh IEDCR Surveillance Data',color = "Surveillance Period") +
-  theme_bw()
+  theme_bw() +
+  guides(color = guide_legend(override.aes = list(size = 5)))
 
 # North India + Bangladesh from outbreak data
 gg_northern_india_bangladesh <- ggplot()  +
@@ -397,7 +398,8 @@ gg_northern_india_bangladesh <- ggplot()  +
                       breaks = c(0, 1, 4, 8, 16, 64, 240),
                       name = 'Total cases',na.value="grey95",limits=c(0,240)) +
   labs(title='Northern India & Bangladesh\nreported outbreaks' ) +
-  theme_bw()
+  theme_bw() + guides(fill = guide_none(),
+                      color=guide_none())
 
 # Kerala
 gg_kerala <- ggplot()  +
@@ -413,7 +415,8 @@ gg_kerala <- ggplot()  +
                       breaks = c(0, 1, 4, 8, 16, 64, 240),
                       name = 'Total cases',na.value="grey95",limits=c(0,240)) +
   labs(title='Kerala\nreported outbreaks' ) +
-  theme_bw()
+  theme_bw() + guides(fill = guide_none(),
+                      color=guide_none())
 
 
 
@@ -432,7 +435,8 @@ gg_malaysia_singapore <- ggplot()  +
                       breaks = c(0, 1, 4, 8, 16, 64, 240),
                       name = 'Total cases',na.value="grey95",limits=c(0,240)) +
   labs(title='Malaysian peninsular\nreported outbreaks' ) +
-  theme_bw()
+  theme_bw() + guides(fill = guide_none(),
+                      color=guide_none())
 
 
 # Philippines
@@ -449,18 +453,72 @@ gg_philippines <- ggplot()  +
                       breaks = c(0, 1, 4, 8, 16, 64, 240),
                       name = 'Total cases',na.value="grey95",limits=c(0,240)) +
   labs(title='Philippines\nreported outbreaks' ) +
-  theme_bw()
-
+  theme_bw() + guides(fill = guide_none(),
+                      color=guide_none())
 layout_design <-
-  "AAAEE
-   AAAEE
-   AAAEE
-   AAAEE
-   AAAEE
-   #BCD#
-   #BCD#"
+  "AAABBBFFF
+   AAABBBFFF
+   AAABBBFFF
+   AAABBBFFF
+   AAABBBFFF
+   CCDDEEFFF
+   CCDDEEFFF"
 
-map_plot <-  gg_northern_india_bangladesh + gg_kerala + gg_malaysia_singapore + gg_philippines + gg_bangladesh +
-  plot_layout(guides = 'collect', design = layout_design) + plot_annotation(tag_levels = 'A')
+sero_studies <- parameters %>%
+  filter(parameter_class == 'Seroprevalence') %>%
+  mutate(population_group = factor(
+    population_group,
+    levels = c(sort(setdiff(unique(population_group),
+                            c("Other", "Unspecified"))),
+               "Other", "Unspecified"))) |>
+  filter(qa_score>0.5) %>%
+  mutate(parameter_unit = 'Percentage (%)', #replace_na(parameter_unit, 'Percentage (%)'),
+         population_group = replace_na(population_group, 'Other'),
+         sero_CSF = case_when(str_detect(parameter_notes,'CSF') ~ 'CSF',
+                              TRUE ~ 'Other')) |>
+  filter(parameter_type=="Seroprevalence - IgG") |>
+  mutate(parameter_value = coalesce(parameter_value,central))
+
+sero_forest_pop_group <- forest_plot(
+  sero_studies, sort=TRUE, 'Serology (%)','population_country', c(-4,104),
+  text_size = 13) +
+  ggforce::facet_col(facets = vars(population_group),
+                     scales = "free_y",
+                     space = "free") +
+  guides(shape = guide_legend(title="Parameter type"),
+         linetype = guide_none(),
+         color=guide_legend(title="Country")) + theme(
+           legend.position = c(0.78, 0.325)
+         )
+
+map_theme <- theme(
+  plot.margin = margin(2,2,2,2),
+  legend.position = "none"
+)
+
+text_size = 13
+gg_bangladesh <- gg_bangladesh+
+  theme(legend.title = element_text(size = 14),
+      legend.text  = element_text(size = 12))
+
+map_plot <-  gg_northern_india_bangladesh + gg_bangladesh + gg_kerala +
+  gg_malaysia_singapore + gg_philippines + sero_forest_pop_group  +
+  plot_layout(design = layout_design) +
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(byrow = FALSE)
+
 
 ggsave("nipha_outbreaks_map.png", plot = map_plot, width = 17, height = 13)
+
+ggsave("sero_forest_pop_group.png",
+       plot = sero_forest_pop_group,
+       width = 6, height = 13)
+
+
+ggsave("northern_india_bangladesh.png",
+       plot = gg_northern_india_bangladesh,
+       width = 10.4, height = 10)
+ggsave("bangladesh.png", plot = gg_bangladesh, width = 10, height = 10)
+ggsave("kerala.png", plot = gg_kerala, width = 6.4, height = 8)
+ggsave("malaysia_singapore.png", plot = gg_malaysia_singapore, width = 8.4, height = 10)
+ggsave("philippines.png", plot = gg_philippines, width = 9.9, height = 10)
