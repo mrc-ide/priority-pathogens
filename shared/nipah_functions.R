@@ -342,7 +342,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10, colgap.forest.left = paste0( colgap_shift,"cm"))
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 13, colgap.forest.left = paste0( colgap_shift,"cm"))
     dev.off()
   } else {
     mtan <- metamean(data = dataframe,
@@ -367,7 +367,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 13)
     dev.off()
   }
 
@@ -507,7 +507,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 11.5)
     dev.off()
   } else {
     mtan <- metagen(data = dataframe,
@@ -535,7 +535,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 11.5)
     dev.off()
   }
 
@@ -572,15 +572,23 @@ metaprop_wrap <- function(dataframe, subgroup,
                      method.tau = "ML")
 
     png(file = "temp.png", width = width, height = height, res = resolution)
+    par(mar = c(2, 2, 2, 1))
     forest(mtan, layout = "RevMan5",
            overall = plot_pooled, pooled.events = TRUE,
            print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
            study.results = plot_study,
            digits = digits,
-           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           col.diamond.lines = "black",col.diamond.common = colour,
+           col.diamond.random = colour, col.study = colour,
            col.subgroup = "black", col.inside = "black",
-           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+           weight.study = "same",
+           at = at, xlim = xlim, xlab="Case Fatality Ratio",
+           fs.predict.labels = 11.5,
+           fs.hetstat=11,
+           fs.test.subgroup = 11,
+           fs.axis = 11,
+           fontsize = 14,
+           plotwidth = "72.5mm")
     dev.off()
   } else {
     mtan <- metaprop(data = dataframe,
@@ -596,10 +604,18 @@ metaprop_wrap <- function(dataframe, subgroup,
            overall = plot_pooled, pooled.events = TRUE,
            study.results = plot_study,
            digits = digits,
-           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
+           col.diamond.lines = "black",col.diamond.common = colour,
+           col.diamond.random = colour,
            col.subgroup = "black", col.inside = "black",
-           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+           weight.study = "same", col.square.lines = "black",
+           col.square = colour,
+           at = at, xlim = xlim, xlab="Case Fatality Ratio",
+           fs.predict.labels = 11.5,
+           fs.hetstat=11,
+           fs.test.subgroup = 11,
+           fs.axis = 11,
+           fontsize = 14,
+           plotwidth = "72.5mm")
     dev.off()
   }
 
