@@ -226,6 +226,8 @@ subcolumns_outbreak <- outbreaks %>% dplyr::select(outbreak_country,outbreak_loc
          total_cases = total_cases/num_loc,
          deaths = deaths / num_loc)    # for location where we split report the AVERAGE number of cases
 
+saveRDS(subcolumns_outbreak, "cleaned_outbreak_data.RDS")
+
 location_agg <- subcolumns_outbreak %>% group_by(outbreak_location) %>%
   summarise(tot_cases = sum(total_cases),
             tot_deaths = sum(deaths)) %>%
