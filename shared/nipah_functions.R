@@ -113,7 +113,8 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 # function to produce forest plot for given dataframe
 forest_plot <- function(df, label, color_column, lims, text_size = 11,
                         show_label = FALSE, custom_colours = NA,
-                        segment_show.legend=NA, sort=FALSE, qa_alpha=1) {
+                        segment_show.legend=NA, sort=FALSE, qa_alpha=1,
+                        point_size=3) {
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
 
   if (sort){
@@ -157,7 +158,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                   alpha=df[df$uncertainty_present,]$plot_alpha) +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_value_type, fill = .data[[color_column]]),
-               alpha=df$plot_alpha, size = 3, stroke = 1, color = "black")
+               alpha=df$plot_alpha, size = point_size, stroke = 1, color = "black")
 
   if (all(df$parameter_class=="Reproduction number")) {
     gg <- gg +
