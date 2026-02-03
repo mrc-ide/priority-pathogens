@@ -142,17 +142,17 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                      y = urefs, yend = urefs, color = .data[[color_column]],),
                  linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      y = urefs),
+                      y = urefs, linetype="Uncertainty"),
                   width = 0.25, lwd=0.5, color = "black", alpha=df$plot_alpha) +
     geom_errorbar(data= df[!df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs),
-                  width = 0.25, lwd=0.5, color = "black", linetype="dashed",
+                      y = urefs, linetype="Variability"),
+                  width = 0.25, lwd=0.5, color = "black",
                   lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
     geom_errorbar(data= df[df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs),
-                  width = 0.25, lwd=0.5, color = "black", linetype="dashed",
+                      y = urefs, linetype="Variability"),
+                  width = 0.25, lwd=0.5, color = "black",
                   lineend = "square", position = position_nudge(y=-0.25),
                   alpha=df[df$uncertainty_present,]$plot_alpha) +
     geom_point(aes(x = parameter_value, y = urefs,
@@ -172,6 +172,9 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                                     Other = 23, `Central - unspecified`=25),
                          breaks = c("Mean", "Median", "Unspecified", "Other",
                                     "Central - unspecified")) +
+      scale_linetype_manual(name   = "Variation Type",
+                            values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                            breaks = c("Uncertainty", "Variability")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
@@ -187,6 +190,9 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                                     Other = 23, `Central - unspecified`=25),
                          breaks = c("Mean", "Median", "Unspecified", "Other",
                                     "Central - unspecified")) +
+      scale_linetype_manual(name   = "Variation Type",
+                            values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                            breaks = c("Uncertainty", "Variability")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
@@ -196,9 +202,13 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   }
 
   if (cats == 1) {
-    gg <- gg + guides(fill = "none", color="none", shape = guide_legend(title = NULL,order = 1))
+    gg <- gg + guides(fill = "none", color="none",
+                      shape = guide_legend(title = NULL,order = 1),
+                      linetype=guide_legend(title = NULL,order = 2))
   } else {
-    gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
+    gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1),
+                      shape = guide_legend(title = NULL,order = 2),
+                      linetype=guide_legend(title = NULL, order = 3))}
 
   if(show_label)
     gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" )
