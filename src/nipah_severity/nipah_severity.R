@@ -54,21 +54,22 @@ iso_lookup <- c(
 cfr_from_outbreaks <- subcolumns_outbreak |>
   mutate(outbreak_source = replace_na(outbreak_source, 'Unknown')) |>
   mutate(cfr_ifr_denominator = round(total_cases),
-         cfr_ifr_numerator   = round(deaths),
-         CFR                 = cfr_ifr_numerator / cfr_ifr_denominator,
-         refs                = paste(outbreak_country, outbreak_location, sep = " |> "),
-         parameter_value     = CFR,
-         parameter_unit      = 'Percentage') |> arrange(desc(CFR)) |>
+         cfr_ifr_numerator = round(deaths),
+         CFR = cfr_ifr_numerator / cfr_ifr_denominator,
+         article_refs = refs,
+         refs = paste(outbreak_country, outbreak_location, sep = " |> "),
+         parameter_value = CFR,
+         parameter_unit = 'Percentage') |> arrange(desc(CFR)) |>
   mutate(outbreak_source = case_when(str_detect(outbreak_source, 'Domestic animal' ) ~ 'Domestic animal',
                                      str_detect(outbreak_source, 'Wild animal' ) ~ 'Wild animal',
                                      TRUE ~ outbreak_source),
          refs_full = refs,
-           refs = paste0(iso_lookup[trimws(str_extract(refs, "^[^|]+"))],
-             " |> ",
+           refs = paste0(
+             iso_lookup[trimws(str_extract(refs, "^[^|]+"))], " |> ",
              # first 3 letters of each word in location
-             str_to_upper(str_replace_all( str_extract(refs, "(?<=\\|>).*$"),
-                                           "\\b([A-Za-z]{1,3})[A-Za-z]*\\b",
-                                           "\\1")))
+             str_to_upper(str_replace_all(str_extract(refs, "(?<=\\|>).*$"),
+                                          "\\b([A-Za-z]{1,3})[A-Za-z]*\\b",
+                                          "\\1")))
          )
 
 # IEDCR
@@ -140,67 +141,133 @@ d1 <- d1 |>
       "109_020", "109_021", "113_001", "129_002", "121_001", "129_003",
       "138_004", "151_004", "171_004", "173_001", "172_001", "179_001",
       "190_001") ~ "Assumed",
-    TRUE ~ "False")) #only identified for estimates passed to meta-analysis (i.e. denominator not NA)
+    TRUE ~ "False")) |>
+  mutate(population_group = factor(population_group,
+           levels = c(sort(setdiff(unique(population_group),
+                                   c("Other", "Unspecified"))),
+                      "Other", "Unspecified")))
 
 # proportion of symptomatic cases
 d2 <- parameters |>
     filter(parameter_type == "Severity - proportion of symptomatic cases")
 
 # *------------------------------ Meta-analysis -------------------------------*
+# Plot file structure - many plots created in this task so better to create a
+# folder structure
+filepath_vec <- c(file.path("figures"),
+                  file.path("figures", "extracted_parameters", "all"),
+                  file.path("figures","extracted_parameters", "qa_filtered"))
+
+for (filepath in filepath_vec){
+  if (!dir.exists(filepath)) {
+    dir.create(filepath, recursive = TRUE)
+  }
+}
+
+
 # Plot colour
 imperial_khaki <- "#EFE58B"
 text_size <- 15
 lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+meta_digits <- 2
 
-# DONT DEDUPLICATE AS THIS HAS CONTEXT INFORMATION
-# cfr <- cfr |>
-#   mutate(parameter_context_location_type=replace_na(
-#     parameter_context_location_type,'Unspecified'),
-#          parameter_notes=replace_na(parameter_notes,''))
-# cfr$is_duplicate <- FALSE
-# #cfr[cfr$outbreak_duriation_years>5,]$is_duplicate <- TRUE
-# cfr[cfr$population_country == 'Malaysia,Singapore',]$is_duplicate <- TRUE
-# cfr[cfr$population_country == 'Malaysia' & cfr$parameter_context_location_type != 'State',]$is_duplicate <- TRUE #we take the individual state outbreaks rather than the national aggregate one.
-# cfr[str_detect(cfr$parameter_notes,'cluster'),]$is_duplicate <- TRUE #we take the individual outbreaks rather than the cluster
-#
-# cfr <- cfr |> filter( !is_duplicate ) |>
-#   mutate( unique_id = paste(covidence_id, population_country, population_location,
-#                             population_study_start_year, str_remove(population_study_start_month, "^0+"), sep = "|"),
-#           EXCLUDE   = ifelse(unique_id %in% exclude_ids, 1, 0)) |>
-#   filter(!EXCLUDE)
-
-# CFR from outbreaks:
-cfr_outbreak_ma <- metaprop_wrap(
+# *----------------------- CFR from extracted outbreaks -----------------------*
+# Overall
+cfr_outbreak_country <- metaprop_wrap(
   cfr_from_outbreaks, subgroup = 'outbreak_country', plot_pooled = TRUE,
-  sort_by_subg = TRUE, plot_study = FALSE, digits = 2, colour = imperial_khaki,
+  sort_by_subg = TRUE, plot_study = FALSE, digits = meta_digits,
+  colour = imperial_khaki,
   width = 9500, height = 6000, resolution = 1000)
 
-ggsave(file.path("all", "figure_3_meta_outbreak_country.pdf"),
-       cfr_outbreak_ma$plot, width = 12, height = 6)
-ggsave(file.path("all", "figure_3_meta_outbreak_country.png"),
-       cfr_outbreak_ma$plot, width = 12, height = 6)
+ggsave(file.path("figures", "figure_3_meta_country_extracted_outbreak.pdf"),
+       cfr_outbreak_country$plot, width = 12, height = 6)
+ggsave(file.path("figures", "figure_3_meta_country_extracted_outbreak.png"),
+       cfr_outbreak_country$plot, width = 12, height = 6)
 
-# CFR from Bangladesh surveillance:
-cfr_from_bangladesh_surveillance_ma <- metaprop_wrap(
-  cfr_from_bangladesh_surveillance, subgroup = NA, plot_pooled = TRUE,
-  plot_study = TRUE, digits = 2, colour = imperial_khaki,
-  width = 9500, height = 6000, resolution = 1000)
+# With study breakdown
+# Update refs for nicer study printing
+# max_width <- max(nchar(paste(cfr_from_outbreaks$outbreak_location,
+#                              cfr_from_outbreaks$outbreak_start_year)))
+# cfr_from_outbreaks <- cfr_from_outbreaks |>
+#   mutate(refs = paste0(str_pad(paste(outbreak_location, outbreak_start_year),
+#                                width = 40, side = "right"), " | ",
+#                        article_refs))
 
-ggsave(file.path("all", "figure_3_meta_no_subg_IEDCR.pdf"),
-       cfr_from_bangladesh_surveillance_ma$plot, width = 12, height = 10)
-ggsave(file.path("all", "figure_3_meta_no_subg_IEDCR.png"),
-       cfr_from_bangladesh_surveillance_ma$plot, width = 12, height = 10)
+cfr_outbreak_country_study <- metaprop_wrap(
+  cfr_from_outbreaks,
+  subgroup = 'outbreak_country', plot_pooled = TRUE,
+  sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+  colour = imperial_khaki,
+  width = 11000, height = 17000, resolution = 1000)
 
+# Update plot to allow for new format
+cfr_outbreak_country_study$result$article_refs <- cfr_from_outbreaks$article_refs
+cfr_outbreak_country_study$result$studlab <- paste0(
+  cfr_from_outbreaks$outbreak_start_year, ", ", cfr_from_outbreaks$outbreak_location)
+
+png(file = "temp.png", width = 13000, height = 17000, res = 1000)
+par(mar = c(2, 2, 2, 1))
+cfr_outbreak_country_study_plot <- forest(cfr_outbreak_country_study$result, layout = "Revman5",
+       leftcols = c("studlab", "article_refs", "event", "n", "effect.ci"),
+       leftlabs = c("Outbreak", "Study", "Events", "Total"),
+       just.addcols = "left",
+       colgap.forest.left = "3mm",
+       overall = TRUE, pooled.events = TRUE,
+       print.subgroup.name = FALSE, sort.subgroup = TRUE,
+       study.results = TRUE,
+       digits = 2,
+       col.diamond.lines = "black",col.diamond.common = colour,
+       col.diamond.random = colour,
+       col.square = colour, col.square.lines = "black",
+       col.study = "black", col.subgroup = "black",
+       col.inside = "black", weight.study = "same",
+       at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio",
+       fs.predict.labels = 11.5,
+       fs.hetstat=11,
+       fs.test.subgroup = 11,
+       fs.axis = 11,
+       fontsize = 14,
+       plotwidth = "72.5mm")
+dev.off()
+
+pg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+cfr_outbreak_country_study_plot <- wrap_elements(
+  plot = rasterGrob(pg, interpolate = TRUE))
+
+ggsave(file.path("figures", "SI_CFR_meta_country_extracted_outbreak.pdf"),
+       cfr_outbreak_country_study_plot, width = 5, height = 6.5)
+ggsave(file.path("figures", "SI_CFR_meta_country_extracted_outbreak.png"),
+       cfr_outbreak_country_study_plot,width = 5, height = 6.5)
+
+# *--------------------- CFR from Bangladesh surveillance ---------------------*
+# Overall
 cfr_from_bangladesh_surveillance_yc <- metaprop_wrap(
   cfr_from_bangladesh_surveillance, subgroup = "year_cat", plot_pooled = TRUE,
-  sort_by_subg = TRUE, plot_study = FALSE, digits = 2, colour = imperial_khaki,
+  sort_by_subg = TRUE, plot_study = FALSE, digits = meta_digits,
+  colour = imperial_khaki,
   width = 9500, height = 7000, resolution = 1000)
 
-ggsave(file.path("all", "figure_3_meta_year_cat_IEDCR.pdf"),
+ggsave(file.path("figures", "figure_3_meta_year_cat_IEDCR.pdf"),
        cfr_from_bangladesh_surveillance_yc$plot, width = 10, height = 8)
-ggsave(file.path("all", "figure_3_meta_year_cat_IEDCR.png"),
+ggsave(file.path("figures", "figure_3_meta_year_cat_IEDCR.png"),
        cfr_from_bangladesh_surveillance_yc$plot, width = 10, height = 8)
 
+# With study breakdown
+cfr_from_bangladesh_surveillance_yc_study <- metaprop_wrap(
+  cfr_from_bangladesh_surveillance, subgroup = 'year_cat',
+  plot_pooled = TRUE, sort_by_subg = TRUE, plot_study = TRUE,
+  digits = meta_digits, colour = imperial_khaki,
+  width = 10400, height = 11000, resolution = 1000)
+
+ggsave(file.path("figures", "SI_CFR_meta_year_cat_IEDCR.pdf"),
+       cfr_from_bangladesh_surveillance_yc_study$plot,
+       width = 7.5, height = 8.25)
+ggsave(file.path("figures", "SI_CFR_meta_year_cat_IEDCR.png"),
+       cfr_from_bangladesh_surveillance_yc_study$plot,
+       width = 7.5, height = 8.25)
+
+# *---------------------- CFR from extracted parameters -----------------------*
 # Extracted CFRs
 qa_thresh_vec <- c("all"=-1, "qa"=0.5)
 qa_alpha_vec <- c(0.3, 1)
@@ -211,11 +278,12 @@ labels <- c("SI_allqa", "")
 cfr_duplicates <- list("no_dups"="False",
                        "no_known_dups"=c("False", "Assumed"),
                        "all"=c("False", "Assumed", "Known"))
+
 for (i in seq_along(qa_thresh_vec)){
   list_label <- list_label_vec[i]
   qa_threshold <- qa_thresh_vec[i]
   qa_alpha <- qa_alpha_vec[i]
-  plot_type <- names(qa_thresh_vec)[i]
+  plot_type <- file.path("figures", "extracted_parameters", list_label)
 
   d1_filtered <- d1 |> filter(qa_score>qa_threshold,
                               duplicate_cfr=="False")
@@ -240,73 +308,66 @@ for (i in seq_along(qa_thresh_vec)){
 
   plot_list[[list_label]][["meta"]][["m1"]] <- metaprop_wrap(
     dataframe = d1_filtered, subgroup = "population_country", plot_pooled = TRUE,
-    sort_by_subg = TRUE, plot_study = FALSE, digits = 2,
-    colour = imperial_khaki,
-    width = 9500, height = 6000, resolution = 1000)
+    sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+    colour = imperial_khaki, width = 10500, height = 9000, resolution = 1000)
 
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_population_country.pdf")),
          plot_list[[list_label]][["meta"]][["m1"]]$plot,
-         width = 12, height = 10)
+         width = 5.8, height = 5)
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_population_country.png")),
          plot_list[[list_label]][["meta"]][["m1"]]$plot,
-         width = 12, height = 10)
+         width = 5.8, height = 5)
 
-  plot_list[[list_label]][["meta"]][["m2"]] <- metaprop_wrap(
+plot_list[[list_label]][["meta"]][["m2"]] <- metaprop_wrap(
     dataframe = d1_filtered, subgroup = "study_midyear_cat",
                       plot_pooled = TRUE, sort_by_subg = TRUE,
-                      plot_study = FALSE, digits = 2, colour = imperial_khaki,
-    width = 9500, height = 7000, resolution = 1000)
+                      plot_study = TRUE, digits = meta_digits,
+    colour = imperial_khaki,
+    width = 10500, height = 9000, resolution = 1000)
 
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_study_midyear_cat.pdf")),
          plot_list[[list_label]][["meta"]][["m2"]]$plot,
-         width = 9, height = 7)
+         width = 8.5, height = 7)
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_study_midyear_cat.png")),
          plot_list[[list_label]][["meta"]][["m2"]]$plot,
-         width = 9, height = 7)
+         width = 8.5, height = 7)
+
+  # Update to account for dedup:
+  d1_filtered <-  d1_filtered |>
+    mutate(cfr_denom_cat = ifelse(cfr_denom_cat=="Reported Cases = 100-329",
+                                  "Reported Cases = 100-250", cfr_denom_cat))
 
   plot_list[[list_label]][["meta"]][["m3"]] <- metaprop_wrap(
-    dataframe = d1_filtered, subgroup = "cfr_denom_cat", plot_pooled = TRUE, sort_by_subg = FALSE,
-    plot_study = FALSE, digits = 2, colour = imperial_khaki,
-    width = 9500, height = 4200, resolution = 1000)
+    dataframe = d1_filtered, subgroup = "cfr_denom_cat", plot_pooled = TRUE,
+    sort_by_subg = FALSE, plot_study = TRUE, digits = meta_digits,
+    colour = imperial_khaki, width = 10500, height = 8000, resolution = 1000)
 
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_cfr_denom_cat.pdf")),
          plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 12, height = 6)
+         width = 8, height = 6)
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_cfr_denom_cat.png")),
          plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 12, height = 6)
+         width = 8, height = 6)
 
   plot_list[[list_label]][["meta"]][["m4"]] <- metaprop_wrap(
     dataframe = d1_filtered, subgroup = "population_group", plot_pooled = TRUE,
-    sort_by_subg = TRUE, plot_study = FALSE, digits = 2, colour = imperial_khaki,
-    width = 9500, height = 4200, resolution = 1000)
+    sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+    colour = imperial_khaki, width = 10000, height = 9000, resolution = 1000)
 
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_population_group.pdf")),
          plot_list[[list_label]][["meta"]][["m4"]]$plot,
-         width = 12, height = 6)
+         width = 7.3, height = 6)
   ggsave(file.path(plot_type,
                    paste0("figure_3_meta_population_group.png")),
          plot_list[[list_label]][["meta"]][["m4"]]$plot,
-         width = 12, height = 6)
-
-  plot_list[[list_label]][["meta"]][["m_ind"]] <- metaprop_wrap(
-      d1_filtered |> arrange(desc(central)), subgroup = NA, plot_pooled = TRUE,
-      plot_study = TRUE, digits = 2, colour = imperial_khaki,
-      width = 9500, height = 6000, resolution = 1000)
-
-  ggsave(file.path("all", "figure_3_meta_no_subg_extracted_cfrs.pdf"),
-         plot_list[[list_label]][["meta"]][["m_ind"]]$plot,
-         width = 12, height = 10)
-  ggsave(file.path("all", "figure_3_meta_no_subg_extracted_cfrs.pdf"),
-         plot_list[[list_label]][["meta"]][["m_ind"]]$plot,
-         width = 12, height = 10)
+         width = 7.3, height = 6)
 
   # Forest plot
   plot_list[[list_label]][["forest"]][["p_cfr_1"]] <- forest_plot(
@@ -363,6 +424,48 @@ for (i in seq_along(qa_thresh_vec)){
          width = 8, height = 5)
 }
 
+# Additional CFR from extracted parameters results
+# Can't do year since the estimates may relate to a range and outbreak location
+# is not clean (possible that there's a single estimate for multiple locations)
+# No duplicates
+d1_dup_false <- d1 |> filter(duplicate_cfr=="False")
+
+meta_dup_false <- metaprop_wrap(
+  dataframe = d1_dup_false, subgroup = "population_country", plot_pooled = TRUE,
+  sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+  colour = imperial_khaki, width = 10500, height = 9000, resolution = 1000)
+
+ggsave(file.path("figures", "extracted_parameters",
+                 "SI_CFR_meta_country_param_dup_eq_false.pdf"),
+       meta_dup_false$plot,
+       width = 5.8, height = 5)
+
+# Assumed duplicates included
+# Error when trying to fit this?
+d1_dup_assumed <- d1 |>
+  filter(duplicate_cfr!="Known")
+
+meta_dup_assumed <- metaprop_wrap(
+  dataframe = d1_dup_assumed, subgroup = "population_country", plot_pooled = TRUE,
+  sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+  colour = imperial_khaki, width = 10500, height = 18000, resolution = 1000)
+
+ggsave(file.path("figures", "extracted_parameters",
+                 "SI_CFR_meta_country_param_dup_neq_known.pdf"),
+       meta_dup_assumed$plot,
+       width = 5.8, height = 10)
+
+# All
+meta_all <- metaprop_wrap(
+  dataframe = d1, subgroup = "population_country", plot_pooled = TRUE,
+  sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+  colour = imperial_khaki, width = 10500, height = 20000, resolution = 1000)
+
+ggsave(file.path("figures", "extracted_parameters",
+                 "SI_CFR_meta_country_param_dup_all.pdf"),
+       meta_all$plot,
+       width = 5.8, height = 10.8)
+
 # Combine figures
 p1 <- plot_list[["all"]][["meta"]][["m1"]]$plot +
   theme(plot.margin = margin(-50, -250, -250, -50))
@@ -380,7 +483,6 @@ p5 <- plot_list[["all"]][["forest"]][["p_prop_1"]] +
 left_col  <- p4 / p5 + plot_layout(heights = c(26, 3))
 right_col <- p1 / p2 / p3 +
   plot_layout(heights = c(2.4, 2.4, 2.45))
-ggsave("figure_right_col.png", plot = right_col, width = 6, height = 10, dpi=600)
 
 patchwork <- (left_col | right_col) +
   plot_layout(widths = c(2.5, 4)) +
@@ -388,25 +490,78 @@ patchwork <- (left_col | right_col) +
   theme(plot.tag.position = c(0, 1), plot.margin = margin(5.5, 0, 0, 5.5),
         plot.tag = element_text(size = 14))
 
-ggsave("figure_severity_forest.png", plot = left_col, width = 8, height = 10)
-ggsave("figure_severity_forest.pdf", plot = left_col, width = 8, height = 10)
+ggsave(file.path("figures", "figure_severity_forest.png"),
+       plot = left_col, width = 8, height = 10)
+ggsave(file.path("figures","figure_severity_forest.pdf"),
+       plot = left_col, width = 8, height = 10)
 
-ggsave("figure_severity.png", plot = patchwork, width = 11.5, height = 10, dpi=300)
-ggsave("figure_severity.pdf", plot = patchwork, width = 11.5, height = 10, dpi=300)
+ggsave(file.path("figures", "figure_severity.png"),
+       plot = patchwork, width = 11.5, height = 10, dpi=300)
+ggsave(file.path("figures", "figure_severity.pdf"),
+       plot = patchwork, width = 11.5, height = 10, dpi=300)
 
 # Additional plots for SI
-#figure_S6-S10: meta-analysis with all estimates plotted
-#figure_S11: meta-analysis with only known duplicates excluded
-# db <- d1 |> filter(duplicate_cfr %in% c("False","Assumed"))
-#figure_S12: meta-analysis without de-duplication
-# dc <- d1
-patchwork_si <- plot_list[["all"]][["forest"]][["p_cfr_1"]] +
+# Since loop only uses deduplicated CFR, recreate the plot (inefficient)
+all_pop_groups <- d1 |>
+  distinct(population_group) |>
+  arrange(population_group == "Other", population_group) |>
+  pull()
+
+custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
+names(custom_colour_pop_groups) <- all_pop_groups
+
+all_countries <- d1 |>
+  distinct(population_country) |>
+  arrange(population_country) |>
+  pull()
+
+custom_colour_countries <- lanonc_colours[seq_along(all_countries)]
+names(custom_colour_countries) <- all_countries
+
+p1 <- forest_plot(
+  d1, "Case-Fatality Ratio (%)","population_country",
+  c(-10,110), custom_colours = custom_colour_countries,
+  text_size=text_size, qa_alpha=0.3, sort=TRUE) +
+  guides(shape = guide_legend(title = "Parameter type", order=1),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  guide_legend(title = "Country", order=2))
+
+p2 <- forest_plot(
+  d1, "Case-Fatality Ratio (%)","population_group",
+  c(-10,110), custom_colours = custom_colour_pop_groups,
+  text_size=text_size, qa_alpha=0.3, sort=TRUE) +
+  guides(shape = guide_legend(title = "Parameter type", order=1),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  guide_legend(title = "Population group", order=2))
+
+patchwork_si <- p1 +
   theme(legend.position=c(0.175, 0.7), legend.direction = "vertical") +
-  plot_list[["all"]][["forest"]][["p_cfr_2"]] +
-  theme(legend.position=c(0.225, 0.7), legend.direction = "vertical") +
+  p2 +
+  theme(legend.position=c(0.25, 0.7), legend.direction = "vertical") +
   guides(shape=guide_none()) +
   plot_layout(ncol = 2) + plot_annotation(tag_levels = 'A')
 
-ggsave("figure_SI_severity.png", plot = patchwork_si, width = 15, height = 10)
-ggsave("figure_SI_severity.pdf", plot = patchwork_si, width = 15, height = 10)
+ggsave(file.path("figures", "figure_SI_severity.png"),
+                 plot = patchwork_si, width = 15, height = 18)
+ggsave(file.path("figures", "figure_SI_severity.pdf"),
+       plot = patchwork_si, width = 15, height = 18)
 
+p3 <- forest_plot(
+  d1, "Case-Fatality Ratio (%)","population_group",
+  c(-10,110), custom_colours = custom_colour_pop_groups,
+  text_size=text_size,qa_alpha=0.3, sort=TRUE) +
+  guides(shape = guide_legend(title = "Parameter type", order=1),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  guide_legend(title = "Population group", order=2)) +
+  ggforce::facet_col(facets = vars(population_country),
+                     scales = "free_y",
+                     space = "free") +
+  theme(legend.position=c(0.2, 0.875))
+
+ggsave(file.path("figures", "figure_SI_severity_facet.png"),
+       plot = p3, width = 10, height = 18)
+ggsave(file.path("figures", "figure_SI_severity_facet.pdf"),
+       plot = p3, width = 10, height = 18)
