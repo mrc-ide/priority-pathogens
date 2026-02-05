@@ -373,7 +373,7 @@ gg_bangladesh <- ggplot() +
   geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
   geom_sf(data = l0_in, lwd = 0.5, col = "black",  fill = NA) +
   coord_sf(xlim = c(87.9, 93), ylim = c(21, 26.7), expand = FALSE) +
-  geom_point(data = manual_coords, aes(x = long, y = lat, color = Surveillance.period), size = 2, shape = 18) +
+  geom_point(data = manual_coords, aes(x = long, y = lat, color = Surveillance.period), size = 3.5, shape = 18) +
   geom_text(data = manual_coords, aes(x = long, y = lat, label = name), hjust = 0, vjust = 0, nudge_y = 0.05, size = 2.5) +
   scale_fill_gradient(low='palegreen', high="darkblue",
                       trans = scales::trans_new("log2p",
