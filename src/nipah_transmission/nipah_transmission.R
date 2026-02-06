@@ -95,10 +95,10 @@ d3 <- d3 |>
 d4 <- d4 |> mutate(arate=c("Primary","Primary")) |>
     arrange(arate,-central)
 
-d6 <- d6 |>
+d5 <- d5 |>
   arrange(parameter_type, -central)
 
-d6 <- d6 |>
+d5 <- d5 |>
   mutate(parameter_type = factor(parameter_type,
                                  levels = unique(parameter_type),
                                  labels = c("Basic (R0)")))
@@ -110,7 +110,7 @@ text_size <- 12
 # Get custom colours so that genome has different colours
 lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 
-all_pop_groups <- bind_rows(d3, d4, d5, d6) |>
+all_pop_groups <- bind_rows(d3, d4, d5, d5) |>
   distinct(population_group) |>
   # arrange alphabetically but put other last
   arrange(population_group == "Other", population_group) |>
@@ -189,7 +189,7 @@ for (i in seq_along(qa_thresh_vec)){
            linetype = guide_none(),
            shape = guide_none())
 
-  p5 <- forest_plot(d6 |> filter(qa_score>qa_threshold),
+  p5 <- forest_plot(d5 |> filter(qa_score>qa_threshold),
                     "Basic Reproduction Number",
                     "population_group",
                     c(0, 1.5), custom_colours = custom_colour_pop_groups,
