@@ -44,7 +44,7 @@ orderly_run("nipah_latex_tables", list(pathogen="NIPAH"))
 # *---------------------------- Plots and analysis ----------------------------*
 orderly_run("nipah_serology", list(pathogen="NIPAH"))
 
-orderly_run("nipah_map", list(pathogen="NIPAH"))
+# orderly_run("nipah_map", list(pathogen="NIPAH"))
 
 orderly_run("nipah_transmission", list(pathogen="NIPAH"))
 
