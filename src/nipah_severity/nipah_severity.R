@@ -24,7 +24,8 @@ orderly_shared_resource("cleaned_outbreak_data.RDS"="cleaned_outbreak_data.RDS")
 source("nipah_functions.R")
 
 orderly_artefact("Nipah severity figures",
-                 c("figure_severity.png", "figure_severity.pdf"))
+                 c(file.path("figures", "figure_severity.png"),
+                   file.path("figures","figure_severity.pdf")))
 # *------------------------------ Data curation -------------------------------*
 articles   <- read_csv("articles.csv")
 outbreaks  <- read_csv("outbreaks.csv")
@@ -205,6 +206,7 @@ cfr_outbreak_country_study$result$article_refs <- cfr_from_outbreaks$article_ref
 cfr_outbreak_country_study$result$studlab <- paste0(
   cfr_from_outbreaks$outbreak_start_year, ", ", cfr_from_outbreaks$outbreak_location)
 
+colour <- imperial_khaki
 png(file = "temp.png", width = 13000, height = 17000, res = 1000)
 par(mar = c(2, 2, 2, 1))
 cfr_outbreak_country_study_plot <- forest(cfr_outbreak_country_study$result, layout = "Revman5",
@@ -469,7 +471,7 @@ ggsave(file.path("figures", "extracted_parameters",
 # Combine figures
 p1 <- plot_list[["all"]][["meta"]][["m1"]]$plot +
   theme(plot.margin = margin(-50, -250, -250, -50))
-p2 <- cfr_outbreak_ma$plot +
+p2 <- cfr_outbreak_country$plot +
   theme(plot.margin = margin(-250, -250, -250, -250))
 p3 <- cfr_from_bangladesh_surveillance_yc$plot +
   theme(plot.margin = margin(-50, -250, -50, -250))
