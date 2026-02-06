@@ -2,7 +2,7 @@
 library(dplyr)
 library(ggplot2)
 library(ggsci)
-library(orderly)
+library(orderly2)
 library(patchwork)
 library(readr)
 library(stringr)
