@@ -11,7 +11,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     mutate(new_refs = ifelse(refs %in% refs[duplicated(refs)],
                              paste0(sub("\\)$", "", refs),letters[counter],")"),
                              refs)) |>
-    select(-counter,-refs) |>
+    dplyr::select(-counter,-refs) |>
     rename(refs = new_refs) |>
     mutate(refs = str_to_title(refs))
 
@@ -70,7 +70,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     mutate(central = coalesce(parameter_value,
                               100*cfr_ifr_numerator/cfr_ifr_denominator,
                               0.5*(parameter_lower_bound+parameter_upper_bound))) |>
-    select(-c(no_unc))
+    dplyr::select(-c(no_unc))
 
   if (plotting) {
     parameters <- param4plot
@@ -113,7 +113,8 @@ curation <- function(articles, outbreaks, models, parameters, plotting) {
 # function to produce forest plot for given dataframe
 forest_plot <- function(df, label, color_column, lims, text_size = 11,
                         show_label = FALSE, custom_colours = NA,
-                        segment_show.legend=NA, sort=FALSE, qa_alpha=1) {
+                        segment_show.legend=NA, sort=FALSE, qa_alpha=1,
+                        point_size=3) {
   stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
 
   if (sort){
@@ -132,8 +133,8 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   df$segment_alpha <- 1
 
   if(qa_alpha!=1){
-    df[df$qa_score<0.5, ]$plot_alpha <- qa_alpha
-    df[df$qa_score<0.5, ]$segment_alpha <- 0.65 * qa_alpha
+    df[df$qa_score<=0.5, ]$plot_alpha <- qa_alpha
+    df[df$qa_score<=0.5, ]$segment_alpha <- 0.65 * qa_alpha
   }
 
   cats <- length(unique(df[[color_column]]))
@@ -142,22 +143,22 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                      y = urefs, yend = urefs, color = .data[[color_column]],),
                  linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      y = urefs),
+                      y = urefs, linetype="Uncertainty"),
                   width = 0.25, lwd=0.5, color = "black", alpha=df$plot_alpha) +
     geom_errorbar(data= df[!df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs),
-                  width = 0.25, lwd=0.5, color = "black", linetype="dashed",
+                      y = urefs, linetype="Variability"),
+                  width = 0.25, lwd=0.5, color = "black",
                   lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
     geom_errorbar(data= df[df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs),
-                  width = 0.25, lwd=0.5, color = "black", linetype="dashed",
+                      y = urefs, linetype="Variability"),
+                  width = 0.25, lwd=0.5, color = "black",
                   lineend = "square", position = position_nudge(y=-0.25),
                   alpha=df[df$uncertainty_present,]$plot_alpha) +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_value_type, fill = .data[[color_column]]),
-               alpha=df$plot_alpha, size = 3, stroke = 1, color = "black")
+               alpha=df$plot_alpha, size = point_size, stroke = 1, color = "black")
 
   if (all(df$parameter_class=="Reproduction number")) {
     gg <- gg +
@@ -172,6 +173,9 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                                     Other = 23, `Central - unspecified`=25),
                          breaks = c("Mean", "Median", "Unspecified", "Other",
                                     "Central - unspecified")) +
+      scale_linetype_manual(name   = "Variation Type",
+                            values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                            breaks = c("Uncertainty", "Variability")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
@@ -187,6 +191,9 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                                     Other = 23, `Central - unspecified`=25),
                          breaks = c("Mean", "Median", "Unspecified", "Other",
                                     "Central - unspecified")) +
+      scale_linetype_manual(name   = "Variation Type",
+                            values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                            breaks = c("Uncertainty", "Variability")) +
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
@@ -196,9 +203,13 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   }
 
   if (cats == 1) {
-    gg <- gg + guides(fill = "none", color="none", shape = guide_legend(title = NULL,order = 1))
+    gg <- gg + guides(fill = "none", color="none",
+                      shape = guide_legend(title = NULL,order = 1),
+                      linetype=guide_legend(title = NULL,order = 2))
   } else {
-    gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1), shape = guide_legend(title = NULL,order = 2))}
+    gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1),
+                      shape = guide_legend(title = NULL,order = 2),
+                      linetype=guide_legend(title = NULL, order = 3))}
 
   if(show_label)
     gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" )
@@ -332,7 +343,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10, colgap.forest.left = paste0( colgap_shift,"cm"))
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 13, colgap.forest.left = paste0( colgap_shift,"cm"))
     dev.off()
   } else {
     mtan <- metamean(data = dataframe,
@@ -357,7 +368,7 @@ metamean_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 13)
     dev.off()
   }
 
@@ -497,7 +508,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 11.5)
     dev.off()
   } else {
     mtan <- metagen(data = dataframe,
@@ -525,7 +536,7 @@ metagen_wrap <- function(dataframe, estmeansd_method,
            digits = digits, digits.sd = digits, digits.weight = digits,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            weight.study = "same", col.square.lines = "black", col.square = colour, col.study = "black", col.inside = "black",
-           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 10)
+           at = seq(lims[1],lims[2],by=2), xlim = lims, xlab = label, fontsize = 11.5)
     dev.off()
   }
 
@@ -562,15 +573,24 @@ metaprop_wrap <- function(dataframe, subgroup,
                      method.tau = "ML")
 
     png(file = "temp.png", width = width, height = height, res = resolution)
+    par(mar = c(2, 2, 2, 1))
     forest(mtan, layout = "RevMan5",
            overall = plot_pooled, pooled.events = TRUE,
            print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
            study.results = plot_study,
            digits = digits,
-           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-           col.subgroup = "black", col.inside = "black",
-           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+           col.diamond.lines = "black",col.diamond.common = colour,
+           col.diamond.random = colour,
+           col.square = colour, col.square.lines = "black",
+           col.study = "black", col.subgroup = "black",
+           col.inside = "black", weight.study = "same",
+           at = at, xlim = xlim, xlab="Case Fatality Ratio",
+           fs.predict.labels = 11.5,
+           fs.hetstat=11,
+           fs.test.subgroup = 11,
+           fs.axis = 11,
+           fontsize = 14,
+           plotwidth = "72.5mm")
     dev.off()
   } else {
     mtan <- metaprop(data = dataframe,
@@ -586,10 +606,17 @@ metaprop_wrap <- function(dataframe, subgroup,
            overall = plot_pooled, pooled.events = TRUE,
            study.results = plot_study,
            digits = digits,
-           col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
-           col.subgroup = "black", col.inside = "black",
-           weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab="Case Fatality Ratio", fontsize=11)
+           col.diamond.lines = "black",col.diamond.common = colour,
+           col.diamond.random = colour,
+           col.square = colour, col.square.lines = "black",
+           col.subgroup = "black", col.inside = "black", weight.study = "same",
+           at = at, xlim = xlim, xlab="Case Fatality Ratio",
+           fs.predict.labels = 11.5,
+           fs.hetstat=11,
+           fs.test.subgroup = 11,
+           fs.axis = 11,
+           fontsize = 14,
+           plotwidth = "72.5mm")
     dev.off()
   }
 

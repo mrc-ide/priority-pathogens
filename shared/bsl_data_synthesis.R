@@ -188,7 +188,7 @@ bsl_summarise_posteriors <- function(posterior_samples_list, L = 50) {
 }
 
 
-# Posterior predictive draw samples
+# Posterior predictive draw samples - confirm not same as below
 bsl_make_density_summary <- function(dist_name, post,
                                  x_seq = seq(0, 20, length.out = 300),
                                  n_draws = 200, L = 20) {
@@ -231,9 +231,11 @@ bsl_make_density_summary <- function(dist_name, post,
 # --------------------------
 # Posterior predictive density summaries (for plotting)
 # --------------------------
-bsl_make_density_summary <- function(dist_name, post,
-                                 x_seq = seq(0, 20, length.out = 400),
-                                 n_draws = 200, L = 20) {
+bsl_make_posterior_summary <- function(dist_name, post,
+                                       x_seq = seq(0, 20, length.out = 400),
+                                       n_draws = 200, L = 20,
+                                       posterior_cdf=FALSE){
+
   post <- as.matrix(post)
   draws <- sample(1:nrow(post), min(n_draws, nrow(post)))
   dens_mat <- matrix(NA, nrow = length(draws), ncol = length(x_seq))
@@ -251,17 +253,28 @@ bsl_make_density_summary <- function(dist_name, post,
         scale <- exp(loc_d); dweibull(x_seq, shape = phi, scale = scale)
       }
     })
+
     dens_mat[i, ] <- rowMeans(dens_l)
+    # dens_mat[i, ] <- t(apply(dens_l, 1, median))
+
   }
-  data.frame(
+
+  if (posterior_cdf){
+    dx <- c(x_seq[1], diff(x_seq))
+    dens_mat <- dens_mat * dx
+    dens_mat <- t(apply(dens_mat, 1, cumsum))
+  }
+
+  summary_df <- data.frame(
     x = x_seq,
-    mean = apply(dens_mat, 2, mean, na.rm = TRUE),
+    mean = apply(dens_mat, 2, median, na.rm = TRUE),
     low  = apply(dens_mat, 2, quantile, 0.025, na.rm = TRUE),
     high = apply(dens_mat, 2, quantile, 0.975, na.rm = TRUE),
     model = dist_name
   )
-}
 
+  return (summary_df)
+}
 
 # ===============================
 # AUTOMATED BSL DIAGNOSTIC REPORT

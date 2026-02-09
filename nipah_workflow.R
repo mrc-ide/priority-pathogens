@@ -42,9 +42,22 @@ orderly_run("db_cleaning",list(pathogen="NIPAH", debug_mode=TRUE))
 orderly_run("nipah_latex_tables", list(pathogen="NIPAH"))
 
 # *---------------------------- Plots and analysis ----------------------------*
+orderly_run("nipah_serology", list(pathogen="NIPAH"))
+
+# orderly_run("nipah_map", list(pathogen="NIPAH"))
+
 orderly_run("nipah_transmission", list(pathogen="NIPAH"))
 
 orderly_run("nipah_severity", list(pathogen="NIPAH"))
+
+orderly_run("nipah_bsl_data_synthesis", list(pathogen="NIPAH"))
+
+# I assume the issue below is caused by the BSL library and other packages will
+# explicitly reference MASS when a function is needed
+# MASS::select masks dplyr::select
+# MASS::area masks patchwork::select
+select <- dplyr::select
+area <- patchwork::area
 
 orderly_run("nipah_delays", list(pathogen="NIPAH"))
 

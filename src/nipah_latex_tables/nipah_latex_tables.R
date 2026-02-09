@@ -920,6 +920,10 @@ sero_params <- parameters |>
          population_sample_type, population_group,
          parameter_notes, refs, central, id, access_param_id)
 
+sero_params  <- sero_params |>
+  mutate(in_CSF = case_when(str_detect(parameter_notes,'CSF')~TRUE,
+                            TRUE~FALSE))
+
 sero_params[, c("parameter_value", "unc_type")] <- sapply(
   c("parameter_value", "unc_type"),
   function(col) gsub(" \\\\%", "", sero_params[[col]]))
@@ -938,6 +942,9 @@ sero_params <- sero_params |>
       TRUE~ str_replace_all(parameter_value,
                             "(\\d+(?:\\.\\d+)?)",
                             function(x) sprintf("%.1f", as.numeric(x)))),
+    parameter_value=ifelse(in_CSF==TRUE,
+                           paste0(parameter_value, "$^+$"),
+                           parameter_value),
     # CI to 1 decimal
     unc_type=str_replace_all(unc_type,
                              "(\\d+(?:\\.\\d+)?)",

@@ -35,12 +35,22 @@ parameters <- dfs$parameters |>
   left_join(qa_scores)
 
 # *----------------------------- Data preparation -----------------------------*
+# Sort population sample type to match legend where Other, Unspecified, or NA
+# are included. A neater solution would be to do this during cleaning or for the
+# relevant subset of population groups included in the params considered in
+# this script.
+parameters <- parameters  |>
+  mutate(population_group = factor(
+    population_group,
+    levels = c(sort(setdiff(unique(population_group),
+                            c("Other", "Unspecified"))),
+               "Other", "Unspecified")))
+
 d1 <- parameters |> filter(parameter_type == "Mutations - evolutionary rate")
 d2 <- parameters |> filter(parameter_type == "Mutations - substitution rate")
 d3 <- parameters |> filter(parameter_class == "Overdispersion")
 d4 <- parameters |> filter(parameter_class == "Attack rate")
-d5 <- parameters |> filter(parameter_type == "Severity - proportion of symptomatic cases")
-d6 <- parameters |> filter(parameter_class == "Reproduction number")
+d5 <- parameters |> filter(parameter_class == "Reproduction number")
 
 # Add prop symptomatic
 # arrange data and format for plotting
@@ -52,11 +62,18 @@ variables_to_mutate <- c("parameter_value",
 
 d1 <- d1 |> mutate(across(all_of(variables_to_mutate), ~ . * 10^4)) #multiply by 10^4
 d2 <- d2 |> mutate(across(all_of(variables_to_mutate), ~ . * 10^4)) #multiply by 10^4
-d4 <- d4 |> mutate(across(all_of(variables_to_mutate),
-                   ~ ifelse(parameter_unit == "No units", . * 100, .))
-                   ) |>
+d4 <- d4 |>
+  mutate(across(all_of(variables_to_mutate),
+                ~ ifelse(parameter_unit == "No units", . * 100, .))) |>
   mutate(parameter_unit = ifelse(parameter_unit == "No units",
                                  "Percentage (%)", parameter_unit))
+
+# Presti reports this metric as an evolutionary rate
+# Rahman refers to the metric as both a substitution and evolutionary rate in
+# the same text
+d1 <- d1 |>
+  mutate(refs=str_replace(refs, "Lo Presti \\(2016\\)",
+                          "'Lo Presti (2016\\)'^'*'"))
 
 d1 <- d1 |> arrange(genome_site,-central)
 
@@ -64,8 +81,7 @@ d1 <- d1 |> arrange(genome_site,-central)
 d2 <- d2 |>
   mutate(across(
     c(parameter_upper_bound, parameter_lower_bound),
-    ~ ifelse(covidence_id == 2760, NA, .))
-    )
+    ~ ifelse(covidence_id == 2760, NA, .)))
 
 d2 <- d2 |> arrange(genome_site,-central)
 
@@ -77,21 +93,12 @@ d3 <- d3 |>
   arrange(-central)
 
 d4 <- d4 |> mutate(arate=c("Primary","Primary")) |>
-             arrange(arate,-central)
+    arrange(arate,-central)
 
-# Update central
 d5 <- d5 |>
-  mutate(parameter_value = ifelse(is.na(parameter_value),
-                                  cfr_ifr_numerator/cfr_ifr_denominator,
-                                  parameter_value)
-                   )
-d5 <- d5 |>
-  arrange(-central)
-
-d6 <- d6 |>
   arrange(parameter_type, -central)
 
-d6 <- d6 |>
+d5 <- d5 |>
   mutate(parameter_type = factor(parameter_type,
                                  levels = unique(parameter_type),
                                  labels = c("Basic (R0)")))
@@ -103,7 +110,7 @@ text_size <- 12
 # Get custom colours so that genome has different colours
 lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 
-all_pop_groups <- bind_rows(d3, d4, d5, d6) |>
+all_pop_groups <- bind_rows(d3, d4, d5, d5) |>
   distinct(population_group) |>
   # arrange alphabetically but put other last
   arrange(population_group == "Other", population_group) |>
@@ -133,78 +140,85 @@ for (i in seq_along(qa_thresh_vec)){
   qa_threshold <- qa_thresh_vec[i]
   qa_alpha <- qa_alpha_vec[i]
 
-  p1 <- forest_plot(d1 |> filter(qa_score>qa_threshold),
-                    expression(Evolutionary~Rate~(s/s/y ~10^{-4})),
+  p1 <- forest_plot(d1 |>
+                      rbind(d2) |>
+                      filter(qa_score>qa_threshold),
+                    expression(Substitution~Rate~(s/s/y ~10^{-4})),
                     "genome_site",
-                    c(-0.01,15), custom_colours = custom_colour_genome_groups,
+                    c(-0.01,16), custom_colours = custom_colour_genome_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha,
+                    sort=TRUE) +
+    scale_y_discrete(labels = function(x) parse(text = x)) +
     scale_color_manual(values=custom_colour_genome_groups,
                        limits=names(custom_colour_genome_groups)) +
     scale_fill_manual(values=custom_colour_genome_groups,
                       limits=names(custom_colour_genome_groups)) +
     guides(fill = guide_none(),
-           color = guide_legend(title = "Genome type", order = 1,
-                                override.aes = list(fill = custom_colour_genome_groups)),
+           linetype = guide_none(),
+           color = guide_legend(title = "Genome type", order =1,
+                                override.aes = list(
+                                  fill = custom_colour_genome_groups)),
            shape=guide_none())
 
-  # Should this be segment?
-  p2 <- forest_plot(d2 |> filter(qa_score>qa_threshold),
-                    expression(Substitution~Rate~(s/s/y ~10^{-4})),
-                    "genome_site",
-                    c(0,16), custom_colours = custom_colour_genome_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
-    guides(shape = guide_legend(title = "Parameter type", order=1),
-           fill = guide_none(),
-           color = guide_none())
+  # p2 <- forest_plot(d2 |> filter(qa_score>qa_threshold),
+  #                   expression(Substitution~Rate~(s/s/y ~10^{-4})),
+  #                   "genome_site",
+  #                   c(0,16), custom_colours = custom_colour_genome_groups,
+  #                   text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
+  #   guides(shape = guide_legend(title = "Parameter type", order=1),
+  #          fill = guide_none(),
+  #          color = guide_none())
 
   p3 <- forest_plot(d3 |> filter(qa_score>qa_threshold),
-                    "Overdispersion (max nr. of cases related to a case)",
+                    "Overdispersion (max nr. of secondary cases)",
                     "population_group", c(0,35),
                     custom_colours = custom_colour_pop_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha,
+                    sort=TRUE) +
     guides(color = guide_none(),
+           linetype = guide_none(),
            shape = guide_none())
 
   p4 <- forest_plot(d4 |> filter(qa_score>qa_threshold),
-                    "Primary Attack Rate (%)",
+                    "Attack Rate (%)",
                     "population_group",
                     c(-0.01,3), custom_colours = custom_colour_pop_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
     guides(color = guide_none(),
+           linetype = guide_none(),
            shape = guide_none())
 
   p5 <- forest_plot(d5 |> filter(qa_score>qa_threshold),
-                    "Proportion of Symptomatic Cases (%)",
-                    "population_group",
-                    c(-5, 110), custom_colours = custom_colour_pop_groups,
-                    text_size=text_size, qa_alpha=qa_alpha) +
-    guides(color = guide_none(),
-           shape = guide_none())
-
-  p6 <- forest_plot(d6 |> filter(qa_score>qa_threshold),
                     "Basic Reproduction Number",
                     "population_group",
                     c(0, 1.5), custom_colours = custom_colour_pop_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
-                    text_size=text_size, qa_alpha=qa_alpha) +
+                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
     scale_color_manual(values=custom_colour_pop_groups,
                        limits=names(custom_colour_pop_groups)) +
     scale_fill_manual(values=custom_colour_pop_groups,
                       limits=names(custom_colour_pop_groups)) +
     guides(fill = guide_none(),
-           color = guide_legend(title = "Population type", order = 1,
-                                override.aes = list(fill   = custom_colour_pop_groups)),
-           shape=guide_none())
+           linetype = guide_none(),
+           color = guide_legend(
+             title = "Population type", order = 2,
+             override.aes = list(fill = custom_colour_pop_groups)),
+           shape=guide_legend(title = "Parameter type", order=1))
 
+  p5 <- p5 + theme(legend.position = c(0.835, 0.3))
+  p1 <- p1 + theme(legend.position = c(0.875, 0.85))
   # Save plots
-  patchwork <- (p6 + p3 + p4 + p5 + p1 + p2) +
-    plot_layout(ncol = 2, widths = c(1,1), guides = "collect")
+  patchwork <- (p5 + p3 + p4 + p1) +
+    plot_layout(ncol = 2, widths = c(1,1))
 
-  patchwork <- patchwork + plot_annotation(tag_levels = "A")
+  patchwork <- patchwork +
+    plot_annotation(tag_levels = "A") +
+    plot_layout(byrow = FALSE)
+
   ggsave(paste0("figure_",label,"trans.png"),
-         plot = patchwork, width = 14, height = 10)
+         plot = patchwork, width = 17, height = 10)
   ggsave(paste0("figure_",label,"trans.pdf"),
-         plot = patchwork, width = 14, height = 10)
+         plot = patchwork, width = 17, height = 10)
 }
 # *============================================================================*
