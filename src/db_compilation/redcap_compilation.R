@@ -204,7 +204,7 @@ orderly_dependency(
 
 # Manually fixed files and "cleaning" script - these need to be in the
 # src/db_compilation folder
-orderly_resource(fixing_files)
+orderly_resource(setNames(fixing_files, fixing_files))
 
 ## Outputs
 orderly_artefact(

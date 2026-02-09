@@ -49,8 +49,14 @@ if (article_table_name %in% tables){
   article_rds_filename <- rds_inputs[[article_table_name]]
   article_df <- readRDS(article_rds_filename)
 
+  # Legacy bug
   article_df <- rename(article_df,
                        first_author_surname = first_aauthor_surname)
+
+# *----------------------------- Custom cleaning ------------------------------*
+  article_df <- article_cleaning(article_df)
+
+# *----------------------------- Generic cleaning -----------------------------*
   article_df$article_label <-  paste(article_df$first_author_surname,
                                      article_df$year_publication)
 
@@ -61,7 +67,6 @@ if (article_table_name %in% tables){
     article_filter_cols <- c("")
   }
 
-
   base_relocate_cols <- c("id", "covidence_id", "pathogen")
   order_col <- "covidence_id"
   article_df <- relocate_and_arrange(
@@ -69,9 +74,6 @@ if (article_table_name %in% tables){
     c(base_relocate_cols, "first_author_first_name", "first_author_surname"),
     order_col
   )
-
-  # ARTICLE CLEANING IN HERE
-  article_df <- article_cleaning(article_df)
 
   cleaned_df_list[[article_table_name]] <- article_df
 } else{
@@ -86,6 +88,10 @@ oubreak_table_name <- table_check_list[["outbreaks"]]
 if (oubreak_table_name %in% tables){
   outbreaks_rds_filename <- rds_inputs[[oubreak_table_name]]
   outbreak_df <- readRDS(outbreaks_rds_filename)
+
+  outbreak_df <- outbreak_cleaning(outbreak_df)
+
+# *----------------------------- Generic cleaning -----------------------------*
   outbreak_df <- filter_cols(outbreak_df,
                              article_filter_cols)
   outbreak_df <- relocate_and_arrange(outbreak_df,
@@ -94,7 +100,6 @@ if (oubreak_table_name %in% tables){
                                         "outbreak_data_id"),
                                       order_col)
 
-  outbreak_df <- outbreak_cleaning(outbreak_df)
 
   cleaned_df_list[[oubreak_table_name]] <- outbreak_df
 }
@@ -106,6 +111,10 @@ if (model_table_name %in% tables){
   models_rds_filename <- rds_inputs[[model_table_name]]
   model_df <- readRDS(models_rds_filename)
 
+# *----------------------------- Custom cleaning ------------------------------*
+  model_df <- model_cleaning(model_df)
+
+# *----------------------------- Generic cleaning -----------------------------*
   model_df <- filter_cols(model_df,
                           article_filter_cols)
 
@@ -114,8 +123,6 @@ if (model_table_name %in% tables){
                                      "access_model_id",
                                      "model_data_id"),
                                    order_col)
-
-  model_df <- model_cleaning(model_df)
 
   cleaned_df_list[[model_table_name]] <- model_df
 }
@@ -126,6 +133,9 @@ param_table_name <- table_check_list[["params"]]
 if (param_table_name %in% tables){
   param_rds_filename <- rds_inputs[[param_table_name]]
   param_df <- readRDS(param_rds_filename)
+
+# *----------------------------- Custom cleaning ------------------------------*
+  param_df <- param_cleaning(param_df)
 
 # *--------------------------- Update column types ----------------------------*
   if (!is.null(type_map_list)){
@@ -183,8 +193,6 @@ if (param_table_name %in% tables){
       "access_param_id",
       "parameter_data_id"),
     order_col)
-
-  param_df <- param_cleaning(param_df)
 
   cleaned_df_list[[param_table_name]] <- param_df
 }
