@@ -1,4 +1,4 @@
-library(orderly2)
+library(orderly)
 
 orderly_parameters(pathogen = NULL,
                    mode="",

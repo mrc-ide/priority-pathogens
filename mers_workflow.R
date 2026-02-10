@@ -1,4 +1,4 @@
-library(orderly2)
+library(orderly)
 
 # *--------------------------- Download REDCap data ---------------------------*
 # Downloads the data report from REDCap

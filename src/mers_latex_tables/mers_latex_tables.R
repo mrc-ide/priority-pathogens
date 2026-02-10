@@ -1,5 +1,5 @@
 library(dplyr)
-library(orderly2)
+library(orderly)
 library(purrr)
 library(readr)
 library(stringr)

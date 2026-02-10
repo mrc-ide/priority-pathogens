@@ -1,7 +1,7 @@
 # *============================================================================*
 library(cli)
 library(httr)
-library(orderly2)
+library(orderly)
 library(yaml)
 
 # *------------------------------ Orderly config ------------------------------*
