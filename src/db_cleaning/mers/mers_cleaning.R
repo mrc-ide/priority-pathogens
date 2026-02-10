@@ -60,6 +60,34 @@ param_cleaning <- function(df){
       parameter_upper_bound=="infinity", NA, parameter_upper_bound),
       parameter_upper_bound=as.numeric(parameter_upper_bound))
 
+  #########################################################
+  # Some rows have text in the population_sample_size column.
+  # Move the text to the notes column and convert the column to a numeric as intended.
+  # Needs to be numeric for downstream tasks.
+
+  df <- df %>%
+    mutate(
+      is_numeric = is.na(population_sample_size) |
+        grepl("^\\s*\\d+(\\.\\d+)?\\s*$", population_sample_size),
+      parameter_notes = if_else(
+        !is_numeric,
+        paste0(
+          coalesce(parameter_notes, ""),
+          if_else(is.na(parameter_notes) | parameter_notes == "", "", " "),
+          "population_sample_size: ",
+          population_sample_size
+        ),
+        parameter_notes
+      ),
+      population_sample_size = if_else(
+        is_numeric,
+        as.numeric(population_sample_size),
+        NA_real_
+      )
+    ) %>%
+    select(-is_numeric)
+
+
   return (df)
 }
 # *============================================================================*
