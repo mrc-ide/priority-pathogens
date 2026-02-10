@@ -13,7 +13,7 @@ orderly_parameters(pathogen = NULL)
 orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "models.csv", "params.csv"))
 
-orderly_shared_resource("mers_functions.R" = "nipah_functions.R")
+orderly_shared_resource("mers_functions.R" = "mers_functions.R")
 source("mers_functions.R")
 
 orderly_artefact("MERS transmission figures",
@@ -28,10 +28,6 @@ parameters <- read_csv("params.csv")
 dfs <- curation(articles, outbreaks, models, parameters, plotting = TRUE)
 
 articles   <- dfs$articles
-
-articles <- articles |>
-  filter(covidence_id!=13554)
-
 articles   <- epireview::assign_qa_score(articles = articles)$articles
 qa_scores  <- articles |> dplyr::select(covidence_id,qa_score)
 
@@ -39,14 +35,24 @@ parameters <- dfs$parameters |>
   left_join(qa_scores)
 
 # *----------------------------- Data preparation -----------------------------*
+# Sort population sample type to match legend where Other, Unspecified, or NA
+# are included. A neater solution would be to do this during cleaning or for the
+# relevant subset of population groups included in the params considered in
+# this script.
+parameters <- parameters  |>
+  mutate(population_group = factor(
+    population_group,
+    levels = c(sort(setdiff(unique(population_group),
+                            c("Other", "Unspecified"))),
+               "Other", "Unspecified")))
+
 d1 <- parameters |> filter(parameter_type == 'Mutations - evolutionary rate')
 d2 <- parameters |> filter(parameter_type == 'Mutations - substitution rate')
 d3 <- parameters |> filter(parameter_class == 'Overdispersion')
-d5 <- parameters |> filter(parameter_type == 'Severity - proportion of symptomatic cases')
 d4 <- parameters |> filter(parameter_class == 'Attack rate')
-d6 <- parameters |> filter(parameter_class == 'Reproduction number')
+d5 <- parameters |> filter(parameter_class == 'Reproduction number')
+d6 <- parameters |> filter(parameter_type == 'Severity - proportion of symptomatic cases')
 
-# Add prop symptomatic
 #arrange data and format for plotting
 variables_to_mutate <- c("parameter_value",
                          "parameter_lower_bound",
@@ -78,16 +84,17 @@ p1 <- forest_plot(d1,expression(Evolutionary~Rate~(s/s/y ~10^{-4})),
                   "genome_site", c(-0.01,15), text_size=text_size) +
   guides(color = guide_legend(title = "Gene", order = 1))
 
-# Error is being caused by different units
+# Error is being caused by different units:
 unique(d2$parameter_unit[!is.na(d2$parameter_unit)])
 d2 <- d2 |>
   mutate(parameter_unit=ifelse(parameter_unit=="Substitutions/site/year",
                                parameter_unit, NA))
+
 p2 <- forest_plot(d2,
                   expression(Substitution~Rate~(s/s/y ~10^{-4})),
-                  "genome_site",c(-5,150),
+                  "population_sex",c(-5,55),
                   text_size=text_size) +
-  guides(color = guide_legend(title = "Segment", order = 1))
+  guides(color = guide_legend(title = "Population Sex", order = 1))
 
 unique(d3$parameter_unit[!is.na(d3$parameter_unit)])
 d3 <- d3 |>
@@ -104,14 +111,17 @@ d4 <- d4 |>
 p4 <- forest_plot(d4, 'Attack Rate (%)', "population_group", c(-1,100),
                   text_size=text_size)
 
-p5 <- forest_plot(d5,'Proportion of Symptomatic Cases (%)', "population_group",
-                  c(0, 110),
+unique(d5$parameter_unit[!is.na(d5$parameter_unit)])
+d5$parameter_unit <- "No units"
+p5 <- forest_plot(d5,'Reproduction Number',"population_group", c(-0.1,6),
                   text_size=text_size)
 
 unique(d6$parameter_unit[!is.na(d6$parameter_unit)])
-d6$parameter_unit <- "No units"
-p6 <- forest_plot(d6,'Reproduction Number',"population_group", c(-0.1,6),
+p6 <- forest_plot(d6,'Proportion of Symptomatic Cases (%)', "population_group",
+                  c(0, 110),
                   text_size=text_size)
+
+
 
 # Save plots
 patchwork <- (p6 + p5 + p4 + p3 + p1 + p2) +
