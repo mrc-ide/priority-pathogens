@@ -2,7 +2,7 @@
 # Task to identify entries of double extracted data that match or do not match
 # between extractors
 
-library(orderly2)
+library(orderly)
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_artefact(

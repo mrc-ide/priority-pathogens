@@ -1,6 +1,6 @@
 library(cli)
 library(ids)
-library(orderly2)
+library(orderly)
 library(readr)
 library(tools)
 library(yaml)
