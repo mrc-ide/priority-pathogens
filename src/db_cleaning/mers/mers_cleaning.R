@@ -88,6 +88,11 @@ param_cleaning <- function(df){
     select(-is_numeric)
 
 
+  ## Covidence #12025 has an error, we need to set the risk factor outcome to "Death" for all 4:
+  df[(df$covidence_id==12025) & (df$parameter_type=="Risk factors"),
+     "riskfactor_outcome"] <- "Death"
+
+
   return (df)
 }
 # *============================================================================*
