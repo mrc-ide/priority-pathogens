@@ -457,46 +457,93 @@ gg_philippines <- ggplot()  +
   labs(title='Philippines\nreported outbreaks' ) +
   theme_bw() + guides(fill = guide_none(),
                       color=guide_none())
-layout_design <-
-  "AAABBBFFF
-   AAABBBFFF
-   AAABBBFFF
-   AAABBBFFF
-   AAABBBFFF
-   CCDDEEFFF
-   CCDDEEFFF"
 
-sero_studies <- parameters %>%
-  filter(parameter_class == 'Seroprevalence') %>%
-  mutate(population_group = factor(
-    population_group,
-    levels = c(sort(setdiff(unique(population_group),
-                            c("Other", "Unspecified"))),
-               "Other", "Unspecified"))) |>
-  filter(qa_score>0.5) %>%
-  mutate(parameter_unit = 'Percentage (%)', #replace_na(parameter_unit, 'Percentage (%)'),
+
+# Sero plot
+sero_studies <- parameters |>
+  filter(parameter_class == 'Seroprevalence') |>
+  mutate(population_group = factor(population_group,
+                                   levels = c("General population",
+                                              sort(
+                                                setdiff(unique(population_group),
+                                                        c("General population", "Other", "Unspecified"))),
+                                              "Other", "Unspecified"))) |>
+  mutate(parameter_unit = 'Percentage (%)',
          population_group = replace_na(population_group, 'Other'),
          sero_CSF = case_when(str_detect(parameter_notes,'CSF') ~ 'CSF',
-                              TRUE ~ 'Other')) |>
-  filter(parameter_type=="Seroprevalence - IgG") |>
-  mutate(parameter_value = coalesce(parameter_value,central))
+                              TRUE ~ 'Other'),
+         parameter_type = str_replace(parameter_type,
+                                      "Seroprevalence - ", "")) |>
+  mutate(parameter_value = coalesce(parameter_value, central)) |>
+  arrange(population_country, central)
+
+custom_colour_pop_groups <- ggsci::pal_lancet("lanonc")(9)
+
+common_cntries <- c("Bangladesh", "India", "Malaysia", "Philippines", "Singapore")
+extra_cntries <- setdiff(unique(sero_studies$population_country),
+                         common_cols)
+countries <- c(common_cntries, extra_cntries)
+
+custom_colour_countries <- lanonc_colours[seq_along(countries)]
+names(custom_colour_countries) <- countries
 
 sero_forest_pop_group <- forest_plot(
   sero_studies, sort=TRUE, 'Serology (%)','population_country', c(-4,104),
-  text_size = 13) +
+  text_size = 13, qa_alpha = 0.3, custom_colours = custom_colour_countries) +
   ggforce::facet_col(facets = vars(population_group),
                      scales = "free_y",
                      space = "free") +
-  guides(shape = guide_legend(title="Parameter type"),
+  guides(shape = guide_none(),
          linetype = guide_none(),
-         color=guide_legend(title="Country")) + theme(
-           legend.position = c(0.78, 0.325)
-         )
+         color=guide_legend(title="Country"))
+
+# manual forest plot to shape type
+color_column <- "population_country"
+qa_alpha <- 0.3
+
+sero_studies$plot_alpha <- 1
+sero_studies$segment_alpha <- 1
+
+sero_studies[sero_studies$qa_score<=0.5, ]$plot_alpha <- qa_alpha
+sero_studies[sero_studies$qa_score<=0.5, ]$segment_alpha <- 0.65 * qa_alpha
+
+# remove geom_point
+sero_forest_pop_group$layers <-
+  sero_forest_pop_group$layers[1:(length(sero_forest_pop_group$layers)-1)]
+
+sero_forest_pop_group <- sero_forest_pop_group +
+  geom_point(data=sero_studies |>
+               mutate(urefs = make.unique(refs),
+                      urefs = factor(urefs, levels = rev(unique(urefs)))),
+             aes(x = parameter_value, y = urefs,
+                 shape = parameter_type,
+                 fill = population_country),
+             alpha=sero_studies$plot_alpha,
+             size = 3, stroke = 1, color = "black") +
+  scale_shape_manual(name = "Assay",
+                     values = c(IgG = 21, IgM = 22,
+                                PRNT = 23, Unspecified = 24),
+                     breaks = c("IgG", "IgM", "PRNT", "Unspecified")) +
+  guides(shape = guide_legend(title="Assay")) +
+  theme(legend.position = c(0.9, 0.49))
+
+ggsave("sero_forest_pop_group.png",
+       plot = sero_forest_pop_group,
+       width = 11, height = 20)
 
 map_theme <- theme(
   plot.margin = margin(2,2,2,2),
   legend.position = "none"
 )
+
+layout_design <-
+  "AAABBBFFFF
+   AAABBBFFFF
+   AAABBBFFFF
+   AAABBBFFFF
+   AAABBBFFFF
+   CCDDEEFFFF
+   CCDDEEFFFF"
 
 text_size = 13
 gg_bangladesh <- gg_bangladesh+
@@ -504,18 +551,13 @@ gg_bangladesh <- gg_bangladesh+
       legend.text  = element_text(size = 12))
 
 map_plot <-  gg_northern_india_bangladesh + gg_bangladesh + gg_kerala +
-  gg_malaysia_singapore + gg_philippines + sero_forest_pop_group  +
+  gg_malaysia_singapore + gg_philippines + (sero_forest_pop_group  +
+  theme(legend.position = c(0.85, 0.51))) +
   plot_layout(design = layout_design) +
   plot_annotation(tag_levels = 'A') +
   plot_layout(byrow = FALSE)
 
-
-ggsave("nipha_outbreaks_map.png", plot = map_plot, width = 17, height = 13)
-
-ggsave("sero_forest_pop_group.png",
-       plot = sero_forest_pop_group,
-       width = 6, height = 13)
-
+ggsave("nipah_outbreaks_map.png", plot = map_plot, width = 19, height = 22)
 
 ggsave("northern_india_bangladesh.png",
        plot = gg_northern_india_bangladesh,
