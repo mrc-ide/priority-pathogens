@@ -46,6 +46,8 @@ orderly_run("mers_latex_tables", list(pathogen="MERS"))
 
 # *---------------------------- Plots and analysis ----------------------------*
 orderly_run("mers_summary", list(pathogen="MERS"))
+orderly_run("mers_supp_tables", list(pathogen="MERS"))
+
 orderly_run("mers_transmission", list(pathogen="MERS"))
 orderly_run("mers_delays", list(pathogen="MERS"))
 orderly_run("mers_risk_factors", list(pathogen="MERS"))
