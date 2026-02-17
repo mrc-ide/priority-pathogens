@@ -20,9 +20,9 @@ library(gridExtra)
 # *------------------------------ Orderly config ------------------------------*
 orderly_strict_mode()
 
-orderly_parameters(pathogen = "NIPAH")
+pathogen <- "NIPAH"
 
-orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
+orderly_dependency("db_cleaning", "latest(parameter:pathogen == 'NIPAH')",
                    c("articles.csv", "models.csv", "params.csv","outbreaks.csv"))
 
 orderly_shared_resource("nipah_functions.R"="nipah_functions.R")
@@ -31,7 +31,10 @@ orderly_shared_resource("NIPAH_Bangladesh_IEDCR.csv"="NIPAH_Bangladesh_IEDCR.csv
 
 source("nipah_functions.R")
 
-orderly_artefact("nipah-specific figures",c("nipha_outbreaks_map.pngf"))
+orderly_artefact(
+  description = "nipah-specific figures",
+  files = c("nipha_outbreaks_map.pngf")
+)
 
 ###################
 ## DATA CURATION ##
