@@ -134,7 +134,7 @@ ggsave(paste0("sero_apx_col_assay_patchwork.pdf"),
        plot = sero_apx_1, width = 32, height = 38)
 
 # *--------------------------- Main text sero plot ----------------------------*
-custom_colour_pop_groups <- ggsci::pal_lancet("lanonc")(9)
+lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 
 common_cntries <- c("Bangladesh", "India", "Malaysia",
                     "Philippines", "Singapore")
@@ -146,6 +146,11 @@ countries <- c(common_cntries, extra_cntries)
 
 custom_colour_countries <- lanonc_colours[seq_along(countries)]
 names(custom_colour_countries) <- countries
+
+qa_alpha <- 0.3
+
+sero_studies$plot_alpha <- 1
+sero_studies[sero_studies$qa_score <= 0.5, ]$plot_alpha <- qa_alpha
 
 forest_plots <- list()
 assays_list <- list("short_term"="IgM",
@@ -167,15 +172,6 @@ for (assay_type in names(assays_list)){
     theme(legend.position = c(0.9, 0.49))
 
   # manual forest plot to shape type
-  color_column <- "population_country"
-  qa_alpha <- 0.3
-
-  sero_studies$plot_alpha <- 1
-  sero_studies$segment_alpha <- 1
-
-  sero_studies[sero_studies$qa_score <= 0.5, ]$plot_alpha <- qa_alpha
-  sero_studies[sero_studies$qa_score <= 0.5, ]$segment_alpha <- 0.65 * qa_alpha
-
   # remove geom_point
   sero_forest_pop_group$layers <-
     sero_forest_pop_group$layers[1:(length(sero_forest_pop_group$layers) - 1)]
