@@ -22,73 +22,81 @@ orderly_strict_mode()
 
 pathogen <- "NIPAH"
 
-orderly_dependency("db_cleaning", "latest(parameter:pathogen == 'NIPAH')",
-                   c("articles.csv", "models.csv", "params.csv","outbreaks.csv"))
+orderly_dependency(
+  "db_cleaning", "latest(parameter:pathogen == 'NIPAH')",
+  c("articles.csv", "models.csv", "params.csv", "outbreaks.csv")
+)
 
-orderly_shared_resource("nipah_functions.R"="nipah_functions.R")
-orderly_shared_resource("nipah_bangladesh_district_data.csv"="nipah_bangladesh_district_data.csv")
-orderly_shared_resource("NIPAH_Bangladesh_IEDCR.csv"="NIPAH_Bangladesh_IEDCR.csv")
+orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
+orderly_shared_resource("nipah_bangladesh_district_data.csv" = "nipah_bangladesh_district_data.csv")
+orderly_shared_resource("NIPAH_Bangladesh_IEDCR.csv" = "NIPAH_Bangladesh_IEDCR.csv")
 
 source("nipah_functions.R")
 
 orderly_artefact(
   description = "nipah-specific figures",
-  files = c("nipha_outbreaks_map.pngf")
+  files = c("nipha_outbreaks_map.png")
 )
 
 ###################
 ## DATA CURATION ##
 ###################
 
-articles   <- read_csv("articles.csv")
-outbreaks  <- read_csv("outbreaks.csv")
-models     <- read_csv("models.csv")
+articles <- read_csv("articles.csv")
+outbreaks <- read_csv("outbreaks.csv")
+models <- read_csv("models.csv")
 parameters <- read_csv("params.csv")
 
-dfs <- curation(articles,outbreaks,models,parameters, plotting = TRUE)
+dfs <- curation(articles, outbreaks, models, parameters, plotting = TRUE)
 
-articles   <- dfs$articles
+articles <- dfs$articles
 
-articles   <- epireview::assign_qa_score(articles = articles)$articles
-qa_scores  <- articles %>% dplyr::select(covidence_id,qa_score)
+articles <- epireview::assign_qa_score(articles = articles)$articles
+qa_scores <- articles %>% dplyr::select(covidence_id, qa_score)
 
-outbreaks  <- dfs$outbreaks
-models     <- dfs$models
-parameters <- dfs$parameters %>% left_join(qa_scores) %>%
+outbreaks <- dfs$outbreaks
+models <- dfs$models
+parameters <- dfs$parameters %>%
+  left_join(qa_scores) %>%
   mutate(article_label = make.unique(refs)) %>%
-  mutate(article_label = factor(article_label,levels=rev(unique(article_label)))) %>%
-  mutate(in_CSF = case_when(str_detect(parameter_notes,'CSF')~TRUE,
-                            TRUE~FALSE),
-         population_location = coalesce(population_location, population_country))
+  mutate(article_label = factor(article_label, levels = rev(unique(article_label)))) %>%
+  mutate(
+    in_CSF = case_when(
+      str_detect(parameter_notes, "CSF") ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    population_location = coalesce(population_location, population_country)
+  )
 
-nipah_bangladesh <-read_csv('nipah_bangladesh_district_data.csv')
+nipah_bangladesh <- read_csv("nipah_bangladesh_district_data.csv")
 
 # *============================= LOCATIONS ===============================================*
-parameter_locs <- str_to_title(unique(str_trim(na.omit(unlist(lapply(parameters$population_location, FUN=function(x) unlist(str_split(x,';'))))))))
-outbreak_locs  <- str_to_title(unique(str_trim(na.omit(unlist(lapply(outbreaks$outbreak_location, FUN=function(x) unlist(str_split(x,';'))))))))
+parameter_locs <- str_to_title(unique(str_trim(na.omit(unlist(lapply(parameters$population_location, FUN = function(x) unlist(str_split(x, ";"))))))))
+outbreak_locs <- str_to_title(unique(str_trim(na.omit(unlist(lapply(outbreaks$outbreak_location, FUN = function(x) unlist(str_split(x, ";"))))))))
 locations <- unique(c(parameter_locs, outbreak_locs))
 
-#prepare shapefiles for maps
-l0_in <- read_sf('../../shared/World_Bank_Official_Boundaries_adm0/WB_GAD_ADM0.shp') %>% #this is the shapefile with country boundaries
-  rename(COUNTRY = NAM_0) #store country names in column COUNTRY
+# prepare shapefiles for maps
+l0_in <- read_sf("../../shared/World_Bank_Official_Boundaries_adm0/WB_GAD_ADM0.shp") %>% # this is the shapefile with country boundaries
+  rename(COUNTRY = NAM_0) # store country names in column COUNTRY
 #
 
 #
-l1_in <- read_sf('../../shared/World_Bank_Official_Boundaries_adm1/WB_GAD_ADM1.shp') %>% #this is the shapefile with level 1 regions
+l1_in <- read_sf("../../shared/World_Bank_Official_Boundaries_adm1/WB_GAD_ADM1.shp") %>% # this is the shapefile with level 1 regions
   rename(COUNTRY = NAM_0) %>%
-  mutate(COUNTRY = case_when( #country names must be consistent between shapefiles
+  mutate(COUNTRY = case_when( # country names must be consistent between shapefiles
     COUNTRY == "Cabo Verde" ~ "Cape Verde",
     COUNTRY == "Democratic Republic of Congo" ~ "Democratic Republic of the Congo",
     COUNTRY == "Guinea Bissau" ~ "Guinea-Bissau",
-    TRUE ~ COUNTRY)) %>%
-  rename(REG_CODE = ADM1CD_c) #store region codes, e.g. SL01, in column REG_CODE
+    TRUE ~ COUNTRY
+  )) %>%
+  rename(REG_CODE = ADM1CD_c) # store region codes, e.g. SL01, in column REG_CODE
 
-l2_in <- read_sf('../../shared/World_Bank_Official_Boundaries_adm2/WB_GAD_ADM2.shp') %>% #this is the shapefile with level 1 regions
+l2_in <- read_sf("../../shared/World_Bank_Official_Boundaries_adm2/WB_GAD_ADM2.shp") %>% # this is the shapefile with level 1 regions
   rename(COUNTRY = NAM_0)
 
-om <- read_sf('../../shared/World_Bank_Official_Boundaries_Ocean_Mask/WB_GAD_ocean_mask.shp')
+om <- read_sf("../../shared/World_Bank_Official_Boundaries_Ocean_Mask/WB_GAD_ocean_mask.shp")
 
-mapped_locations   <- locations[(locations %in% l2_in$NAM_2)|(locations %in% l2_in$NAM_1)|(locations %in% l2_in$COUNTRY)]
+mapped_locations <- locations[(locations %in% l2_in$NAM_2) | (locations %in% l2_in$NAM_1) | (locations %in% l2_in$COUNTRY)]
 unmapped_locations <- locations[!(locations %in% l2_in$NAM_2) & !(locations %in% l2_in$NAM_1) & !(locations %in% l2_in$COUNTRY)]
 
 
@@ -155,26 +163,28 @@ location_mapping <- tribble(
 location_mapping <- location_mapping %>% filter(location != "")
 
 location_mapping <- location_mapping %>%
-  mutate(across(where(is.list), ~map_chr(., ~paste(., collapse = "; ")))) %>%
+  mutate(across(where(is.list), ~ map_chr(., ~ paste(., collapse = "; ")))) %>%
   separate_rows(district, sep = ";") %>%
-  mutate(district=str_trim(district))
+  mutate(district = str_trim(district))
 
-location_mapping[!((location_mapping$district %in% l2_in$NAM_2)|(location_mapping$district %in% l2_in$NAM_1)|
-                     location_mapping$division_or_state %in% l2_in$NAM_1),]
+location_mapping[!((location_mapping$district %in% l2_in$NAM_2) | (location_mapping$district %in% l2_in$NAM_1) |
+  location_mapping$division_or_state %in% l2_in$NAM_1), ]
 
 # *=============== DEDUPLICATE OUTBREAKS =============================================================*
-outbreaks <- outbreaks %>% mutate(outbreak_location = coalesce(outbreak_location, outbreak_country),
-                                  outbreak_end_year = coalesce(outbreak_end_year,outbreak_start_year),
-                                  outbreak_duriation_years = outbreak_end_year - outbreak_start_year,
-                                  type_cases_sex_disagg = replace_na(type_cases_sex_disagg,'Unspecified'),
-                                  outbreak_notes = replace_na(outbreak_notes,''),
-                                  outbreak_location_type = str_to_title(replace_na(outbreak_location_type,'Unspecified')))
+outbreaks <- outbreaks %>% mutate(
+  outbreak_location = coalesce(outbreak_location, outbreak_country),
+  outbreak_end_year = coalesce(outbreak_end_year, outbreak_start_year),
+  outbreak_duriation_years = outbreak_end_year - outbreak_start_year,
+  type_cases_sex_disagg = replace_na(type_cases_sex_disagg, "Unspecified"),
+  outbreak_notes = replace_na(outbreak_notes, ""),
+  outbreak_location_type = str_to_title(replace_na(outbreak_location_type, "Unspecified"))
+)
 outbreaks$is_duplicate <- FALSE
-outbreaks[outbreaks$outbreak_duriation_years>5,]$is_duplicate <- TRUE
-outbreaks[outbreaks$outbreak_country == 'Malaysia,Singapore',]$is_duplicate <- TRUE
-outbreaks[outbreaks$outbreak_country == 'Malaysia' & outbreaks$outbreak_location_type != 'State',]$is_duplicate <- TRUE #we take the individual state outbreaks rather than the national aggregate one.
-outbreaks[outbreaks$outbreak_country == 'Singapore' & (is.na(outbreaks$deaths) | outbreaks$type_cases_sex_disagg=='Confirmed'),]$is_duplicate <- TRUE #we take the report with confirmed cases, also not the sero study
-outbreaks[str_detect(outbreaks$outbreak_notes,'cluster'),]$is_duplicate <- TRUE #we take the individual outbreaks rather than the cluster
+outbreaks[outbreaks$outbreak_duriation_years > 5, ]$is_duplicate <- TRUE
+outbreaks[outbreaks$outbreak_country == "Malaysia,Singapore", ]$is_duplicate <- TRUE
+outbreaks[outbreaks$outbreak_country == "Malaysia" & outbreaks$outbreak_location_type != "State", ]$is_duplicate <- TRUE # we take the individual state outbreaks rather than the national aggregate one.
+outbreaks[outbreaks$outbreak_country == "Singapore" & (is.na(outbreaks$deaths) | outbreaks$type_cases_sex_disagg == "Confirmed"), ]$is_duplicate <- TRUE # we take the report with confirmed cases, also not the sero study
+outbreaks[str_detect(outbreaks$outbreak_notes, "cluster"), ]$is_duplicate <- TRUE # we take the individual outbreaks rather than the cluster
 
 exclude_ids <- c(
   # India outbreaks to exclude
@@ -209,61 +219,83 @@ exclude_ids <- c(
   "4358|India|Kerela|2018|5"
 )
 
-outbreaks <- outbreaks %>% filter( !is_duplicate ) %>%
-  mutate( unique_id = paste(covidence_id, outbreak_country, outbreak_location,
-                            outbreak_start_year, str_remove(outbreak_start_month, "^0+"), sep = "|"),
-          EXCLUDE   = ifelse(unique_id %in% exclude_ids, 1, 0)) %>%
+outbreaks <- outbreaks %>%
+  filter(!is_duplicate) %>%
+  mutate(
+    unique_id = paste(covidence_id, outbreak_country, outbreak_location,
+      outbreak_start_year, str_remove(outbreak_start_month, "^0+"),
+      sep = "|"
+    ),
+    EXCLUDE = ifelse(unique_id %in% exclude_ids, 1, 0)
+  ) %>%
   filter(!EXCLUDE)
 
-subcolumns_outbreak <- outbreaks %>% dplyr::select(outbreak_country,outbreak_location,outbreak_source,cases_confirmed,cases_suspected,cases_asymptomatic,cases_unspecified,outbreak_probable,deaths,outbreak_start_month,outbreak_start_year,refs) %>%
-  mutate( cases_confirmed_raw = cases_confirmed) %>%
-  mutate( cases_confirmed = coalesce(cases_confirmed,cases_suspected)) %>% # only use cases suspected if we don't have confirmed cases
-  mutate( cases_confirmed = case_when(cases_confirmed<deaths ~ cases_confirmed + replace_na(cases_suspected,0), # for Bangladesh we have some instances which require suspected cases to be added to confirmed to be feasible with deaths
-                                      TRUE ~ cases_confirmed )) %>%
-  mutate_if(is.numeric, list(~replace_na(., 0))) %>%
-  mutate( total_cases = cases_confirmed + cases_asymptomatic + cases_unspecified + outbreak_probable) %>%
-  arrange(outbreak_start_year,outbreak_start_month) %>%
-  mutate(num_loc = str_count(outbreak_location, ";") + 1 ) %>%
+subcolumns_outbreak <- outbreaks %>%
+  dplyr::select(outbreak_country, outbreak_location, outbreak_source, cases_confirmed, cases_suspected, cases_asymptomatic, cases_unspecified, outbreak_probable, deaths, outbreak_start_month, outbreak_start_year, refs) %>%
+  mutate(cases_confirmed_raw = cases_confirmed) %>%
+  mutate(cases_confirmed = coalesce(cases_confirmed, cases_suspected)) %>% # only use cases suspected if we don't have confirmed cases
+  mutate(cases_confirmed = case_when(
+    cases_confirmed < deaths ~ cases_confirmed + replace_na(cases_suspected, 0), # for Bangladesh we have some instances which require suspected cases to be added to confirmed to be feasible with deaths
+    TRUE ~ cases_confirmed
+  )) %>%
+  mutate_if(is.numeric, list(~ replace_na(., 0))) %>%
+  mutate(total_cases = cases_confirmed + cases_asymptomatic + cases_unspecified + outbreak_probable) %>%
+  arrange(outbreak_start_year, outbreak_start_month) %>%
+  mutate(num_loc = str_count(outbreak_location, ";") + 1) %>%
   separate_rows(outbreak_location, sep = ";") %>%
-  mutate(outbreak_location=str_trim(outbreak_location),
-         total_cases = total_cases/num_loc,
-         deaths = deaths / num_loc)    # for location where we split report the AVERAGE number of cases
+  mutate(
+    outbreak_location = str_trim(outbreak_location),
+    total_cases = total_cases / num_loc,
+    deaths = deaths / num_loc
+  ) # for location where we split report the AVERAGE number of cases
 
 saveRDS(subcolumns_outbreak, "cleaned_outbreak_data.RDS")
 
-location_agg <- subcolumns_outbreak %>% group_by(outbreak_location) %>%
-  summarise(tot_cases = sum(total_cases),
-            tot_deaths = sum(deaths)) %>%
+location_agg <- subcolumns_outbreak %>%
+  group_by(outbreak_location) %>%
+  summarise(
+    tot_cases = sum(total_cases),
+    tot_deaths = sum(deaths)
+  ) %>%
   left_join(location_mapping, by = c("outbreak_location" = "location")) %>%
-  mutate(map_location=coalesce(district, division_or_state, outbreak_location)) %>%
-  dplyr::select(map_location,tot_cases,tot_deaths)
+  mutate(map_location = coalesce(district, division_or_state, outbreak_location)) %>%
+  dplyr::select(map_location, tot_cases, tot_deaths)
 
 
 # what is the 'true' number of cases we assign, how do we demonstrate time dimension?
 
-#outbreaks %>% filter(!is_duplicate) %>% group_by(outbreak_location, outbreak_start_year) %>% summarise(n=n()) %>% filter(n>1)
+# outbreaks %>% filter(!is_duplicate) %>% group_by(outbreak_location, outbreak_start_year) %>% summarise(n=n()) %>% filter(n>1)
 
-#world               <- ne_countries(scale = "medium", returnclass = "sf")
-#worldmap            <- st_transform(world, crs = st_crs(l0))
+# world               <- ne_countries(scale = "medium", returnclass = "sf")
+# worldmap            <- st_transform(world, crs = st_crs(l0))
 
-#southeast_asia_cropped <- st_crop(worldmap, xmin = -20, xmax = 45,
+# southeast_asia_cropped <- st_crop(worldmap, xmin = -20, xmax = 45,
 #                          ymin = 30, ymax = 73)
 
 
-l0 <- l0_in %>% left_join(location_agg %>% rename(tc_l0=tot_cases,td_l0=tot_deaths),by=c('COUNTRY'='map_location')) %>%
-  mutate(total_cases = tc_l0,
-         total_deaths = td_l0)
+l0 <- l0_in %>%
+  left_join(location_agg %>% rename(tc_l0 = tot_cases, td_l0 = tot_deaths), by = c("COUNTRY" = "map_location")) %>%
+  mutate(
+    total_cases = tc_l0,
+    total_deaths = td_l0
+  )
 
-l1 <- l1_in %>% left_join(location_agg %>% rename(tc_l1=tot_cases,td_l1=tot_deaths),by=c('NAM_1'='map_location')) %>%
-  mutate(total_cases = tc_l1,
-         total_deaths = td_l1)
+l1 <- l1_in %>%
+  left_join(location_agg %>% rename(tc_l1 = tot_cases, td_l1 = tot_deaths), by = c("NAM_1" = "map_location")) %>%
+  mutate(
+    total_cases = tc_l1,
+    total_deaths = td_l1
+  )
 
-l2 <- l2_in %>% left_join(location_agg %>% rename(tc_l2=tot_cases,td_l2=tot_deaths),by=c('NAM_2'='map_location')) %>%
-  left_join(location_agg %>% rename(tc_l1=tot_cases,td_l1=tot_deaths),by=c('NAM_1'='map_location')) %>%
-  left_join(location_agg %>% rename(tc_l0=tot_cases,td_l0=tot_deaths),by=c('COUNTRY'='map_location')) %>%
-  mutate(total_cases = coalesce(tc_l2, tc_l1, tc_l0),
-         total_deaths = coalesce(td_l2, td_l1, td_l0)) %>%
-  filter(!is.na(total_cases))     # remove visual noise
+l2 <- l2_in %>%
+  left_join(location_agg %>% rename(tc_l2 = tot_cases, td_l2 = tot_deaths), by = c("NAM_2" = "map_location")) %>%
+  left_join(location_agg %>% rename(tc_l1 = tot_cases, td_l1 = tot_deaths), by = c("NAM_1" = "map_location")) %>%
+  left_join(location_agg %>% rename(tc_l0 = tot_cases, td_l0 = tot_deaths), by = c("COUNTRY" = "map_location")) %>%
+  mutate(
+    total_cases = coalesce(tc_l2, tc_l1, tc_l0),
+    total_deaths = coalesce(td_l2, td_l1, td_l0)
+  ) %>%
+  filter(!is.na(total_cases)) # remove visual noise
 
 
 
@@ -353,152 +385,203 @@ manual_coords <- data.frame(
 
 nipah_bangladesh <- nipah_bangladesh %>% left_join(location_mapping_bangladesh, by = c("District" = "location"))
 
-l2_bangladesh <- l2_in %>% filter(COUNTRY=='Bangladesh') %>% left_join( nipah_bangladesh %>% rename(tc_l2=`Grand Total`),by=c('ADM2CD_c'='adm2_code')) %>%
-  left_join(nipah_bangladesh %>% dplyr::select(-Division) %>% rename(tc_l1=`Grand Total`),by=c('NAM_1'='District')) %>%
-  mutate(total_cases = coalesce(tc_l2, tc_l1)) #%>%
-#filter(!is.na(total_cases))     # remove visual noise
+l2_bangladesh <- l2_in %>%
+  filter(COUNTRY == "Bangladesh") %>%
+  left_join(nipah_bangladesh %>% rename(tc_l2 = `Grand Total`), by = c("ADM2CD_c" = "adm2_code")) %>%
+  left_join(nipah_bangladesh %>% dplyr::select(-Division) %>% rename(tc_l1 = `Grand Total`), by = c("NAM_1" = "District")) %>%
+  mutate(total_cases = coalesce(tc_l2, tc_l1)) # %>%
+# filter(!is.na(total_cases))     # remove visual noise
 
 nipah_country <- l2$COUNTRY |> unique()
 
 # Need to fix India, include Bangladesh as a panel so that it can be seen more easily.
 # Maybe split this into a multi-panel figure??? Chat with Tristan
 gg <- ggplot() +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  geom_sf(data = l0_in, lwd = 0.5, col = "black",  fill = NA) +
+  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3) +
+  geom_sf(data = l0_in, lwd = 0.5, col = "black", fill = NA) +
   coord_sf(xlim = c(70, 130), ylim = c(-5, 30), expand = FALSE) +
-  scale_fill_continuous(na.value="white") +
+  scale_fill_continuous(na.value = "white") +
   theme_bw()
 
 
 # Bangladesh inset
 gg_bangladesh <- ggplot() +
-  geom_sf(data = l2_bangladesh, lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
-  geom_sf(data = l0_in, lwd = 0.5, col = "black",  fill = NA) +
+  geom_sf(data = l2_bangladesh, lwd = 0.2, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3) +
+  geom_sf(data = l0_in, lwd = 0.5, col = "black", fill = NA) +
   coord_sf(xlim = c(87.9, 93), ylim = c(21, 26.7), expand = FALSE) +
   geom_point(data = manual_coords, aes(x = long, y = lat, color = Surveillance.period), size = 3.5, shape = 18) +
   geom_text(data = manual_coords, aes(x = long, y = lat, label = name), hjust = 0, vjust = 0, nudge_y = 0.05, size = 2.5) +
-  scale_fill_gradient(low='palegreen', high="darkblue",
-                      trans = scales::trans_new("log2p",
-                                                transform = function(x) log2(x + 1),
-                                                inverse = function(x) 2^x - 1),
-                      breaks = c(0, 1, 4, 8, 16, 64, 240),
-                      name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  ggsci::scale_color_lancet() + xlab('') + ylab('') +
-  labs(title='Bangladesh IEDCR Surveillance Data',color = "Surveillance Period") +
+  scale_fill_gradient(
+    low = "palegreen", high = "darkblue",
+    trans = scales::trans_new("log2p",
+      transform = function(x) log2(x + 1),
+      inverse = function(x) 2^x - 1
+    ),
+    breaks = c(0, 1, 4, 8, 16, 64, 240),
+    name = "Total cases", na.value = "grey95", limits = c(0, 240)
+  ) +
+  ggsci::scale_color_lancet() +
+  xlab("") +
+  ylab("") +
+  labs(title = "Bangladesh IEDCR Surveillance Data", color = "Surveillance Period") +
   theme_bw() +
   guides(color = guide_legend(override.aes = list(size = 5)))
 
 # North India + Bangladesh from outbreak data
-gg_northern_india_bangladesh <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('India','Bangladesh')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('India','Bangladesh')), lwd = 0.5, col = "black",  fill = NA) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
+gg_northern_india_bangladesh <- ggplot() +
+  geom_sf(data = l1 %>% filter(COUNTRY %in% c("India", "Bangladesh")), lwd = 0.4, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l0_in %>% filter(COUNTRY %in% c("India", "Bangladesh")), lwd = 0.5, col = "black", fill = NA) +
+  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3) +
   coord_sf(xlim = c(83, 92), ylim = c(20, 28), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue",
-                      trans = scales::trans_new("log2p",
-                                                transform = function(x) log2(x + 1),
-                                                inverse = function(x) 2^x - 1),
-                      breaks = c(0, 1, 4, 8, 16, 64, 240),
-                      name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Northern India & Bangladesh\nreported outbreaks' ) +
-  theme_bw() + guides(fill = guide_none(),
-                      color=guide_none())
+  scale_fill_gradient(
+    low = "palegreen", high = "darkblue",
+    trans = scales::trans_new("log2p",
+      transform = function(x) log2(x + 1),
+      inverse = function(x) 2^x - 1
+    ),
+    breaks = c(0, 1, 4, 8, 16, 64, 240),
+    name = "Total cases", na.value = "grey95", limits = c(0, 240)
+  ) +
+  labs(title = "Northern India & Bangladesh\nreported outbreaks") +
+  theme_bw() +
+  guides(
+    fill = guide_none(),
+    color = guide_none()
+  )
 
 # Kerala
-gg_kerala <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('India')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('India')), lwd = 0.5, col = "black",  fill = NA) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
+gg_kerala <- ggplot() +
+  geom_sf(data = l1 %>% filter(COUNTRY %in% c("India")), lwd = 0.4, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l0_in %>% filter(COUNTRY %in% c("India")), lwd = 0.5, col = "black", fill = NA) +
+  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3) +
   coord_sf(xlim = c(74, 78), ylim = c(8, 13), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue",
-                      trans = scales::trans_new("log2p",
-                                                transform = function(x) log2(x + 1),
-                                                inverse = function(x) 2^x - 1),
-                      breaks = c(0, 1, 4, 8, 16, 64, 240),
-                      name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Kerala\nreported outbreaks' ) +
-  theme_bw() + guides(fill = guide_none(),
-                      color=guide_none())
+  scale_fill_gradient(
+    low = "palegreen", high = "darkblue",
+    trans = scales::trans_new("log2p",
+      transform = function(x) log2(x + 1),
+      inverse = function(x) 2^x - 1
+    ),
+    breaks = c(0, 1, 4, 8, 16, 64, 240),
+    name = "Total cases", na.value = "grey95", limits = c(0, 240)
+  ) +
+  labs(title = "Kerala\nreported outbreaks") +
+  theme_bw() +
+  guides(
+    fill = guide_none(),
+    color = guide_none()
+  )
 
 
 
 # Malaysia & Singapore
-gg_malaysia_singapore <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('Malaysia','Singapore')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('Malaysia','Singapore')), lwd = 0.5, col = "black",  fill = NA) +
-  geom_sf(data = l0 %>% filter(COUNTRY %in% c('Singapore')), lwd = 0.7, col = "black",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
+gg_malaysia_singapore <- ggplot() +
+  geom_sf(data = l1 %>% filter(COUNTRY %in% c("Malaysia", "Singapore")), lwd = 0.4, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l0_in %>% filter(COUNTRY %in% c("Malaysia", "Singapore")), lwd = 0.5, col = "black", fill = NA) +
+  geom_sf(data = l0 %>% filter(COUNTRY %in% c("Singapore")), lwd = 0.7, col = "black", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3) +
   coord_sf(xlim = c(100, 105), ylim = c(1, 7), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue",
-                      trans = scales::trans_new("log2p",
-                                                transform = function(x) log2(x + 1),
-                                                inverse = function(x) 2^x - 1),
-                      breaks = c(0, 1, 4, 8, 16, 64, 240),
-                      name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Malaysian peninsular\nreported outbreaks' ) +
-  theme_bw() + guides(fill = guide_none(),
-                      color=guide_none())
+  scale_fill_gradient(
+    low = "palegreen", high = "darkblue",
+    trans = scales::trans_new("log2p",
+      transform = function(x) log2(x + 1),
+      inverse = function(x) 2^x - 1
+    ),
+    breaks = c(0, 1, 4, 8, 16, 64, 240),
+    name = "Total cases", na.value = "grey95", limits = c(0, 240)
+  ) +
+  labs(title = "Malaysian peninsular\nreported outbreaks") +
+  theme_bw() +
+  guides(
+    fill = guide_none(),
+    color = guide_none()
+  )
 
 
 # Philippines
-gg_philippines <- ggplot()  +
-  geom_sf(data = l1 %>% filter(COUNTRY %in% c('Philippines')), lwd = 0.4, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey",  aes(fill = total_cases),na.rm = TRUE) +
-  geom_sf(data = l0_in %>% filter(COUNTRY %in% c('Philippines')), lwd = 0.5, col = "black",  fill = NA) +
-  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = 'lightblue',alpha=0.3) +
+gg_philippines <- ggplot() +
+  geom_sf(data = l1 %>% filter(COUNTRY %in% c("Philippines")), lwd = 0.4, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l2 %>% filter(NAM_2 %in% location_agg$map_location), lwd = 0.2, col = "darkgrey", aes(fill = total_cases), na.rm = TRUE) +
+  geom_sf(data = l0_in %>% filter(COUNTRY %in% c("Philippines")), lwd = 0.5, col = "black", fill = NA) +
+  geom_sf(data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3) +
   coord_sf(xlim = c(115, 130), ylim = c(5, 20), expand = FALSE) +
-  scale_fill_gradient(low='palegreen', high="darkblue",
-                      trans = scales::trans_new("log2p",
-                                                transform = function(x) log2(x + 1),
-                                                inverse = function(x) 2^x - 1),
-                      breaks = c(0, 1, 4, 8, 16, 64, 240),
-                      name = 'Total cases',na.value="grey95",limits=c(0,240)) +
-  labs(title='Philippines\nreported outbreaks' ) +
-  theme_bw() + guides(fill = guide_none(),
-                      color=guide_none())
+  scale_fill_gradient(
+    low = "palegreen", high = "darkblue",
+    trans = scales::trans_new("log2p",
+      transform = function(x) log2(x + 1),
+      inverse = function(x) 2^x - 1
+    ),
+    breaks = c(0, 1, 4, 8, 16, 64, 240),
+    name = "Total cases", na.value = "grey95", limits = c(0, 240)
+  ) +
+  labs(title = "Philippines\nreported outbreaks") +
+  theme_bw() +
+  guides(
+    fill = guide_none(),
+    color = guide_none()
+  )
 
 
 # Sero plot
 sero_studies <- parameters |>
-  filter(parameter_class == 'Seroprevalence') |>
+  filter(parameter_class == "Seroprevalence") |>
   mutate(population_group = factor(population_group,
-                                   levels = c("General population",
-                                              sort(
-                                                setdiff(unique(population_group),
-                                                        c("General population", "Other", "Unspecified"))),
-                                              "Other", "Unspecified"))) |>
-  mutate(parameter_unit = 'Percentage (%)',
-         population_group = replace_na(population_group, 'Other'),
-         sero_CSF = case_when(str_detect(parameter_notes,'CSF') ~ 'CSF',
-                              TRUE ~ 'Other'),
-         parameter_type = str_replace(parameter_type,
-                                      "Seroprevalence - ", "")) |>
+    levels = c(
+      "General population",
+      sort(
+        setdiff(
+          unique(population_group),
+          c("General population", "Other", "Unspecified")
+        )
+      ),
+      "Other", "Unspecified"
+    )
+  )) |>
+  mutate(
+    parameter_unit = "Percentage (%)",
+    population_group = replace_na(population_group, "Other"),
+    sero_CSF = case_when(
+      str_detect(parameter_notes, "CSF") ~ "CSF",
+      TRUE ~ "Other"
+    ),
+    parameter_type = str_replace(
+      parameter_type,
+      "Seroprevalence - ", ""
+    )
+  ) |>
   mutate(parameter_value = coalesce(parameter_value, central)) |>
   arrange(population_country, central)
 
 custom_colour_pop_groups <- ggsci::pal_lancet("lanonc")(9)
 
 common_cntries <- c("Bangladesh", "India", "Malaysia", "Philippines", "Singapore")
-extra_cntries <- setdiff(unique(sero_studies$population_country),
-                         common_cols)
+extra_cntries <- setdiff(
+  unique(sero_studies$population_country),
+  common_cols
+)
 countries <- c(common_cntries, extra_cntries)
 
 custom_colour_countries <- lanonc_colours[seq_along(countries)]
 names(custom_colour_countries) <- countries
 
 sero_forest_pop_group <- forest_plot(
-  sero_studies, sort=TRUE, 'Serology (%)','population_country', c(-4,104),
-  text_size = 13, qa_alpha = 0.3, custom_colours = custom_colour_countries) +
-  ggforce::facet_col(facets = vars(population_group),
-                     scales = "free_y",
-                     space = "free") +
-  guides(shape = guide_none(),
-         linetype = guide_none(),
-         color=guide_legend(title="Country"))
+  sero_studies,
+  sort = TRUE, "Serology (%)", "population_country", c(-4, 104),
+  text_size = 13, qa_alpha = 0.3, custom_colours = custom_colour_countries
+) +
+  ggforce::facet_col(
+    facets = vars(population_group),
+    scales = "free_y",
+    space = "free"
+  ) +
+  guides(
+    shape = guide_none(),
+    linetype = guide_none(),
+    color = guide_legend(title = "Country")
+  )
 
 # manual forest plot to shape type
 color_column <- "population_country"
@@ -507,35 +590,46 @@ qa_alpha <- 0.3
 sero_studies$plot_alpha <- 1
 sero_studies$segment_alpha <- 1
 
-sero_studies[sero_studies$qa_score<=0.5, ]$plot_alpha <- qa_alpha
-sero_studies[sero_studies$qa_score<=0.5, ]$segment_alpha <- 0.65 * qa_alpha
+sero_studies[sero_studies$qa_score <= 0.5, ]$plot_alpha <- qa_alpha
+sero_studies[sero_studies$qa_score <= 0.5, ]$segment_alpha <- 0.65 * qa_alpha
 
 # remove geom_point
 sero_forest_pop_group$layers <-
-  sero_forest_pop_group$layers[1:(length(sero_forest_pop_group$layers)-1)]
+  sero_forest_pop_group$layers[1:(length(sero_forest_pop_group$layers) - 1)]
 
 sero_forest_pop_group <- sero_forest_pop_group +
-  geom_point(data=sero_studies |>
-               mutate(urefs = make.unique(refs),
-                      urefs = factor(urefs, levels = rev(unique(urefs)))),
-             aes(x = parameter_value, y = urefs,
-                 shape = parameter_type,
-                 fill = population_country),
-             alpha=sero_studies$plot_alpha,
-             size = 3, stroke = 1, color = "black") +
-  scale_shape_manual(name = "Assay",
-                     values = c(IgG = 21, IgM = 22,
-                                PRNT = 23, Unspecified = 24),
-                     breaks = c("IgG", "IgM", "PRNT", "Unspecified")) +
-  guides(shape = guide_legend(title="Assay")) +
+  geom_point(
+    data = sero_studies |>
+      mutate(
+        urefs = make.unique(refs),
+        urefs = factor(urefs, levels = rev(unique(urefs)))
+      ),
+    aes(
+      x = parameter_value, y = urefs,
+      shape = parameter_type,
+      fill = population_country
+    ),
+    alpha = sero_studies$plot_alpha,
+    size = 3, stroke = 1, color = "black"
+  ) +
+  scale_shape_manual(
+    name = "Assay",
+    values = c(
+      IgG = 21, IgM = 22,
+      PRNT = 23, Unspecified = 24
+    ),
+    breaks = c("IgG", "IgM", "PRNT", "Unspecified")
+  ) +
+  guides(shape = guide_legend(title = "Assay")) +
   theme(legend.position = c(0.9, 0.49))
 
 ggsave("sero_forest_pop_group.png",
-       plot = sero_forest_pop_group,
-       width = 11, height = 20)
+  plot = sero_forest_pop_group,
+  width = 11, height = 20
+)
 
 map_theme <- theme(
-  plot.margin = margin(2,2,2,2),
+  plot.margin = margin(2, 2, 2, 2),
   legend.position = "none"
 )
 
@@ -548,23 +642,26 @@ layout_design <-
    CCDDEEFFFF
    CCDDEEFFFF"
 
-text_size = 13
-gg_bangladesh <- gg_bangladesh+
-  theme(legend.title = element_text(size = 14),
-      legend.text  = element_text(size = 12))
+text_size <- 13
+gg_bangladesh <- gg_bangladesh +
+  theme(
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12)
+  )
 
-map_plot <-  gg_northern_india_bangladesh + gg_bangladesh + gg_kerala +
-  gg_malaysia_singapore + gg_philippines + (sero_forest_pop_group  +
-  theme(legend.position = c(0.85, 0.51))) +
+map_plot <- gg_northern_india_bangladesh + gg_bangladesh + gg_kerala +
+  gg_malaysia_singapore + gg_philippines + (sero_forest_pop_group +
+    theme(legend.position = c(0.85, 0.51))) +
   plot_layout(design = layout_design) +
-  plot_annotation(tag_levels = 'A') +
+  plot_annotation(tag_levels = "A") +
   plot_layout(byrow = FALSE)
 
 ggsave("nipah_outbreaks_map.png", plot = map_plot, width = 19, height = 22)
 
 ggsave("northern_india_bangladesh.png",
-       plot = gg_northern_india_bangladesh,
-       width = 10.4, height = 10)
+  plot = gg_northern_india_bangladesh,
+  width = 10.4, height = 10
+)
 ggsave("bangladesh.png", plot = gg_bangladesh, width = 10, height = 10)
 ggsave("kerala.png", plot = gg_kerala, width = 6.4, height = 8)
 ggsave("malaysia_singapore.png", plot = gg_malaysia_singapore, width = 8.4, height = 10)
