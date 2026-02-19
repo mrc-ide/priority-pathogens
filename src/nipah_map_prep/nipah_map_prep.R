@@ -1,5 +1,6 @@
 library(orderly2)
 library(tidyverse)
+library(sf)
 library(stringr)
 
 
@@ -155,7 +156,7 @@ location_mapping <- location_mapping %>%
 
 subcolumns_outbreak <- readRDS("cleaned_outbreak_data.RDS") 
 
-location_agg <- subcolumns_outbreak %>%
+locations_with_cases_and_deaths <- subcolumns_outbreak %>%
   group_by(outbreak_location) %>%
   summarise(
     tot_cases = sum(total_cases),
@@ -167,12 +168,12 @@ location_agg <- subcolumns_outbreak %>%
 
 
 
-location_agg$tot_cases_binned <-
-  cut(location_agg$tot_cases, breaks = c(1, 10, 30, 45, 235),
+locations_with_cases_and_deaths$tot_cases_binned <-
+  cut(locations_with_cases_and_deaths$tot_cases, breaks = c(1, 10, 30, 45, 235),
       right = FALSE, order_result = TRUE)
 
 
-saveRDS(location_agg, "locations_with_cases_and_deaths.rds")
+saveRDS(locations_with_cases_and_deaths, "locations_with_cases_and_deaths.rds")
 orderly_artefact(files = "locations_with_cases_and_deaths.rds")
 
 
@@ -180,3 +181,97 @@ orderly_artefact(files = "locations_with_cases_and_deaths.rds")
 
 
 
+## prepare shapefiles for maps
+## this is the shapefile with country boundaries
+orderly_shared_resource("World_Bank_Official_Boundaries_adm0/")
+orderly_shared_resource("World_Bank_Official_Boundaries_adm1/")
+orderly_shared_resource("World_Bank_Official_Boundaries_adm2/")
+orderly_shared_resource("World_Bank_Official_Boundaries_Ocean_Mask/")
+
+l0_in <- read_sf("World_Bank_Official_Boundaries_adm0/WB_GAD_ADM0.shp") %>%                                rename(COUNTRY = NAM_0) 
+#
+
+### this is the shapefile with level 1 regions
+l1_in <- read_sf("World_Bank_Official_Boundaries_adm1/WB_GAD_ADM1.shp") %>%
+  rename(COUNTRY = NAM_0) %>%
+  mutate(COUNTRY = case_when( # country names must be consistent between shapefiles
+    COUNTRY == "Cabo Verde" ~ "Cape Verde",
+    COUNTRY == "Democratic Republic of Congo" ~ "Democratic Republic of the Congo",
+    COUNTRY == "Guinea Bissau" ~ "Guinea-Bissau",
+    TRUE ~ COUNTRY
+  )) %>%
+  rename(REG_CODE = ADM1CD_c) # store region codes, e.g. SL01, in column REG_CODE
+
+l2_in <- read_sf("World_Bank_Official_Boundaries_adm2/WB_GAD_ADM2.shp") %>%
+  rename(COUNTRY = NAM_0)
+
+om <- read_sf("World_Bank_Official_Boundaries_Ocean_Mask/WB_GAD_ocean_mask.shp") 
+
+
+
+# what is the 'true' number of cases we assign, how do we demonstrate time dimension?
+
+# outbreaks %>% filter(!is_duplicate) %>% group_by(outbreak_location, outbreak_start_year) %>% summarise(n=n()) %>% filter(n>1)
+
+# world               <- ne_countries(scale = "medium", returnclass = "sf")
+# worldmap            <- st_transform(world, crs = st_crs(l0))
+
+# southeast_asia_cropped <- st_crop(worldmap, xmin = -20, xmax = 45,
+#                          ymin = 30, ymax = 73)
+
+
+l0 <- l0_in %>%
+  left_join(
+    rename(
+      locations_with_cases_and_deaths,
+      tc_l0 = tot_cases,
+      td_l0 = tot_deaths,
+      tc_binned = tot_cases_binned
+    ),
+    by = c("COUNTRY" = "map_location")) %>%
+  mutate(total_cases = tc_l0, total_deaths = td_l0, tot_cases_binned = tc_binned)
+
+l1 <- l1_in %>%
+  left_join(
+    rename(
+      locations_with_cases_and_deaths, tc_l1 = tot_cases, td_l1 = tot_deaths,
+      tc_binned = tot_cases_binned
+    ),
+    by = c("NAM_1" = "map_location")) %>%
+  mutate(total_cases = tc_l1, total_deaths = td_l1, tot_cases_binned = tc_binned)
+
+l2 <- left_join(
+  l2_in, 
+    rename(
+      locations_with_cases_and_deaths, tc_l2 = tot_cases, td_l2 = tot_deaths,
+      tc_l2_binned = tot_cases_binned
+    ),
+    by = c("NAM_2" = "map_location")) %>%
+  left_join(
+    rename(
+      locations_with_cases_and_deaths, tc_l1 = tot_cases, td_l1 = tot_deaths,
+      tc_l1_binned = tot_cases_binned
+    ),
+    by = c("NAM_1" = "map_location")) %>%
+  left_join(
+    rename(
+      locations_with_cases_and_deaths, tc_l0 = tot_cases, td_l0 = tot_deaths,
+      tc_l0_binned = tot_cases_binned
+    ),
+    by = c("COUNTRY" = "map_location")) %>%
+  mutate(
+    total_cases = coalesce(tc_l2, tc_l1, tc_l0),
+    total_deaths = coalesce(td_l2, td_l1, td_l0),
+    total_cases_binned = coalesce(tc_l2_binned, tc_l1_binned, tc_l0_binned)
+  ) %>%
+  filter(!is.na(total_cases)) # remove visual noise
+
+saveRDS(l0, "l0_shapefile_with_cases_and_deaths.rds")
+saveRDS(l1, "l1_shapefile_with_cases_and_deaths.rds")
+saveRDS(l2, "l2_shapefile_with_cases_and_deaths.rds")
+
+orderly_artefact(files = c(
+  "l0_shapefile_with_cases_and_deaths.rds",
+  "l1_shapefile_with_cases_and_deaths.rds",
+  "l2_shapefile_with_cases_and_deaths.rds"
+))
