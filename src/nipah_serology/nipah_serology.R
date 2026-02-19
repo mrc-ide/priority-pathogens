@@ -11,13 +11,11 @@ library(stringr)
 library(tidyr)
 
 # *--------------------------------- Orderly ----------------------------------*
-orderly_strict_mode()
 
-orderly_parameters(pathogen=NULL)
 
 orderly_dependency(
   "db_cleaning",
-  "latest(parameter:pathogen==this:pathogen)",
+  "latest(parameter:pathogen=='NIPAH')",
   c("articles.csv", "models.csv", "params.csv", "outbreaks.csv"))
 
 orderly_shared_resource("nipah_functions.R"="nipah_functions.R")
@@ -224,3 +222,8 @@ patch <- (p1 | p2 + theme(legend.position=c(0.815, 0.425),
 ggsave("sero_forest_pop_group_cols.png",
        plot=patch,
        width=12, height=16)
+
+saveRDS(patch, "sero_forest_pop_group_cols.rds")
+orderly_artefact(
+  files = c("sero_forest_pop_group_cols.png", "sero_forest_pop_group_cols.rds")
+)
