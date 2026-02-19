@@ -210,10 +210,10 @@ p1 <- forest_plots[["short_term"]] +
   guides(starshape=guide_none(),
          fill=guide_none(),
          color=guide_none()) +
-  labs(title="Short term")
+  labs(title="Short term antibodies")
 
 p2 <- forest_plots[["long_term"]] +
-  labs(title="Long term")
+  labs(title="Long term antibodies")
 
 patch <- (p1 | p2 + theme(legend.position=c(0.815, 0.425),
                           legend.spacing=unit(2, "mm"),
