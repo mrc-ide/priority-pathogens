@@ -92,6 +92,18 @@ param_cleaning <- function(df){
   df[(df$covidence_id==12025) & (df$parameter_type=="Risk factors"),
      "riskfactor_outcome"] <- "Death"
 
+  #Kim (2015) has extracted the lower bounds incorrectly
+  df[(df$access_param_id == "055_001"),
+     "parameter_2_lower_bound"] <- 0
+  df[(df$access_param_id == "055_002"),
+     "parameter_2_lower_bound"] <- 0
+  df[(df$access_param_id == "055_002"),
+     "population_group"] <- "Healthcare workers"
+
+  #As is this central value, they've taken a subset rather than the overall average attack rate
+  df[(df$access_param_id == "029_003"),
+     "parameter_value"] <- 0.39
+
 
   return (df)
 }
