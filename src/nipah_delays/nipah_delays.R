@@ -135,8 +135,8 @@ parameters <- parameters |>
 # In order of initial outbreak per country
 parameters <- parameters |>
   mutate(population_country=factor(population_country,
-                                   levels=c("Malaysia", "Bangladesh",
-                                            "India", "Philippines"))
+                                   levels=c("Philippines", "India",
+                                            "Bangladesh", "Malaysia"))
          )
 
 # Incubation period
