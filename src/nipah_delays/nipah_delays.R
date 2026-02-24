@@ -583,7 +583,7 @@ for (i in seq_along(qa_thresh_vec)){
       guides(shape =  guide_legend(title = "Parameter type", order=1),
              color = guide_legend(title = "Outcome"),
              linetype = guide_legend(title = "Variation type")) +
-      theme(legend.position = c(0.8,0.375))
+      theme(legend.position = c(0.8,0.4))
 
     p3_ao <- p3_ao_plots[[plot_type]][["population_country"]] +
       guides(shape =  guide_none(),
