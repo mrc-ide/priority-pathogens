@@ -226,8 +226,14 @@ for (i in seq_along(qa_thresh_vec)){
              override.aes = list(fill = custom_colour_pop_groups)),
            shape=guide_legend(title = "Parameter type", order=1))
 
-  p5 <- p5 + theme(legend.position = c(0.835, 0.3))
-  p1 <- p1 + theme(legend.position = c(0.875, 0.85))
+  p5 <- p5 + theme(legend.position = c(0.835, 0.3),
+                   legend.spacing=unit(2, "mm"),
+                   legend.key.height = unit(0.5, "cm"),
+                   legend.margin=margin(0, 0, 0, 0))
+  p1 <- p1 + theme(legend.position = c(0.875, 0.85),
+                   legend.spacing=unit(2, "mm"),
+                   legend.key.height = unit(0.5, "cm"),
+                   legend.margin=margin(0, 0, 0, 0))
   # Save plots
   patchwork <- (p5 + p3 + p4 + p1) +
     plot_layout(ncol = 2, widths = c(1,1))
