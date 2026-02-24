@@ -260,10 +260,22 @@ for (i in seq_along(qa_thresh_vec)){
       colour_col_label <- paste0(substr(unlist(strsplit(colour_col, "_")), 1, 1),
                                  collapse = "")
 
-      all_groups <- bind_rows(d1, d2, d3, d4) |>
-        distinct(.data[[colour_col]]) |>
-        arrange(.data[[colour_col]]) |>
-        pull()
+      if (colour_col=="population_country"){
+        all_groups <- bind_rows(d1, d2, d3, d4)
+        all_groups <- sort(levels(all_groups$population_country))
+
+        custom_colours <- lanonc_colours[seq_along(all_groups)]
+        custom_colours <- setNames(custom_colours, all_groups)
+        custom_colour_countries <- custom_colours
+      }else{
+        all_groups <- bind_rows(d1, d2, d3, d4) |>
+          distinct(.data[[colour_col]]) |>
+          arrange(.data[[colour_col]]) |>
+          pull()
+
+        custom_colours <- lanonc_colours[seq_along(all_groups)]
+        custom_colours <- setNames(custom_colours, all_groups)
+      }
 
       # # Since we plot parameter_type and country in the same plot shift colours
       # # for parameter_type by the number of countries (4)
@@ -273,8 +285,6 @@ for (i in seq_along(qa_thresh_vec)){
       #   shift <- 0
       # }
 
-      custom_colours <- lanonc_colours[seq_along(all_groups)]
-      custom_colours <- setNames(custom_colours, all_groups)
 
       # 65 with Chua
       p1_incb_plots[[plot_type]][[colour_col]] <- forest_plot(
@@ -567,6 +577,9 @@ for (i in seq_along(qa_thresh_vec)){
   }else{
 
     p1_incb <- p1_incb_plots[[plot_type]][["population_country"]] +
+      scale_color_manual(name="Country",
+                         values = custom_colour_countries,
+                         breaks = names(custom_colour_countries)) +
       guides(shape =  guide_legend(title = "Parameter type", order=1),
              color = guide_legend(title = "Outcome"),
              linetype = guide_legend(title = "Variation type")) +
