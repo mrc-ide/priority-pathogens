@@ -19,7 +19,8 @@ source("mers_functions.R")
 
 orderly_artefact("MERS transmission figures",
                  c("figure_trans.png", "figure_trans.pdf",
-                   "R_by_country.png", "R_by_country.pdf"))
+                   "R_by_country.png", "R_by_country.pdf",
+                   "R_by_sample_type.png", "R_by_sample_type.pdf"))
 
 # *------------------------------ Data curation -------------------------------*
 articles   <- read_csv("articles.csv")
@@ -318,10 +319,10 @@ unique(d8$parameter_unit[!is.na(d8$parameter_unit)])
 # Save plots
 design <- "ACE
 BDE"
-patchwork <- p3+p1+p4+p2+p5+plot_layout(design = design)
-patchwork <- patchwork + plot_annotation(tag_levels = 'A')
-ggsave("figure_trans.png", plot = patchwork, width = 20, height = 10)
-ggsave("figure_trans.pdf", plot = patchwork, width = 20, height = 10)
+patchwork_trans <- p3+p1+p4+p2+p5+plot_layout(design = design)
+patchwork_trans <- patchwork_trans + plot_annotation(tag_levels = 'A')
+ggsave("figure_trans.png", plot = patchwork_trans, width = 20, height = 10)
+ggsave("figure_trans.pdf", plot = patchwork_trans, width = 20, height = 10)
 # *============================================================================*
 
 # Now we make some fancier R number plots
@@ -352,9 +353,12 @@ dRe <- dRe |>
 dRe <- dRe |> arrange(population_country, central)
 full_levels <- unique(filter(dRe, qa_score >= 0.5)$population_country)
 
-pRe <- forest_plot(filter(dRe, qa_score >= 0.5),'Effective Reproduction Number (R_e)', "population_country", #"method_moment_value",
+pRe <- forest_plot(filter(dRe, qa_score >= 0.5),'Effective Reproduction Number (R_e)',
+                   "population_country", #"method_moment_value",
                    c(0, 30),
                    text_size=text_size)  +
+  scale_x_continuous(breaks = seq(0,30, by = 2),
+                     limits = c(0,29)) +
   scale_x_break(c(10, 25)) +
   scale_fill_lancet(
     palette = "lanonc",
@@ -382,6 +386,8 @@ dR0 <- dR0 |> arrange(population_country, central)
 pR0 <- forest_plot(filter(dR0, qa_score >= 0.5),'Basic Reproduction Number (R_0)', "population_country", #"method_moment_value",
                   c(0, 30),
                   text_size=text_size) +
+  scale_x_continuous(breaks = seq(0,30, by = 2),
+                     limits = c(0,29)) +
   scale_x_break(c(10, 25)) +
   guides(color = guide_legend(title = "Population Country", order = 1)) +
   scale_fill_lancet(
@@ -397,8 +403,68 @@ pR0 <- forest_plot(filter(dR0, qa_score >= 0.5),'Basic Reproduction Number (R_0)
     drop = TRUE
   )
 
-patchwork <- (pR0 + pRe) +
+patchwork_country <- (pR0 + pRe) +
   plot_layout(nrow = 2, heights = c(1,1))
 
-ggsave("R_by_country.png", plot = patchwork, width = 7, height = 8)
-ggsave("R_by_country.pdf", plot = patchwork, width = 7, height = 8)
+ggsave("R_by_country.png", plot = patchwork_country, width = 7, height = 8)
+ggsave("R_by_country.pdf", plot = patchwork_country, width = 7, height = 8)
+
+################
+sample_type_levels <- c("Hospital based",
+                        "Population based",
+                        "Travel based",
+                        "Other",
+                        "Unspecified")
+
+dRe <- dRe |>
+  mutate(population_sample_type = ifelse(
+    is.na(population_sample_type), "Unspecified",
+    population_sample_type
+  ))
+dRe <- dRe |> arrange(population_sample_type, central)
+
+pRe <- forest_plot(filter(dRe, qa_score >= 0.5),'Effective Reproduction Number (R_e)',
+                   "population_sample_type", #"method_moment_value",
+                   c(0, 30),
+                   text_size=text_size)  +
+  scale_x_continuous(breaks = seq(0,31, by = 2),
+                     limits = c(0,29)) +
+  scale_x_break(c(10, 25)) +
+scale_fill_lancet(
+  palette = "lanonc",
+  limits = sample_type_levels
+) +
+scale_color_lancet(
+  palette = "lanonc",
+  limits = sample_type_levels
+)
+# ) +
+#   theme(
+#     panel.grid.major.x = element_line(colour = "grey85"),
+#     axis.ticks.length = unit(-0.15, "cm")
+#   )
+
+dR0 <- dR0 |> arrange(population_sample_type, central)
+pR0 <- forest_plot(filter(dR0, qa_score >= 0.5),'Basic Reproduction Number (R_0)',
+                   "population_sample_type", #"method_moment_value",
+                   c(0, 30),
+                   text_size=text_size)  +
+  scale_x_continuous(breaks = seq(0,31, by = 2),
+                     limits = c(0,29)) +
+  scale_x_break(c(10, 25)) +
+  scale_fill_lancet(
+    palette = "lanonc",
+    limits = sample_type_levels
+  ) +
+  scale_color_lancet(
+    palette = "lanonc",
+    limits = sample_type_levels
+  )
+
+patchwork_sample_type <- (pR0 + pRe) +
+  plot_layout(nrow = 2, heights = c(1,1))
+
+ggsave("R_by_sample_type.png", plot = patchwork_sample_type, width = 7, height = 8)
+ggsave("R_by_sample_type.pdf", plot = patchwork_sample_type, width = 7, height = 8)
+
+dev.off()
