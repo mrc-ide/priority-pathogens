@@ -326,7 +326,7 @@ for (i in seq_along(qa_thresh_vec)){
 
       p3_ao_plots[[plot_type]][[colour_col]] <- forest_plot(
         d3 |> filter(qa_score>qa_threshold), 'Hospitalisation-to-outcome (days)',
-        colour_col, c(0,45), text_size = text_size, sort=TRUE,
+        colour_col, c(-0.5,42), text_size = text_size, sort=TRUE,
         custom_colours = custom_colours, qa_alpha=qa_alpha)
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_admis_outcome_",
@@ -336,7 +336,7 @@ for (i in seq_along(qa_thresh_vec)){
     }else if(plot_type=="all"){
       p3_ao_plots[[plot_type]][[colour_col]] <- forest_plot(
         d3 |> filter(qa_score>qa_threshold), 'Hospitalisation-to-outcome (days)',
-        colour_col, c(0,45), text_size = text_size, sort=TRUE,
+        colour_col, c(-0.5,42), text_size = text_size, sort=TRUE,
         custom_colours = custom_colours, qa_alpha=qa_alpha) +
         ggforce::facet_col(facets = vars(parameter_type),
                            scales = "free_y",
@@ -362,7 +362,7 @@ for (i in seq_along(qa_thresh_vec)){
       d4_plot <- d4
       d4_plot_label <- "outcome"
       d4_x_axis_label <- 'Symptom onset-to-outcome (days)'
-      xlim <- c(-2,85)
+      xlim <- c(-0.5,85)
 
       all_groups <- d4_plot |>
         distinct(parameter_type) |>
@@ -378,7 +378,7 @@ for (i in seq_along(qa_thresh_vec)){
       d4_plot <- d4 |> filter(parameter_type=="Death")
       d4_plot_label <- "death"
       d4_x_axis_label <- 'Symptom onset-to-death (days)'
-      xlim <- c(0,50)
+      xlim <- c(-0.5,50)
     }
 
     # Sim is duplicated
@@ -422,7 +422,7 @@ for (i in seq_along(qa_thresh_vec)){
 
     # Serial interval
     p5_si_plots[[plot_type]][[colour_col]] <- forest_plot(
-      d5, 'Serial interval (days)', colour_col, c(0,22),
+      d5, 'Serial interval (days)', colour_col, c(-0.5,22),
       text_size = text_size, sort=TRUE, custom_colours = custom_colours,
       qa_alpha=qa_alpha)
 
@@ -430,9 +430,9 @@ for (i in seq_along(qa_thresh_vec)){
       # Do  we want consistent colours across the SI and main plot?
       # If so, remove the filter
       if (plot_type=="all"){
-        xlim <- c(0,85)
+        xlim <- c(-0.5,85)
       }else{
-        xlim <- c(0,40)
+        xlim <- c(-0.5,40)
       }
       all_groups <- d6 |>
         filter(qa_score>qa_threshold) |>
@@ -479,7 +479,7 @@ for (i in seq_along(qa_thresh_vec)){
       p7_oo_reduced_plots[[plot_type]][[colour_col]] <- forest_plot(
         d7 |> filter(qa_score>qa_threshold),
         'Symptom onset-to-outcome (days)',
-        colour_col, c(0,85), text_size = text_size, sort=TRUE,
+        colour_col, c(-0.5,85), text_size = text_size, sort=TRUE,
         custom_colours = custom_colours, qa_alpha=qa_alpha) +
         facet_wrap(~parameter_type, ncol=1, scales="free_x")
       ggsave(file.path(plot_type,
@@ -501,7 +501,7 @@ for (i in seq_along(qa_thresh_vec)){
         # update x-lim to 85 if including the above
         p7_oo_reduced_plots[[plot_type]][[colour_col]] <- forest_plot(
           d4_filtered, 'Symptom onset-to-outcome (days)',
-          colour_col, c(0,85), text_size = text_size, sort=TRUE,
+          colour_col, c(-0.5,85), text_size = text_size, sort=TRUE,
           custom_colours = custom_colours, qa_alpha=qa_alpha) +
           ggforce::facet_col(facets = vars(parameter_type),
                              scales = "free_y",
@@ -642,7 +642,7 @@ for (i in seq_along(qa_thresh_vec)){
 # Incubation facet:
 incubation_pc_facet <- forest_plot(d1,
                                    "Incubation period (days)",
-                                   "population_sample_type", c(0,35),
+                                   "population_sample_type", c(-0.5,35),
                                    text_size=text_size,
                                    segment_show.legend = NA,
                                    sort=TRUE) +
