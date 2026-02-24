@@ -42,9 +42,13 @@ parameters <- dfs$parameters |>
 parameters <- parameters  |>
   mutate(population_group = factor(
     population_group,
-    levels = c(sort(setdiff(unique(population_group),
-                            c("Other", "Unspecified"))),
-               "Other", "Unspecified")))
+    levels=c("General population",
+               sort(setdiff(unique(population_group),
+                            c("General population", "Other", "Unspecified"))
+               ),
+               "Other", "Unspecified"
+    )),
+    parameter_value = coalesce(parameter_value, central))  #NOTE
 
 d1 <- parameters |> filter(parameter_type == "Mutations - evolutionary rate")
 d2 <- parameters |> filter(parameter_type == "Mutations - substitution rate")
@@ -108,23 +112,42 @@ d5 <- d5 |>
 text_size <- 12
 
 # Get custom colours so that genome has different colours
-lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+bmj_colours <- ggsci::pal_bmj("default")(9)
+temp <- bmj_colours[4]
+bmj_colours[4] <- bmj_colours[6]
+bmj_colours[6] <- temp
 
-all_pop_groups <- bind_rows(d3, d4, d5, d5) |>
+temp <- bmj_colours[1]
+bmj_colours[1] <- bmj_colours[2]
+bmj_colours[2] <- temp
+
+all_pop_groups <- parameters |>
+  filter(!is.na(population_group)) |>
   distinct(population_group) |>
-  # arrange alphabetically but put other last
-  arrange(population_group == "Other", population_group) |>
+  arrange(desc(population_group == "General population"),
+          population_group == "Unspecified", population_group == "Other",
+          population_group) |>
   pull()
 
-custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
+all_pop_groups <- levels(all_pop_groups)
+
+custom_colour_pop_groups <- bmj_colours[seq_along(all_pop_groups)]
 names(custom_colour_pop_groups) <- all_pop_groups
+
+unique_groups_in_plot <- unique(bind_rows(d3, d4, d5, d5)$population_group)
+
+custom_colour_pop_groups <- (custom_colour_pop_groups[all_pop_groups %in% (unique_groups_in_plot)])
+
+bind_rows(d3, d4, d5, d5) |> distinct(population_group)
+
+nejm_colours <-  c("#7876B1FF", "#EE4C97FF", "#EFE58B","#6F99ADFF")
 
 all_genomes <- bind_rows(d1, d2) |>
   distinct(genome_site) |>
   pull()
 
-custom_colour_genome_groups <- lanonc_colours[length(all_pop_groups) +
-                                                seq_along(all_genomes)]
+custom_colour_genome_groups <- nejm_colours[length(all_genomes) +
+                                              seq_along(all_genomes)]
 names(custom_colour_genome_groups) <- all_genomes
 
 # Approach to getting unified axes is very hacky... :(
