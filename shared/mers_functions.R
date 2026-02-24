@@ -731,3 +731,106 @@ filter_df_for_metamean <- function (df)
                    NA)
   df
 }
+
+
+cfr_periods_forest_style <- function(plot_df2,
+                                     country_colors,
+                                     label = "Date",
+                                     cap_height = 0.3,
+                                     lims = NULL,            # NULL or c(as.Date(...), as.Date(...))
+                                     text_size = 11,
+                                     point_size = 3,
+                                     segment_show.legend = NA,
+                                     qa_alpha = 1,
+                                     show_label = FALSE) {
+
+  # Prepare the data (keep only the two countries)
+  df <- plot_df2 %>%
+    filter(population_country %in% names(country_colors)) %>%
+    # preserve order for y-axis based on country_layout stored in plot_df2
+    mutate(urefs = make.unique(as.character(population_country))) %>%
+    # alpha handling (mirrors forest_plot QA behaviour; here applied simply)
+    mutate(plot_alpha = 1, segment_alpha = 1)
+
+  if(qa_alpha != 1) {
+    df$plot_alpha <- qa_alpha
+    df$segment_alpha <- 0.65 * qa_alpha
+  }
+
+  # Build the ggplot (forest-like styling)
+  gg <- ggplot(df) +
+    # long thick segments like your forest plot
+    geom_segment(aes(x = start_date, xend = end_date,
+                     y = y_position, yend = y_position,
+                     color = population_country),
+                 linewidth = 1, alpha = df$segment_alpha, show.legend = segment_show.legend) +
+
+    # small black-edged filled points at ends, same style as forest_plot's central points
+    geom_segment(aes(
+      x = start_date, xend = start_date,
+      y = y_position - cap_height,
+      yend = y_position + cap_height,
+      color = population_country
+    ),
+    linewidth = 1, alpha = df$plot_alpha) +
+
+    geom_segment(aes(
+      x = end_date, xend = end_date,
+      y = y_position - cap_height,
+      yend = y_position + cap_height,
+      color = population_country
+    ),
+    linewidth = 1, alpha = df$plot_alpha)
+
+  # optional label (uses population_country_ISO if present; adapt as needed)
+  if (show_label) {
+    if(!"population_country_ISO" %in% names(df)) {
+      warning("show_label = TRUE but column 'population_country_ISO' not found; skipping labels.")
+    } else {
+      gg <- gg + geom_text_repel(aes(x = coalesce(start_date, end_date), y = y_position,
+                                     label = population_country_ISO),
+                                 nudge_y = 0.5, segment.color = "grey50", size = rel(3))
+    }
+  }
+
+  # Scales & theme to mimic forest_plot
+  if (!is.null(lims)) {
+    # expect lims to be Date vector of length 2
+    gg <- gg + scale_x_date(limits = lims, expand = c(0, 0), date_labels = "%Y")
+  } else {
+    gg <- gg + scale_x_date(date_breaks = "2 years", date_labels = "%Y", expand = c(0, 0))
+  }
+
+  gg <- gg +
+    # use manual color/fill that you provided (keeps legend order)
+    scale_color_manual(values = country_colors) +
+    scale_fill_manual(values = country_colors) +
+
+    # y labels: create a named vector mapping y midpoints -> country names.
+    # We assume plot_df2/country_layout logic has a country_layout object available; otherwise fallback.
+    scale_y_continuous(
+      breaks = unique(df$y_position) %>% sort() %>% tapply(., df$population_country, function(x) mean(x)),
+      labels = names(country_colors),
+      expand = expansion(add = c(0.5, 0.5))
+    ) +
+
+    labs(x = label, y = NULL, color = NULL, fill = NULL,
+         title = "CFR Study Periods") +
+
+    theme_minimal(base_size = text_size) +
+    theme(
+      panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+      text = element_text(size = text_size)
+    )
+
+  # Guide behavior similar to forest_plot: when only 1 category, hide legends for color; for 2 keep color legend
+  cats <- length(unique(df$population_country))
+  if (cats == 1) {
+    gg <- gg + guides(fill = "none", color = "none")
+  } else {
+    gg <- gg + guides(fill = guide_legend(title = NULL, order = 1),
+                      color = guide_legend(title = NULL, order = 1))
+  }
+
+  return(gg)
+}
