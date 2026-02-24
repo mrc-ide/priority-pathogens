@@ -595,7 +595,19 @@ for (i in seq_along(qa_thresh_vec)){
              linetype = guide_none(),
              color = guide_none())
 
+    annot_df <- data.frame(x = 50.7, xend = 51.7, y = 1, yend = 1,
+                           parameter_type = "Discharge/recovery") |>
+      mutate(parameter_type=factor(parameter_type,
+                                   levels=c("Admission", "Severe illness",
+                                            "Death", "Discharge/recovery")))
+
     p7_oo <- p7_oo_reduced_plots[[plot_type]][["population_country"]] +
+      geom_segment(
+        data = annot_df,
+        aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+        arrow = arrow(type = "open", length = unit(0.15, "cm")),
+      ) +
+      coord_cartesian(xlim = c(-0.5, 52)) +
       guides(shape =  guide_none(),
              linetype = guide_none(),
              color = guide_none())
