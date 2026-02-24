@@ -81,12 +81,6 @@ d1 <- d1 |>
 
 d1 <- d1 |> arrange(genome_site,-central)
 
-# TODO: check Upper and lower bound - zero out for now
-d2 <- d2 |>
-  mutate(across(
-    c(parameter_upper_bound, parameter_lower_bound),
-    ~ ifelse(covidence_id == 2760, NA, .)))
-
 d2 <- d2 |> arrange(genome_site,-central)
 
 # Different from SARS and Lassa
@@ -168,10 +162,13 @@ for (i in seq_along(qa_thresh_vec)){
                       filter(qa_score>qa_threshold),
                     expression(Substitution~Rate~(s/s/y ~10^{-4})),
                     "genome_site",
-                    c(-0.01,16), custom_colours = custom_colour_genome_groups,
+                    c(-0.01,145), custom_colours = custom_colour_genome_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
                     text_size=text_size, qa_alpha=qa_alpha,
                     sort=TRUE) +
+    coord_cartesian(xlim = c(0, 16)) +
+    annotate("segment", x = 15.5, xend = 15.9, y = 2, yend = 2,
+      arrow = arrow(type = "open", length = unit(0.2, "cm"))) +
     scale_y_discrete(labels = function(x) parse(text = x)) +
     scale_color_manual(values=custom_colour_genome_groups,
                        limits=names(custom_colour_genome_groups)) +
