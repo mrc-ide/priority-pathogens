@@ -565,7 +565,7 @@ for (i in seq_along(qa_thresh_vec)){
     # Alternative is to use guides="collect" (legends) in plot_layout
     delays_plot <-  (p1_incb_plots[[plot_type]][["population_country"]] +
                        p4_oo_plots[[plot_type]][["population_country"]])/(
-                         bsl_model_plot +
+                         wrap_elements(full = bsl_main_cdf_plot) +
                            p6_oa_o_plots[[plot_type]][["parameter_type"]]) +
       plot_layout(heights = c(1, 1), widths = c(1, 1)) +
       plot_annotation(tag_levels = 'A')
