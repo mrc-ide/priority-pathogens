@@ -69,6 +69,10 @@ qa_scores  <- articles |> dplyr::select(covidence_id,qa_score)
 parameters <- dfs$parameters |>
   left_join(qa_scores)
 
+parameters <- parameters |>
+  filter(parameter_class=="Human delay") |>
+  mutate(parameter_value = coalesce(parameter_value, central))  #NOTE
+
 # Symptom Onset/Fever -> Recovery/Death
 parameters[parameters$access_param_id=="121_003",
            "parameter_type"] <- "Human delay - symptom onset>recovery/death"
