@@ -392,7 +392,12 @@ parameters <- parameters |>
       parameter_type == "Seroprevalence - PRNT" ~ "PRNT",
       parameter_type == "Seroprevalence - Unspecified" ~ "Unspecified test",
       parameter_type == "Severity - case fatality rate (CFR)" ~ "Case fatality ratio (CFR)",
+      parameter_type == "Severity - case fatality ratio (CFR)" ~ "Case fatality ratio (CFR)",
+      parameter_type == "Severity - infection fatality ratio (IFR)" ~ "Infection fatality ratio (IFR)",
       parameter_type == "Severity - proportion of symptomatic cases" ~ "Proportion of symptomatic cases",
+      parameter_type == "Severity - symptomatic proportion of infections" ~ "Proportion of symptomatic cases",
+      parameter_type == "Severity - proportion of asymptomatic cases" ~ "Proportion of asymptomatic cases",
+      parameter_type == "Severity - asymptomatic proportion of infections" ~ "Proportion of asymptomatic cases",
       TRUE ~ parameter_type)
   )
 
