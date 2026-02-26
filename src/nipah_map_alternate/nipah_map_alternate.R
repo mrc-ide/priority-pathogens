@@ -6,6 +6,7 @@ library(ggsci)
 library(ggspatial)
 library(grid)
 library(gridExtra)
+library(magick)
 library(orderly2)
 library(patchwork)
 library(png)
@@ -62,8 +63,8 @@ pall <- ggplot() +
   geom_sf(
     data = l1_centroids,
     aes(size = total_cases),
-    fill = "red", 
-    col = "red",    alpha = 0.5,
+    fill = "red",
+    col = "red", alpha = 0.5,
     na.rm = TRUE
   ) +
   # Circles at centroids - Layer 2
@@ -74,29 +75,33 @@ pall <- ggplot() +
     alpha = 0.5,
     na.rm = TRUE
   ) +
-    geom_sf(
+  geom_sf(
     data = filter(l0_in, COUNTRY %in% c("India", "Bangladesh")),
     lwd = 0.5, col = "black", fill = NA
   ) +
-    geom_sf(
-      data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3
-    ) +
+  geom_sf(
+    data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3
+  ) +
   scale_size_continuous(
-      name = "Total Cases",
+    name = "Total Cases",
     limits = c(1, 235),
     range = c(2, 15),
     breaks = c(1, 10, 50, 100, 200),
-    ##guide = "none"
-    ) +
+    ## guide = "none"
+  ) +
   labs(size = "Total cases") +
   annotation_scale(location = "bl", width_hint = 0.3) +
   theme_bw() +
-  theme(legend.position = "top", legend.key.height = unit(0.3, "cm"))
+  theme(
+    plot.title = element_text(size = 14, hjust = 0.5),
+    legend.background = element_blank(),
+    legend.position = "inside",
+    legend.position.inside = c(0.1, 0.5)
+  )
 
-legend <- get_legend(pall)
 
-## Now remove legend from the individual plots
-pall <- pall + theme(legend.position = "none")
+
+
 
 bbox_ll <- st_bbox(c(xmin = 83, xmax = 92, ymin = 20, ymax = 28), crs = crs_latlong)
 bbox_utm <- st_bbox(st_transform(st_as_sfc(bbox_ll), crs_scale))
@@ -107,7 +112,8 @@ pindia_bangladesh <- pall +
   xlim = c(bbox_utm["xmin"], bbox_utm["xmax"]),
   ylim = c(bbox_utm["ymin"], bbox_utm["ymax"]),
   expand = FALSE
-) + ggtitle("India & Bangladesh") 
+  ) + ggtitle("India & Bangladesh") +
+  theme(legend.position = "none")
 
 
 ## Kerala
@@ -129,9 +135,11 @@ pmalaysia_singapore <- pall +
   coord_sf(
     crs = crs_scale, # Only need to specify output CRS
     xlim = c(bbox_utm["xmin"], bbox_utm["xmax"]),
-    ylim = c(bbox_utm["ymin"], bbox_utm["ymax"]),
+    ylim = c(bbox_utm["ymin"],
+             bbox_utm["ymax"]),
     expand = FALSE
-  ) + ggtitle("Malaysia & Singapore")
+  ) + ggtitle("Malaysia & Singapore") +
+  theme(legend.position = "none")
 
 ## Philippines
 bbox_ll <- st_bbox(c(xmin = 116, xmax = 130, ymin = 5, ymax = 20), crs = crs_latlong)
@@ -142,9 +150,13 @@ pphilippines <- pall +
     xlim = c(bbox_utm["xmin"], bbox_utm["xmax"]),
     ylim = c(bbox_utm["ymin"], bbox_utm["ymax"]),
     expand = FALSE
-  ) + ggtitle("Philippines")
+  ) + ggtitle("Philippines") +
+  theme(legend.position = "none")
+
+
 
 ## Put the plots together
+
 pfinal <- pindia_bangladesh + pkerala +  pmalaysia_singapore + pphilippines +
   plot_layout(ncol = 2) 
 
@@ -156,13 +168,35 @@ ggsave("pindia_bangladesh.png", pindia_bangladesh, width = width, height = heigh
 ggsave("pkerala.png", pkerala, width = width, height = height, bg = "white")
 ggsave("pmalaysia_singapore.png", pmalaysia_singapore, width = width, height = height, bg = "white")
 ggsave("pphilippines.png", pphilippines, width = width, height = height, bg = "white")
-ggsave("map_legend.png", legend)
 
-orderly_artefact(
-  files = c("pfinal.png", "pindia_bangladesh.png", "pkerala.png",
-            "pmalaysia_singapore.png", "pphilippines.png",
-            "map_legend.png")
-)
 
-orderly_resource("nipah_map.tex")
-system("pdflatex nipah_map.tex")
+files = c("pfinal.png", "pindia_bangladesh.png", "pkerala.png",
+            "pmalaysia_singapore.png", "pphilippines.png"
+          )
+for (f in files) {
+  img <- magick::image_read(f)
+  img_trimmed <- magick::image_trim(img)
+  magick::image_write(img_trimmed, f)
+}
+orderly_artefact(files = files)
+
+
+
+
+layout_design <-
+  "AAABBBEEEE
+    CCCDDDEEEE
+   CCCDDDEEEE"
+
+sero_forest_pop_group <- readRDS("sero_forest_pop_group_cols.rds")
+map_plot <- pindia_bangladesh +
+  pkerala +
+  pmalaysia_singapore +
+  pphilippines + 
+  (sero_forest_pop_group +
+    theme(legend.position = c(0.85, 0.51))) +
+  plot_layout(design = layout_design) +
+  plot_annotation(tag_levels = "A") +
+  plot_layout(byrow = FALSE)
+
+ggsave("nipah_outbreaks_map.png", plot = map_plot, width = 19, height = 22)
