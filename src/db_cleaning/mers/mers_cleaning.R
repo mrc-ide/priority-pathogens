@@ -104,6 +104,11 @@ param_cleaning <- function(df){
   df[(df$access_param_id == "029_003"),
      "parameter_value"] <- 0.39
 
+  # 229_003 has the wrong "genome" info.
+  # They wrote "GenBank", change to "Unspecified"
+  df[(df$access_param_id == "229_003"),
+     "genome_site"] <- "Unspecified"
+
 
   return (df)
 }
