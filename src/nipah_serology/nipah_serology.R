@@ -216,7 +216,7 @@ p2 <- forest_plots[["long_term"]] +
 patch <- (p1 | p2 + theme(legend.position=c(0.815, 0.425),
                           legend.spacing=unit(2, "mm"),
                           legend.margin=margin(0, 0, 0, 0))) +
-  plot_annotation(tag_levels="A") &
+  ##plot_annotation(tag_levels="A") &
   theme(plot.title=element_text(hjust=0.5))
 
 ggsave("sero_forest_pop_group_cols.png",

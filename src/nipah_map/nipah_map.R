@@ -14,6 +14,10 @@ library(stringr)
 
 # *============================================================================*
 # *------------------------------ Orderly config ------------------------------*
+orderly_artefact(
+  description = "nipah-specific figures", files = c("nipah_outbreaks_map.png")
+)
+
 orderly_dependency(
   "nipah_serology", "latest", "sero_forest_pop_group_cols.rds"
 )
@@ -24,15 +28,11 @@ orderly_dependency(
     "l0_shapefile_with_cases_and_deaths.rds",
     "l1_shapefile_with_cases_and_deaths.rds",
     "l2_shapefile_with_cases_and_deaths.rds"
-    )
+  )
 )
 
 locations_with_cases_and_deaths <- readRDS("locations_with_cases_and_deaths.rds")
 
-orderly_artefact(
-  description = "nipah-specific figures",
-  files = c("nipah_outbreaks_map.png")
-)
 
 
 orderly_shared_resource("World_Bank_Official_Boundaries_adm0/")
