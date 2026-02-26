@@ -43,6 +43,9 @@ parameters <- parameters |>
 parameters |>
   NROW()
 
+#Filter out low QA studies:
+parameters <- filter(parameters, qa_score >= 0.5)
+
 parameters$riskfactor_name <- str_replace_all(parameters$riskfactor_name,
                                               ";", ",")
 
@@ -61,6 +64,14 @@ risk_table <- parameters |>
          riskfactor_outcome=str_trim(riskfactor_outcome),
          riskfactor_name=str_trim(riskfactor_name),
          riskfactor_name=str_to_sentence(riskfactor_name)) |>
+  # We choose to map all camel contacts together for now
+  mutate(riskfactor_name=ifelse(riskfactor_name=="Camel contact (home)",
+                                "Camel contact", riskfactor_name)) |>
+  mutate(riskfactor_name=ifelse(riskfactor_name=="Camel contact (work)",
+                                "Camel contact", riskfactor_name)) |>
+  mutate(riskfactor_name=ifelse(riskfactor_name=="Camel contact (other)",
+                                "Camel contact", riskfactor_name)) |>
+  #
   group_by(riskfactor_outcome, riskfactor_name,
            riskfactor_significant, riskfactor_adjusted) |>
   summarise(n=n(),
@@ -108,14 +119,15 @@ risk_factor_plot <- function(risk_table, outcome, custom_colours){
     filter(riskfactor_outcome==outcome) %>%
     ggplot(aes(x=n,
                y=riskfactor_name,
-               col=significant_adjusted,
+               #col=significant_adjusted,
                fill=significant_adjusted)) +
     geom_bar(stat='identity', position = position_dodge2(preserve = "single"),
-             color="black") +
-    scale_color_manual(name="Significant / Adjusted",
-                       values = custom_colours) +
+             color="black",
+             show.legend = TRUE) +
     scale_fill_manual(name="Significant / Adjusted",
-                      values = custom_colours) +
+                      values = custom_colours,
+                      breaks = names(custom_colours),
+                      drop = FALSE) +
     xlab('Count') + ylab('Risk factor name') +
     scale_x_continuous(breaks = function(x)
       unique(floor(pretty(seq(min(x), (max(x) + 1) * 1.1))))) +
@@ -127,7 +139,6 @@ risk_factor_plot <- function(risk_table, outcome, custom_colours){
 
   return(rf_plot)
 }
-
 # *-------------------------------- Patch work --------------------------------*
 risk_table_plt_death <- risk_factor_plot(risk_table, "Death",
                                          custom_colours) +
@@ -187,7 +198,11 @@ rf_facet_o1 <- risk_table |>
            color="black", position=position_dodge2(width = 0.9,
                                                    preserve = "single")) +
   scale_x_discrete(labels = c("Contact with animal" = "Contact \nwith animal",
-                              "Close contact" = "Close\ncontact")) +
+                              "Close contact" = "Close\ncontact",
+                              "Camel contact" = "Camel \ncontact",
+                              "Consumption of animal product" = "Consumption \nof animal \nproduct",
+                              "Non-household contact" = "Non-household \ncontact",
+                              "Household contact" = "Household \ncontact")) +
   scale_y_continuous(breaks = function(x)
     unique(floor(pretty(seq(min(x), (max(x) + 1) * 1.1))))) +
   scale_color_manual(name="Significant / Adjusted", values = custom_colours) +
@@ -197,6 +212,7 @@ rf_facet_o1 <- risk_table |>
   theme(strip.text = element_text( color = "black"),
         panel.border = element_rect(color = "black", size = 1.25, fill = NA),
         text = element_text(size = text_size),
+        axis.text.x = element_text(angle = 35, hjust = 1),
         strip.background =element_rect(fill="white", color="white"),
         legend.position="top") +
   facet_wrap(~riskfactor_outcome, scales="free", ncol=2)
@@ -205,6 +221,7 @@ ggsave("figure_SI_risk_facet_option_1.pdf", plot = rf_facet_o1,
        width = 16, height = 10)
 
 rt_plot <- risk_table |>
+  #Note, putting "recovery" into "other" because there's not much there
   mutate(riskfactor_outcome=ifelse(riskfactor_outcome=="Recovery",
                                    "Other", riskfactor_outcome)) |>
   group_by(riskfactor_outcome, riskfactor_name, significant_adjusted,
@@ -227,6 +244,10 @@ rf_facet_o2 <- rt_plot |>
          riskfactor_name=case_when(
            riskfactor_name=="Contact with animal"~"Contact\nwith animal",
            riskfactor_name=="Close contact"~"Close\ncontact",
+           riskfactor_name=="Camel contact" ~ "Camel \ncontact",
+           riskfactor_name=="Consumption of animal product" ~ "Consumption \nof animal \nproduct",
+           riskfactor_name=="Non-household contact" ~ "Non-household \ncontact",
+           riskfactor_name=="Household contact" ~ "Household \ncontact",
            TRUE~riskfactor_name)) |>
   ungroup() |>
   ggplot(aes(x=tidytext::reorder_within(riskfactor_name,
@@ -251,7 +272,7 @@ rf_facet_o2 <- rt_plot |>
         text = element_text(size = 15),
         strip.background =element_rect(fill="white", color="white"),
         legend.position= c(0.76,0.14),
-        axis.text.x = element_text(color="black", size=13),
+        axis.text.x = element_text(color="black", size=13, angle = 40, hjust = 1),
         axis.text.y = element_text(color="black", size=13)) +
   guides(fill=guide_legend(nrow=4,byrow=TRUE)) +
   facet_wrap(~riskfactor_outcome, scales="free", ncol=2)
@@ -269,6 +290,10 @@ option_3_table <- rt_plot |>
          riskfactor_name=case_when(
            riskfactor_name=="Contact with animal"~"Contact\nwith animal",
            riskfactor_name=="Close contact"~"Close\ncontact",
+           riskfactor_name=="Camel contact" ~ "Camel \ncontact",
+           riskfactor_name=="Consumption of animal product" ~ "Consumption \nof animal \nproduct",
+           riskfactor_name=="Non-household contact" ~ "Non-household \ncontact",
+           riskfactor_name=="Household contact" ~ "Household \ncontact",
            TRUE~riskfactor_name),
          riskfactor_name_new=paste0(riskfactor_name, " \n(",
                                     riskfactor_significant, ")")) |>
@@ -333,7 +358,7 @@ rf_facet_o3 <- option_3_table |>
     legend.position = c(0.7, 0.19),
     legend.title = element_text(size=15),
     legend.text = element_text(size=13),
-    axis.text.x = element_text(color = "black", size = 13),
+    axis.text.x = element_text(color = "black", size = 13, angle = 55, hjust = 1),
     axis.text.y = element_text(color = "black", size = 13)
   ) +
   guides(
@@ -358,6 +383,10 @@ option_4_table <- rt_plot |>
          riskfactor_name=case_when(
            riskfactor_name=="Contact with animal"~"Contact\nwith animal",
            riskfactor_name=="Close contact"~"Close\ncontact",
+           riskfactor_name=="Camel contact" ~ "Camel \ncontact",
+           riskfactor_name=="Consumption of animal product" ~ "Consumption \nof animal \nproduct",
+           riskfactor_name=="Non-household contact" ~ "Non-household \ncontact",
+           riskfactor_name=="Household contact" ~ "Household \ncontact",
            TRUE~riskfactor_name),
          riskfactor_name_new=paste0(riskfactor_name, " \n(",
                                     riskfactor_significant, ")")) |>
@@ -452,11 +481,11 @@ rf_facet_o4 <- option_4_table |>
     panel.border = element_rect(color = "black", size = 1.25, fill = NA),
     text = element_text(size = 15),
     strip.background = element_rect(fill = "white", color = "white"),
-    legend.position = c(0.7, 0.19),
+    legend.position = c(0.7, 0.13),
     legend.title = element_text(size=15),
     legend.text = element_text(size=14),
     legend.key.size = unit(.75, "cm"),
-    axis.text.x = element_text(color = "black", size = 13),
+    axis.text.x = element_text(color = "black", size = 13, angle = 60, hjust = 1),
     axis.text.y = element_text(color = "black", size = 13)
   ) +
   guides(
