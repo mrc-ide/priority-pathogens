@@ -1,4 +1,4 @@
-# *=================== Nipah severity meta-analysis & plots ===================*
+# *=================== MERS severity meta-analysis & plots ===================*
 library(dplyr)
 library(ggplot2)
 library(ggsci)
@@ -10,6 +10,7 @@ library(patchwork)
 library(readr)
 library(stringr)
 library(tidyr)
+library(lubridate)
 
 # *--------------------------------- Orderly ----------------------------------*
 orderly_parameters(pathogen = NULL)
@@ -40,7 +41,6 @@ parameters <- dfs$parameters |>
   left_join(qa_scores)
 
 # Note, for MERS we have an issue of different parameter type names:
-#TODO: Discuss this as a group
 unique(filter(parameters, parameter_class == "Severity")$parameter_type)
 # So CF ratio AND CF rate
 #"Severity - symptomatic proportion of infections"
@@ -49,16 +49,22 @@ unique(filter(parameters, parameter_class == "Severity")$parameter_type)
 #"Severity - proportion of symptomatic cases"
 table(filter(parameters, parameter_class == "Severity")$parameter_type)
 
+#Filter out low QA now
+parameters <- filter(parameters, qa_score >= 0.5)
+
 #For now, map ratio to rate and symptomatics together
-#TODO: Return to asymptomatics
+#Stick asymptomatics together too
 parameters$parameter_type <- gsub("case fatality ratio",
                     "case fatality rate",
                     parameters$parameter_type)
 
-parameters$parameter_type <- gsub("symptomatic proportion of infections",
-                    "proportion of symptomatic cases",
+parameters$parameter_type <- gsub(" symptomatic proportion of infections",
+                    " proportion of symptomatic cases",
                     parameters$parameter_type)
 
+parameters$parameter_type <- gsub("asymptomatic proportion of infections",
+                                  "proportion of asymptomatic cases",
+                                  parameters$parameter_type)
 # *----------------------------- Data preparation -----------------------------*
 # Extracted CFRs parameters
 d1 <- parameters |>
@@ -68,9 +74,8 @@ d1 <- parameters |>
 d1 <- d1 |>
   mutate(population_group = ifelse(is.na(population_group), "Unspecified", population_group))
 
-# Unspecified parameter type for CFR with only numerator and denom
-# d1 <- d1 |>
-#   filter(parameter_unit != "Unspecified")
+# Immediately remove the low-QA studies
+d1 <- filter(d1, qa_score >= 0.5)
 
 # We have 8 parameters with NA for unit
 # d1_no_unit <- d1 |>
@@ -105,6 +110,7 @@ d1 <- d1 |>
     cfr_ifr_denominator %in% 1:29      ~ "Reported Cases < 30",
     cfr_ifr_denominator %in% 30:99     ~ "Reported Cases = 30-99",
     cfr_ifr_denominator %in% 100:329   ~ "Reported Cases = 100-329",
+    cfr_ifr_denominator %in% 330:20000   ~ "Reported Cases = 330+",
     TRUE ~ "Unspecified")) |>
   # Deduplicating CFRs
   # For MERS, we might want a closer think about what we want to do here
@@ -125,7 +131,102 @@ d1 <- d1 |>
                                    levels = c(sort(setdiff(unique(population_group),
                                                            c("Other", "Unspecified"))),
                                               "Other", "Unspecified")))
+#Let's re-assign all the country tags
+d1 <- d1 |>
+  mutate(population_country=ifelse(population_country=="Algeria; Austria; Bahrain; China; Egypt; France; Germany; Greece; Iran (Islamic Republic of); Italy; Jordan; Kuwait; Lebanon; Malaysia; Netherlands; Oman; Philippines; Qatar; Republic of Korea; Saudi Arabia; Thailand; Tunisia; Türkiye; United Arab Emirates; United Kingdom of Great Britain and Northern Ireland; United States of America; Yemen",
+                                   "Global", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Austria; France; Germany; Greece; Italy; Netherlands; Spain; United Kingdom of Great Britain and Northern Ireland",
+                                   "Europe", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Bahrain; Egypt; Iran (Islamic Republic of); Jordan; Kuwait; Lebanon; Oman; Qatar; Saudi Arabia; United Arab Emirates; Yemen",
+                                   "Middle East", population_country)) |>
+  mutate(population_country=ifelse(population_country=="China; Malaysia; Philippines; Republic of Korea; Thailand; Türkiye",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="France; Iran (Islamic Republic of); Italy; Jordan; Kuwait; Lebanon; Oman; Qatar; Republic of Korea; Saudi Arabia; Tunisia; United Arab Emirates; United Kingdom of Great Britain and Northern Ireland; Yemen",
+                                   "Global", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Lebanon; Malaysia; Oman; Qatar; Saudi Arabia; United Arab Emirates",
+                                   "Middle East", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Oman; Saudi Arabia",
+                                   "Middle East", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Republic of Korea; Saudi Arabia",
+                                   "Other", population_country))
 
+# Plot the spread:
+# ---------- 1. Build dates ----------
+plot_df <- d1 %>%
+  mutate(
+    start_year  = population_study_start_year,
+    start_month = as.integer(population_study_start_month),
+    start_day   = as.integer(population_study_start_day),
+    end_year    = population_study_end_year,
+    end_month   = as.integer(population_study_end_month),
+    end_day     = as.integer(population_study_end_day)
+  ) %>%
+  mutate(
+    start_month = if_else(is.na(start_month), 1L, start_month),
+    start_day   = if_else(is.na(start_day),   1L, start_day),
+    end_month   = if_else(is.na(end_month),   12L, end_month),
+    end_day     = if_else(is.na(end_day),     28L, end_day)
+  ) %>%
+  mutate(
+    start_date = make_date(start_year, start_month, start_day),
+    end_date   = make_date(end_year,   end_month,   end_day)
+  ) %>%
+  mutate(
+    start_date = pmin(start_date, end_date),
+    end_date   = pmax(start_date, end_date)
+  )
+
+# ---------- 2. Compute vertical layout ----------
+row_spacing <- 0.25   # vertical distance between rows inside country
+country_gap <- 0.5    # space between countries
+
+country_layout <- plot_df %>%
+  group_by(population_country) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  arrange(population_country) %>%  # change ordering here if desired
+  mutate(
+    block_height = (n - 1) * row_spacing,
+    block_start = cumsum(lag(block_height + country_gap, default = 0)),
+    y_mid = block_start + block_height / 2
+  )
+
+# join and assign deterministic row position
+plot_df2 <- plot_df %>%
+  left_join(country_layout, by = "population_country") %>%
+  group_by(population_country) %>%
+  mutate(
+    row_id = row_number(),
+    y_position = block_start + (row_id - 1) * row_spacing
+  ) %>%
+  ungroup()
+
+# ---------- 3. Color mapping for the two countries ----------
+country_colors <- c(
+  "Saudi Arabia"      = "#006C35",  # Saudi flag green (approx)
+  "Republic of Korea" = "#C60C30"   # South Korea taegeuk red (approx)
+)
+plot_df2$population_country <- factor(
+  plot_df2$population_country,
+  levels = c("Saudi Arabia", "Republic of Korea")
+  )
+# ---------- 4. Plot ----------
+plot_df2 <- plot_df2 |> arrange(start_date)
+
+cfr_periods_forest_style(plot_df2, country_colors = country_colors,
+                         lims = c(as.Date("2011-06-01"), as.Date("2023-12-31"))) +
+  theme(
+  axis.text.y  = element_blank(),
+  axis.ticks.y = element_blank(),
+  legend.position = c(0.80, 0.15),
+  legend.background = element_rect(fill = "white", colour = "black"),
+  panel.grid.major.y = element_blank(),
+  panel.grid.minor.y = element_blank()
+) -> cfr_study_periods
+
+ggsave("CFR_Study_Periods.png",
+cfr_study_periods,
+       width = 10, height = 6)
+######################################
 # proportion of symptomatic cases
 #TODO: Probably need to coalesce with central again here
 d2 <- parameters |>
@@ -150,24 +251,48 @@ d2 <- d2 |>
     cfr_ifr_denominator %in% 1:29      ~ "Reported Cases < 30",
     cfr_ifr_denominator %in% 30:99     ~ "Reported Cases = 30-99",
     cfr_ifr_denominator %in% 100:329   ~ "Reported Cases = 100-329",
+    cfr_ifr_denominator %in% 330:20000   ~ "Reported Cases = 330+",
     TRUE ~ "Unspecified")) |>
 mutate(population_group = factor(population_group,
                                  levels = c(sort(setdiff(unique(population_group),
                                                          c("Other", "Unspecified"))),
                                             "Other", "Unspecified")))
+######################################
+# proportion of asymptomatic cases
+#TODO: Probably need to coalesce with central again here
+d3 <- parameters |>
+  filter(parameter_type == "Severity - proportion of asymptomatic cases")
+
+d3 <- d3 |>
+  mutate(parameter_unit = 'Percentage (%)',
+         parameter_value = coalesce(parameter_value, central), #using central where no % was reported
+         population_study_start_year = as.numeric(population_study_start_year),
+         population_study_end_year = as.numeric(population_study_end_year),
+         study_midyear = ifelse(!is.na(population_study_start_year) & !is.na(population_study_end_year),
+                                round((population_study_start_year + population_study_end_year) / 2),
+                                population_study_start_year)) |>
+  mutate(study_midyear_cat = case_when(
+    study_midyear %in% 1990:1999 ~ "1990-1999",
+    study_midyear %in% 2000:2009 ~ "2000-2009",
+    study_midyear %in% 2010:2019 ~ "2010-2019",
+    study_midyear %in% 2020:2029 ~ "2020-Present",
+    TRUE ~ "Unspecified")) |>
+  mutate(cfr_denom_cat = case_when(
+    cfr_ifr_denominator %in% 1:29      ~ "Reported Cases < 30",
+    cfr_ifr_denominator %in% 30:99     ~ "Reported Cases = 30-99",
+    cfr_ifr_denominator %in% 100:329   ~ "Reported Cases = 100-329",
+    cfr_ifr_denominator %in% 330:20000   ~ "Reported Cases = 330+",
+    TRUE ~ "Unspecified")) |>
+  mutate(population_group = factor(population_group,
+                                   levels = c(sort(setdiff(unique(population_group),
+                                                           c("Other", "Unspecified"))),
+                                              "Other", "Unspecified")))
 
 # *------------------------------ Meta-analysis -------------------------------*
 # Plot file structure - many plots created in this task so better to create a
 # folder structure
-filepath_vec <- c(file.path("figures"),
-                  file.path("figures", "extracted_parameters", "all"),
-                  file.path("figures","extracted_parameters", "qa_filtered"))
-
-for (filepath in filepath_vec){
-  if (!dir.exists(filepath)) {
-    dir.create(filepath, recursive = TRUE)
-  }
-}
+dir.create("figures")
+filepath <- "figures"
 
 
 # Plot colour
@@ -178,28 +303,10 @@ meta_digits <- 2
 
 # *---------------------- CFR from extracted parameters -----------------------*
 # Extracted CFRs
-qa_thresh_vec <- c("all"=-1, "qa"=0.5)
-qa_alpha_vec <- c(0.3, 1)
-list_label_vec <- c("all", "qa_filtered")
-plot_list <- list("all"=list("meta"=list(), "forest"=list()),
-                  "qa_filtered"=list("meta"=list(), "forest"=list()))
-labels <- c("SI_allqa", "")
-cfr_duplicates <- list("no_dups"="False",
-                       "no_known_dups"=c("False", "Assumed"),
-                       "all"=c("False", "Assumed", "Known"))
-
-for (i in seq_along(qa_thresh_vec)){
-  list_label <- list_label_vec[i]
-  qa_threshold <- qa_thresh_vec[i]
-  qa_alpha <- qa_alpha_vec[i]
-  plot_type <- file.path("figures", "extracted_parameters", list_label)
-
-  d1_filtered <- d1 |> filter(qa_score>qa_threshold)#,
-                              #duplicate_cfr=="False")
-  d2_filtered <- d2 |> filter(qa_score>qa_threshold)
+plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
 
   # Colours:
-  all_pop_groups <- d1_filtered |>
+  all_pop_groups <- d1 |>
     distinct(population_group) |>
     arrange(population_group == "Other", population_group) |>
     pull()
@@ -207,109 +314,104 @@ for (i in seq_along(qa_thresh_vec)){
   custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
   names(custom_colour_pop_groups) <- all_pop_groups
 
-  all_countries <- d1_filtered |>
+  all_countries <- d1 |>
     distinct(population_country) |>
     arrange(population_country) |>
     pull()
 
   #Note we can only have up to 8 so this doesn't work at the moment.
   custom_colour_countries <- lanonc_colours[seq_along(all_countries)]
+  custom_colour_countries[10] <- "black"
+  custom_colour_countries[11] <- "firebrick"
   names(custom_colour_countries) <- all_countries
 
-  # plot_list[[list_label]][["meta"]][["m1"]] <- metaprop_wrap(
-  #   dataframe = d1_filtered, subgroup = "population_country", plot_pooled = TRUE,
-  #   sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-  #   colour = imperial_khaki, width = 10500, height = 9000, resolution = 1000)
-  #
-  # ggsave(file.path(plot_type,
-  #                  paste0("figure_3_meta_population_country.pdf")),
-  #        plot_list[[list_label]][["meta"]][["m1"]]$plot,
-  #        width = 5.8, height = 5)
-  # ggsave(file.path(plot_type,
-  #                  paste0("figure_3_meta_population_country.png")),
-  #        plot_list[[list_label]][["meta"]][["m1"]]$plot,
-  #        width = 5.8, height = 5)
-
-  plot_list[[list_label]][["meta"]][["m2"]] <- metaprop_wrap(
-    dataframe = d1_filtered, subgroup = "study_midyear_cat",
+  plot_list[["qa_filtered"]][["meta"]][["m2"]] <- metaprop_wrap(
+    dataframe = d1, subgroup = NA,
     plot_pooled = TRUE, sort_by_subg = TRUE,
     plot_study = TRUE, digits = meta_digits,
     colour = imperial_khaki,
-    width = 10500, height = 9000, resolution = 1000)
+    width = 9500, height = 20000, resolution = 1000)
 
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_meta_study_midyear_cat.pdf")),
-         plot_list[[list_label]][["meta"]][["m2"]]$plot,
-         width = 8.5, height = 7)
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_meta_study_midyear_cat.png")),
-         plot_list[[list_label]][["meta"]][["m2"]]$plot,
-         width = 8.5, height = 7)
+  ggsave("figures/meta_study_no_cat.pdf",
+         plot_list[["qa_filtered"]][["meta"]][["m2"]]$plot,
+         width = 8.5, height = 18)
+  ggsave("figures/meta_study_no_cat.png",
+         plot_list[["qa_filtered"]][["meta"]][["m2"]]$plot,
+         width = 8.5, height = 18)
 
-  # Update to account for dedup:
-  #TODO: This is definitely Nipah specific, comment out for now
-  # d1_filtered <-  d1_filtered |>
-  #   mutate(cfr_denom_cat = ifelse(cfr_denom_cat=="Reported Cases = 100-329",
-  #                                 "Reported Cases = 100-250", cfr_denom_cat))
-
-  plot_list[[list_label]][["meta"]][["m3"]] <- metaprop_wrap(
-    dataframe = d1_filtered, subgroup = "cfr_denom_cat", plot_pooled = TRUE,
+  plot_list[["qa_filtered"]][["meta"]][["m3"]] <- metaprop_wrap(
+    dataframe = d1, subgroup = "cfr_denom_cat", plot_pooled = TRUE,
     sort_by_subg = FALSE, plot_study = TRUE, digits = meta_digits,
-    colour = imperial_khaki, width = 10500, height = 8000, resolution = 1000)
+    colour = imperial_khaki, width = 9500, height = 22000, resolution = 1000)
 
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_meta_cfr_denom_cat.pdf")),
-         plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 8, height = 6)
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_meta_cfr_denom_cat.png")),
-         plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 8, height = 6)
+  ggsave("figures/meta_cfr_denom_cat.pdf",
+         plot_list[["qa_filtered"]][["meta"]][["m3"]]$plot,
+         width = 8, height = 20)
+  ggsave("figures/meta_cfr_denom_cat.png",
+         plot_list[["qa_filtered"]][["meta"]][["m3"]]$plot,
+         width = 8, height = 20)
 
-  plot_list[[list_label]][["meta"]][["m4"]] <- metaprop_wrap(
-    dataframe = d1_filtered, subgroup = "population_group", plot_pooled = TRUE,
+  plot_list[["qa_filtered"]][["meta"]][["m4"]] <- metaprop_wrap(
+    dataframe = d1, subgroup = "population_group", plot_pooled = TRUE,
     sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-    colour = imperial_khaki, width = 10000, height = 9000, resolution = 1000)
+    colour = imperial_khaki, width = 9500, height = 22000, resolution = 1000)
 
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_meta_population_group.pdf")),
-         plot_list[[list_label]][["meta"]][["m4"]]$plot,
-         width = 7.3, height = 6)
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_meta_population_group.png")),
-         plot_list[[list_label]][["meta"]][["m4"]]$plot,
-         width = 7.3, height = 6)
+  ggsave("figures/meta_cfr_population_group.pdf",
+         plot_list[["qa_filtered"]][["meta"]][["m4"]]$plot,
+         width = 8, height = 20)
+  ggsave("figures/meta_cfr_population_group.png",
+         plot_list[["qa_filtered"]][["meta"]][["m4"]]$plot,
+         width = 8, height = 20)
+
+  # And by country,
+  plot_list[["qa_filtered"]][["meta"]][["m5"]] <- metaprop_wrap(
+    dataframe = filter(d1, population_country %in% c("Republic of Korea", "Saudi Arabia")
+                       ), subgroup = "population_country", plot_pooled = TRUE,
+    sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+    colour = imperial_khaki, width = 9000, height = 20000, resolution = 1000)
+
+  ggsave("figures/meta_cfr_country.pdf",
+         plot_list[["qa_filtered"]][["meta"]][["m5"]]$plot,
+         width = 8, height = 14)
+  ggsave("figures/meta_cfr_country.png",
+         plot_list[["qa_filtered"]][["meta"]][["m5"]]$plot,
+         width = 8, height = 14)
 
   # Forest plot
   #############
-  # plot_list[[list_label]][["forest"]][["p_cfr_1"]] <- forest_plot(
-  #   d1_filtered, "Case-Fatality Ratio (%)", "population_country",
-  #   c(-10,110), custom_colours = custom_colour_countries,
-  #   text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
-  #   guides(shape = guide_legend(title = "Parameter type", order=1),
-  #          fill = guide_none(),
-  #          linetype = guide_none(),
-  #          color = guide_legend(title = "Population country", order=3))
-  # ggsave(file.path(plot_type,
-  #                  paste0("figure_3_forest_cfr_population_country.pdf")),
-  #        plot = plot_list[[list_label]][["forest"]][["p_cfr_1"]],
-  #        width = 10, height = 12)
-
-  plot_list[[list_label]][["forest"]][["p_cfr_2"]] <- forest_plot(
-    d1_filtered, "Case-Fatality Ratio (%)","population_group",
+  plot_list[["qa_filtered"]][["forest"]][["p_cfr_2"]] <- forest_plot(
+    d1, "Case-Fatality Ratio (%)","population_group",
     c(-10,110), custom_colours = custom_colour_pop_groups,
-    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
+    text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
            fill =  guide_none(),
            linetype = guide_none(),
            color =  guide_legend(title = "Population group", order=2))
 
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_forest_cfr_population_group.pdf")),
-         plot =  plot_list[[list_label]][["forest"]][["p_cfr_2"]],
-         width = 10, height = 12)
+  ggsave("figures/forest_cfr_population_group.pdf",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_cfr_2"]],
+         width = 8, height = 14)
+  ggsave("figures/forest_cfr_population_group.png",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_cfr_2"]],
+         width = 8, height = 14)
 
-  all_countries <- d2_filtered |>
+  plot_list[["qa_filtered"]][["forest"]][["p_cfr_3"]] <- forest_plot(
+    d1, "Case-Fatality Ratio (%)","population_sample_type",
+    c(-10,110), #custom_colours = custom_colour_pop_groups,
+    text_size=text_size, sort=TRUE) +
+    guides(shape = guide_legend(title = "Parameter type", order=1),
+           fill =  guide_none(),
+           linetype = guide_none(),
+           color =  guide_legend(title = "Population type", order=2))
+
+  ggsave("figures/forest_cfr_population_sample_type.pdf",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_cfr_3"]],
+         width = 8, height = 14)
+  ggsave("figures/forest_cfr_population_sample_type.png",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_cfr_3"]],
+         width = 8, height = 14)
+
+  all_countries <- d2 |>
     distinct(population_country) |>
     arrange(population_country) |>
     pull()
@@ -318,174 +420,102 @@ for (i in seq_along(qa_thresh_vec)){
   custom_colour_countries <- lanonc_colours[seq_along(all_countries)]
   names(custom_colour_countries) <- all_countries
 
-  plot_list[[list_label]][["forest"]][["p_prop_1"]] <- forest_plot(
-    d2_filtered, "Percentage of Symptomatic Cases (%)", "population_country",
+  plot_list[["qa_filtered"]][["forest"]][["p_prop_1"]] <- forest_plot(
+    d2, "Percentage of Symptomatic Cases (%)", "population_country",
     c(-10, 110), custom_colours = custom_colour_countries,
-    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
+    text_size=text_size, sort=TRUE) +
     guides(color = guide_legend(title = "Population country", order=2),
            linetype = guide_none(),
            shape = guide_legend(title = "Parameter type", order=1))
 
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_forest_prop_country.pdf")),
-         plot =  plot_list[[list_label]][["forest"]][["p_prop_1"]],
-         width = 8, height = 5)
+  ggsave("figures/figure_3_forest_prop_country.pdf",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_1"]],
+         width = 6, height = 6)
+  ggsave("figures/figure_3_forest_prop_country.png",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_1"]],
+         width = 6, height = 6)
 
-  plot_list[[list_label]][["forest"]][["p_prop_2"]] <- forest_plot(
-    d2_filtered, "Percentage of Symptomatic Cases (%)", "population_group",
+  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]] <- forest_plot(
+    d2, "Percentage of Symptomatic Cases (%)", "population_group",
     c(-10, 110), custom_colours = custom_colour_pop_groups,
-    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
+    text_size=text_size, sort=TRUE) +
     guides(color = guide_legend(title = "Population group", order=2),
            linetype = guide_none(),
            shape = guide_legend(title = "Parameter type", order=1))
 
-  ggsave(file.path(plot_type,
-                   paste0("figure_3_forest_prop_population_group.pdf")),
-         plot =  plot_list[[list_label]][["forest"]][["p_prop_2"]],
-         width = 8, height = 5)
-}
+  ggsave("figures/figure_3_forest_prop_pop_group.pdf",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
+         width = 6, height = 6)
+  ggsave("figures/figure_3_forest_prop_pop_group.png",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
+         width = 6, height = 6)
 
-# Additional CFR from extracted parameters results
-# Can't do year since the estimates may relate to a range and outbreak location
-# is not clean (possible that there's a single estimate for multiple locations)
-# No duplicates
-d1_dup_false <- d1 ## |> filter(duplicate_cfr=="False")
+  #And ASYMPTOMATIC
 
-# meta_dup_false <- metaprop_wrap(
-#   dataframe = d1_dup_false, subgroup = "population_country", plot_pooled = TRUE,
-#   sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-#   colour = imperial_khaki, width = 10500, height = 9000, resolution = 1000)
+  all_countries <- d3 |>
+    distinct(population_country) |>
+    arrange(population_country) |>
+    pull()
 
-# ggsave(file.path("figures", "extracted_parameters",
-#                  "SI_CFR_meta_country_param_dup_eq_false.pdf"),
-#        meta_dup_false$plot,
-#        width = 5.8, height = 5)
+  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]] <- forest_plot(
+    d3, "Percentage of Asymptomatic Cases (%)", "population_group",
+    c(-10, 110), custom_colours = custom_colour_pop_groups,
+    text_size=text_size, sort=TRUE) +
+    guides(color = guide_legend(title = "Population group", order=2),
+           linetype = guide_none(),
+           shape = guide_legend(title = "Parameter type", order=1))
 
+  ggsave("figures/figure_4_forest_prop_pop_group.pdf",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
+         width = 6, height = 6)
+  ggsave("figures/figure_4_forest_prop_pop_group.png",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
+         width = 6, height = 6)
 
-# Assumed duplicates included
-#TODO: I'm just commenting out the below dupe stuff for now, we'll have a think about what we want to do with this.
-# Nipah note: Error when trying to fit this?
+  ############
+  d4 <- parameters |>
+    filter(parameter_type == 'Severity - infection fatality ratio (IFR)')
+  # 3 rows have NA for population_group
+  # This causes plotting issues, so change the NA to "Unspecified" for now
+  d4 <- d4 |>
+    mutate(population_group = ifelse(is.na(population_group), "Unspecified", population_group))
+  d4 <- d4 |>
+    mutate(parameter_unit = 'Percentage (%)',
+           parameter_value = coalesce(parameter_value, central), #using central where no % was reported
+           population_study_start_year = as.numeric(population_study_start_year),
+           population_study_end_year = as.numeric(population_study_end_year),
+           study_midyear = ifelse(!is.na(population_study_start_year) & !is.na(population_study_end_year),
+                                  round((population_study_start_year + population_study_end_year) / 2),
+                                  population_study_start_year)) |>
+    mutate(study_midyear_cat = case_when(
+      study_midyear %in% 1990:1999 ~ "1990-1999",
+      study_midyear %in% 2000:2009 ~ "2000-2009",
+      study_midyear %in% 2010:2019 ~ "2010-2019",
+      study_midyear %in% 2020:2029 ~ "2020-Present",
+      TRUE ~ "Unspecified")) |>
+    mutate(cfr_denom_cat = case_when(
+      cfr_ifr_denominator %in% 1:29      ~ "Reported Cases < 30",
+      cfr_ifr_denominator %in% 30:99     ~ "Reported Cases = 30-99",
+      cfr_ifr_denominator %in% 100:329   ~ "Reported Cases = 100-329",
+      cfr_ifr_denominator %in% 330:20000   ~ "Reported Cases = 330+",
+      TRUE ~ "Unspecified")) |>
+  mutate(population_group = factor(population_group,
+                                   levels = c(sort(setdiff(unique(population_group),
+                                                           c("Other", "Unspecified"))),
+                                              "Other", "Unspecified")))
 
-# d1_dup_assumed <- d1 ## |>
-#   ##filter(duplicate_cfr!="Known")
-#
-# meta_dup_assumed <- metaprop_wrap(
-#   dataframe = d1_dup_assumed, subgroup = "population_country", plot_pooled = TRUE,
-#   sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-#   colour = imperial_khaki, width = 10500, height = 18000, resolution = 1000)
-#
-# ggsave(file.path("figures", "extracted_parameters",
-#                  "SI_CFR_meta_country_param_dup_neq_known.pdf"),
-#        meta_dup_assumed$plot,
-#        width = 5.8, height = 10)
+  IFR_plot <- forest_plot(
+    d4, "Infection Fatality Ratio (%)","population_group",
+    c(-10,110), #custom_colours = custom_colour_pop_groups,
+    text_size=text_size, sort=TRUE) +
+    guides(shape = guide_legend(title = "Parameter type", order=1),
+           fill =  guide_none(),
+           linetype = guide_none(),
+           color =  guide_legend(title = "Population type", order=2))
 
-# All
-# meta_all <- metaprop_wrap(
-#   dataframe = d1, subgroup = "population_country", plot_pooled = TRUE,
-#   sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-#   colour = imperial_khaki, width = 10500, height = 20000, resolution = 1000)
-
-# ggsave(file.path("figures", "extracted_parameters",
-#                  "SI_CFR_meta_country_param_dup_all.pdf"),
-#        meta_all$plot,
-#        width = 5.8, height = 10.8)
-
-# Combine figures
-# p1 <- plot_list[["all"]][["meta"]][["m1"]]$plot +
-#   theme(plot.margin = margin(-50, -250, -250, -50))
-# p2 <- cfr_outbreak_country$plot +
-#   theme(plot.margin = margin(-250, -250, -250, -250))
-# p3 <- cfr_from_bangladesh_surveillance_yc$plot +
-#   theme(plot.margin = margin(-50, -250, -50, -250))
-# p4 <- plot_list[["all"]][["forest"]][["p_cfr_1"]] +
-#   theme(legend.position=c(0.275, 0.775), legend.direction = "vertical")
-# p5 <- plot_list[["all"]][["forest"]][["p_prop_1"]] +
-#   guides(color = guide_none(),
-#          linetype = guide_none(),
-#          shape = guide_none())
-#
-# left_col  <- p4 / p5 + plot_layout(heights = c(26, 3))
-# right_col <- p1 / p2 / p3 +
-#   plot_layout(heights = c(2.4, 2.4, 2.45))
-#
-# patchwork <- (left_col | right_col) +
-#   plot_layout(widths = c(2.5, 4)) +
-#   plot_annotation(tag_levels = "A") &
-#   theme(plot.tag.position = c(0, 1), plot.margin = margin(5.5, 0, 0, 5.5),
-#         plot.tag = element_text(size = 14))
-
-# ggsave(file.path("figures", "figure_severity_forest.png"),
-#        plot = left_col, width = 8, height = 10)
-# ggsave(file.path("figures","figure_severity_forest.pdf"),
-#        plot = left_col, width = 8, height = 10)
-#
-# ggsave(file.path("figures", "figure_severity.png"),
-#        plot = patchwork, width = 11.5, height = 10, dpi=300)
-# ggsave(file.path("figures", "figure_severity.pdf"),
-#        plot = patchwork, width = 11.5, height = 10, dpi=300)
-
-# Additional plots for SI
-# Since loop only uses deduplicated CFR, recreate the plot (inefficient)
-all_pop_groups <- d1 |>
-  distinct(population_group) |>
-  arrange(population_group == "Other", population_group) |>
-  pull()
-
-custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
-names(custom_colour_pop_groups) <- all_pop_groups
-
-all_countries <- d1 |>
-  distinct(population_country) |>
-  arrange(population_country) |>
-  pull()
-
-custom_colour_countries <- lanonc_colours[seq_along(all_countries)]
-names(custom_colour_countries) <- all_countries
-
-p1 <- forest_plot(
-  d1, "Case-Fatality Ratio (%)","population_country",
-  c(-10,110), custom_colours = custom_colour_countries,
-  text_size=text_size, qa_alpha=0.3, sort=TRUE) +
-  guides(shape = guide_legend(title = "Parameter type", order=1),
-         fill =  guide_none(),
-         linetype = guide_none(),
-         color =  guide_legend(title = "Country", order=2))
-
-p2 <- forest_plot(
-  d1, "Case-Fatality Ratio (%)","population_group",
-  c(-10,110), custom_colours = custom_colour_pop_groups,
-  text_size=text_size, qa_alpha=0.3, sort=TRUE) +
-  guides(shape = guide_legend(title = "Parameter type", order=1),
-         fill =  guide_none(),
-         linetype = guide_none(),
-         color =  guide_legend(title = "Population group", order=2))
-
-patchwork_si <- p1 +
-  theme(legend.position=c(0.175, 0.7), legend.direction = "vertical") +
-  p2 +
-  theme(legend.position=c(0.25, 0.7), legend.direction = "vertical") +
-  guides(shape=guide_none()) +
-  plot_layout(ncol = 2) + plot_annotation(tag_levels = 'A')
-
-ggsave(file.path("figures", "figure_SI_severity.png"),
-       plot = patchwork_si, width = 15, height = 18)
-ggsave(file.path("figures", "figure_SI_severity.pdf"),
-       plot = patchwork_si, width = 15, height = 18)
-
-p3 <- forest_plot(
-  d1, "Case-Fatality Ratio (%)","population_group",
-  c(-10,110), custom_colours = custom_colour_pop_groups,
-  text_size=text_size,qa_alpha=0.3, sort=TRUE) +
-  guides(shape = guide_legend(title = "Parameter type", order=1),
-         fill =  guide_none(),
-         linetype = guide_none(),
-         color =  guide_legend(title = "Population group", order=2)) +
-  ggforce::facet_col(facets = vars(population_country),
-                     scales = "free_y",
-                     space = "free") +
-  theme(legend.position=c(0.2, 0.875))
-
-ggsave(file.path("figures", "figure_SI_severity_facet.png"),
-       plot = p3, width = 10, height = 18)
-ggsave(file.path("figures", "figure_SI_severity_facet.pdf"),
-       plot = p3, width = 10, height = 18)
+  ggsave("figures/figure_5_IFR_pop_group.pdf",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
+         width = 6, height = 6)
+  ggsave("figures/figure_5_IFR_pop_group.png",
+         plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
+         width = 6, height = 6)
