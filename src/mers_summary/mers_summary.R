@@ -469,12 +469,14 @@ p1 <- ggplot(data = parameters,
 # separate_rows(population_country, sep = ";")
 p2 <- ggplot(data = parameters |>
                separate_rows(population_country, sep = ";") |>
-               mutate(population_country = str_trim(population_country)),
+               mutate(population_country = str_trim(population_country)) |>
+               mutate(population_country = ifelse(population_country == "TÃ¼rkiye",
+                                                  "Türkiye", population_country)),
              aes(x = fct_infreq(population_country), fill = parameter_class)) +
   geom_bar(color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_continuous(limits = c(0,170),
-                     breaks = seq(0,200,by = 20), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,640),
+                     breaks = seq(0,640,by = 40), expand = c(0,0)) +
   xlab("Study Country") + ylab("Parameter Count") +
   scale_fill_manual(values=param_colour_palette, name=NULL) +
   theme_minimal() +
@@ -518,7 +520,7 @@ parameters |>
 
 # Size based on y-axis label count from above
 patchwork <- p1 / p3 / p2 / p4 + plot_layout(ncol = 1,
-                                             heights = c(21,6,8,9))
+                                             heights = c(21,6,20,9))
 plot_annotation(tag_levels = 'A')
 
 ggsave("figure_S3.pdf", plot = patchwork, width = 12, height = 15)
