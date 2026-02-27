@@ -41,9 +41,7 @@ parameters <- dfs$parameters |>
 # *----------------------------- Data preparation -----------------------------*
 parameters <- parameters |>
   mutate(article_label = make.unique(refs)) |>
-  mutate(article_label = factor(article_label,levels=rev(unique(article_label)))) |>
-  mutate(in_CSF = case_when(str_detect(parameter_notes,'CSF')~TRUE,
-                            TRUE~FALSE)) #This is all false for MERS, could remove
+  mutate(article_label = factor(article_label,levels=rev(unique(article_label))))
 
 sero_studies <- parameters |>
   filter(parameter_class == 'Seroprevalence')
@@ -73,6 +71,9 @@ sero_studies <- sero_studies |>
                                    c("Other", "Unspecified"))),
                       "Other", "Unspecified")))
 
+# Remove the low-QA studies now
+sero_studies <- filter(sero_studies, qa_score >= 0.5)
+
 # *---------------------------------- Plots -----------------------------------*
 p1 <- forest_plot(sero_studies, 'Serology (%)', 'parameter_type', c(-4,104),
                   qa_alpha = 0.3, text_size = 28, sort=TRUE, point_size=6) +
@@ -84,9 +85,41 @@ p1 <- forest_plot(sero_studies, 'Serology (%)', 'parameter_type', c(-4,104),
          linetype = guide_none(),
          color = guide_legend(title = "Assay", order =2),
          shape = guide_legend(title = "Parameter type", order =1)) +
-  theme(legend.position = c(0.84, 0.94))
+  theme(legend.position = c(0.84, 0.74))
 ggsave(paste0("sero_apx_col_assay_general.pdf"),
-       plot = p1, width = 19, height = 35)
+       plot = p1, width = 19, height = 23)
+ggsave(paste0("sero_apx_col_assay_general.png"),
+       plot = p1, width = 19, height = 23)
+
+
+#Rename country tags:
+sero_studies <- sero_studies |>
+  mutate(population_country=ifelse(population_country=="China; Nigeria",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Egypt",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Germany; Netherlands; Qatar",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Jordan",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Kenya",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Malaysia",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Morocco",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Nigeria",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Pakistan",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="United States of America",
+                                   "Other", population_country))
+#Set my preferred factor levels:
+sero_studies$population_country <- factor(
+  sero_studies$population_country,
+  levels = c("Saudi Arabia", "United Arab Emirates", "Qatar",
+             "Republic of Korea", "Other (MENAP)", "Other")  # <- your desired order
+)
 
 p1 <- forest_plot(sero_studies, 'Serology (%)', 'parameter_type', c(-4,104),
                   qa_alpha = 0.3, text_size = 28, sort=TRUE, point_size=6) +
@@ -98,9 +131,11 @@ p1 <- forest_plot(sero_studies, 'Serology (%)', 'parameter_type', c(-4,104),
          linetype = guide_none(),
          color = guide_legend(title = "Assay", order =2),
          shape = guide_legend(title = "Parameter type", order =1)) +
-  theme(legend.position = c(0.84, 0.94))
+  theme(legend.position = c(0.82, 0.91))
 ggsave(paste0("sero_apx_col_assay_pop_country.pdf"),
-       plot = p1, width = 19, height = 35)
+       plot = p1, width = 19, height = 27)
+ggsave(paste0("sero_apx_col_assay_pop_country.png"),
+       plot = p1, width = 19, height = 27)
 
 p2 <- forest_plot(sero_studies, 'Serology (%)', 'parameter_type', c(-4,104),
                   qa_alpha = 0.3, text_size = 28, sort=TRUE, point_size=6) +
@@ -111,9 +146,11 @@ p2 <- forest_plot(sero_studies, 'Serology (%)', 'parameter_type', c(-4,104),
          linetype = guide_none(),
          color = guide_legend(title = "Assay", order =2),
          shape = guide_legend(title = "Parameter type", order =1)) +
-  theme(legend.position = c(0.84, 0.4))
+  theme(legend.position = c(0.84, 0.45))
+ggsave(paste0("sero_apx_col_assay_pop_group.png"),
+       plot = p2, width = 19, height = 27)
 ggsave(paste0("sero_apx_col_assay_pop_group.pdf"),
-       plot = p2, width = 19, height = 35)
+       plot = p2, width = 19, height = 27)
 
 p3 <- forest_plot(sero_studies, 'Serology (%)', 'population_group', c(-4,104),
                   qa_alpha = 0.3, text_size = 28, sort=TRUE, point_size=6) +
@@ -124,9 +161,11 @@ p3 <- forest_plot(sero_studies, 'Serology (%)', 'population_group', c(-4,104),
          linetype = guide_none(),
          color = guide_legend(title = "Population group", order =2),
          shape = guide_legend(title = "Parameter type", order =1)) +
-  theme(legend.position = c(0.86, 0.93))
+  theme(legend.position = c(0.82, 0.91))
 ggsave(paste0("sero_apx_col_country_pop_country.pdf"),
-       plot = p3, width = 19, height = 35)
+       plot = p3, width = 19, height = 27)
+ggsave(paste0("sero_apx_col_country_pop_country.png"),
+       plot = p3, width = 19, height = 27)
 
 # SI figures
 # Split figures to allow for larger panels and figures to split over two pages
@@ -135,6 +174,8 @@ sero_apx_1 <-  (p1+ theme(legend.position = c(0.76, 0.94)) |
                   p2  + guides(color=guide_none(), shape=guide_none())) +
   plot_annotation(tag_levels = "A")
 
+ggsave(paste0("sero_apx_col_assay_patchwork.png"),
+       plot = sero_apx_1, width = 32, height = 30)
 ggsave(paste0("sero_apx_col_assay_patchwork.pdf"),
-       plot = sero_apx_1, width = 32, height = 38)
+       plot = sero_apx_1, width = 32, height = 30)
 
