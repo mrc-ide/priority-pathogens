@@ -6,6 +6,7 @@ library(orderly)
 library(patchwork)
 library(readr)
 library(stringr)
+library(ggbreak)
 
 # *--------------------------------- Orderly ----------------------------------*
 orderly_parameters(pathogen = NULL)
@@ -19,20 +20,6 @@ source("mers_functions.R")
 orderly_artefact(description="Nipah delay figures",
                  c("figure_5_delays.pdf",
                    "figure_5_delays.png",
-                   "figure_5SI_allqa_delays.pdf",
-                   "figure_5SI_allqa_delays.png",
-                   "all/figure_5SI_allqa_admis_outcome_pt.pdf",
-                   "all/figure_5SI_allqa_incubation_pc.pdf",
-                   "all/figure_5SI_allqa_incubation_pg.pdf",
-                   "all/figure_5SI_allqa_incubation_pst.pdf",
-                   "all/figure_5SI_allqa_onset_admis_outcome_pt.pdf",
-                   "all/figure_5SI_allqa_onset_admis_pc.pdf",
-                   "all/figure_5SI_allqa_onset_admis_pg.pdf",
-                   "all/figure_5SI_allqa_onset_admis_pst.pdf",
-                   "all/figure_5SI_allqa_onset_death_pc.pdf",
-                   "all/figure_5SI_allqa_onset_death_pg.pdf",
-                   "all/figure_5SI_allqa_onset_death_pst.pdf",
-                   "all/figure_5SI_allqa_onset_outcome_pt.pdf",
                    "qa/figure_5_admis_outcome_pt.pdf",
                    "qa/figure_5_incubation_pc.pdf",
                    "qa/figure_5_incubation_pg.pdf",
@@ -61,10 +48,6 @@ qa_scores  <- articles |> dplyr::select(covidence_id,qa_score)
 parameters <- dfs$parameters |>
   left_join(qa_scores)
 
-### Nipah specific editing code will be commented out throughout for now
-# This here is manually changing some of the "others" to a pre-defined delay
-#TODO: We will need to do this too!
-
 ## 320_002 has population_group as NA
 ## This breaks forest_plot, so we change it to "Unspecified"
 parameters[parameters$access_param_id=="320_002",
@@ -78,7 +61,6 @@ parameters[parameters$access_param_id=="390_003",
 
 #271-001 is a gamma distribution but with reported mean 6.99 (unspecified units)
 #It's also low-QA. For now I'm going to manually change it to days though
-#TODO: THink long-and-hard about what to do in this scenario
 parameters[parameters$access_param_id=="271_001",
            "parameter_unit"] <- "Days"
 
@@ -88,40 +70,37 @@ parameters[parameters$access_param_id=="032_001",
            "parameter_unit"] <- "Days"
 
 #261-001 extracts it's units as "Months", but it is also an "Other" delay, so look at this later
+#(It's high QA)
 #TODO: Look at this
-
-# Symptom Onset/Fever -> Recovery/Death
-#parameters[parameters$access_param_id=="121_003",
-#           "parameter_type"] <- "Human delay - symptom onset>recovery/death"
-
-# severe_illness_ids <- c("046_001",
-#                         "040_002",
-#                         "040_004",
-#                         "040_005",
-#                         "033_007",
-#                         "033_008")
-# parameters[parameters$access_param_id%in% severe_illness_ids,
-#            "parameter_type"] <- "Human delay - symptom onset>severe illness"
 
 #Remove the words "human delay" throughout
 parameters <- parameters |>
   mutate(parameter_type = str_replace(parameter_type, "Human delay - ", ""),
          parameter_type = str_to_sentence(parameter_type))
 
+all_delays <- filter(parameters, parameter_class == "Human delay")
+
+#Filter out all low-QA
+all_delays <- filter(all_delays, qa_score >= 0.5)
+
+table(all_delays$parameter_type)
+
 # Filter out everything but the delays
-all_delay_types <- c("Incubation period",
-                     "Time in care (length of stay)" ,
-                     "Serial interval" ,
-                     "Other human delay (go to section)",
-                     "Symptom onset>death",
-                     "Symptom onset>admission to care",
-                     "Admission to care>death",
-                     "Symptom onset>discharge/recovery",
-                     "Admission to care>discharge/recovery",
-                     "Infectious period"
+# (There was one "Generation Time" which has been removed in QA filtering)
+all_delay_types <- c("Incubation period", #27
+                     "Time in care (length of stay)", #27
+                     "Serial interval", #8
+                     "Other human delay (go to section)", #140!
+                     "Symptom onset>death", #14
+                     "Symptom onset>admission to care", #25
+                     "Admission to care>death", #1
+                     "Symptom onset>discharge/recovery", #6
+                     "Admission to care>discharge/recovery", #1
+                     "Infectious period" #None
                      )
 parameters <- parameters |>
   filter(parameter_type %in% all_delay_types)
+parameters <- filter(parameters, qa_score >= 0.5)
 # *--------------------------------- Summary ----------------------------------*
 num_delays <- NROW(parameters)
 
@@ -134,11 +113,7 @@ parameters |>
   arrange(desc(n)) |>
   print()
 
-# cat("\nThe other delays excluded from plotting are as follows
-#     (note,",NROW(severe_illness_ids), "other delays have been mapped to",
-#     "Symptom onset>severe illness and one has been mapped to",
-#     "Symptom onset>recovery/death):\n")
-
+#Extract start and end from "Other delays"
 parameters |>
   filter(parameter_type == "Other human delay (go to section)") |>
   select(parameter_type, other_delay_start, other_delay_end) |>
@@ -151,56 +126,65 @@ varb_only_rows <- parameters |>
            is.na(parameter_upper_bound)) |>
   NROW()
 
+varb_only_data <- filter(parameters, is.na(parameter_value) &
+                           is.na(parameter_lower_bound) &
+                           is.na(parameter_upper_bound))
+
 cat("Number of variability only rows:", varb_only_rows)
 # *------------------------------ Plot datasets -------------------------------*
 # Filter out the 4 variability only rows:
+#TODO: Return to this and think about maybe keeping
 parameters <- parameters |>
   filter(!is.na(parameter_value) |
            !is.na(parameter_lower_bound) |
            !is.na(parameter_upper_bound))
 
-# In order of initial outbreak per country
-# parameters <- parameters |>
-#   mutate(population_country=factor(population_country,
-#                                    levels=c("Malaysia", "Bangladesh",
-#                                             "India", "Philippines"))
-#   )
-
-#TODO: FYI, we have ONE infectious period estimate, not captured below currently
+#Let's re-assign all the country tags
+parameters <- parameters |>
+  mutate(population_country=ifelse(population_country=="Algeria; Austria; Bahrain; China; Egypt; France; Germany; Greece; Iran (Islamic Republic of); Italy; Jordan; Kuwait; Lebanon; Malaysia; Netherlands; Oman; Philippines; Qatar; Republic of Korea; Saudi Arabia; Thailand; Tunisia; Türkiye; United Arab Emirates; United Kingdom of Great Britain and Northern Ireland; United States of America; Yemen",
+                                   "Global", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Algeria; Egypt; Germany; Greece; Italy; Netherlands; Philippines; Thailand; United States of America",
+                                   "Global", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Bahrain; Kuwait; Qatar; Saudi Arabia; United Arab Emirates; Yemen",
+                                   "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Democratic People's Republic of Korea; Republic of Korea; Saudi Arabia",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Oman",
+                                   "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Oman; Saudi Arabia",
+                                   "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Qatar",
+                                   "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="United Arab Emirates",
+                                   "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Republic of Korea; Saudi Arabia",
+                                   "Other", population_country))
 
 # Incubation period
-d1 <- parameters %>% filter(tolower(parameter_type) == 'incubation period')
-
-# Deduplication
-# Nikolay (2019) is duplicated (reference below is a subset of the first)
-# 37d6d213b05ac303ee32de21186977d4 large sample 82
-# CI is based on gamma dist but extracted central parameter is median
-# bb5bdf26abeda50067007b8db5d4bb15 small subset 11
-# d1 <- d1 |>
-#   filter(parameter_data_id!="bb5bdf26abeda50067007b8db5d4bb15")
+d1 <- parameters %>% filter(tolower(parameter_type) == 'incubation period')  #26
 
 # Onset to admission
 d2 <- parameters |>
-  filter(tolower(parameter_type) == 'symptom onset>admission to care')
+  filter(tolower(parameter_type) == 'symptom onset>admission to care')  #25
 
 # Hospital admission to outcome
 d3 <- parameters |>
   filter(tolower(parameter_type) %in% c('time in care (length of stay)',
                                         'admission to care>discharge/recovery',
-                                        'admission to care>death')
+                                        'admission to care>death')   #26 + 1 + 1
   )
 
 # Symptom-onset to outcome
 d4 <- parameters |>
   filter(tolower(parameter_type) %in% c(
-    "symptom onset>admission to care",
-    'symptom onset>discharge/recovery',
-    'symptom onset>death',
-    'symptom onset>recovery/death',
+    "symptom onset>admission to care",  #25
+    'symptom onset>discharge/recovery',  #6
+    'symptom onset>death',  #12
+    'symptom onset>recovery/death',  #0
     "symptom onset>severe illness")
   )
 
-d5 <- parameters %>% filter(tolower(parameter_type) == 'serial interval')
+d5 <- parameters %>% filter(tolower(parameter_type) == 'serial interval')  #8
 
 # Combine before updating variable names
 d6 <- d3 |>
@@ -253,23 +237,23 @@ lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 text_size <- 28
 
 # We'll produce multiple plots to filter in/out low QA studies
-qa_thresh_vec <- c("all"=-1, "qa"=0.5)
-qa_alpha_vec <- c(0.3, 1)
+qa_thresh_vec <- c("qa"=0.5)
+qa_alpha_vec <- c(1)
 
-labels <- c("SI_allqa", "")
+labels <- c("")
 colour_columns <- c("parameter_type",
                     "population_group",
                     "population_country",
                     "population_sample_type")
 
-p1_incb_plots <- list("all"=list(), "qa"=list())
-p2_oa_plots <- list("all"=list(), "qa"=list())
-p3_ao_plots <- list("all"=list(), "qa"=list())
-p4_oo_plots <- list("all"=list(), "qa"=list())
-p5_si_plots <- list("all"=list(), "qa"=list())
-p6_oa_o_plots <- list("all"=list(), "qa"=list())
-p7_o_a_plots <- list("all"=list())
-p7_oo_reduced_plots <- list("all"=list())
+p1_incb_plots <- list("qa"=list())
+p2_oa_plots <- list("qa"=list())
+p3_ao_plots <- list("qa"=list())
+p4_oo_plots <- list("qa"=list())
+p5_si_plots <- list("qa"=list())
+p6_oa_o_plots <- list("qa"=list())
+p7_o_a_plots <- list("qa"=list())
+p7_oo_reduced_plots <- list("qa"=list())
 
 for (i in seq_along(qa_thresh_vec)){
   label <- labels[i]
@@ -296,19 +280,25 @@ for (i in seq_along(qa_thresh_vec)){
       # 65 with Chua
       p1_incb_plots[[plot_type]][[colour_col]] <- forest_plot(
         d1 |> filter(qa_score>qa_threshold), "Incubation period (days)",
-        colour_col, c(0,35), text_size=text_size, segment_show.legend = NA,
+        colour_col, c(0,22), text_size=text_size, segment_show.legend = NA,
         sort=TRUE, custom_colours = custom_colours, qa_alpha=qa_alpha)
 
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_incubation_",
                               colour_col_label, ".pdf")),
              plot = p1_incb_plots[[plot_type]][[colour_col]],
-             width = 11, height = 15)
+             width = 11, height = 9)
+      ggsave(file.path(plot_type,
+                       paste0("figure_5", label, "_incubation_",
+                              colour_col_label, ".png")),
+             plot = p1_incb_plots[[plot_type]][[colour_col]],
+             width = 11, height = 9)
 
       # Onset to admissions
+      #Note, one of the missing Balkhays is because it's a MINUS value
       p2_oa_plots[[plot_type]][[colour_col]] <- forest_plot(
         d2 |> filter(qa_score>qa_threshold),
-        'Symptom onset-to-hospitalisation delay (days)', colour_col, c(0,20),
+        'Symptom onset-to-hospitalisation delay (days)', colour_col, c(0,23),
         text_size = text_size, sort=TRUE, custom_colours = custom_colours,
         qa_alpha=qa_alpha)
 
@@ -316,7 +306,12 @@ for (i in seq_along(qa_thresh_vec)){
                        paste0("figure_5", label, "_onset_admis_",
                               colour_col_label, ".pdf")),
              plot = p2_oa_plots[[plot_type]][[colour_col]],
-             width = 11, height = 15)
+             width = 11, height = 9)
+      ggsave(file.path(plot_type,
+                       paste0("figure_5", label, "_onset_admis_",
+                              colour_col_label, ".png")),
+             plot = p2_oa_plots[[plot_type]][[colour_col]],
+             width = 11, height = 9)
     }
 
     if (colour_col== "parameter_type"){
@@ -333,13 +328,18 @@ for (i in seq_along(qa_thresh_vec)){
 
       p3_ao_plots[[plot_type]][[colour_col]] <- forest_plot(
         d3 |> filter(qa_score>qa_threshold), 'Hospitalisation-to-outcome (days)',
-        colour_col, c(0,45), text_size = text_size, sort=TRUE,
+        colour_col, c(0,100), text_size = text_size, sort=TRUE,
         custom_colours = custom_colours, qa_alpha=qa_alpha)
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_admis_outcome_",
                               colour_col_label, ".pdf")),
              plot = p3_ao_plots[[plot_type]][[colour_col]],
-             width = 11, height = 15)
+             width = 11, height = 9)
+      ggsave(file.path(plot_type,
+                       paste0("figure_5", label, "_admis_outcome_",
+                              colour_col_label, ".png")),
+             plot = p3_ao_plots[[plot_type]][[colour_col]],
+             width = 11, height = 9)
     }else if(plot_type=="all"){
       p3_ao_plots[[plot_type]][[colour_col]] <- forest_plot(
         d3 |> filter(qa_score>qa_threshold), 'Hospitalisation-to-outcome (days)',
@@ -353,7 +353,12 @@ for (i in seq_along(qa_thresh_vec)){
                        paste0("figure_5", label, "_admis_outcome_facet_",
                               colour_col_label, ".pdf")),
              plot = p7_oo_reduced_plots[[plot_type]][[colour_col]],
-             width = 15, height = 15)
+             width = 15, height = 11)
+      ggsave(file.path(plot_type,
+                       paste0("figure_5", label, "_admis_outcome_facet_",
+                              colour_col_label, ".png")),
+             plot = p7_oo_reduced_plots[[plot_type]][[colour_col]],
+             width = 15, height = 11)
 
       p7_oo_reduced_plots[[plot_type]][[colour_col]] <-
         p7_oo_reduced_plots[[plot_type]][[colour_col]] +
@@ -369,7 +374,7 @@ for (i in seq_along(qa_thresh_vec)){
       d4_plot <- d4
       d4_plot_label <- "outcome"
       d4_x_axis_label <- 'Symptom onset-to-outcome (days)'
-      xlim <- c(-2,60)
+      xlim <- c(-2,190)
 
       all_groups <- d4_plot |>
         distinct(parameter_type) |>
@@ -385,7 +390,7 @@ for (i in seq_along(qa_thresh_vec)){
       d4_plot <- d4 |> filter(parameter_type=="Death")
       d4_plot_label <- "death"
       d4_x_axis_label <- 'Symptom onset-to-death (days)'
-      xlim <- c(0,50)
+      xlim <- c(0,180)
     }
 
     p4_oo <- forest_plot(
@@ -413,6 +418,11 @@ for (i in seq_along(qa_thresh_vec)){
                             colour_col_label, ".pdf")),
            plot = p4_oo_plots[[plot_type]][[colour_col]] ,
            width = 15, height = 15)
+    ggsave(file.path(plot_type,
+                     paste0("figure_5", label, "_onset_", d4_plot_label, "_",
+                            colour_col_label, ".png")),
+           plot = p4_oo_plots[[plot_type]][[colour_col]] ,
+           width = 15, height = 15)
 
     # Serial interval
     p5_si_plots[[plot_type]][[colour_col]] <- forest_plot(
@@ -421,13 +431,9 @@ for (i in seq_along(qa_thresh_vec)){
       qa_alpha=qa_alpha)
 
     if (colour_col== "parameter_type"){
-      # Do  we want consistent colours across the SI and main plot?
-      # If so, remove the filter
-      if (plot_type=="all"){
-        xlim <- c(0,85)
-      }else{
-        xlim <- c(0,40)
-      }
+
+      xlim <- c(-2, 200)
+
       all_groups <- d6 |>
         filter(qa_score>qa_threshold) |>
         distinct(parameter_type) |>
@@ -446,7 +452,12 @@ for (i in seq_along(qa_thresh_vec)){
                        paste0("figure_5", label, "_onset_admis_outcome_",
                               colour_col_label, ".pdf")),
              plot = p6_oa_o_plots[[plot_type]][[colour_col]],
-             width = 15, height = 15)
+             width = 15, height = 17)
+      ggsave(file.path(plot_type,
+                       paste0("figure_5", label, "_onset_admis_outcome_",
+                              colour_col_label, ".png")),
+             plot = p6_oa_o_plots[[plot_type]][[colour_col]],
+             width = 15, height = 17)
 
       p6_oa_o_plots[[plot_type]][[colour_col]] <-
         p6_oa_o_plots[[plot_type]][[colour_col]] +
@@ -473,14 +484,20 @@ for (i in seq_along(qa_thresh_vec)){
       p7_oo_reduced_plots[[plot_type]][[colour_col]] <- forest_plot(
         d7 |> filter(qa_score>qa_threshold),
         'Symptom onset-to-outcome (days)',
-        colour_col, c(0,85), text_size = text_size, sort=TRUE,
+        colour_col, c(0,195), text_size = text_size, sort=TRUE,
         custom_colours = custom_colours, qa_alpha=qa_alpha) +
-        facet_wrap(~parameter_type, ncol=1, scales="free_x")
+        scale_x_break(c(50, 125)) #+
+        #facet_wrap(~parameter_type, ncol=1, scales="free_x")
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_onset_outcome_reduced_",
                               colour_col_label, ".pdf")),
              plot = p7_oo_reduced_plots[[plot_type]][[colour_col]],
-             width = 15, height = 15)
+             width = 15, height = 11)
+      ggsave(file.path(plot_type,
+                       paste0("figure_5", label, "_onset_outcome_reduced_",
+                              colour_col_label, ".png")),
+             plot = p7_oo_reduced_plots[[plot_type]][[colour_col]],
+             width = 15, height = 11)
 
       p7_oo_reduced_plots[[plot_type]][[colour_col]] <-
         p7_oo_reduced_plots[[plot_type]][[colour_col]] +
@@ -496,16 +513,22 @@ for (i in seq_along(qa_thresh_vec)){
       # update x-lim to 85 if including the above
       p7_oo_reduced_plots[[plot_type]][[colour_col]] <- forest_plot(
         d4_filtered, 'Symptom onset-to-outcome (days)',
-        colour_col, c(0,85), text_size = text_size, sort=TRUE,
+        colour_col, c(0,195), text_size = text_size, sort=TRUE,
         custom_colours = custom_colours, qa_alpha=qa_alpha) +
         ggforce::facet_col(facets = vars(parameter_type),
                            scales = "free_y",
                            space = "free") +
+        scale_x_break(c(40, 140)) +
         theme(strip.text.y = element_text(angle=0))
 
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_onset_outcome_facet_",
                               colour_col_label, ".pdf")),
+             plot = p7_oo_reduced_plots[[plot_type]][[colour_col]],
+             width = 15, height = 15)
+      ggsave(file.path(plot_type,
+                       paste0("figure_5", label, "_onset_outcome_facet_",
+                              colour_col_label, ".png")),
              plot = p7_oo_reduced_plots[[plot_type]][[colour_col]],
              width = 15, height = 15)
 
@@ -591,15 +614,6 @@ for (i in seq_along(qa_thresh_vec)){
       guides(shape =  guide_none(),
              linetype = guide_none(),
              color = guide_none())
-    #
-    #     left_col <- p1_incb / p5_si / free(bsl_model_plot) +
-    #       plot_layout(heights = c(21, 2.75, 20))  +
-    #       plot_annotation(tag_levels = "A")
-    #
-    #     right_col <-  p7_oo / p3_ao  +
-    #       plot_layout(heights = c(31, 8))
-    #     delays_plot <- (left_col | right_col) +
-    #       plot_layout(widths = c(1, 1)) +
 
 
     # p1_incb / p5_si / free(bsl_model_plot) | p7_oo / p3_ao
@@ -624,9 +638,9 @@ for (i in seq_along(qa_thresh_vec)){
 
 
     ggsave(paste0("figure_5", label,"_delays.pdf"), plot = delays_plot,
-           width = 26, height = 20)
+           width = 26, height = 30)
     ggsave(paste0("figure_5", label,"_delays.png"), plot = delays_plot,
-           width = 26, height = 20)
+           width = 26, height = 30)
   }
 }
 # ==============================================================================
