@@ -254,6 +254,7 @@ p5_si_plots <- list("qa"=list())
 p6_oa_o_plots <- list("qa"=list())
 p7_o_a_plots <- list("qa"=list())
 p7_oo_reduced_plots <- list("qa"=list())
+p8_oo_plots <- list("qa"=list())
 
 for (i in seq_along(qa_thresh_vec)){
   label <- labels[i]
@@ -376,7 +377,12 @@ for (i in seq_along(qa_thresh_vec)){
       d4_x_axis_label <- 'Symptom onset-to-outcome (days)'
       xlim <- c(-2,190)
 
-      all_groups <- d4_plot |>
+      d8_plot <- d6 |> filter(parameter_type=="Time in care (length of stay)")
+      d8_plot_label <- "time_in_care"
+      d8_x_axis_label <- 'Time in care (days)'
+      xlim_d8 <- c(0,100)
+
+      all_groups <- rbind(d4_plot, d8_plot) |>
         distinct(parameter_type) |>
         arrange(parameter_type) |>
         pull()
@@ -391,6 +397,11 @@ for (i in seq_along(qa_thresh_vec)){
       d4_plot_label <- "death"
       d4_x_axis_label <- 'Symptom onset-to-death (days)'
       xlim <- c(0,180)
+
+      d8_plot <- d6 |> filter(parameter_type=="Time in care (length of stay)")
+      d8_plot_label <- "time_in_care"
+      d8_x_axis_label <- 'Time in care (days)'
+      xlim_d8 <- c(0,100)
     }
 
     p4_oo <- forest_plot(
@@ -400,11 +411,11 @@ for (i in seq_along(qa_thresh_vec)){
       segment_show.legend = c(shape=FALSE, colour=TRUE),
       custom_colours = custom_colours,
       qa_alpha=qa_alpha) +
-      geom_linerange(data=d4_plot |> filter(qa_score>qa_threshold,
-                                            covidence_id==275),
+      geom_linerange(data=d4_plot |> filter(qa_score>qa_threshold),
                      aes(xmin = parameter_2_lower_bound,
                          xmax = parameter_value, y=refs),
                      linetype="dashed")
+
 
     # send linerange to the back
     # Keep forest plot point geom last to maintain plot order
@@ -422,6 +433,36 @@ for (i in seq_along(qa_thresh_vec)){
                      paste0("figure_5", label, "_onset_", d4_plot_label, "_",
                             colour_col_label, ".png")),
            plot = p4_oo_plots[[plot_type]][[colour_col]] ,
+           width = 15, height = 15)
+
+    p8_oo <- forest_plot(
+      d8_plot |> filter(qa_score>qa_threshold),
+      d8_x_axis_label, colour_col, xlim_d8,
+      text_size = text_size, sort=TRUE,
+      segment_show.legend = c(shape=FALSE, colour=TRUE),
+      custom_colours = custom_colours,
+      qa_alpha=qa_alpha) +
+      geom_linerange(data=d8_plot |> filter(qa_score>qa_threshold),
+                     aes(xmin = parameter_2_lower_bound,
+                         xmax = parameter_value, y=refs),
+                     linetype="dashed")
+
+    # send linerange to the back
+    # Keep forest plot point geom last to maintain plot order
+    p8_oo$layers <- c(tail(p8_oo$layers, 1), head(p8_oo$layers, -3),
+                      tail(p8_oo$layers,2)[1], tail(p8_oo$layers,3)[1])
+
+    p8_oo_plots[[plot_type]][[colour_col]] <- p8_oo
+
+    ggsave(file.path(plot_type,
+                     paste0("figure_8", label, "_time_in_care_", d8_plot_label, "_",
+                            colour_col_label, ".pdf")),
+           plot = p8_oo_plots[[plot_type]][[colour_col]] ,
+           width = 15, height = 15)
+    ggsave(file.path(plot_type,
+                     paste0("figure_8", label, "_time_in_care_", d8_plot_label, "_",
+                            colour_col_label, ".png")),
+           plot = p8_oo_plots[[plot_type]][[colour_col]] ,
            width = 15, height = 15)
 
     # Serial interval
@@ -443,11 +484,28 @@ for (i in seq_along(qa_thresh_vec)){
       custom_colours <- lanonc_colours[seq_along(all_groups)]
       custom_colours <- setNames(custom_colours, all_groups)
 
+      arrow_df <- data.frame(x = rep(43.7,2), xend = rep(44.7,2), y = c(4,5), yend = c(4,5),
+                             parameter_type = rep("Discharge/recovery",2)) |>
+        mutate(parameter_type=factor(parameter_type,
+                                     levels=c("Admission", "Severe illness",
+                                              "Death", "Discharge/recovery")))
+
       p6_oa_o_plots[[plot_type]][[colour_col]] <- forest_plot(
-        d6 |> filter(qa_score>qa_threshold),
-        'Symptom onset/Hospitalisation-to-outcome (days)',
+        d6 |> filter(qa_score>qa_threshold) |>
+          #REMOVE THIS TO GO BACK TO ORIGINAL
+          filter(parameter_type %in% c("Onset>admission",
+                                       "Onset>severe illness",
+                                       "Onset>recovery/death",
+                                       "Onset>discharge/recovery")),
+        'Symptom onset-to-outcome (days)',
         colour_col, xlim, text_size = text_size, sort=TRUE,
-        custom_colours = custom_colours, qa_alpha=qa_alpha)
+        custom_colours = custom_colours, qa_alpha=qa_alpha) +
+        geom_segment(
+          data = arrow_df,
+          aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+          arrow = arrow(type = "open", length = unit(0.20, "cm")),
+        ) +
+        coord_cartesian(xlim = c(-0.5, 45))
       ggsave(file.path(plot_type,
                        paste0("figure_5", label, "_onset_admis_outcome_",
                               colour_col_label, ".pdf")),
@@ -581,17 +639,18 @@ for (i in seq_along(qa_thresh_vec)){
       p6_oa_o_plots[[plot_type]][["parameter_type"]] + common_left_legend
 
     # Alternative is to use guides="collect" (legends) in plot_layout
-    delays_plot <-  (p1_incb_plots[[plot_type]][["population_country"]] +
-                       p4_oo_plots[[plot_type]][["population_country"]])/(
+    delays_plot <-  (p1_incb_plots[[plot_type]][["population_country"]] /#+
+                       p8_oo_plots[[plot_type]][["population_country"]])/(
                          #bsl_model_plot +
                            p6_oa_o_plots[[plot_type]][["parameter_type"]]) +
-      plot_layout(heights = c(1, 1), widths = c(1, 1)) +
+      plot_layout(heights = c(1, 1, 1), #, widths = c(1, 1)
+                  guides = "collect") +
       plot_annotation(tag_levels = 'A')
 
-    ggsave(paste0("figure_5", label,"_delays.pdf"), plot = delays_plot,
-           width = 25, height = 13)
-    ggsave(paste0("figure_5", label,"_delays.png"), plot = delays_plot,
-           width = 25, height = 13)
+    ggsave(paste0("figure_8", label,"_delays.pdf"), plot = delays_plot,
+           width = 25, height = 25)
+    ggsave(paste0("figure_8", label,"_delays.png"), plot = delays_plot,
+           width = 25, height = 25)
   }else{
 
     p1_incb <- p1_incb_plots[[plot_type]][["population_country"]] +
@@ -643,6 +702,8 @@ for (i in seq_along(qa_thresh_vec)){
            width = 26, height = 30)
   }
 }
+
+
 # ==============================================================================
 # *--------------------------------- Not used ---------------------------------*
 # Incubation facet:
