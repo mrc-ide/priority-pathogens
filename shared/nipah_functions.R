@@ -68,17 +68,17 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
            unc_inferred_from_custom = !is.na(custom_se) & no_unc,
            parameter_uncertainty_lower_value = case_when(
              unc_inferred_from_se ~ parameter_value - parameter_uncertainty_single_value,
-             unc_inferred_from_custom ~ parameter_value - custom_se,
+             # unc_inferred_from_custom ~ parameter_value - custom_se,
              TRUE ~ parameter_uncertainty_lower_value
            ),
            parameter_uncertainty_upper_value = case_when(
              unc_inferred_from_se ~ parameter_value + parameter_uncertainty_single_value,
-             unc_inferred_from_custom ~ parameter_value + custom_se,
+             # unc_inferred_from_custom ~ parameter_value + custom_se,
              TRUE ~ parameter_uncertainty_upper_value
            ),
            uncertainty_inferred_flag = case_when(
              unc_inferred_from_se ~ "inferred from SE",
-             unc_inferred_from_custom ~ "inferred from custom SE",
+             # unc_inferred_from_custom ~ "inferred from custom SE",
              TRUE ~ NA
            )) |>
     mutate(central = coalesce(parameter_value,
