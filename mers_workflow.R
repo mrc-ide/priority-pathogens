@@ -50,6 +50,7 @@ orderly_run("mers_supp_tables", list(pathogen="MERS"))
 
 orderly_run("mers_transmission", list(pathogen="MERS"))
 orderly_run("mers_delays", list(pathogen="MERS"))
+orderly_run("mers_delays_final_fig", list(pathogen="MERS"))
 orderly_run("mers_risk_factors", list(pathogen="MERS"))
 orderly_run("mers_serology", list(pathogen="MERS"))
 orderly_run("mers_severity", list(pathogen="MERS"))
