@@ -100,5 +100,8 @@ ip_all_data <- metamean_wrap(
 )
 
 saveRDS(ip_same_data, file = "ip_same_data.rds")
-ggsave("nipah_ip_meta_analysis_same_data.png", ip_same_data$plot, width = 12, height = 6)
+png("nipah_ip_meta_analysis_same_data.png", width = 2800, height = 1000, res = 300)
+plot(ip_same_data$result)
+dev.off()
+
 orderly_artefact(files = c("ip_same_data.rds", "nipah_ip_meta_analysis_same_data.png"))
