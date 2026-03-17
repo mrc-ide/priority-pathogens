@@ -55,6 +55,9 @@ l2_centroids <- filter(l2_in, NAM_2 %in% locations_with_cases_and_deaths$map_loc
 
 
                                         # Explicitly transform bounds - clearer and more reliable
+title_size <- 17
+text_size <- 15
+
 crs_latlong <- 4326
 crs_scale <- 3857
 
@@ -90,13 +93,20 @@ pall <- ggplot() +
     ## guide = "none"
   ) +
   labs(size = "Total cases") +
-  annotation_scale(location = "bl", width_hint = 0.3) +
+  annotation_scale(location = "bl", width_hint = 0.3,
+                   text_cex = 1.2,
+                   line_width = 1,
+                   height = unit(0.2, "cm")) +
   theme_bw() +
   theme(
-    plot.title = element_text(size = 14, hjust = 0.5),
+    plot.title=element_text(size=title_size, hjust = 0.5),
     legend.background = element_blank(),
     legend.position = "inside",
-    legend.position.inside = c(0.1, 0.5)
+    legend.position.inside = c(0.2, 0.5),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    text=element_text(size=text_size),
+    axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
 
