@@ -139,7 +139,7 @@ pkerala <- pall +
   ) + ggtitle("Kerala")
 
 ## Malaysia & Singapore
-bbox_ll <- st_bbox(c(xmin = 100, xmax = 105, ymin = 1, ymax = 7), crs = crs_latlong)
+bbox_ll <- st_bbox(c(xmin = 100, xmax = 105.05, ymin = 1, ymax = 7), crs = crs_latlong)
 bbox_utm <- st_bbox(st_transform(st_as_sfc(bbox_ll), crs_scale))
 pmalaysia_singapore <- pall +
   coord_sf(
@@ -148,11 +148,11 @@ pmalaysia_singapore <- pall +
     ylim = c(bbox_utm["ymin"],
              bbox_utm["ymax"]),
     expand = FALSE
-  ) + ggtitle("Malaysia & Singapore") +
+  ) + ggtitle("Malaysia & Singapore")  +
   theme(legend.position = "none")
 
 ## Philippines
-bbox_ll <- st_bbox(c(xmin = 116, xmax = 130, ymin = 5, ymax = 20), crs = crs_latlong)
+bbox_ll <- st_bbox(c(xmin = 116, xmax = 129.4, ymin = 5, ymax = 20), crs = crs_latlong)
 bbox_utm <- st_bbox(st_transform(st_as_sfc(bbox_ll), crs_scale))
 pphilippines <- pall +
   coord_sf(
