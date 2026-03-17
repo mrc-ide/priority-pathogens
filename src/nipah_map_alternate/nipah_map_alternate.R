@@ -122,7 +122,7 @@ pindia_bangladesh <- pall +
   xlim = c(bbox_utm["xmin"], bbox_utm["xmax"]),
   ylim = c(bbox_utm["ymin"], bbox_utm["ymax"]),
   expand = FALSE
-  ) + ggtitle("India & Bangladesh") +
+  ) + ggtitle("West Bengal & Bangladesh") +
   theme(legend.position = "none")
 
 
