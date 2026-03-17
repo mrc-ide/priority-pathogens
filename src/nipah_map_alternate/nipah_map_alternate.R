@@ -190,23 +190,33 @@ for (f in files) {
 }
 orderly_artefact(files = files)
 
-
-
-
 layout_design <-
-  "AAABBBEEEE
-    CCCDDDEEEE
-   CCCDDDEEEE"
+  "GGE
+   ABE
+   CDE
+   FFE"
+
+blank_tag <- ggplot() +
+  theme_void()
 
 sero_forest_pop_group <- readRDS("sero_forest_pop_group_cols.rds")
 map_plot <- pindia_bangladesh +
   pkerala +
   pmalaysia_singapore +
-  pphilippines + 
+  pphilippines +
   (sero_forest_pop_group +
-    theme(legend.position = c(0.85, 0.51))) +
+    theme(legend.position = c(0.8, 0.425))) +
+  plot_spacer() +
+  # plot_spacer() +
+  blank_tag +
   plot_layout(design = layout_design) +
-  plot_annotation(tag_levels = "A") +
-  plot_layout(byrow = FALSE)
+  plot_annotation(tag_levels = list(c("", "", "", "", "B", "", "A"))) +
+  plot_layout(byrow = FALSE,
+              heights = c(0.05, 0.95, 0.86, 0.05),
+              widths = c(1, 0.7, 1.25)) &
+  theme(plot.tag.position = "topleft",
+        plot.tag = element_text(size = 25))
 
-ggsave("nipah_outbreaks_map.png", plot = map_plot, width = 19, height = 22)
+ggsave("nipah_outbreaks_map.png", plot = map_plot, width = 25, height = 16.2,
+       dpi=300)
+
