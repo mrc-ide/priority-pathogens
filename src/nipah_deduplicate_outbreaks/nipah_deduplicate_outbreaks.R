@@ -42,6 +42,17 @@ outbreaks[outbreaks$outbreak_country == "Malaysia" & outbreaks$outbreak_location
 outbreaks[outbreaks$outbreak_country == "Singapore" & (is.na(outbreaks$deaths) | outbreaks$type_cases_sex_disagg == "Confirmed"), ]$is_duplicate <- TRUE # we take the report with confirmed cases, also not the sero study
 outbreaks[str_detect(outbreaks$outbreak_notes, "cluster"), ]$is_duplicate <- TRUE # we take the individual outbreaks rather than the cluster
 
+
+## notes:
+## covidence ids 2886, 4358, 3065, and 2979 all describe the same outbreak; keep
+## 2886 only
+## two more outbreaks in the same location: one in 2021 (id 2984, Yadav (2022)) and
+## one in 2023 (id 2983, As (2024))
+## Ids 1150, 184, 292, all describe Siliguri outbreak in 2001
+## Id 828 Nadia, 2007
+
+
+
 exclude_ids <- c(
   # India outbreaks to exclude
   "1150|India|Siliguri|2001|1",
@@ -85,6 +96,10 @@ outbreaks <- outbreaks %>%
     EXCLUDE = ifelse(unique_id %in% exclude_ids, 1, 0)
   ) %>%
   filter(!EXCLUDE)
+
+## Fix the location name for covidence id 184
+outbreaks$outbreak_location[outbreaks$covidence_id == 184] <- "Siliguri"
+outbreaks$outbreak_location[outbreaks$covidence_id == 3065] <- "Kozhikode"
 
 subcolumns_outbreak <- outbreaks %>%
   dplyr::select(outbreak_country, outbreak_location, outbreak_source,

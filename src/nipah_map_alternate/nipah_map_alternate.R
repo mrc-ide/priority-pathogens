@@ -44,8 +44,12 @@ l1_in <- readRDS("l1_shapefile_with_cases_and_deaths.rds")
 l2_in <- readRDS("l2_shapefile_with_cases_and_deaths.rds")
 om <- read_sf("World_Bank_Official_Boundaries_Ocean_Mask/WB_GAD_ocean_mask.shp")
 
-# Calculate centroids 
+# Calculate centroids
 sf_use_s2(FALSE)
+l0_centroids <- filter(
+  l0_in, COUNTRY %in% c( "Singapore")
+) %>% st_centroid()
+
 l1_centroids <- filter(
   l1_in, COUNTRY %in% c("India", "Bangladesh", "Malaysia", "Singapore", "Philippines")
 ) %>% st_centroid()
@@ -62,6 +66,13 @@ crs_latlong <- 4326
 crs_scale <- 3857
 
 pall <- ggplot() +
+    geom_sf(
+    data = l0_centroids,
+    aes(size = total_cases),
+    fill = "red",
+    col = "red", alpha = 0.5,
+    na.rm = TRUE
+  ) +
   # Circles at centroids - Layer 1
   geom_sf(
     data = l1_centroids,

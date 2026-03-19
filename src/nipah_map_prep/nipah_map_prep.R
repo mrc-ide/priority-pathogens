@@ -1,4 +1,5 @@
 library(orderly2)
+library(readr)
 library(tidyverse)
 library(sf)
 library(stringr)
@@ -113,8 +114,8 @@ location_mapping <- tribble(
   "Khulna Division", "BGD", NA, "Khulna", "Division-level entry",
   "Mymensingh Division", "BGD", NA, "Mymensingh", "Division-level entry",
 
-  # ---- India ----
-  "Siliguri", "IND", "Darjeeling", "West Bengal", NA,
+                                        # ---- India ----
+  "Siliguri", "IND", "Siliguri", "West Bengal", NA,
   "Nearby Districts Of Kozhikode", "IND", "Kozhikode", "Kerala", "Primary reference district",
   "Kerela", "IND", NA, "Kerala", "Common misspelling",
   "West Bangal", "IND", NA, "West Bengal", "Common misspelling",
