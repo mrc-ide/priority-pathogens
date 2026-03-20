@@ -65,8 +65,10 @@ meta_digits <- 3
 
 # *--------------------- CFR from Bangladesh surveillance ---------------------*
 # Overall
+cfr_from_bangladesh_meta_data <- cfr_from_bangladesh_surveillance |>
+  filter(Cases!=0)
 cfr_from_bangladesh_surveillance_yc <- metaprop_wrap(
-  cfr_from_bangladesh_surveillance, subgroup = "year_cat", plot_pooled = TRUE,
+  cfr_from_bangladesh_meta_data, subgroup = "year_cat", plot_pooled = TRUE,
   sort_by_subg = TRUE, plot_study = FALSE, digits = meta_digits,
   colour = diamond_colour, colour_square = square_colour,
   width = 9500, height = 7000, resolution = 1000)
@@ -76,7 +78,7 @@ ggsave(file.path("figures", "figure_3_meta_year_cat_IEDCR.pdf"),
 
 # With study breakdown
 cfr_from_bangladesh_surveillance_yc_study <- metaprop_wrap(
-  cfr_from_bangladesh_surveillance, subgroup = 'year_cat', plot_pooled = TRUE,
+  cfr_from_bangladesh_meta_data, subgroup = 'year_cat', plot_pooled = TRUE,
   sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
   colour = diamond_colour, colour_square = square_colour,
   width = 10400, height = 11000, resolution = 1000)
