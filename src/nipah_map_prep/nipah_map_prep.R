@@ -158,16 +158,16 @@ location_mapping <- location_mapping %>%
 subcolumns_outbreak <- readRDS("cleaned_outbreak_data.RDS") 
 
 locations_with_cases_and_deaths <- subcolumns_outbreak %>%
-  group_by(outbreak_location) %>%
+  group_by(outbreak_location, outbreak_country) %>%
   summarise(
     tot_cases = sum(total_cases),
     tot_deaths = sum(deaths)
   ) %>%
   left_join(location_mapping, by = c("outbreak_location" = "location")) %>%
-  mutate(map_location = coalesce(district, division_or_state, outbreak_location)) %>%
-  dplyr::select(map_location, tot_cases, tot_deaths)
-
-
+  mutate(map_location = coalesce(district, division_or_state, outbreak_location),
+         outbreak_country) %>%
+  ungroup() |>
+  dplyr::select(outbreak_country, map_location, tot_cases, tot_deaths)
 
 locations_with_cases_and_deaths$tot_cases_binned <-
   cut(locations_with_cases_and_deaths$tot_cases, breaks = c(1, 10, 30, 45, 235),
@@ -242,21 +242,21 @@ l1 <- l1_in %>%
   mutate(total_cases = tc_l1, total_deaths = td_l1, tot_cases_binned = tc_binned)
 
 l2 <- left_join(
-  l2_in, 
+  l2_in,
     rename(
       locations_with_cases_and_deaths, tc_l2 = tot_cases, td_l2 = tot_deaths,
       tc_l2_binned = tot_cases_binned
     ),
-    by = c("NAM_2" = "map_location")) %>%
+    by = c("NAM_2" = "map_location", "COUNTRY" = "outbreak_country")) %>%
   left_join(
     rename(
       locations_with_cases_and_deaths, tc_l1 = tot_cases, td_l1 = tot_deaths,
       tc_l1_binned = tot_cases_binned
     ),
-    by = c("NAM_1" = "map_location")) %>%
+    by = c("NAM_1" = "map_location", "COUNTRY" = "outbreak_country")) %>%
   left_join(
     rename(
-      locations_with_cases_and_deaths, tc_l0 = tot_cases, td_l0 = tot_deaths,
+      locations_with_cases_and_deaths , tc_l0 = tot_cases, td_l0 = tot_deaths,
       tc_l0_binned = tot_cases_binned
     ),
     by = c("COUNTRY" = "map_location")) %>%
