@@ -98,7 +98,7 @@ outbreaks <- outbreaks %>%
   filter(!EXCLUDE)
 
 ## Fix the location name for covidence id 184
-outbreaks$outbreak_location[outbreaks$covidence_id == 184] <- "Siliguri"
+outbreaks$outbreak_location[outbreaks$covidence_id == 184] <- "Darjeeling;Siliguri"
 outbreaks$outbreak_location[outbreaks$covidence_id == 3065] <- "Kozhikode"
 
 subcolumns_outbreak <- outbreaks %>%
