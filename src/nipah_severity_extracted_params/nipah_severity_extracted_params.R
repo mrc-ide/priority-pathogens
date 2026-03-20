@@ -527,9 +527,9 @@ patchwork_new <- (left_col | plot_spacer() | right_col) +
         plot.margin = margin(5.5, 0, 0, 5.5),
         plot.tag = element_text(size = 16))
 
-ggsave(file.path("figures", "figure_severity_new_pop_group.png"),
+ggsave(file.path("figures", "figure_severity.png"),
        plot = patchwork_new, width = 12.5, height = 8, dpi=300)
-ggsave(file.path("figures", "figure_severity_new_pop_group.pdf"),
+ggsave(file.path("figures", "figure_severity.pdf"),
        plot = patchwork_new, width = 12.5, height = 8)
 
 # -------------- Funnel plot
