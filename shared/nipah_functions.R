@@ -105,9 +105,6 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     outbreaks  <- outbreaks  |> mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
   }
 
-  # parameters <- parameters |> mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
-  #                                     population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
-
   if(switch_first_surname)   # this is due to legacy access database issue
   {
     articles <- articles |> rename(first_author_first_name=first_author_surname,first_author_surname=first_author_first_name)
