@@ -408,7 +408,7 @@ cfr_from_outbreaks |>
     ci_high = binom.test(cfr_ifr_numerator, cfr_ifr_denominator)$conf.int[2]
   )
 
-cfr_from_outbreaks |>
+exploratory_plot_1 <- cfr_from_outbreaks |>
   select(outbreak_start_year, CFR, outbreak_location, outbreak_country,
          cfr_ifr_numerator, cfr_ifr_denominator) |>
   mutate(outbreak_location=case_when(outbreak_location=="Kozhikode"~"Kerala",
@@ -421,7 +421,7 @@ cfr_from_outbreaks |>
   theme_bw()
 
 # Outbreak size
-cfr_from_outbreaks |>
+exploratory_plot_2 <- cfr_from_outbreaks |>
   select(outbreak_start_year, CFR, outbreak_country,
          cfr_ifr_denominator, cfr_ifr_numerator) |>
   group_by(outbreak_country, outbreak_start_year) |>
