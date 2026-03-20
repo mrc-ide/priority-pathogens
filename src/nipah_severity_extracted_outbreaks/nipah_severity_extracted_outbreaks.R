@@ -92,6 +92,7 @@ square_colour <- imperial_khaki
 
 text_size <- 13
 lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+meta_digits <- 3
 
 # Colour overlap...
 all_countries <- unique(cfr_from_outbreaks$outbreak_country)
@@ -168,7 +169,7 @@ ggsave(file.path("figures",
 
 # Overall
 cfr_from_outbreaks_reduced <- cfr_from_outbreaks |>
-  group_by(outbreak_country, outbreak_year, parameter_unit, article_refs) |>
+  group_by(outbreak_country, outbreak_start_year, parameter_unit, article_refs) |>
   summarise(cfr_ifr_denominator=sum(total_cases),
             cfr_ifr_numerator=sum(deaths),
             parameter_value=cfr_ifr_numerator/cfr_ifr_denominator,
