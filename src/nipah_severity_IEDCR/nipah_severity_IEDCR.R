@@ -124,7 +124,6 @@ IEDCR_over_time_overall <- cfr_from_bangladesh_surveillance |>
   theme_minimal() +
   theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
         text = element_text(size = 18))
-IEDCR_over_time_overall
 
 ggsave(file.path("figures", "IEDCR_over_time_overall.pdf"),
        IEDCR_over_time_overall, width = 8, height = 5)
