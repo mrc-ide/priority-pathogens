@@ -58,8 +58,8 @@ incp_meta_result <-
 
 imperial_khaki <- "#EFE58B"
 
-saveRDS(incp_meta_result, file = "ip_same_data.rds")
-png("nipah_ip_meta_analysis_same_data.png", width = 12400, height = 4600,
+saveRDS(incp_meta_result, file = "incp_meta_result.rds")
+png("incp_meta_analysis.png", width = 12400, height = 4600,
     res = 1000)
 
 # can't get size by square size right but the random effects look similar and
@@ -96,5 +96,5 @@ forest(incp_meta_result$result, layout = "Revman5",
 
 dev.off()
 
-orderly_artefact(files = c("ip_same_data.rds",
-                           "nipah_ip_meta_analysis_same_data.png"))
+orderly_artefact(files = c("incp_meta_result.rds",
+                           "incp_meta_analysis.png"))
