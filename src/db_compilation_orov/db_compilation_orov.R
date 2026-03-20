@@ -22,9 +22,9 @@ orderly_resource(
 orderly_artefact(
   description = "Extracted data ready for analysis",
   files = c(
-    "outputs/articles.csv",
-    "outputs/parameters.csv",
-    "outputs/outbreaks.csv"
+    "articles.csv",
+    "parameters.csv",
+    "outbreaks.csv"
   ))
 
 ## read in the data 
@@ -112,8 +112,10 @@ parameters <- parameters %>% mutate(
 )
 
 # save outputs 
-write.csv(articles,"outputs/articles.csv",row.names=FALSE)
-write.csv(outbreaks,"outputs/outbreaks.csv",row.names=FALSE)
-write.csv(parameters,"outputs/parameters.csv",row.names=FALSE)
+# write.csv(x = articles,file = "outputs/articles.csv",row.names=FALSE)
+# write.csv(x = outbreaks,file = "outputs/outbreaks.csv",row.names=FALSE)
+# write.csv(parameters,"outputs/parameters.csv",row.names=FALSE)
 
-
+write_csv(articles, "articles.csv")
+write_csv(outbreaks, "outbreaks.csv")
+write_csv(parameters, "parameters.csv")
