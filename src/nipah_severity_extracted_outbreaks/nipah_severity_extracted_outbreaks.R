@@ -23,10 +23,6 @@ orderly_shared_resource("cleaned_outbreak_data.RDS"="cleaned_outbreak_data.RDS")
 
 source("nipah_functions.R")
 
-orderly_artefact("Nipah severity figures",
-                 c(file.path("figures", "figure_severity.png"),
-                   file.path("figures","figure_severity.pdf")))
-
 # *------------------------------ Data curation -------------------------------*
 articles   <- read_csv("articles.csv")
 outbreaks  <- read_csv("outbreaks.csv")

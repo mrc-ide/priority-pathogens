@@ -23,11 +23,6 @@ orderly_shared_resource("NIPAH_Bangladesh_IEDCR.csv"="NIPAH_Bangladesh_IEDCR.csv
 
 source("nipah_functions.R")
 
-orderly_artefact("Nipah severity figures",
-                 c(file.path("figures", "figure_severity.png"),
-                   file.path("figures","figure_severity.pdf")))
-
-
 # *----------------------------- Data preparation -----------------------------*
 # IEDCR
 cfr_bangladesh <- read_csv('NIPAH_Bangladesh_IEDCR.csv')
