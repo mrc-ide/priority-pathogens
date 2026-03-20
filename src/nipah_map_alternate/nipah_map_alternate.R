@@ -89,10 +89,13 @@ pall <- ggplot() +
     alpha = 0.5,
     na.rm = TRUE
   ) +
-  geom_sf(
-    data = filter(l0_in, COUNTRY %in% c("India", "Bangladesh")),
-    lwd = 0.5, col = "black", fill = NA
-  ) +
+  geom_sf(data = l2_in |> filter(!is.na(tc_l2)),
+          lwd = 0.2, col = "gray50", fill = NA, na.rm = TRUE) +
+  geom_sf(data = l1_in |>
+            filter(COUNTRY %in% c("Singapore", "India", "Bangladesh",
+                                  "Malaysia", "Philippines")),
+          lwd = 0.3, col = "#654321CC", fill = NA, na.rm = TRUE) +
+  geom_sf(data = l0_in, lwd = 0.55, col = "black", fill = NA, na.rm = TRUE) +
   geom_sf(
     data = om, lwd = 0.001, col = "lightgrey", fill = "lightblue", alpha = 0.3
   ) +
@@ -121,10 +124,7 @@ pall <- ggplot() +
   )
 
 
-
-
-
-bbox_ll <- st_bbox(c(xmin = 83, xmax = 92, ymin = 20, ymax = 28), crs = crs_latlong)
+bbox_ll <- st_bbox(c(xmin = 85.5, xmax = 92, ymin = 20, ymax = 28), crs = crs_latlong)
 bbox_utm <- st_bbox(st_transform(st_as_sfc(bbox_ll), crs_scale))
 
 pindia_bangladesh <- pall +
@@ -147,7 +147,10 @@ pkerala <- pall +
     xlim = c(bbox_utm["xmin"], bbox_utm["xmax"]),
     ylim = c(bbox_utm["ymin"], bbox_utm["ymax"]),
     expand = FALSE
-  ) + ggtitle("Kerala")
+  ) +
+  scale_x_continuous(breaks = seq(74, 78, by = 1)) +
+  scale_y_continuous(breaks = seq(8, 13, by = 1)) +
+  ggtitle("Kerala")
 
 ## Malaysia & Singapore
 bbox_ll <- st_bbox(c(xmin = 100, xmax = 105.05, ymin = 1, ymax = 7), crs = crs_latlong)
@@ -159,7 +162,7 @@ pmalaysia_singapore <- pall +
     ylim = c(bbox_utm["ymin"],
              bbox_utm["ymax"]),
     expand = FALSE
-  ) + ggtitle("Malaysia & Singapore")  +
+  ) + ggtitle("Peninsular Malaysia & Singapore")  +
   theme(legend.position = "none")
 
 ## Philippines
@@ -179,7 +182,7 @@ pphilippines <- pall +
 ## Put the plots together
 
 pfinal <- pindia_bangladesh + pkerala +  pmalaysia_singapore + pphilippines +
-  plot_layout(ncol = 2) 
+  plot_layout(ncol = 2)
 
 
 width <- 12
@@ -223,7 +226,7 @@ map_plot <- pindia_bangladesh +
   plot_layout(design = layout_design) +
   plot_annotation(tag_levels = list(c("", "", "", "", "B", "", "A"))) +
   plot_layout(byrow = FALSE,
-              heights = c(0.05, 0.95, 0.86, 0.05),
+              heights = c(0.0, 0.95, 0.86, 0.075),
               widths = c(1, 0.7, 1.25)) &
   theme(plot.tag.position = "topleft",
         plot.tag = element_text(size = 25))
