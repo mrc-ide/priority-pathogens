@@ -564,7 +564,11 @@ metagen_wrap <- function(dataframe, estmeansd_method,
 metaprop_wrap <- function(dataframe, subgroup,
                           plot_pooled, sort_by_subg, plot_study, digits, colour,
                           width, height, resolution,
-                          at = seq(0,1,by=0.2), xlim = c(0,1)){
+                          at = seq(0,1,by=0.2), xlim = c(0,1),
+                          colour_square=NA){
+  if (is.na(colour_square)){
+    colour_sqaure=colour
+  }
 
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
 
@@ -594,7 +598,7 @@ metaprop_wrap <- function(dataframe, subgroup,
            digits = digits,
            col.diamond.lines = "black",col.diamond.common = colour,
            col.diamond.random = colour,
-           col.square = colour, col.square.lines = "black",
+           col.square = colour_square, col.square.lines = "black",
            col.study = "black", col.subgroup = "black",
            col.inside = "black", weight.study = "same",
            at = at, xlim = xlim, xlab="Case Fatality Ratio",
@@ -621,7 +625,7 @@ metaprop_wrap <- function(dataframe, subgroup,
            digits = digits,
            col.diamond.lines = "black",col.diamond.common = colour,
            col.diamond.random = colour,
-           col.square = colour, col.square.lines = "black",
+           col.square = colour_square, col.square.lines = "black",
            col.subgroup = "black", col.inside = "black", weight.study = "same",
            at = at, xlim = xlim, xlab="Case Fatality Ratio",
            fs.predict.labels = 11.5,
