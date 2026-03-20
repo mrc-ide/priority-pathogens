@@ -61,13 +61,6 @@ orderly_run("nipah_severity_IEDCR", list(pathogen="NIPAH"))
 # Transmission
 orderly_run("nipah_transmission", list(pathogen="NIPAH"))
 
-# I assume the issue below is caused by the BSL library and other packages will
-# explicitly reference MASS when a function is needed
-# MASS::select masks dplyr::select
-# MASS::area masks patchwork::select
-select <- dplyr::select
-area <- patchwork::area
-
 # Delays
 orderly_run("nipah_inc_period_meta")
 orderly_run("nipah_delays")
