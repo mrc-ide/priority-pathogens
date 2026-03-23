@@ -38,7 +38,7 @@ orderly_run("db_double",list(pathogen="NIPAH"))
 orderly_run("db_compilation", list(pathogen="NIPAH"))
 
 # *-------------------------------- Clean data --------------------------------*
-orderly_run("db_cleaning",list(pathogen="NIPAH", debug_mode=TRUE))
+orderly_run("db_cleaning",list(pathogen="NIPAH", debug_mode=FALSE))
 
 # *------------------------------- Latex tables -------------------------------*
 # Add cleaning mode
