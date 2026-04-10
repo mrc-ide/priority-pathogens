@@ -532,6 +532,14 @@ ggsave(file.path("figures", "figure_severity.png"),
 ggsave(file.path("figures", "figure_severity.pdf"),
        plot = patchwork_new, width = 12.5, height = 8)
 
+ggsave(file.path("figures", "figure_3_panel_C.pdf"),
+       plot = p1, width = 7.25, height = 8)
+ggsave(file.path("figures", "figure_3_panel_B.pdf"),
+       plot = p4 +theme(legend.position=c(0.17, 0.51)), width = 6, height = 7)
+ggsave(file.path("figures", "figure_3_panel_A.pdf"),
+       plot = p5, width = 6, height = 1.75)
+
+
 # -------------- Funnel plot
 png("dedup_cfr_funnel_plot.png", width = 3000, height = 2000, res = 300)
 par(mar = c(4, 4, 1, 1))
