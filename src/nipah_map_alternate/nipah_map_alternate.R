@@ -15,8 +15,9 @@ library(sf)
 library(stringr)
 
 orderly_dependency(
-  "nipah_serology", "latest",
-  c("sero_forest_pop_group_cols.rds", "sero_forest_pop_group_cols.png")
+  "nipah_serology",
+  "latest",
+  c("sero_forest_pop_group_cols.rds")
 )
 
 orderly_dependency(

@@ -219,11 +219,22 @@ patch <- (p1 | p2 + theme(legend.position=c(0.815, 0.425),
   ##plot_annotation(tag_levels="A") &
   theme(plot.title=element_text(hjust=0.5))
 
-ggsave("sero_forest_pop_group_cols.png",
+ggsave("sero_forest_pop_group_col_1.pdf",
+       plot=p1+theme(plot.title=element_text(hjust=0.5)),
+       width=6, height=16)
+ggsave("sero_forest_pop_group_col_2.pdf",
+       plot= p2 + theme(legend.position=c(0.815, 0.425),
+                        legend.spacing=unit(2, "mm"),
+                        legend.margin=margin(0, 0, 0, 0),
+                        plot.title=element_text(hjust=0.5)),
+       width=6, height=16)
+
+ggsave("sero_forest_pop_group_cols.pdf",
        plot=patch,
        width=12, height=16)
 
 saveRDS(patch, "sero_forest_pop_group_cols.rds")
 orderly_artefact(
-  files = c("sero_forest_pop_group_cols.png", "sero_forest_pop_group_cols.rds")
+  files = c("sero_forest_pop_group_cols.pdf",
+            "sero_forest_pop_group_cols.rds")
 )
