@@ -53,6 +53,9 @@ orderly_run("nipah_deduplicate_outbreaks")
 orderly_run("nipah_map_prep")
 orderly_run("nipah_map_alternate")
 
+orderly_run("nipah_iedcr_map_prep")
+orderly_run("nipah_map_alternate_iedcr")
+
 # Severity
 orderly_run("nipah_severity_extracted_params", list(pathogen="NIPAH"))
 orderly_run("nipah_severity_extracted_outbreaks", list(pathogen="NIPAH"))
