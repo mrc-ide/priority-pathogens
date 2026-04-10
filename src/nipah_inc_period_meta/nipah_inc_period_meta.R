@@ -52,14 +52,14 @@ params_in$parameter_uncertainty_upper_value <- params_in$parameter_2_upper_bound
 
 incp_meta_result <-
   metamean_wrap(dataframe = params_in, estmeansd_method = "Cai",
-                plot_study = TRUE, digits = 2, lims = c(2,15),
+                plot_study = TRUE, digits = 3, lims = c(2,15),
                 colour = "dodgerblue3", label = "Median Incubation Period (days)",
                 width = 11000, height = 4200, resolution = 1000)
 
 imperial_khaki <- "#EFE58B"
 
 saveRDS(incp_meta_result, file = "incp_meta_result.rds")
-png("incp_meta_analysis.png", width = 12400, height = 4600,
+png("incp_meta_analysis.png", width = 12750, height = 4600,
     res = 1000)
 
 # can't get size by square size right but the random effects look similar and
@@ -76,8 +76,8 @@ forest(incp_meta_result$result, layout = "Revman5",
        overall = TRUE, pooled.events = TRUE,
        print.subgroup.name = FALSE, sort.subgroup = TRUE,
        study.results = TRUE,
-       digits = 2,
-       digits.sd = 2,
+       digits = 3,
+       digits.sd = 3,
        showweights = TRUE,
        col.diamond.lines = "black",col.diamond.common = "dodgerblue3",
        col.diamond.random = "dodgerblue3",
