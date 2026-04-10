@@ -232,7 +232,7 @@ for (i in seq_along(qa_thresh_vec)){
   p5 <- p5 + theme(legend.position = c(0.835, 0.25),
                    legend.spacing=unit(2, "mm"),
                    legend.key.height = unit(0.5, "cm"),
-                   legend.margin=margin(0, 0, 0, 0),
+                   legend.margin=margin(0, 0, 0, 10),
                    legend.text = element_text(size = 11),
                    legend.title = element_text(size = 13))
   p1 <- p1 + theme(legend.position = c(0.875, 0.875),
@@ -255,5 +255,23 @@ for (i in seq_along(qa_thresh_vec)){
          plot = patchwork, width = 21, height = 12)
   ggsave(paste0("figure_",label,"trans.pdf"),
          plot = patchwork, width = 21, height = 12)
+
+  # For lancet
+  ggsave(paste0("figure_",label,"trans_panel_A.pdf"),
+         plot = p5 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
+  ggsave(paste0("figure_",label,"trans_panel_B.pdf"),
+         plot = p3 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
+  ggsave(paste0("figure_",label,"trans_panel_C.pdf"),
+         plot = p4 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
+  ggsave(paste0("figure_",label,"trans_panel_D.pdf"),
+         plot = p1 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
 }
 # *============================================================================*
