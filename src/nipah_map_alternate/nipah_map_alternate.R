@@ -225,12 +225,47 @@ map_plot <- pindia_bangladesh +
   blank_tag +
   plot_layout(design = layout_design) +
   plot_annotation(tag_levels = list(c("", "", "", "", "B", "", "A"))) +
-  plot_layout(byrow = FALSE,
-              heights = c(0.0, 0.95, 0.86, 0.075),
-              widths = c(1, 0.7, 1.25)) &
-  theme(plot.tag.position = "topleft",
-        plot.tag = element_text(size = 25))
+  plot_layout(
+    byrow = FALSE,
+    heights = c(0.0, 0.95, 0.86, 0.075),
+    widths = c(1, 0.7, 1.25)
+  ) &
+  theme(plot.tag.position = "topleft", plot.tag = element_text(size = 25))
 
-ggsave("nipah_outbreaks_map.png", plot = map_plot, width = 25, height = 16.2,
-       dpi=300)
+ggsave(
+  "nipah_outbreaks_map.png",
+  plot = map_plot,
+  width = 25,
+  height = 16.2,
+  dpi = 300
+)
 
+ggsave("nipah_outbreaks_map.pdf",
+       plot = map_plot,
+       width = 25,
+       height = 16.2,
+       device = cairo_pdf)
+
+ggsave("pindia_bangladesh.pdf",
+       plot = pindia_bangladesh,
+       width = 6.5,
+       height = 8,
+       device = cairo_pdf)
+
+ggsave("pkerala.pdf",
+       plot = pkerala,
+       width = 7,
+       height = 8,
+       device = cairo_pdf)
+
+ggsave("pmalaysia_singapore.pdf",
+       plot = pmalaysia_singapore,
+       width = 6,
+       height = 7,
+       device = cairo_pdf)
+
+ggsave("pphilippines.pdf",
+       plot = pphilippines,
+       width = 6,
+       height = 7,
+       device = cairo_pdf)
