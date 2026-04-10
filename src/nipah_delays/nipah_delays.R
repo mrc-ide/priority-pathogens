@@ -646,10 +646,24 @@ delays_plot <- wrap_plots(
     plot.tag = element_text(size = 34)
   )
 
-ggsave(paste0("figure_5_delays.pdf"), plot = delays_plot,
+ggsave(paste0("figure_4_delays.pdf"), plot = delays_plot,
        width = 30, height = 20)
-ggsave(paste0("figure_5_delays.png"), plot = delays_plot,
+ggsave(paste0("figure_4_delays.png"), plot = delays_plot,
        width = 30, height = 20)
+
+# Individual panels for the Lancet
+ggsave(paste0("figure_4_panel_A.pdf"), plot = p1_incb,
+       width = 12, height = 14)
+ggsave(paste0("figure_4_panel_B.pdf"), plot = gg,
+       width = 30, height = 10)
+ggsave(paste0("figure_4_panel_C.pdf"), plot = p5_si,
+       width = 11, height = 3)
+ggsave(paste0("figure_4_panel_D.pdf"), plot = p7_oo,
+       width = 12, height = 11)
+ggsave(paste0("figure_4_panel_E.pdf"), plot = p8_symp_d,
+       width = 12, height = 14)
+ggsave(paste0("figure_4_panel_F.pdf"), plot = p3_ao,
+       width = 12, height = 7)
 # ==============================================================================
 # *--------------------------------- Not used ---------------------------------*
 # Incubation facet:
