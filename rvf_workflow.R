@@ -41,3 +41,7 @@ orderly_run("db_compilation", list(pathogen="RVF"))
 
 # *-------------------------------- Clean data --------------------------------*
 orderly_run("db_cleaning",list(pathogen="RVF", debug_mode=TRUE))
+
+orderly_run("rvf_latex_tables", list(pathogen="RVF"))
+
+orderly_run("rvf_summary", list(pathogen="RVF"))
