@@ -3,7 +3,7 @@ library(cli)
 library(dplyr)
 library(ids)
 library(janitor)
-library(orderly2)
+library(orderly)
 library(readr)
 library(yaml)
 
@@ -12,7 +12,7 @@ read_clean_arrange <- function(table_name, col_types){
   df <- read_csv(table_name, col_types=col_types)
   df <- clean_names(df)
   df <- arrange(df, covidence_id)
-
+  
   return (df)
 }
 
@@ -23,9 +23,9 @@ create_file_list <- function(table_name_list, col_type_list){
       read_clean_arrange(table_name_list[[table_name]],
                          col_types = col_type_list[[table_name]])
   )
-
+  
   table_list <- setNames(table_list,names(table_name_list))
-
+  
   return (table_list)
 }
 
@@ -40,27 +40,27 @@ join_qa_and_article <- function(article_single_df,
                                 fixing_join_cols,
                                 matching_join_cols){
   article_double_details_df <- select(article_double_df, -c(starts_with("qa")))
-
+  
   article_matching_df <- left_join(qa_matching_df,
-                                article_double_details_df,
-                                by = matching_join_cols)
+                                   article_double_details_df,
+                                   by = matching_join_cols)
   # Removes duplicated article rows which causes missing info ids
   article_matching_df <- distinct(article_matching_df,
                                   covidence_id, .keep_all = TRUE)
   article_matching_df$double_extracted <- 1
-
+  
   article_fixed_df <- left_join(qa_fixing_df,
                                 article_double_details_df,
                                 by = fixing_join_cols)
   article_fixed_df$double_extracted <- 1
-
+  
   article_single_df$double_extracted <- 0
-
+  
   article_all_df <- rbind(
     article_single_df,
     article_matching_df,
     article_fixed_df)
-
+  
   return (article_all_df)
 }
 
@@ -72,11 +72,11 @@ join_and_create_extraction_table <- function(single_df,
   double_ids <- double_df[colnames(double_df) %in% join_cols]
   fixed_df <- left_join(fixed_df,
                         double_ids)
-
+  
   all_df <- rbind(single_df,
                   matching_df,
                   fixed_df)
-
+  
   return (all_df)
 }
 
@@ -87,30 +87,34 @@ check_info_ids <- function(extraction_table,
                            cov_id_col,
                            extraction_table_name,
                            info_table_name){
+  # During double extraction, the same article may be extracted by two people.
+  # As a result, a single covidence ID might refer to two different article IDs.
+  # Since the article table is deduplicated, we need to update any orphaned IDs.
+  # This function performs that update.
   cli_h3(paste("Checking whether", info_uuid_col, "correspond between",
                info_table_name, "table and", extraction_table_name))
-
+  
   ft_info_uuid_vec <- extraction_table[[info_uuid_col]]
   cov_id_vec <- extraction_table[[cov_id_col]]
-
+  
   it_info_uuid_vec <- sapply(
     cov_id_vec,
     function(id) info_table[info_table[[cov_id_col]] == id, ][[info_uuid_col]])
-
+  
   not_matching <- ft_info_uuid_vec != it_info_uuid_vec
   not_matching[is.na(not_matching)] <- TRUE
-
+  
   if (sum(not_matching) > 0){
     cli_alert_warning(
       paste("There are", sum(not_matching),
-             "rows with either no or mismatching", info_uuid_col,
-             "values. \nThe", extraction_table_name, "table will be updated to",
+            "rows with either no or mismatching", info_uuid_col,
+            "values. \nThe", extraction_table_name, "table will be updated to",
             "match the", info_table_name, "table")
-      )
-
+    )
+    
     extraction_table[not_matching, info_uuid_col] <- it_info_uuid_vec[not_matching]
   }
-
+  
   return (extraction_table)
 }
 
@@ -122,22 +126,22 @@ fix_missing_ids <- function(extraction_table,
   set.seed(seed)
   missing_ids <- is.na(extraction_table[id_col])
   num_ids_missing <-  sum(missing_ids)
-
+  
   if (num_ids_missing > 0){
     cli_h3(paste("Generating missing", id_col, "for", extraction_table_name,
                  "table"))
-
+    
     cli_alert_info(
       paste("There are", num_ids_missing, "with no", id_col,"entry.
           This is likely due to a mismatch between the fixing and
           double_extraction files. These will be regenerated and,
           as a result, will no longer match the ID extraction file.")
     )
-
+    
     extraction_table[missing_ids, id_col] <- random_id(n = num_ids_missing,
                                                        use_openssl = FALSE)
   }
-
+  
   return (extraction_table)
 }
 
@@ -157,17 +161,17 @@ qa_table <- "qa"
 extraction_tables <- tables[tables!=info_table]
 
 csv_artefacts <- sapply(tables,
-                    function(table) paste0(table, ".csv"))
+                        function(table) paste0(table, ".csv"))
 rds_artefacts <- sapply(tables,
                         function(table) paste0(table, ".rds"))
 
 double_tables <- sapply(tables,
-                    function(table)
-                      paste0("double_extraction_", table, ".csv"))
+                        function(table)
+                          paste0("double_extraction_", table, ".csv"))
 
 single_tables <- sapply(tables,
-                     function(table)
-                       paste0("single_extraction_", table, ".csv"))
+                        function(table)
+                          paste0("single_extraction_", table, ".csv"))
 
 fixing_files <- sapply(
   recon, function(recon_table) file.path(
@@ -176,7 +180,7 @@ fixing_files <- sapply(
 
 matching_files<- sapply(
   recon, function(recon_table) paste(recon_table, "matching.csv",
-                                    sep="_"))
+                                     sep="_"))
 
 # Get results from db_extraction
 orderly_dependency(
@@ -207,8 +211,8 @@ orderly_artefact(
   description="Merged single and double extracted data as csv and rds files",
   c(setNames(csv_artefacts, csv_artefacts),
     setNames(rds_artefacts, rds_artefacts)
-    )
   )
+)
 
 # *--------------------------- Hard-coded variables ---------------------------*
 col_type_list <- list("qa" = cols(Covidence_ID = col_integer()),
@@ -295,15 +299,15 @@ final_tables <- Map(
   extraction_tables)
 
 cli_h1("Checking (pk/fk) correspondence between extraction table & info table ids")
-final_tables <- lapply(names(final_tables),
-                       function (name) check_info_ids(final_tables[[name]],
-                                                      article_table,
-                                                      "id",
-                                                      extract_uuid_cols[[name]],
-                                                      "covidence_id",
-                                                      name,
-                                                      info_table)
-                       )
+# final_tables <- lapply(names(final_tables),
+#                        function (name) check_info_ids(final_tables[[name]],
+#                                                       article_table,
+#                                                       "id",
+#                                                       extract_uuid_cols[[name]],
+#                                                       "covidence_id",
+#                                                       name,
+#                                                       info_table)
+# )
 
 final_tables <- setNames(final_tables, extraction_tables)
 seeds <- setNames(1:3, sort(extraction_tables))
@@ -316,7 +320,7 @@ final_tables <- lapply(
                                   "covidence_id",
                                   name,
                                   seeds[[name]])
-  )
+)
 
 final_tables <- setNames(final_tables, extraction_tables)
 final_tables[[info_table]] <- article_table

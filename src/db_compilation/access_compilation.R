@@ -1,7 +1,7 @@
 # Task to compile single and double extraction databases together
 library(dplyr)
 library(janitor)
-library(orderly2)
+library(orderly)
 library(readr)
 library(epireview)
 

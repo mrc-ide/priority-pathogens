@@ -1,8 +1,8 @@
-# orderly2::orderly_run(name = 'db_double', parameters = list(pathogen = 'ZIKA'))
+# orderly::orderly_run(name = 'db_double', parameters = list(pathogen = 'ZIKA'))
 # Task to identify entries of double extracted data that match or do not match
 # between extractors
 
-library(orderly2)
+library(orderly)
 orderly_strict_mode()
 orderly_parameters(pathogen = NULL)
 orderly_artefact(
@@ -38,7 +38,7 @@ articles <- read_csv("double_extraction_articles.csv")
 parameters <- read_csv("double_extraction_params.csv")
 models <- read_csv("double_extraction_models.csv")
 
-if (pathogen %in% c('LASSA', 'OROV', 'ZIKA', 'NIPAH')) {
+if (pathogen %in% c('LASSA', 'OROV', 'ZIKA', 'NIPAH', 'RVF')) {
   outbreaks <- read_csv("double_extraction_outbreaks.csv")
 } else {
   outbreaks <- NULL
@@ -72,7 +72,7 @@ model_exclude_cols <- c("Name_data_entry",
 model_notes_col <- NULL
 model_id_col <- NULL
 
-if (pathogen %in% c("NIPAH")){
+if (pathogen %in% c("NIPAH", "RVF")) {
   outbreak_exclude_cols <- c(outbreak_exclude_cols, "Outbreak_data_ID")
 
   qa_notes_col <- "qa_notes"
@@ -131,7 +131,7 @@ model_discordant <- filter_table(models,
 )
 
 
-if (pathogen %in% c('LASSA', 'OROV',  "ZIKA", 'NIPAH')){
+if (pathogen %in% c('LASSA', 'OROV',  "ZIKA", 'NIPAH', 'RVF')) {
   outbreak_match <- filter_table(outbreaks,
                                   matching = TRUE,
                                   exlcude_cols=outbreak_exclude_cols
@@ -170,7 +170,7 @@ if (pathogen %in% c('EBOLA','SARS')) {
   file.create("outbreaks_fixing.csv")
 }
 
-if (pathogen %in% c('LASSA', 'OROV', "ZIKA", 'NIPAH')){
+if (pathogen %in% c('LASSA', 'OROV', "ZIKA", 'NIPAH', 'RVF')) {
   write_csv(outbreak_match, "outbreaks_matching.csv")
   write_csv(outbreak_discordant, "outbreaks_fixing.csv")
 }
