@@ -1,2 +1,0 @@
-tables: ["articles", "models", "params", "outbreaks"]
-recon: ["qa", "models", "params", "outbreaks"]
