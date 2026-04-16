@@ -5,10 +5,10 @@ library(orderly)
 library(yaml)
 
 # *------------------------------ Orderly config ------------------------------*
-orderly_parameters(pathogen = NULL)
+pars <- orderly_parameters(pathogen = NULL)
 
 config_filepath <- file.path("download_config",
-                             paste0(tolower(pathogen), "_config.yaml"))
+                             paste0(tolower(pars$pathogen), "_config.yaml"))
 
 orderly_resource(config_filepath)
 

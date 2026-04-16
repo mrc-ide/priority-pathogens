@@ -4,7 +4,10 @@
 
 library(orderly)
 orderly_strict_mode()
-orderly_parameters(pathogen = NULL)
+
+pars <- orderly_parameters(pathogen = NULL)
+pathogen <- toupper(pars$pathogen)
+
 orderly_artefact(
   description = "Double extraction matches and mismatches as csv files",
   files = c(

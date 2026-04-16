@@ -3,9 +3,9 @@ library(orderly)
 library(readr)
 library(stringr)
 
-orderly_parameters(pathogen = NULL, debug_mode=FALSE)
+pars <- orderly_parameters(pathogen = NULL, debug_mode=FALSE)
 
-pathogen_config_case <- tolower(pathogen)
+pathogen_config_case <- tolower(pars$pathogen)
 pathogen_config_filename <- file.path(
   pathogen_config_case, paste0(pathogen_config_case, "_cleaning_config.R"))
 pathogen_cleaning_filename <- file.path(

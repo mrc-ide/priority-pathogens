@@ -1,11 +1,11 @@
 library(orderly)
 
-orderly_parameters(pathogen = NULL,
+pars <- orderly_parameters(pathogen = NULL,
                    mode="",
                    orderly_download_dependency=FALSE)
 
-pathogen <- toupper(pathogen)
-mode <- toupper(mode)
+pathogen <- toupper(pars$pathogen)
+mode <- toupper(pars$mode)
 
 orderly_artefact(description="rds file with the processed tables",
                  "extracted_tables.rds")

@@ -2,11 +2,11 @@ library(orderly)
 
 orderly_strict_mode()
 
-orderly_parameters(pathogen = NULL,
+pars <- orderly_parameters(pathogen = NULL,
                    mode="")
 
-pathogen <- toupper(pathogen)
-mode <- toupper(mode)
+pathogen <- toupper(pars$pathogen)
+mode <- toupper(pars$mode)
 
 # Mode serves to overwrite the default pathogen method of extraction
 # E.g. if new EBOLA articles are extracted with redcap, mode can be used to

@@ -4,7 +4,7 @@ library(dplyr)
 library(orderly)
 library(readr)
 
-orderly_parameters(pathogen = NULL)
+pars <- orderly_parameters(pathogen = NULL)
 
 orderly_artefact(
   description = "Merged data as csv and errors as RDS",
