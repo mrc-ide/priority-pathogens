@@ -21,7 +21,7 @@ create_cleaning_table <- function(data_table, save_name, article_table){
 # *------------------------------ Orderly config ------------------------------*
 orderly_strict_mode()
 
-orderly_parameters(pathogen = NULL)
+pars <- orderly_parameters(pathogen = NULL)
 
 orderly_dependency(
   "db_cleaning",
@@ -428,6 +428,7 @@ for (i in 1:length(param_identifier)) {
 }
 
 # Dates
+
 parameters <- parameters |>
   mutate(population_study_start_day = as.numeric(gsub("x+", "", population_study_start_day)),
          population_study_start_month = as.numeric(gsub("x+", "", population_study_start_month)),
