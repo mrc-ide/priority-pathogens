@@ -116,6 +116,33 @@ parameters <- parameters %>% mutate(
 # write.csv(x = outbreaks,file = "outputs/outbreaks.csv",row.names=FALSE)
 # write.csv(parameters,"outputs/parameters.csv",row.names=FALSE)
 
+# map population_group and parameter_value_type values
+parameters <- parameters |>
+  mutate(
+    population_group = case_when(
+      population_group == "Central - unspecified" ~ "Unspecified",
+      population_group == "NA" ~ "Unspecified",
+      .default = population_group
+    ),
+    parameter_value_type = case_when(
+      parameter_value_type == "NA" ~ "Unspecified",
+      .default = parameter_value_type
+    )
+  )
+
+# rename columns to match naming convention expected by orov_functions.R
+parameters <- parameters |>
+  rename(
+    parameter_uncertainty_single_type = parameter_uncertainty_singe_type,
+    parameter_2_value = parameter_value_2,
+    parameter_2_lower_bound = parameter_range_low_2,
+    parameter_2_upper_bound = parameter_range_upper_2,
+    parameter_2_uncertainty_lower_value = parameter_unc_pair_value_low_2,
+    parameter_2_uncertainty_upper_value = parameter_unc_pair_value_up_2,
+    parameter_2_uncertainty_single_value = parameter_unc_single_value_2,
+    parameter_2_value_type = parameter_value_type_2
+  )
+
 write_csv(articles, "articles.csv")
 write_csv(outbreaks, "outbreaks.csv")
 write_csv(parameters, "parameters.csv")
