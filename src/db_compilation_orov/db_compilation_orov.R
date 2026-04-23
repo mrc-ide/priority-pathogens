@@ -67,9 +67,9 @@ articles <- articles %>%
       select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
       na.rm = TRUE
     ),
-    article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
+    qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
   ) %>%
-select(-c(total_qa, yes_score))
+  select(-c(total_qa, yes_score))
 
 # fix article labels
 length(which(is.na(articles$article_label)))
