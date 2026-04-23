@@ -72,6 +72,15 @@ articles <- articles %>%
   select(-c(total_qa, yes_score))
 
 # fix article labels
+articles <- articles |> rename(first_author_surname = first_aauthor_surname)
+articles$first_author_surname[
+  articles$first_author_surname == "PINHEIRO"
+] <- "Pinheiro"
+
+articles$article_label <- paste(
+  articles$first_aauthor_surname,
+  articles$year_publication
+)
 length(which(is.na(articles$article_label)))
 
 # add this into parameters and outbreaks 
