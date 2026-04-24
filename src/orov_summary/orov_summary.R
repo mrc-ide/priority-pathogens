@@ -12,7 +12,7 @@ orderly2::orderly_artefact(description = "inputs folder",
 
 # did not like latest(parameter:pathogen == this:pathogen) - fix in future - seems to have resolved itself for now...
 orderly_dependency(
-  name = "db_compilation",
+  name = "db_compilation_orov",
   query = "latest(parameter:pathogen == this:pathogen)",
   files = c("inputs/articles.csv"="articles.csv",
             "inputs/parameters.csv"="parameters.csv",
@@ -68,6 +68,12 @@ parameters %>% group_by(parameter_type_broad,parameter_context_human) %>%
 articles %>% group_by(article_preprint) %>% summarise(length(article_preprint))
 #articles %>% filter(is.na(article_preprint))
 
+# how many since 2020
+articles %>% filter(year_publication>=2020) %>% nrow()
+
+# how many case reports
+outbreaks %>% filter(outbreak_case_report=="Yes") %>% nrow()
+
 ## look at QA scores
 ggplot(articles,
        aes(x=year_publication,y=article_qa_score))+
@@ -87,7 +93,7 @@ articles %>% summarise(mean = mean(article_qa_score))
 
 articles %>% mutate(post_2020 = ifelse(year_publication>=2020,1,0)) %>%
   group_by(post_2020) %>% 
-  summarise(mean = mean(article_qa_score))
+  summarise(mean = mean(article_qa_score,na.rm=TRUE))
 
 wilcox.test(
   x = articles %>% filter(year_publication < 2020) %>% 
