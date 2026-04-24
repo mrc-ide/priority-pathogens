@@ -14,7 +14,7 @@ orderly2::orderly_artefact(description = "inputs folder",
 
 # did not like latest(parameter:pathogen == this:pathogen) - fix in future - seems to have resolved itself for now...
 orderly_dependency(
-  name = "db_compilation",
+  name = "db_compilation_orov",
   query = "latest(parameter:pathogen == this:pathogen)",
   files = c("inputs/articles.csv"="articles.csv",
             "inputs/parameters.csv"="parameters.csv",
@@ -45,8 +45,12 @@ parameters <- read.csv("inputs/parameters.csv")
 # 
 # delays_cleaned$parameters %>% filter(article_label=="Barbiero 2025")
 
+# ## need to sort and reclean
+# delays <- parameters %>% filter(parameter_type_broad=="Delays")
+# write.csv(delays,"delays_reextraction.csv",row.names = FALSE)
 
 # ## human delays
+## this needs to be updated to account for variability/uncertainty 
 delays <- parameters %>% filter(parameter_type_broad=="Delays") %>%
   select(covidence_id,parameter_type,parameter_value,
          parameter_lower_bound,parameter_upper_bound,
@@ -76,6 +80,8 @@ delays <- parameters %>% filter(parameter_type_broad=="Delays") %>%
     parameter_type!="Human delay - other human delay (go to section)" ~ parameter_type
   )
 )
+
+delays %>% filter(population_sample_size==1) %>% nrow()
 
 # delays %>% select(parameter_type,parameter_hd_from,parameter_hd_to,delay_label) %>% View()
 # 
