@@ -47,4 +47,6 @@ orderly_run("db_compilation",list(pathogen="OROV"))
 
 
 
+orderly_run("db_compilation_orov")
 
+orderly_run("orov_transmission")
