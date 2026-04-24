@@ -72,7 +72,7 @@ articles <- articles %>%
 select(-c(total_qa, yes_score))
 
 # fix article labels
-length(which(is.na(articles$article_label)))
+#length(which(is.na(articles$article_label)))
 
 # add this into parameters and outbreaks 
 qa_scores_and_labels <- articles %>% select(covidence_id,article_label,article_qa_score)
