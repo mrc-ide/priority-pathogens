@@ -19,7 +19,9 @@ orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "outbreaks.csv", "models.csv", "params.csv"))
 
 orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
-orderly_shared_resource("cleaned_outbreak_data.RDS"="cleaned_outbreak_data.RDS")
+orderly_dependency("nipah_deduplicate_outbreaks",
+                   "latest",
+                   "cleaned_outbreak_data.RDS")
 
 source("nipah_functions.R")
 
@@ -163,10 +165,73 @@ ggsave(file.path("figures",
                  "CFR_extracted_outbreak_country_ind_locs_study.pdf"),
        cfr_outbreak_country_study_plot,width = 5, height = 6.5)
 
-# --------------- REDUCED
+# As reported
+cfr_from_outbreaks_as_reported <- cfr_from_outbreaks |>
+  group_by(access_outbreak_id, outbreak_country, article_refs, parameter_unit) |>
+  summarise(cfr_ifr_denominator=sum(total_cases),
+            cfr_ifr_numerator=sum(deaths),
+            parameter_value=cfr_ifr_numerator/cfr_ifr_denominator,
+            outbreak_location=paste(outbreak_location, collapse=","),
+            outbreak_start_year=unique(outbreak_start_year)) |>
+  rename(refs=article_refs)
+
+# Plots
+# By country
+cfr_outbreak_country_as_reported <- metaprop_wrap(
+  cfr_from_outbreaks_as_reported, subgroup = "outbreak_country",
+  plot_pooled = TRUE, sort_by_subg = TRUE, plot_study = TRUE,
+  digits = meta_digits, colour = diamond_colour, colour_square = square_colour,
+  width = 11000, height = 11000, resolution = 1000)
+
+ggsave(file.path("figures",
+                 "CFR_extracted_outbreak_country_reduced_study_as_reported.pdf"),
+       cfr_outbreak_country_as_reported$plot, width = 11, height = 11)
+
+# REDUCED by outbreak_country, outbreak_start_year, parameter_unit, article_refs
+cfr_from_outbreaks_reduced <- cfr_from_outbreaks |>
+  group_by(outbreak_country, outbreak_start_year,
+           parameter_unit, article_refs) |>
+  summarise(cfr_ifr_denominator=sum(total_cases),
+            cfr_ifr_numerator=sum(deaths),
+            parameter_value=cfr_ifr_numerator/cfr_ifr_denominator,
+            outbreak_location=paste(outbreak_location, collapse=","),
+            outbreak_start_year=unique(outbreak_start_year)) |>
+  mutate(outbreak_period = case_when(
+    outbreak_start_year %in% 1990:1999 ~ "1998-2000",
+    outbreak_start_year %in% 2001:2005 ~ "2001-2005",
+    outbreak_start_year %in% 2006:2010 ~ "2006-2010",
+    outbreak_start_year %in% 2011:2015 ~ "2011-2015",
+    outbreak_start_year %in% 2016:2020 ~ "2016-2020",
+    outbreak_start_year %in% 2021:2029 ~ "2021-Present",
+    TRUE ~ "Unspecified"),
+    outbreak_size = case_when(
+    cfr_ifr_denominator %in% 1:9      ~ "Reported Cases < 10",
+    cfr_ifr_denominator %in% 10:19      ~ "Reported Cases = 10-19",
+    cfr_ifr_denominator %in% 20:49      ~ "Reported Cases = 20-49",
+    cfr_ifr_denominator %in% 50:99     ~ "Reported Cases = 50-99",
+    cfr_ifr_denominator %in% 100:329   ~ "Reported Cases = 100-329",
+    TRUE ~ "Unspecified"),
+    outbreak_size=factor(outbreak_size,
+                         levels=c("Reported Cases < 10",
+                                  "Reported Cases = 10-19",
+                                  "Reported Cases = 20-49",
+                                  "Reported Cases = 50-99",
+                                  "Reported Cases = 100-329")),
+    refs=article_refs)
+
+# Plots
+# By country
+cfr_outbreak_country <- metaprop_wrap(
+  cfr_from_outbreaks_reduced, subgroup = "outbreak_country", plot_pooled = TRUE,
+  sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+  colour = diamond_colour, colour_square = square_colour,
+  width = 11000, height = 11000, resolution = 1000)
+
+ggsave(file.path("figures",
+                 "CFR_extracted_outbreak_country_reduced_study.pdf"),
+       cfr_outbreak_country$plot, width = 11, height = 11)
 # Issue with rounding....
 # Create a new dataframe of outbreak by country by year
-
 # Overall
 cfr_from_outbreaks_reduced <- cfr_from_outbreaks |>
   group_by(outbreak_country, outbreak_start_year, parameter_unit, article_refs) |>
@@ -205,33 +270,6 @@ cfr_outbreak_country <- metaprop_wrap(
   sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
   colour = diamond_colour, colour_square = square_colour,
   width = 11000, height = 11000, resolution = 1000)
-
-
-forest(
-  cfr_outbreak_country$result, layout = "Revman5",
-  leftcols = c("studlab", "event", "n", "effect.ci"),
-  leftlabs = c("Study", "Events", "Total",
-               "GLMM, Fixed + Random, 95% CI"),
-  just.addcols = "left",
-  colgap.forest.left = "3mm",
-  overall = TRUE,
-  pooled.events = TRUE,
-  print.subgroup.name = FALSE, sort.subgroup = TRUE,
-  study.results = TRUE,
-  digits = 3,
-  col.diamond.lines = "black",
-  col.diamond.common = diamond_colour,
-  col.diamond.random = diamond_colour,
-  col.square = square_colour, col.square.lines = "black",
-  col.study = "black", col.subgroup = "black",
-  col.inside = "black", weight.study = "same",
-  at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio",
-  fs.predict.labels = 11.5,
-  fs.hetstat=11,
-  fs.test.subgroup = 11,
-  fs.axis = 11,
-  fontsize = 14,
-  plotwidth = "72.5mm")
 
 ggsave(file.path("figures",
                  "CFR_extracted_outbreak_country_reduced_study.pdf"),
@@ -384,11 +422,14 @@ cfr_from_outbreaks |>
   filter(outbreak_country=="India") |>
   select(outbreak_start_year, CFR, outbreak_location,
          cfr_ifr_numerator, cfr_ifr_denominator) |>
-  mutate(outbreak_location=case_when(outbreak_location=="Kozhikode"~"Kerala",
-                                     outbreak_location=="Siliguri"~"West Bengal",
-                                     TRUE~outbreak_location)) |>
+  mutate(outbreak_location=case_when(
+    outbreak_location=="Kozhikode"~"Kerala",
+    outbreak_location=="Siliguri"~"West Bengal",
+    outbreak_location == "Darjeeling" ~ "West Bengal",
+    TRUE~outbreak_location)) |>
   group_by(outbreak_location) |>
-  summarise(cfr=mean(CFR))
+  summarise(cfr=mean(CFR)) |>
+  print()
 
 cfr_from_outbreaks |>
   filter(outbreak_country == "India") |>
@@ -397,6 +438,7 @@ cfr_from_outbreaks |>
   mutate(outbreak_location = case_when(
     outbreak_location == "Kozhikode" ~ "Kerala",
     outbreak_location == "Siliguri" ~ "West Bengal",
+    outbreak_location == "Darjeeling" ~ "West Bengal",
     TRUE ~ outbreak_location
   )) |>
   group_by(outbreak_location) |>
@@ -406,13 +448,15 @@ cfr_from_outbreaks |>
     cfr = cfr_ifr_numerator / cfr_ifr_denominator,
     ci_low = binom.test(cfr_ifr_numerator, cfr_ifr_denominator)$conf.int[1],
     ci_high = binom.test(cfr_ifr_numerator, cfr_ifr_denominator)$conf.int[2]
-  )
+  ) |>
+  print()
 
 exploratory_plot_1 <- cfr_from_outbreaks |>
   select(outbreak_start_year, CFR, outbreak_location, outbreak_country,
          cfr_ifr_numerator, cfr_ifr_denominator) |>
   mutate(outbreak_location=case_when(outbreak_location=="Kozhikode"~"Kerala",
                                      outbreak_location=="Siliguri"~"West Bengal",
+                                     outbreak_location == "Darjeeling" ~ "West Bengal",
                                      TRUE~outbreak_location)) |>
   group_by(outbreak_country, outbreak_start_year) |>
   summarise(cfr=sum(cfr_ifr_numerator)/sum(cfr_ifr_denominator)) |>
@@ -428,10 +472,13 @@ exploratory_plot_2 <- cfr_from_outbreaks |>
   summarise(cfr=mean(CFR),
             cfr_ifr_denominator=sum(cfr_ifr_denominator, na.rm=T),
             cfr_ifr_numerator=sum(cfr_ifr_numerator, na.rm=T)) |>
-  ggplot(aes(x=outbreak_start_year, y=cfr_ifr_denominator, color=outbreak_country)) +
-  geom_point() + geom_line() + labs(x="Outbreak year", y="Cases",
-                                    title="Number of cases by country based on deduplicated outbreaks",
-                                    subtitle="Dashed line=30 case") +
+  ggplot(aes(x=outbreak_start_year, y=cfr_ifr_denominator,
+             color=outbreak_country)) +
+  geom_point() +
+  geom_line() +
+  labs(x="Outbreak year", y="Cases",
+       title="Number of cases by country based on deduplicated outbreaks",
+       subtitle="Dashed line=30 case") +
   geom_hline(aes(yintercept=30), linetype="dashed") +
   theme_bw()
 # -----------------------------------------------------------------------------#
