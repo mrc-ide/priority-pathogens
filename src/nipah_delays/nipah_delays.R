@@ -18,8 +18,8 @@ orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
 source("nipah_functions.R")
 
 orderly_artefact(description="Nipah delay figures",
-                 c("figure_5_delays.pdf",
-                   "figure_5_delays.png"))
+                 c("figure_4_delays.pdf",
+                   "figure_4_delays.png"))
 
 # *------------------------------ Data curation -------------------------------*
 articles   <- read_csv("articles.csv")
