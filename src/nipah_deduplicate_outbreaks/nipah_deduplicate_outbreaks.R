@@ -105,7 +105,8 @@ subcolumns_outbreak <- outbreaks %>%
   dplyr::select(outbreak_country, outbreak_location, outbreak_source,
                 cases_confirmed, cases_suspected, cases_asymptomatic,
                 cases_unspecified, outbreak_probable, deaths,
-                outbreak_start_month, outbreak_start_year, refs) %>%
+                outbreak_start_month, outbreak_start_year, access_outbreak_id,
+                refs) %>%
   mutate(cases_confirmed_raw = cases_confirmed) %>%
   mutate(cases_confirmed = coalesce(cases_confirmed, cases_suspected)) %>% # only use cases suspected if we don't have confirmed cases
   mutate(cases_confirmed = case_when(
