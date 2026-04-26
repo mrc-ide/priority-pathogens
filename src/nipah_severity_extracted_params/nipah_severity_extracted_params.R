@@ -45,8 +45,6 @@ outbreaks <- dfs$outbreaks |>
 parameters <- dfs$parameters |>
   left_join(qa_scores)
 
-subcolumns_outbreak <- readRDS("cleaned_outbreak_data.RDS")
-
 # *----------------------------- Data preparation -----------------------------*
 # Extracted CFRs parameters
 d1 <- parameters |>
