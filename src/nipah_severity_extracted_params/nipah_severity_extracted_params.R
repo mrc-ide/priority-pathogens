@@ -20,7 +20,6 @@ orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
 
 orderly_shared_resource("nipah_functions.R" = "nipah_functions.R")
 orderly_shared_resource("NIPAH_Bangladesh_IEDCR.csv"="NIPAH_Bangladesh_IEDCR.csv")
-orderly_shared_resource("cleaned_outbreak_data.RDS"="cleaned_outbreak_data.RDS")
 
 source("nipah_functions.R")
 
