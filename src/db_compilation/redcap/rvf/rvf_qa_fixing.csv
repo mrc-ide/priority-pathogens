@@ -1,0 +1,40 @@
+fixed,only_notes_mismatch,Covidence_ID,Name_data_entry,QA_M1,QA_M2,QA_A3,QA_A4,QA_D5,QA_D6,QA_D7,qa_notes,num_rows,matching
+1,FALSE,59,Gemma Nedjati-Gilani,Yes,No,Not Applicable,Not Applicable,No,Yes,No,Test used is named and cited but sampling is not random and not well described.,1,0
+1,FALSE,138,Alba Halliday,Yes,Yes,Not Applicable,Not Applicable,Yes,No,No,NA,1,0
+1,FALSE,279,Alba Halliday,Yes,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,FALSE,331,Alba Halliday,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,FALSE,345,Amy Dighe,Yes,No,Not Applicable,Not Applicable,Yes,No,No,Serological cut-offs are not validated and cross-reactivity across RVF and other similar viruses is discussed - unclear how many seropositives are due to RVF specifically.,1,0
+1,FALSE,356,Gemma Nedjati-Gilani,Yes,No,Not Applicable,Not Applicable,No,No,No,No information on sample given,1,0
+1,FALSE,375,Patrick Doohan,No,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,TRUE,503,Anna Vicco,Yes,Yes,Yes,Yes,Yes,Yes,Yes,the same analysis has been performed in homesteads and in slaughterhouses,1,0
+1,FALSE,678,Christian Morgenstern,Yes,Yes,Not Applicable,Not Applicable,Yes,No,No,NA,1,0
+1,FALSE,708,Gina Cuomo-Dannenburg,Yes,No,Yes,No,Not Applicable,Not Applicable,Not Applicable,"Fully theoretical model. The full equations are given and the parameters describe and references to the source of the parameters given, but no model fitting procedure is undertaken.",1,0
+1,FALSE,726,Amy Dighe,Yes,No,Not Applicable,Not Applicable,No,No,No,"Since it is written in the form of a short report, details of cut-offs chosen for positivity and any controls used are not provided so not possible to assess their assumptions.",1,0
+1,FALSE,753,Gemma Nedjati-Gilani,Yes,No,Not Applicable,Not Applicable,Yes,Yes,No,"Very old paper, so slightly hard to judge it by the criteria I would expect of a paper published in the last 5 years or so",1,0
+1,FALSE,845,Kelly McCain,Yes,Yes,Yes,Yes,Yes,Yes,No,NA,1,0
+1,FALSE,959,Thomas Rawson,Yes,Yes,Yes,Yes,No,Yes,No,NA,1,0
+1,FALSE,982,Nora Schmit,Yes,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,FALSE,1032,Amy Dighe,Yes,No,Not Applicable,Not Applicable,No,Yes,No,Unclear what cutoffs were used to determine RVF reactivity and whether these were justified based on controls etc.,1,0
+1,FALSE,1043,Gemma Nedjati-Gilani,No,Yes,No,Yes,Not Applicable,Not Applicable,Not Applicable,Model equations are provided but the code is not. I have marked it as not being reproducible because I don't think the description of how they constructed the network is very clear.,1,0
+1,FALSE,1111,Julia Halder,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,Yes,NA,1,0
+1,FALSE,1146,Ruth McCabe,Yes,Yes,Yes,No,Yes,No,No,NA,1,0
+1,FALSE,1156,sangeeta bhatia,Yes,No,Not Applicable,Not Applicable,Yes,No,No,Statistical model not specified; adjustments not clear; descriptive data missing,1,0
+1,FALSE,1162,sangeeta,Yes,Yes,Yes,Yes,Yes,Yes,No,NA,1,0
+1,FALSE,1165,Julia Halder,Yes,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,FALSE,1168,Kieran Chopra,Yes,Yes,Yes,Yes,Yes,Not Applicable,Not Applicable,"Nice idea, OKish execution",1,0
+1,FALSE,1184,Yiran Wang,Yes,No,Not Applicable,Not Applicable,No,No,No,"no report of seroprevalence value (only nominator and denominator), no uncertainty, no description of sample, no discussion of potential limitations",1,0
+1,FALSE,1204,Yiran Wang,Yes,Yes,Not Applicable,Not Applicable,Yes,No,No,NA,1,0
+1,FALSE,1230,Yiran Wang,No,Yes,Yes,Yes,Yes,No,No,"no code, no prior, Bayesian phylogenetic approaches, no quality check for public data",1,0
+1,FALSE,1381,Ruth McCabe,Yes,No,Yes,No,Yes,Yes,No,NA,1,0
+1,FALSE,1389,Ruth McCabe,Yes,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,FALSE,1424,Joseph Hicks,No,No,Not Applicable,Not Applicable,No,No,No,NA,1,0
+1,FALSE,1464,Kieran Chopra,Yes,No,Yes,Yes,Yes,Yes,No,fairly nice paper. not sure if relevant to anything we care about.,1,1
+1,FALSE,1496,Julia Halder,Yes,No,No,No,Yes,No,No,There is detail about the case finding and definition but nothing about limitations or biases.,1,0
+1,FALSE,666,Rhys Earl,Yes,Yes,Not Applicable,Yes,Yes,Yes,Yes,NA,1,0
+1,FALSE,906,Kelly McCain,Yes,Yes,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,FALSE,1190,Yiran Wang,No,No,Yes,Yes,Not Applicable,Not Applicable,Not Applicable,"code not provided, equations provided, parameters sourced from literatures.",1,0
+1,FALSE,1397,Anna Vicco,Yes,No,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,FALSE,10,Alba Halliday,Yes,No,Not Applicable,Not Applicable,Yes,Yes,No,NA,1,0
+1,FALSE,741,Joseph Hicks,Yes,No,Yes,Yes,Yes,Yes,Yes,NA,1,0
+1,FALSE,1038,Anna-Maria Hartner,No,No,No,No,Yes,No,No,NA,1,0
+1,FALSE,1157,sangeeta,Yes,Yes,Yes,Yes,Yes,Yes,Yes,NA,1,0
