@@ -23,6 +23,7 @@ orderly_artefact(description="Nipah delay figures",
                    "p3_outcomes.pdf",
                    "mers_delays.pdf",
                    "p1_incubation_period.png",
+                   "incubation_period_df.rds",
                    "p2_time_in_care.png",
                    "p3_outcomes.png",
                    "mers_delays.png"))
@@ -259,6 +260,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
           linetype = guide_legend(title = "", order = 2)
         )
 
+      saveRDS(d1, "incubation_period_df.rds")
       ggsave("p1_incubation_period.pdf",
              plot = p1_incb,
              width = 11, height = 9)
