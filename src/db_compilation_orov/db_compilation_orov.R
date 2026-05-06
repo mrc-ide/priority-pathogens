@@ -13,7 +13,7 @@ orderly_parameters(pathogen = "OROV")
 
 orderly_resource(
   c(## data files
-    "inputs/articles_orov.csv",
+    "inputs/articles_orov.xlsx",
     "inputs/outbreaks_orov.xlsx",
     "inputs/parameters_orov.xlsx"
   )
@@ -28,7 +28,7 @@ orderly_artefact(
   ))
 
 ## read in the data 
-articles <- read.csv("inputs/articles_orov.csv")
+articles <- readxl::read_excel("inputs/articles_orov.xlsx")
 outbreaks <- readxl::read_excel("inputs/outbreaks_orov.xlsx")
 parameters <- readxl::read_excel("inputs/parameters_orov.xlsx")
 ## placeholder for genomics 
@@ -79,7 +79,7 @@ articles$first_author_surname[
 ] <- "Pinheiro"
 
 articles$article_label <- paste(
-  articles$first_aauthor_surname,
+  articles$first_author_surname,
   articles$year_publication
 )
 length(which(is.na(articles$article_label)))
