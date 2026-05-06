@@ -86,7 +86,7 @@ d1 <- d1 |> arrange(genome_site,central)
 d2 <- d2 |> arrange(genome_site, central)
 d3 <- d3 |> arrange(population_group, central)
 
-d4 <- d4 |>  arrange(population_group, central)
+d4 <- d4 |> arrange(population_group, central)
 d5 <- d5 |> arrange(population_group, central)
 d6 <- d6 |> arrange(population_group, central)
 
@@ -153,6 +153,22 @@ p2 <- forest_plot(filter(d2, qa_score >= 0.5),
                          text_size=text_size) +
   guides(color = guide_legend(title = "Gene", order = 1))
 
+#Combine both genomic plots together
+d1_and_d2 <- rbind(d1,d2)
+d1_and_d2 <- filter(d1_and_d2, qa_score >= 0.5)
+d1_and_d2 <- d1_and_d2 |>
+  mutate(parameter_type = str_remove(parameter_type, "Mutations - ") |>
+           str_to_sentence())
+
+
+p1_and_p2 <- forest_plot(d1_and_d2,
+                         expression(Mutation~Rate~(s/s/y ~10^{-4})),
+                         custom_colours = c("#CBCE91", "#d3687f"),
+                         "parameter_type",c(-0.01,15),
+                         text_size=text_size) +
+  guides(color = guide_legend(title = "Mutation Rate", order = 1),
+         linetype = "none",
+         shape = "none")
 ## Overdispersion
 # access_id 064_004 has an upper limit of infinity, having checked the original paper, better to just remove it:
 d3 <- d3 |>
@@ -203,7 +219,10 @@ p3 <- forest_plot(filter(d3, qa_score >= 0.5),
         "Persons under\ninvestigation"
       x
     }
-  )
+  ) +
+  guides(color = "none",
+         linetype = "none",
+         shape = "none")
 
 # Attack Rate
 #############
@@ -241,7 +260,10 @@ p4 <- forest_plot(filter(d4, qa_score >= 0.5),
         "Persons under\ninvestigation"
       x
     }
-  )
+  ) +
+  guides(color = "none",
+         linetype = "none",
+         shape = "none")
 
 # Reproduction Number
 ####################
@@ -276,28 +298,64 @@ p5 <- forest_plot(filter(d5, qa_score >= 0.5),'Reproduction Number',"population_
     }
   )
 
-# Symptomatic Proportion
-#########################
+#Separate Re and R0
+d5_basic <- filter(d5, parameter_type %in% c("Reproduction number (Basic R0)" ,
+                                             "Reproduction number (Basic R0) - Human"))
+d5_effective <- filter(d5, parameter_type %in% c("Reproduction number (Effective, Re)" ,
+                                                 "Reproduction number (Effective, Re) - Human"))
+# Pull all population group colours
+all_pop_groups <- rbind(d1,d2,d3,d4,d5) |>
+  distinct(population_group) |>
+  arrange(population_group == "Other", population_group) |>
+  pull()
 
-unique(d6$parameter_unit[!is.na(d6$parameter_unit)])
-p6 <- forest_plot(d6,'Proportion of Symptomatic Cases (%)', "population_group",
-                  c(0, 110),
-                  text_size=text_size) +
-  scale_fill_lancet(
-    palette = "lanonc",
-    limits = full_levels,
-    breaks = full_levels[c(1,2,4)],
-    drop = TRUE
+lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
+names(custom_colour_pop_groups) <- all_pop_groups
+#Make "Other" the grey one
+custom_colour_pop_groups[7] <- "#ADB6B6FF"
+
+arrow_df <- data.frame(x = rep(8.9,2), xend = rep(9.9,2), y = c(1,13), yend = c(1,13),
+                       population_group = rep("Other",2)) |>
+  mutate(parameter_type=factor(population_group,
+                               levels=all_pop_groups))
+
+p5_basic <- forest_plot(
+  filter(d5_basic, qa_score >= 0.5), "Basic Reproduction Number","population_group",
+  c(-0.1,30), custom_colours = custom_colour_pop_groups,
+  text_size=text_size, sort=TRUE,
+  segment_show.legend = c(shape=FALSE, colour=TRUE)) +
+  scale_colour_manual(name = "Population group", values = custom_colour_pop_groups, drop = FALSE) +
+  geom_segment(
+    data = arrow_df,
+    aes(x = x, xend = xend, y = y, yend = yend, group=population_group),
+    arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
-  scale_color_lancet(
-    palette = "lanonc",
-    limits = full_levels,
-    breaks = full_levels[c(1,2,4)],
-    drop = TRUE
-  )
+  coord_cartesian(xlim = c(-0.1, 10)) +
+  guides(shape = "none",
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  guide_legend(title = "Population group", order=2))
 
-# Don't include this because we have to include the asymptomatics too which are in the _severity task
+arrow_df <- data.frame(x = rep(8.9,2), xend = rep(9.9,2), y = c(1,6), yend = c(1,6),
+                       population_group = rep("Other",2)) |>
+  mutate(parameter_type=factor(population_group,
+                               levels=all_pop_groups))
 
+p5_effective <- forest_plot(
+  filter(d5_effective, qa_score >= 0.5), "Effective Reproduction Number","population_group",
+  c(-0.1,30), custom_colours = custom_colour_pop_groups,
+  text_size=text_size, sort=TRUE) +
+  geom_segment(
+    data = arrow_df,
+    aes(x = x, xend = xend, y = y, yend = yend, group=population_group),
+    arrow = arrow(type = "open", length = unit(0.20, "cm")),
+  ) +
+  coord_cartesian(xlim = c(-0.1, 10)) +
+  guides(shape = guide_legend(title = "Parameter type", order=1),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  "none")
 # Secondary Attack Rate
 #######################
 
@@ -317,12 +375,17 @@ unique(d8$parameter_unit[!is.na(d8$parameter_unit)])
 
 
 # Save plots
-design <- "ACE
-BDE"
-patchwork_trans <- p3+p1+p4+p2+p5+plot_layout(design = design)
+design <- "AD
+AD
+BD
+BE
+CE
+CE"
+patchwork_trans <- p3+p4+p1_and_p2+p5_basic+p5_effective+plot_layout(design = design, guides = "collect")
 patchwork_trans <- patchwork_trans + plot_annotation(tag_levels = 'A')
-ggsave("figure_trans.png", plot = patchwork_trans, width = 20, height = 10)
-ggsave("figure_trans.pdf", plot = patchwork_trans, width = 20, height = 10)
+ggsave("figure_trans.png", plot = patchwork_trans, width = 14, height = 10)
+ggsave("figure_trans.pdf", plot = patchwork_trans, width = 14, height = 10)
+
 # *============================================================================*
 
 # Now we make some fancier R number plots
