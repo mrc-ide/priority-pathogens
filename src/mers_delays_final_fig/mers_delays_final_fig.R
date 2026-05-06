@@ -21,11 +21,13 @@ orderly_artefact(description="Nipah delay figures",
                  c("p1_incubation_period.pdf",
                    "p2_time_in_care.pdf",
                    "p3_outcomes.pdf",
+                   "p4_outcomes.pdf",
                    "mers_delays.pdf",
                    "p1_incubation_period.png",
                    "incubation_period_df.rds",
                    "p2_time_in_care.png",
                    "p3_outcomes.png",
+                   "p4_outcomes.png",
                    "mers_delays.png"))
 
 # *------------------------------ Data curation -------------------------------*
@@ -63,6 +65,9 @@ parameters[parameters$access_param_id=="271_001",
 #It's a decent study, but never explicity SAYS "Days"
 parameters[parameters$access_param_id=="032_001",
            "parameter_unit"] <- "Days"
+
+#255_014 lists a delay of -5.9 days. Paper seems to corroborate. It might be a typo, but let's remove it:
+parameters <- filter(parameters, access_param_id != "255_014")
 
 #261-001 extracts it's units as "Months", but it is also an "Other" delay, so look at this later
 #(It's high QA)
@@ -153,7 +158,9 @@ parameters <- parameters |>
   mutate(population_country=ifelse(population_country=="United Arab Emirates",
                                    "Other (Middle East)", population_country)) |>
   mutate(population_country=ifelse(population_country=="Republic of Korea; Saudi Arabia",
-                                   "Other", population_country))
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(!is.na(population_location) & population_location=="Global linelist",
+                                   "Global linelist", population_country))
 
 # Incubation period
 d1 <- parameters %>% filter(tolower(parameter_type) == 'incubation period')  #26
@@ -238,9 +245,14 @@ all_country_groups <- bind_rows(d1, d6) |>
   distinct(population_country) |>
   arrange(population_country) |>
   pull()
+#Change order:
+all_country_groups2 <- c(all_country_groups[2:4], all_country_groups[1])
 
-country_colours <- lanonc_colours[seq_along(all_country_groups)]
-country_colours <- setNames(country_colours, all_country_groups)
+country_colours <- lanonc_colours[seq_along(all_country_groups2)]
+country_colours <- setNames(country_colours, all_country_groups2)
+
+d1$population_country <- factor(d1$population_country,
+                     levels = all_country_groups)
 
 # Convert population_country to factor with ALL levels in both datasets
 d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_country_groups))
@@ -332,22 +344,31 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                                      levels=c("Admission", "Severe illness",
                                               "Death", "Discharge/recovery")))
 
+      arrow_df_1 <- data.frame(x = rep(14.5,2), xend = rep(14.9,2), y = c(1,17), yend = c(1,17),
+                             parameter_type = rep("Discharge/recovery",2)) |>
+        mutate(parameter_type=factor(parameter_type,
+                                     levels=c("Admission", "Severe illness",
+                                              "Death", "Discharge/recovery")))
+
       p3_outcomes <- forest_plot(
         d6 |> filter(qa_score>= 0.5) |>
           #REMOVE THIS TO GO BACK TO ORIGINAL
-          filter(parameter_type %in% c("Onset>admission",
-                                       "Onset>severe illness",
-                                       "Onset>recovery/death",
-                                       "Onset>discharge/recovery")),
-        'Symptom onset-to-outcome (days)',
-        "parameter_type", xlim, text_size = text_size, sort=TRUE,
-        custom_colours = custom_colours) +
+          filter(parameter_type %in% c("Onset>admission")),#,
+                                       #"Onset>severe illness",
+                                       #"Onset>recovery/death",
+                                       #"Onset>discharge/recovery")),
+        #'Symptom onset-to-outcome (days)',
+        'Symptom onset-to-hospital admission (days)',
+        #"parameter_type",
+        "population_country",
+        xlim, text_size = text_size, sort=TRUE,
+        custom_colours = country_colours) +#custom_colours) +
         geom_segment(
-          data = arrow_df,
+          data = arrow_df_1,
           aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
           arrow = arrow(type = "open", length = unit(0.20, "cm")),
         ) +
-        coord_cartesian(xlim = c(-0.5, 45))
+        coord_cartesian(xlim = c(-0.5, 15))
 
       ggsave("p3_outcomes.pdf",
              plot = p3_outcomes,
@@ -360,8 +381,38 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         p3_outcomes +
         guides(shape =  guide_none(),
                linetype = guide_none(),
-               color = guide_legend(title = "\nOutcome")) +
+               color = guide_none()) +
         theme(legend.position = c(0.85, 0.75))
+
+      ###
+      p4_outcomes <- forest_plot(
+        d6 |> filter(qa_score>= 0.5) |>
+          #REMOVE THIS TO GO BACK TO ORIGINAL
+          filter(parameter_type %in% c("Onset>discharge/recovery")),
+        'Symptom onset-to-discharge/recovery (days)',
+        "population_country", xlim, text_size = text_size, sort=TRUE,
+        custom_colours = country_colours) +
+        geom_segment(
+          data = arrow_df,
+          aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+          arrow = arrow(type = "open", length = unit(0.20, "cm")),
+        ) +
+        coord_cartesian(xlim = c(-0.5, 45))
+
+      ggsave("p4_outcomes.pdf",
+             plot = p4_outcomes,
+             width = 15, height = 17)
+      ggsave("p4_outcomes.png",
+             plot = p4_outcomes,
+             width = 15, height = 17)
+
+      p4_outcomes <-
+        p4_outcomes +
+        guides(shape =  guide_none(),
+               linetype = guide_none(),
+               color = guide_none()) +
+        theme(legend.position = c(0.85, 0.75))
+      ###
 
   common_left_legend <- theme(
     legend.position = "right",
@@ -392,12 +443,13 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
 
 
 
-# Stick all 3 together:
+# Stick all 4 together:
 
     delays_plot <-  (p1_incb /#+
-                       p2_time_in_care/
-      p3_outcomes) +
-      plot_layout(heights = c(1, 1, 1), #, widths = c(1, 1)
+      p3_outcomes /
+        p4_outcomes /
+        p2_time_in_care) +
+      plot_layout(heights = c(26, 24, 6, 26), #, widths = c(1, 1)
                   guides = "collect") +
       plot_annotation(tag_levels = 'A')
 
