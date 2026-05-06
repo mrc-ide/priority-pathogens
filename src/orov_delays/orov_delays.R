@@ -262,7 +262,7 @@ ggsave("test.png",width=30,height=20)
 
 
 ## for the analysis 
-
+d1$parameter_type
 
 
 
