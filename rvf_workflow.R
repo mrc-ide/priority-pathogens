@@ -64,6 +64,8 @@ orderly_run("rvf_transmission", list(pathogen="RVF"))
 orderly_run("rvf_delays", list(pathogen="RVF"))
 
 # Risk factor plots
+orderly_run("rvf_risk_factors", list(pathogen="RVF"))
+
 
 
 
