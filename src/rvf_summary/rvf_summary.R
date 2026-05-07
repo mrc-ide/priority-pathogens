@@ -103,8 +103,8 @@ p1 <- ggplot(data=articles, aes(x = year_publication)) +
   geom_col(stat="count", fill = colour_palette[4], color = "black", width=1) +
   scale_x_continuous(limits = c(min(articles$year_publication, na.rm = TRUE)-1,
                                 max(articles$year_publication, na.rm = TRUE)+1),
-                     breaks = seq(2000, 2025, by = 5), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0,50), expand = c(0, 0)) +
+                     breaks = seq(1950, 2025, by = 5), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0,20), expand = c(0, 0)) +
   theme_minimal() +
   theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA)) +
   labs(x = "Year of Publication", y = "Article Count")
@@ -115,7 +115,7 @@ p2 <- ggplot() +
   geom_histogram(data=quality, aes(x = score), binwidth = 10, boundary = 0,
                  fill = colour_palette[4], color = "black") +
   scale_x_continuous(limits = c(0,100), breaks = seq(0, 100, by = 10)) +
-  scale_y_continuous(limits = c(0,60), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0,50), expand = c(0, 0)) +
   theme_minimal() +
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA)) +
   labs(x = "Quality Assessment Score (%)", y = "Article Count")
@@ -131,7 +131,7 @@ p3 <- ggplot() +
   geom_smooth(data = subset(quality, category == "Modelling Studies"),
               aes(x=year_publication,y=score), span = 2,
               color = colour_palette[2], fill = colour_palette[2]) +
-  scale_x_continuous(limits = c(2012,2025), breaks = seq(2000, 2025, by=5), expand = c(0, 0)) +
+#  scale_x_continuous(limits = c(2012,2025), breaks = seq(2000, 2025, by=5), expand = c(0, 0)) +
   scale_y_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20)) +
   xlab("Year of Publication") + ylab("Quality Assessment Score (%)") +
   scale_color_manual(values = c("Non-Modelling Studies" = colour_palette[3],
@@ -146,7 +146,7 @@ p4 <- answers |>
   group_by(Question,Assessment) |> summarize(count=n()) |> ungroup() |>
   ggplot(aes(fill=Assessment, y=count, x=Question)) +
   geom_bar(position="stack", stat="identity" , color = "black") + theme_bw() +
-  scale_y_continuous(limits = c(0,290), breaks = seq(0,300,by=40), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0,200), breaks = seq(0,300,by=40), expand = c(0, 0)) +
   scale_fill_manual(values = c(colour_palette[3],
                                colour_palette[2],
                                colour_palette[11]),
@@ -219,7 +219,7 @@ models <- models |>
 p1 <- ggplot() +
   geom_bar(data = models, aes(x = model_type, fill = stoch_deter),
            color = "black") +
-  scale_y_continuous(limits = c(0,55), breaks = seq(0,40,by = 10),
+  scale_y_continuous(limits = c(0,20), breaks = seq(0,20,by = 5),
                      expand = c(0,0)) +
   xlab("Model Type") + ylab("Model Count") +
   scale_fill_manual(values = c("Deterministic model" = colour_palette[4],
@@ -253,7 +253,7 @@ p2 <- models |>
                "Both Human to human (direct contact) and Vector/Animal to human" = "Human \n(direct contact) & \nVector/Animal",
                "Human to human (direct contact)" = "Human \n(direct contact)",
                "Airborne or close contact" = 'Airbone or \n close contact')) +
-  scale_y_continuous(limits = c(0,45), breaks = seq(0,50,by = 5), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,20), breaks = seq(0,50,by = 5), expand = c(0,0)) +
   xlab("Transmission Route(s)") + ylab("Model Count") +
   scale_fill_manual(values=model_colour_pal, name = NULL) +
   theme_minimal() +
@@ -280,7 +280,7 @@ p3 <- models |>
                "Subgroup heterogeneous" = "Subgroup\nheterogeneous",
                "Human-to-animal & subgroup heterogeneous"="Human-to-animal\n& subgroup\nheterogeneous",
                "Multiple assumptions"= "Multiple\nassumptions")) +
-  scale_y_continuous(limits = c(0,45), breaks = seq(0,80,by = 5), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,12), breaks = seq(0,80,by = 5), expand = c(0,0)) +
   xlab("Model assumptions") + ylab("Model Count") +
   scale_fill_manual(values=model_colour_pal, name = NULL) +
   theme_minimal() +
@@ -300,7 +300,7 @@ p4 <- models |>
   ggplot(aes(x = compartmental_type,
              fill = model_type)) +
   geom_bar(color = "black") +
-  scale_y_continuous(limits = c(0,32), breaks = seq(0,35,by = 5),
+  scale_y_continuous(limits = c(0,12), breaks = seq(0,35,by = 5),
                      expand = c(0,0)) +
   xlab("Compartments") + ylab("Model Count") +
   scale_fill_manual(values=model_colour_pal, name = NULL) +
@@ -315,7 +315,7 @@ p5 <- models |>
   geom_bar(color = "black") +
   scale_x_discrete(labels = c("No" = "Fitted to Data",
                               "Yes" = "Theoretical")) +
-  scale_y_continuous(limits = c(0,45), breaks = seq(0,45,by = 5),
+  scale_y_continuous(limits = c(0,14), breaks = seq(0,45,by = 5),
                      expand = c(0,0)) +
   xlab("Model Calibration") + ylab("Model Count") +
   scale_fill_manual(values=model_colour_pal, name = NULL) +
@@ -346,7 +346,7 @@ p6 <-  models |>
                               "Behaviour changes" = "Behaviour\nchanges",
                               "Contact tracing" = "Contact\ntracing",
                               "Other" = "Other")) +
-  scale_y_continuous(limits = c(0,50), breaks = seq(0,55,by = 5), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,14), breaks = seq(0,55,by = 5), expand = c(0,0)) +
   xlab("Interventions") + ylab("Model Count") +
   scale_fill_manual(values=model_colour_pal, name = NULL) +
   theme_minimal() +
@@ -463,7 +463,7 @@ p1 <- ggplot(data = parameters,
              aes(x = parameter_type, fill = parameter_class)) +
   geom_bar(color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_continuous(limits = c(0,330), breaks = seq(0,340,by = 10), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,230), breaks = seq(0,340,by = 10), expand = c(0,0)) +
   xlab("Parameter Type") +
   ylab("Parameter Count") +
   scale_fill_manual(values=param_colour_palette, name=NULL) +
@@ -482,7 +482,7 @@ p2 <- ggplot(data = parameters |>
              aes(x = fct_infreq(population_country), fill = parameter_class)) +
   geom_bar(color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_continuous(limits = c(0,640),
+  scale_y_continuous(limits = c(0,140),
                      breaks = seq(0,640,by = 40), expand = c(0,0)) +
   xlab("Study Country") + ylab("Parameter Count") +
   scale_fill_manual(values=param_colour_palette, name=NULL) +
@@ -496,7 +496,7 @@ p3 <- ggplot(data = parameters,
              aes(x = study_midyear_cat, fill = parameter_class)) +
   geom_bar(color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_continuous(limits = c(0,540), breaks = seq(0,740,by = 30),
+  scale_y_continuous(limits = c(0,130), breaks = seq(0,740,by = 30),
                      expand = c(0,0)) +
   xlab("Study Year") + ylab("Parameter Count") +
   scale_fill_manual(values=param_colour_palette, name=NULL) +
@@ -508,7 +508,7 @@ p3 <- ggplot(data = parameters,
 p4 <- ggplot() +
   geom_bar(data = parameters, aes(x = fct_infreq(population_sample_type), fill = parameter_class), color = "black") +
   scale_x_discrete(limits = rev) +
-  scale_y_continuous(limits = c(0,540), breaks = seq(0,640,by = 20), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,110), breaks = seq(0,640,by = 20), expand = c(0,0)) +
   xlab("Study Setting") + ylab("Parameter Count") +
   scale_fill_manual(values=param_colour_palette, name=NULL) +
   theme_minimal() +

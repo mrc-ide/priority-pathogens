@@ -51,15 +51,19 @@ orderly_run("rvf_latex_tables", list(pathogen="RVF"))
 
 
 # *---------------------------- Plots and analysis ----------------------------*
+# Summary plots 
+orderly_run("rvf_summary", list(pathogen="RVF"))
 
 # Serology plots
 orderly_run("rvf_serology", list(pathogen="RVF"))
 
-# current error - mismatch parameters?
+# Transmission (and severity) plots
 orderly_run("rvf_transmission", list(pathogen="RVF"))
 
+# Delay plots 
+orderly_run("rvf_delays", list(pathogen="RVF"))
 
-orderly_run("rvf_summary", list(pathogen="RVF"))
+# Risk factor plots
 
 
 

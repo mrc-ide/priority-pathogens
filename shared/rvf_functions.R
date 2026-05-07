@@ -186,7 +186,8 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
       theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))
   } else {
-    gg <- gg + scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+    gg <- gg + # scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+      # FIX? commented out to keep colours even if NA
       scale_shape_manual(name = "Parameter Type",
                          values = c(Mean = 21, Median = 22, Unspecified = 24,
                                     Other = 23, `Central - unspecified`=25),
