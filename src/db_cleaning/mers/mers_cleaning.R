@@ -109,6 +109,10 @@ param_cleaning <- function(df){
   df[(df$access_param_id == "229_003"),
      "genome_site"] <- "Unspecified"
 
+  #401_003 is strange, trying to capture a range of PRNT50 values,
+  #It shouldn't be extracted
+  df <- filter(df, access_param_id != "401_003")
+
   # 391_001 is serology of blood donors, but pop_group is currently NA
   df[(df$access_param_id == "391_001"),
      "population_group"] <- "General population"
