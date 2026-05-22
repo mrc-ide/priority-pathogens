@@ -8,11 +8,12 @@ library(readr)
 library(stringr)
 library(ggbreak)
 
+
 # *--------------------------------- Orderly ----------------------------------*
 pars <- orderly_parameters(pathogen = NULL)
 
 orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
-                   c("articles.csv", "models.csv", "params.csv"))
+                   c("articles.csv", "models.csv", "params.csv", "outbreaks.csv"))
 
 orderly_shared_resource("rvf_functions.R" = "rvf_functions.R")
 source("rvf_functions.R")
@@ -22,10 +23,9 @@ orderly_artefact(description="RVF delay figures",
                    "figure_delays.png"))
 
 
-
 # *------------------------------ Data curation -------------------------------*
 articles   <- read_csv("articles.csv")
-outbreaks  <- tibble()
+outbreaks  <- read_csv("outbreaks.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("params.csv")
 
@@ -61,11 +61,14 @@ all_delay_types <- c("Incubation period", #0
                      "Admission to care>death", #1
                      "Symptom onset>discharge/recovery", #1
                      "Admission to care>discharge/recovery", #0
+                     "Symptom onset/fever>discharge or death", #2
                      "Infectious period" #None
 )
 parameters <- parameters |>
   filter(parameter_type %in% all_delay_types)
 parameters_qa <- filter(parameters, qa_score >= 0.5)
+
+
 # *--------------------------------- Summary ----------------------------------*
 num_delays <- NROW(parameters)
 
@@ -78,13 +81,7 @@ parameters |>
   arrange(desc(n)) |>
   print()
 
-#Extract start and end from "Other delays"
-parameters |>
-  filter(parameter_type == "Other human delay (go to section)") |>
-  select(parameter_type, other_delay_start, other_delay_end) |>
-  print()
-
-# rows with variability only
+# Rows with variability only
 varb_only_rows <- parameters |>
   filter(is.na(parameter_value) &
            is.na(parameter_lower_bound) &
@@ -96,13 +93,9 @@ varb_only_data <- filter(parameters, is.na(parameter_value) &
                            is.na(parameter_upper_bound))
 
 cat("Number of variability only rows:", varb_only_rows)
+
+
 # *------------------------------ Plot datasets -------------------------------*
-# Filter out the 4 variability only rows:
-#TODO: Return to this and think about maybe keeping
-# parameters <- parameters |>
-#   filter(!is.na(parameter_value) |
-#            !is.na(parameter_lower_bound) |
-#            !is.na(parameter_upper_bound))
 
 # Incubation period
 d1 <- parameters %>% filter(tolower(parameter_type) == 'incubation period')  
@@ -122,10 +115,18 @@ d4 <- parameters |>
     'symptom onset>discharge/recovery')
   )
 
+# Symptom-onset to death
 d5 <- parameters |>
   filter(tolower(parameter_type) %in% c(
     'symptom onset>death')
   )
+
+# Symptom Onset/Fever to Discharge or death
+d6 <- parameters |>
+  filter(tolower(parameter_type) %in% c(
+    'symptom onset/fever>discharge or death')
+  ) 
+
 
 # *---------------------------------- Plots -----------------------------------*
 lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
@@ -144,7 +145,8 @@ p1 <- forest_plot(d1,
                   "population_group", c(0,35),
                   text_size=text_size,
                   segment_show.legend = NA,
-                  sort=TRUE) 
+                  sort=TRUE,
+                  qa_alpha =0.3) 
 # Onset to care:
 d2$parameter_unit
 p2 <- forest_plot(d2,
@@ -152,7 +154,8 @@ p2 <- forest_plot(d2,
                   "population_group", c(0,35),
                   text_size=text_size,
                   segment_show.legend = NA,
-                  sort=TRUE)
+                  sort=TRUE,
+                  qa_alpha =0.3)
 
 # Admission to care>death:
 d3$parameter_unit <- "Needs checking" # needs updating
@@ -161,7 +164,8 @@ p3 <- forest_plot(d3,
                   "population_group", c(0,35),
                   text_size=text_size,
                   segment_show.legend = NA,
-                  sort=TRUE) 
+                  sort=TRUE,
+                  qa_alpha =0.3) 
 
 # Symptom onset>discharge/recovery:
 d4$parameter_unit
@@ -170,7 +174,8 @@ p4 <- forest_plot(d4,
                   "population_group", c(-5,130),
                   text_size=text_size,
                   segment_show.legend = NA,
-                  sort=TRUE) 
+                  sort=TRUE,
+                  qa_alpha =0.3) 
 
 # Symptom onset>death:
 d5$parameter_unit
@@ -179,11 +184,24 @@ p5 <- forest_plot(d5,
                   "population_group", c(0,35),
                   text_size=text_size,
                   segment_show.legend = NA,
-                  sort=TRUE) 
+                  sort=TRUE,
+                  qa_alpha =0.3) 
+
+# Symptom onset/fever > discharge or death:
+d6$parameter_unit
+p6 <- forest_plot(df=d6,
+                  label="Symptom onset > discharge or death",
+                  color_column = "population_group", 
+                  lims = c(-5,130),
+                  text_size=text_size,
+                  segment_show.legend = NA,
+                  sort=TRUE,
+                  qa_alpha =0.3) 
+
 
 
 # Save transmission plots
-patchwork_delays <- p1+p2+p3+p4+p5+plot_layout(ncol=1)
+patchwork_delays <- p1+p2+p3+p5+p6+p4+plot_layout(ncol=1)
 patchwork_delays <- patchwork_delays + plot_annotation(tag_levels = 'A')
 ggsave("figure_delays.png", plot = patchwork_delays, width = 10, height = 15)
 ggsave("figure_delays.pdf", plot = patchwork_delays, width = 10, height = 15)

@@ -69,16 +69,6 @@ d8 <- parameters |> filter(parameter_type == 'Relative contribution - zoonotic t
 # For numerator/denominator calculations use central value 
 d6 <- d6 |> mutate(parameter_value=ifelse(is.na(parameter_value)&!is.na(cfr_ifr_numerator),central,parameter_value)) 
 
-
-# article 643 notes say per 100,000 people so needs -5 exponent 
-d4$exponent[which(d4$article_id==643)] <- -5
-d4$parameter_lower_bound[which(d4$article_id==643)] <- d4$parameter_lower_bound[which(d4$article_id==643)] *10^(d4$exponent[which(d4$article_id==643)])
-d4$parameter_upper_bound[which(d4$article_id==643)] <- d4$parameter_upper_bound[which(d4$article_id==643)] *10^(d4$exponent[which(d4$article_id==643)])
-d4$parameter_value[which(d4$article_id==643)] <- d4$parameter_value[which(d4$article_id==643)] *10^(d4$exponent[which(d4$article_id==643)])
-d4$parameter_uncertainty_lower_value[which(d4$article_id==643)] <- d4$parameter_uncertainty_lower_value[which(d4$article_id==643)] *10^(d4$exponent[which(d4$article_id==643)])
-d4$parameter_uncertainty_upper_value[which(d4$article_id==643)] <- d4$parameter_uncertainty_upper_value[which(d4$article_id==643)] *10^(d4$exponent[which(d4$article_id==643)])
-
-
 #arrange data and format for plotting
 variables_to_mutate <- c("parameter_value",
                          "parameter_lower_bound",
@@ -86,13 +76,14 @@ variables_to_mutate <- c("parameter_value",
                          "parameter_uncertainty_lower_value",
                          "parameter_uncertainty_upper_value")
 
+# Multiply evolutionary/substitution rates by 10^4 for plotting 
 d1 <- d1 |> mutate(across(all_of(variables_to_mutate), ~ . * 10^4)) #multiply by 10^4
 d2 <- d2 |> mutate(across(all_of(variables_to_mutate), ~ . * 10^4)) #multiply by 10^4
 
-d4 <- d4 |> mutate(across(all_of(variables_to_mutate),
-                          ~ ifelse(parameter_unit != "Percentage (%)", . * 100, .)) #(Attack rate)
-) |>
-  mutate(parameter_unit = ifelse(parameter_unit != "Percentage (%)",
+# Convert non-percentage attack rate into percentage 
+d4 <- d4 |> mutate(parameter_value = case_when(is.na(parameter_unit) ~ parameter_value*100,
+                                                    .default = parameter_value)) |>
+  mutate(parameter_unit = ifelse(is.na(parameter_unit),
                                  "Percentage (%)", parameter_unit))
 
 
@@ -132,9 +123,8 @@ p1_all_qa <- forest_plot(d1,expression(Evolutionary~Rate~(s/s/y ~10^{-4})),
   guides(color = guide_legend(title = "Gene", order = 1)) 
 
 
-# Subsitution Rate
-##################
-# For d2; error is being caused by different units:
+# Substitution Rate
+#####################
 unique(d2$parameter_unit[!is.na(d2$parameter_unit)])
 d2 <- d2 |>
   mutate(parameter_unit=ifelse(parameter_unit=="Substitutions/site/year",
@@ -143,34 +133,36 @@ d2 <- d2 |>
 
 p2_all_qa <- forest_plot(d2,
                          expression(Substitution~Rate~(s/s/y ~10^{-4})),
-                         "population_country",c(-5,55),
+                         "genome_site",c(-5,30),
                          qa_alpha = 0.3,
                          text_size=text_size) +
-  guides(color = guide_legend(title = "Population Country", order = 1))
+  guides(color = guide_legend(title = "Gene", order = 1))
 
 p2 <- forest_plot(filter(d2, qa_score >= 0.5),
                   expression(Substitution~Rate~(s/s/y ~10^{-4})),
-                  "genome_site",c(-0.01,15),
+                  "genome_site",c(-0.01,5),
                   text_size=text_size) +
   guides(color = guide_legend(title = "Gene", order = 1))
 
+
 # Attack Rate
-#############
+###############
+# d4 <- mutate(d4, parameter_value = case_when(is.na(parameter_value)&!is.na(cfr_ifr_numerator)&!is.na(cfr_ifr_denominator) ~ (cfr_ifr_numerator/cfr_ifr_denominator)*100,
+#                                              .default = parameter_value), 
+#              parameter_statistical_approach = case_when(is.na(parameter_statistical_approach) ~ "Unknown",
+#                                                         .default = parameter_statistical_approach))
 
 unique(d4$parameter_unit[!is.na(d4$parameter_unit)])
-d4 <- d4 |>
-  mutate(parameter_unit=ifelse(parameter_unit=="Percentage (%)",
-                               parameter_unit, NA))
 
 # not sure how central value for missing studies are calculated? so reluctant to use
-p4_all_qa <- forest_plot(d4, 'Attack Rate (%)', "population_group", 
-                         c(-3,10),
+p4_all_qa <- forest_plot_approach(d4, 'Attack Rate (%)', "population_group", 
+                         c(-3,20),
                          qa_alpha = 0.3,
                          text_size=text_size) 
 
-p4 <- forest_plot(filter(d4, qa_score >= 0.5),
+p4 <- forest_plot_approach(filter(d4, qa_score >= 0.5),
                   'Attack Rate (%)', "population_group",
-                  c(-3,50),
+                  c(-3,15),
                   text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1)) 
 
@@ -179,11 +171,11 @@ p4 <- forest_plot(filter(d4, qa_score >= 0.5),
 ####################
 unique(d5$parameter_unit[!is.na(d5$parameter_unit)])
 d5$parameter_unit <- "No units"
-p5_all_qa <- forest_plot(d5,'Reproduction Number',"population_group",
+p5_all_qa <- forest_plot_approach(d5,'Reproduction Number',"population_group",
                          c(-0.1,5),
                          text_size=text_size,
                          qa_alpha = 0.3)
-p5 <- forest_plot(filter(d5, qa_score >= 0.5),'Reproduction Number',"population_group",
+p5 <- forest_plot_approach(filter(d5, qa_score >= 0.5),'Reproduction Number',"population_group",
                   c(-0.1,5),
                   text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1)) 
@@ -191,28 +183,29 @@ p5 <- forest_plot(filter(d5, qa_score >= 0.5),'Reproduction Number',"population_
 
 #Symptomatic Proportion
 #########################
-# FIX: HOW TO PLOT CENTRAL VALUE?
 unique(d6$parameter_unit[!is.na(d6$parameter_unit)])
 d6 <- d6 |>
   mutate(parameter_unit="Percentage (%)")
 # parameter value is under central (calculated from proportion)
-p6_all_qa <- forest_plot(d6,'Proportion of Symptomatic Cases (%)', "population_group",
+p6_all_qa <- forest_plot_approach(d6,'Proportion of Symptomatic Cases (%)', "population_group",
                   c(0, 100),
                   text_size=text_size,
                   qa_alpha =0.3)
 
-# Don't include this because we have to include the asymptomatics too which are in the _severity task
-
 # Severity - CFR
 #######################
-
 unique(d7$parameter_unit[!is.na(d7$parameter_unit)])
+# d7 <- mutate(d7, parameter_value = case_when(is.na(parameter_value)&!is.na(cfr_ifr_numerator)&!is.na(cfr_ifr_denominator) ~ (cfr_ifr_numerator/cfr_ifr_denominator)*100,
+#                                                   .default = parameter_value), 
+#              parameter_statistical_approach = case_when(is.na(parameter_statistical_approach) ~ "Unknown",
+#                                         .default = parameter_statistical_approach))
+
 d7$parameter_unit <- "Percentage (%)"
-p7_all_qa <- forest_plot(d7,'Case-Fatality Ratio (%)', "population_group",
-                         c(0, 100),
+p7_all_qa <- forest_plot_approach(d7,'Case-Fatality Ratio (%)', "population_group",
+                         c(-3, 110),
                          text_size=text_size,
                          qa_alpha =0.3)
-p7 <- forest_plot(filter(d7, qa_score >= 0.5),'Case-Fatality Ratio (%)', "population_group",
+p7 <- forest_plot_approach(filter(d7, qa_score >= 0.5),'Case-Fatality Ratio (%)', "population_group",
                   c(0, 100),
                   text_size=text_size)
 
@@ -220,12 +213,16 @@ p7 <- forest_plot(filter(d7, qa_score >= 0.5),'Case-Fatality Ratio (%)', "popula
 ###########################################
 unique(d8$parameter_unit[!is.na(d8$parameter_unit)])
 # These are all low QA so just ignore
-p8_all_qa <- forest_plot(d8,' Relative contribution - zoonotic to human (%)', "population_group",
-                         c(-5, 100),
+p8_all_qa <- forest_plot_approach(d8,
+                         label='Relative contribution - zoonotic to human (%)', 
+                         color_column = "population_group",
+                         lims=c(-5, 100),
                          text_size=text_size,
                          qa_alpha =0.3)
-p8 <- forest_plot(filter(d8, qa_score >= 0.5),' Relative contribution - zoonotic to human (%)', "population_group",
-                  c(-5, 100),
+p8 <- forest_plot_approach(filter(d8, qa_score >= 0.5),
+                  label = 'Relative contribution - zoonotic to human (%)',
+                  color_column = "population_group",
+                  lims=c(-5, 100),
                   text_size=text_size)
 
 

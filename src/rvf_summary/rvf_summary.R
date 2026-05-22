@@ -18,20 +18,20 @@ pathogen <- pars$pathogen
 orderly_dependency(
   "db_cleaning",
   "latest(parameter:pathogen == this:pathogen)",
-  c("articles.csv", "models.csv", "params.csv"))
+  c("articles.csv", "models.csv", "params.csv", "outbreaks.csv"))
 
 orderly_shared_resource("rvf_functions.R"="rvf_functions.R")
 
 source("rvf_functions.R")
 
 orderly_artefact(description = "RVF supplementary figures",
-                 c("figure_S1.pdf", "figure_S2.pdf", "figure_S3.pdf"))
+                 c("figure_S1_articles.pdf", "figure_S2_models.pdf", "figure_S3_parameters.pdf", "figure_S4_outbreaks.pdf"))
 
 
 # *------------------------------- Read in data -------------------------------*
 articles <- read_csv("articles.csv", show_col_types = FALSE)
 models <- read_csv("models.csv", show_col_types = FALSE)
-outbreaks <- tibble()
+outbreaks <- read_csv("outbreaks.csv", show_col_types = FALSE)
 parameters <- read_csv("params.csv", show_col_types = FALSE)
 
 # Should plotting be TRUE?
@@ -54,7 +54,7 @@ colour_palette[8] <- "#f0e68c"
 
 colour_palette <- c(colour_palette, temp, temp_2)
 
-## scales::show_col(colour_palette)
+
 # *--------------------------------- Articles ---------------------------------*
 # convert to a %
 quality <- articles |>
@@ -157,10 +157,10 @@ p4 <- answers |>
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA)) +
   theme(legend.position = 'bottom')
 
-patchwork <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
-patchwork <- patchwork + plot_annotation(tag_levels = 'A')
+patchwork_S1 <- (p1 + p2 + p3 + p4) + plot_layout(ncol = 2, widths = c(1,1))
+patchwork_S1 <- patchwork_S1 + plot_annotation(tag_levels = 'A')
 
-ggsave("figure_S1.pdf", plot = patchwork, width = 12, height = 12)
+ggsave("figure_S1_articles.pdf", plot = patchwork_S1, width = 12, height = 12)
 
 # *---------------------------------- Models ----------------------------------*
 models <- dfs$models
@@ -174,6 +174,9 @@ models <- models |>
          # interventions_type = str_replace_all(interventions_type,"Unspecified",
          #                                      "Other"),
          transmission_route = replace_na(transmission_route,'Unspecified'),
+         model_type = ifelse(
+           model_type %in% c("Compartmental,Agent / individual based"),
+           "Agent / individual based & compartmental", model_type),
          compartmental_type = ifelse(
            compartmental_type %in% c("Other compartmental, please specify"),
            "Other compartmental", compartmental_type))
@@ -203,24 +206,24 @@ models$assumptions <- str_replace_all(models$assumptions,
 models |>
   count(assumptions)
 
-# If multiple assumptions route:
-# models <- models |>
-#   mutate(num_assumptions = str_count(assumptions, ",")+1,
-#          assumptions = case_when(
-#            assumptions=="Subgroup heterogeneous,Human-to-animal heterogeneous"~"Human-to-animal & subgroup heterogeneous",
-#            num_assumptions>1~"Multiple assumptions",
-#            TRUE~assumptions))
-
 models <- models |>
   mutate(assumptions = ifelse(
     assumptions=="Subgroup heterogeneous,Human-to-animal heterogeneous",
     "Human-to-animal & subgroup heterogeneous", assumptions))
+
+model_colour_pal <- c("Agent / individual based & compartmental" = colour_palette[10],
+                      "Branching process" = colour_palette[5],
+                      "Compartmental" = colour_palette[7],
+                      "Other" = colour_palette[3],
+                      "Unspecified" = colour_palette[11])
+
 
 p1 <- ggplot() +
   geom_bar(data = models, aes(x = model_type, fill = stoch_deter),
            color = "black") +
   scale_y_continuous(limits = c(0,20), breaks = seq(0,20,by = 5),
                      expand = c(0,0)) +
+  scale_x_discrete(labels = c("Agent / individual based & compartmental" = "Agent / individual based\n& compartmental"))+
   xlab("Model Type") + ylab("Model Count") +
   scale_fill_manual(values = c("Deterministic model" = colour_palette[4],
                                "Stochastic model" = colour_palette[2]),
@@ -229,11 +232,6 @@ p1 <- ggplot() +
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
         legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
 
-model_colour_pal <- c("Agent / individual based" = colour_palette[10],
-                      "Branching process" = colour_palette[5],
-                      "Compartmental" = colour_palette[7],
-                      "Other" = colour_palette[3],
-                      "Unspecified" = colour_palette[11])
 
 
 p2 <- models |>
@@ -269,6 +267,8 @@ p3 <- models |>
                                        "Human-to-animal heterogeneous",
                                        "Subgroup heterogeneous",
                                        "Human-to-animal & subgroup heterogeneous",
+                                       "Latent period is same as incubation period",
+                                       "Age dependent susceptibility",
                                        "Other",
                                        "Unspecified"))
   ) |>
@@ -276,10 +276,12 @@ p3 <- models |>
   geom_bar(color = "black") +
   scale_x_discrete(
     labels = c("Human-to-animal heterogeneous" = "Human-to-animal\nheterogeneous",
-               "Time heterogeneous"="Time\nheterogeneous",
+               "Latent period is same as incubation period" = "Latent period is same\nas incubation period",
+               "Age dependent susceptibility" = "Age dependent\nsusceptibility",
+               "Time heterogeneous" = "Time\nheterogeneous",
                "Subgroup heterogeneous" = "Subgroup\nheterogeneous",
-               "Human-to-animal & subgroup heterogeneous"="Human-to-animal\n& subgroup\nheterogeneous",
-               "Multiple assumptions"= "Multiple\nassumptions")) +
+               "Human-to-animal & subgroup heterogeneous" = "Human-to-animal\n& subgroup\nheterogeneous",
+               "Multiple assumptions" = "Multiple\nassumptions")) +
   scale_y_continuous(limits = c(0,12), breaks = seq(0,80,by = 5), expand = c(0,0)) +
   xlab("Model assumptions") + ylab("Model Count") +
   scale_fill_manual(values=model_colour_pal, name = NULL) +
@@ -353,12 +355,13 @@ p6 <-  models |>
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
         legend.position = "none")
 
-patchwork <- (p1 + p2 + p5 + p4 + p3 + p6) + plot_layout(ncol = 2, widths = c(1,1))
-patchwork <- patchwork + plot_annotation(tag_levels = 'A')
+patchwork_S2 <- (p1 + p2 + p5 + p4 + p3 + p6) + plot_layout(ncol = 2, widths = c(1,1))
+patchwork_S2 <- patchwork_S2 + plot_annotation(tag_levels = 'A')
 
-ggsave("figure_S2.pdf", plot = patchwork, width = 16, height = 16)
+ggsave("figure_S2_models.pdf", plot = patchwork_S2, width = 16, height = 16)
 
 # *-------------------------------- Parameters --------------------------------*
+
 parameters <- dfs$parameters |>
   left_join(qa_scores) |>
   mutate(parameter_value = coalesce(parameter_value,central)) |>
@@ -420,7 +423,10 @@ parameters <-parameters |>
            !is.na(population_study_end_year)~population_study_start_year,
            TRUE~0),
          study_midyear_cat = case_when(
-           study_midyear %in% 1998:2004 ~ "1998-2004",
+           study_midyear %in% 1:1984 ~ "Pre 1985",
+           study_midyear %in% 1985:1994 ~ "1985-1994",
+           study_midyear %in% 1995:1999 ~ "1995-1999",
+           study_midyear %in% 2000:2004 ~ "2000-2004",
            study_midyear %in% 2005:2009 ~ "2005-2009",
            study_midyear %in% 2010:2014 ~ "2010-2014",
            study_midyear %in% 2015:2019 ~ "2015-2019",
@@ -428,7 +434,7 @@ parameters <-parameters |>
            TRUE ~ "Unspecified"),
          study_midyear_cat=factor(
            study_midyear_cat,
-           levels = c("1998-2004", "2005-2009", "2010-2014",
+           levels = c("Pre 1985", "1985-1994", "1995-1999", "2000-2004", "2005-2009", "2010-2014",
                       "2015-2019", "2020-Present",'Unspecified')))
 
 # Sample type cleaning
@@ -458,7 +464,7 @@ ordering <- parameters |>
 
 parameters$parameter_type <- factor(parameters$parameter_type,
                                     levels = ordering)
-#TODO: Risk factors is around 325, we should plot this different perhaps
+
 p1 <- ggplot(data = parameters,
              aes(x = parameter_type, fill = parameter_class)) +
   geom_bar(color = "black") +
@@ -472,8 +478,7 @@ p1 <- ggplot(data = parameters,
         legend.position = 'top' ) +
   coord_flip()
 
-# 352 rows instead of 332 - 20 introduced
-# separate_rows(population_country, sep = ";")
+
 p2 <- ggplot(data = parameters |>
                separate_rows(population_country, sep = ";") |>
                mutate(population_country = str_trim(population_country)) |>
@@ -491,7 +496,6 @@ p2 <- ggplot(data = parameters |>
         legend.position = 'none') +
   coord_flip()
 
-#TODO: Maybe split into more bins
 p3 <- ggplot(data = parameters,
              aes(x = study_midyear_cat, fill = parameter_class)) +
   geom_bar(color = "black") +
@@ -530,4 +534,69 @@ patchwork <- p1 / p3 / p2 / p4 + plot_layout(ncol = 1,
                                              heights = c(21,6,20,9))
 plot_annotation(tag_levels = 'A')
 
-ggsave("figure_S3.pdf", plot = patchwork, width = 12, height = 15)
+ggsave("figure_S3_parameters.pdf", plot = patchwork, width = 12, height = 15)
+
+
+
+# *---------------------------------- Outbreaks ----------------------------------*
+outbreaks <- mutate(outbreaks, outbreak_source = case_when(is.na(outbreak_source) ~ "Unspecified",
+                                                           outbreak_source=="Domestic animal,Unknown" ~ "Domestic animal + Unknown", 
+                                                           .default=outbreak_source))
+outbreaks_colour_pal <- c("Domestic animal" = colour_palette[10],
+                      "Domestic animal+Unknown" = colour_palette[5],
+                      "Unknown" = colour_palette[7],
+                      "Other" = colour_palette[3],
+                      "Unspecified" = colour_palette[11])
+
+p1 <- ggplot(outbreaks)+
+  geom_histogram(aes(outbreak_start_year, fill=outbreak_source))+
+  xlab("Outbreak start year") + ylab("Outbreak count") +
+  scale_fill_manual(values=outbreaks_colour_pal, name = NULL) +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = "none")
+
+p2 <- ggplot(outbreaks)+
+  geom_histogram(aes(outbreak_duration_months, fill=outbreak_source))+
+  xlab("Outbreak duration (months)") + ylab("Outbreak count") +
+  scale_fill_manual(values=outbreaks_colour_pal, name = NULL) +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = "none")
+
+p3 <- ggplot(outbreaks)+
+  geom_bar(aes(y=outbreak_country, fill=outbreak_source))+
+  xlab("Outbreak count") + ylab(NULL) +
+  scale_fill_manual(values=outbreaks_colour_pal, name = NULL) +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = "left")
+
+p4 <- ggplot(outbreaks)+
+  geom_histogram(aes(cases_confirmed, fill=outbreak_source))+
+  xlab("Outbreak confirmed cases") + ylab("Outbreak count") +
+  scale_fill_manual(values=outbreaks_colour_pal, name = NULL) +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = "none")
+
+p5 <- ggplot(outbreaks)+
+  geom_histogram(aes(deaths, fill=outbreak_source))+
+  xlab("Outbreak deaths") + ylab("Outbreak count") +
+  scale_fill_manual(values=outbreaks_colour_pal, name = NULL) +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = "none")
+
+design <- "AB
+           CD"
+S4_top <- p1 + p2 + p4 + p5 +
+  plot_layout(design = design)
+S4 <- S4_top / p3 + plot_layout(ncol=1, design ="AAAAAAAAAAAAAAAAAAAA
+#BBBBBBBBBBBBBBBBBBB")
+
+
+ggsave("figure_S4_outbreaks.pdf", plot = S4, width = 12, height = 15)
+
+
+

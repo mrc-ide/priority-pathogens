@@ -6,7 +6,7 @@
 # *============================================================================*
 # *---------------------------- Tables to include -----------------------------*
 # NB! this needs to match the output and rds filenames
-tables <- c("articles", "models", "params")
+tables <- c("articles", "models", "params","outbreaks")
 
 # *------------------------ Update column types action ------------------------*
 type_map_list <- list("cfr_ifr_numerator" = as.integer,
