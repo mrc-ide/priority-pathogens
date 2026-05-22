@@ -163,7 +163,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   
   if (all(df$parameter_class=="Reproduction number")) {
     gg <- gg +
-      geom_vline(xintercept = 1,linetype = "dashed", colour = "dark grey")
+      geom_vline(xintercept = 1,linetype = "dotted", colour = "dark grey")
   }
   
   if(sum(!is.na(custom_colours)))
@@ -219,6 +219,122 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   
   return(gg)
 }
+
+
+
+# function to produce forest plot for given dataframe - shape is parameter_statistical_approach
+forest_plot_approach <- function(df, label, color_column, lims, text_size = 11,
+                        show_label = FALSE, custom_colours = NA,
+                        segment_show.legend=NA, sort=FALSE, qa_alpha=1,
+                        point_size=3) {
+  stopifnot(length(unique(df$parameter_unit[!is.na(df$parameter_unit)])) == 1)#values must have same units
+  
+  if (sort){
+    df <- df |> arrange(.data[[color_column]], central)
+  }
+  
+  # Assume that if a single type was displayed it would be converted to a
+  # lower + upper value
+  df   <- df |> mutate(urefs = make.unique(refs)) |>
+    mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
+           uncertainty_present = (
+             !(is.na(parameter_uncertainty_lower_value) &
+                 is.na(parameter_uncertainty_upper_value)))
+    )
+  df$plot_alpha <- 1
+  df$segment_alpha <- 1
+  
+  if(qa_alpha!=1){
+    df[df$qa_score<=0.5, ]$plot_alpha <- qa_alpha
+    df[df$qa_score<=0.5, ]$segment_alpha <- 0.65 * qa_alpha
+  }
+  
+  cats <- length(unique(df[[color_column]]))
+  gg <- ggplot(df) +
+    geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
+                     y = urefs, yend = urefs, color = .data[[color_column]],),
+                 linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
+    geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
+                      y = urefs, linetype="Uncertainty"),
+                  width = 0.25, lwd=0.5, color = "black", alpha=df$plot_alpha) +
+    geom_errorbar(data= df[!df$uncertainty_present,],
+                  aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                      y = urefs, linetype="Variability"),
+                  width = 0.25, lwd=0.5, color = "black",
+                  lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
+    geom_errorbar(data= df[df$uncertainty_present,],
+                  aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                      y = urefs, linetype="Variability"),
+                  width = 0.25, lwd=0.5, color = "black",
+                  lineend = "square", position = position_nudge(y=-0.25),
+                  alpha=df[df$uncertainty_present,]$plot_alpha) +
+    geom_point(aes(x = parameter_value, y = urefs,
+                   shape = parameter_statistical_approach, fill = .data[[color_column]]),
+               alpha=df$plot_alpha, size = point_size, stroke = 1, color = "black")
+  
+  if (all(df$parameter_class=="Reproduction number")) {
+    gg <- gg +
+      geom_vline(xintercept = 1,linetype = "dotted", colour = "dark grey")
+  }
+  
+  if(sum(!is.na(custom_colours)))
+  {
+    gg <- gg +
+      scale_shape_manual(name = "Statistical approach",
+                         values = c(`Observed sample statistic` = 21,
+                                    `Estimated parameter` = 22,            
+                                    `Unknown` = 23, 
+                                    `Unspecified` = 24, `Other`=25),
+                         breaks = c("Observed sample statistic", "Estimated parameter", "Unspecified", "Other",
+                                    "Unknown")) +
+      scale_linetype_manual(name   = "Variation Type",
+                            values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                            breaks = c("Uncertainty", "Variability")) +
+      scale_x_continuous(limits = lims, expand = c(0, 0)) +
+      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+      labs(x = label, y = NULL) +
+      scale_color_manual(values = custom_colours) +
+      scale_fill_manual(values = custom_colours) +
+      theme_minimal() +
+      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+            text = element_text(size = text_size))
+  } else {
+    gg <- gg + # scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+      # FIX? commented out to keep colours even if NA
+      scale_shape_manual(name = "Statistical approach",
+                         values = c(`Observed sample statistic` = 21,
+                                    `Estimated parameter` = 22, 
+                                    `Unknown` = 23, 
+                                    `Unspecified` = 24, `Other`=25),
+                         breaks = c("Observed sample statistic", "Estimated parameter", "Unspecified", "Other",
+                                    "Unknown")) +
+      scale_linetype_manual(name   = "Variation Type",
+                            values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                            breaks = c("Uncertainty", "Variability")) +
+      scale_x_continuous(limits = lims, expand = c(0, 0)) +
+      scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+      labs(x = label, y = NULL) +
+      theme_minimal() +
+      theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+            text = element_text(size = text_size))
+  }
+  
+  if (cats == 1) {
+    gg <- gg + guides(fill = "none", color="none",
+                      shape = guide_legend(title = NULL,order = 1),
+                      linetype=guide_legend(title = NULL,order = 2))
+  } else {
+    gg <- gg + guides(fill = "none", color = guide_legend(title = NULL,order = 1),
+                      shape = guide_legend(title = NULL,order = 2),
+                      linetype=guide_legend(title = NULL, order = 3))}
+  
+  if(show_label)
+    gg <- gg + geom_text_repel(aes(x = coalesce(parameter_value), y = urefs, label = population_country_ISO), nudge_y = 0.5, segment.color = "grey50" )
+  #gg <- gg + geom_text_repel(aes(x = coalesce(parameter_uncertainty_upper_value,parameter_upper_bound,parameter_value), y = urefs, label = population_country_ISO), nudge_x = 1.5, segment.color = "grey90" )
+  
+  return(gg)
+}
+
 
 # function to produce map for given shapefiles and dataframes
 
