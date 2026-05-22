@@ -19,10 +19,14 @@ article_cleaning <- function(df){
 }
 
 model_cleaning <- function(df){
+  # fix model type
+  df$model_type[which(df$covidence_id==1669)] <- "Compartmental"
+  
   return (df)
 }
 
 outbreak_cleaning <- function(df){
+
   return (df)
 }
 
@@ -117,6 +121,62 @@ param_cleaning <- function(df){
              case_when(toupper(population_study_end_year)=="XXXX" ~ NA,
                        TRUE ~ population_study_end_year)
     )
+  
+  ### fix typos in dates 
+  df$population_study_start_year[which(df$covidence_id==1038)] <- 2012
+  df$population_study_start_year[which(df$covidence_id==6385)] <- 2019
+  
+  
+  #########################################################################
+  ## Fixing exponents in attack rate parameter
+  
+  # article 643 notes say per 100,000 people so needs -5 exponent - attack rate
+  df$exponent[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- -5
+  df$parameter_value[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- df$parameter_value[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] *10^(df$exponent[which((df$article_id==643)&(df$parameter_type=="Attack rate"))])*100
+  df$parameter_lower_bound[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- df$parameter_lower_bound[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] *10^(df$exponent[which((df$article_id==643)&(df$parameter_type=="Attack rate"))])*100
+  df$parameter_upper_bound[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- df$parameter_upper_bound[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] *10^(df$exponent[which((df$article_id==643)&(df$parameter_type=="Attack rate"))])*100
+  df$parameter_uncertainty_lower_value[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- df$parameter_uncertainty_lower_value[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] *10^(df$exponent[which((df$article_id==643)&(df$parameter_type=="Attack rate"))])*100
+  df$parameter_uncertainty_upper_value[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- df$parameter_uncertainty_upper_value[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] *10^(df$exponent[which((df$article_id==643)&(df$parameter_type=="Attack rate"))])*100
+  df$exponent[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- 0
+  df$parameter_unit[which((df$article_id==643)&(df$parameter_type=="Attack rate"))] <- "Percentage (%)"
+  
+  
+  ##############################################################################
+  ## Fix incorrect population group for covidence 5255
+  
+  df$population_group[which(df$covidence_id==5255)] <- "Persons under investigation"
+  
+  ##############################################################################
+  ## Create delay name for "Other human delay" 
+  
+  # Update parameter_type names for "Other human delay"
+  df <- mutate(df, 
+               parameter_type= case_when(parameter_type=="Human delay - other human delay (go to section)" ~ 
+                                           paste(tolower(other_delay_start), ">", tolower(other_delay_end), sep=""),
+                                   .default=parameter_type))
+ 
+   # Symptom Onset/Fever to Discharge or death - covidence 1767 -  "Other" population group is 
+  # HIV positive individuals
+  df <-mutate(df, 
+              population_group=case_when((population_group=="Other")&tolower(parameter_type) %in% 
+                                           c('symptom onset/fever>discharge or death') ~
+                                           "Persons with confirmed HIV",
+      .default = population_group))
+  
+  
+  
+  #########################################################################################
+  # Calculate central value from CFR/IFR/Attack rate nom and denom if parameter value is NA
+  
+  df <- mutate(df, 
+               parameter_value = case_when(is.na(parameter_value)&!is.na(cfr_ifr_numerator)&!is.na(cfr_ifr_denominator) ~ (cfr_ifr_numerator/cfr_ifr_denominator)*100,
+                                               .default = parameter_value), 
+               parameter_unit = case_when(is.na(parameter_value)&!is.na(cfr_ifr_numerator)&!is.na(cfr_ifr_denominator) ~ "Percentage (%)",
+                                           .default = parameter_unit), 
+               parameter_statistical_approach = case_when(is.na(parameter_statistical_approach) ~ "Unspecified",
+                                                          .default = parameter_statistical_approach))
+  
+
   
   return (df)
 }
