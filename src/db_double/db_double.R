@@ -72,7 +72,7 @@ model_exclude_cols <- c("Name_data_entry",
 model_notes_col <- NULL
 model_id_col <- NULL
 
-if (pathogen %in% c("NIPAH", "MERS")){
+if (pathogen %in% c("NIPAH", "MERS", "CCHF")){
   param_notes_col <- "parameter_notes"
   param_id_col <- "Parameter_data_ID"
   outbreak_notes_col <- "outbreak_notes"
@@ -156,7 +156,7 @@ if (pathogen != 'LASSA' & pathogen != 'ZIKA') {
   param_discordant <- param_discordant %>% select(-c(ID, Parameter_data_ID))
   model_discordant <- model_discordant %>% select(-c(ID, Model_data_ID))
 
-  if (pathogen != 'MERS'){
+  if (pathogen != 'MERS' & pathogen != 'CCHF'){
     outbreak_discordant <- outbreak_discordant |> select(-c(ID, Outbreak_data_ID))
   }
 }
@@ -172,7 +172,7 @@ write_csv(model_match, "models_matching.csv")
 write_csv(model_discordant, "models_fixing.csv")
 
 # Empty outbreaks for Ebola - amend this for other pathogens
-if (pathogen %in% c('EBOLA','SARS', 'MERS')) {
+if (pathogen %in% c('EBOLA','SARS', 'MERS', "CCHF")) {
   file.create("outbreaks_matching.csv")
   file.create("outbreaks_fixing.csv")
 }
