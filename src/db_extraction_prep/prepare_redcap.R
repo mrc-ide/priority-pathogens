@@ -236,43 +236,50 @@ get_overflow_mapping_table <- function(df,
   id_mapping_list <- list()
   cov_id_vec <- c()
   cov_id_error_list <- list()
+  prog_report_list <- list("cov_id_vec"=c(),
+                           "cov_id_error_list"=list(),
+                           "id_mapping_list"=list())
+  n_continuations <- nrow(continuations_df)
+  if (n_continuations>0){
+    for (i in 1:n_continuations){
+      extractor <- continuations_df[[extractor_col]][i]
+      cov_id <- continuations_df[[cov_id_col]][i]
+      extractor_filter <- non_na_df[[extractor_col]]==extractor
+      cov_id_filter <- non_na_df[[cov_id_col]]==cov_id
 
-  for (i in 1:nrow(continuations_df)){
-    extractor <- continuations_df[[extractor_col]][i]
-    cov_id <- continuations_df[[cov_id_col]][i]
-    extractor_filter <- non_na_df[[extractor_col]]==extractor
-    cov_id_filter <- non_na_df[[cov_id_col]]==cov_id
+      temp_df <- non_na_df[cov_id_filter & extractor_filter, ]
 
-    temp_df <- non_na_df[cov_id_filter & extractor_filter, ]
+      if (NROW(temp_df) == 1){
+        cli_alert_warning(
+          paste(extractor, "has indicated that Covidence ID: ", cov_id,
+                "is a continuation, but it only has 1 REDCap entry")
+        )
+        cov_id_error_list[[extractor]] <- cov_id
+        next
+      }
 
-    if (NROW(temp_df) == 1){
-      cli_alert_warning(
-        paste(extractor, "has indicated that Covidence ID: ", cov_id,
-              "is a continuation, but it only has 1 REDCap entry")
+      # We map to the latest complete row
+      id_vec <- temp_df[[id_col]]
+      id_to_map_to <- max(id_vec[!(temp_df[[incomplete_col]]==incomplete_key)])
+
+      id_update_vec <- id_vec[id_vec!=id_to_map_to]
+      id_mapping_list[[as.character(id_to_map_to)]] <- id_update_vec
+      cov_id_vec <- c(cov_id_vec, cov_id)
+
+      cli_alert_info(
+        paste0(extractor, " has indicated that Covidence ID: ", cov_id,
+               " is a continuation. There are ", NROW(temp_df),
+               " REDCap entries with this ID.\n",
+               "The following ", id_col, " will be mapped to ", id_to_map_to, ": ",
+               paste(id_update_vec, collapse=", "))
       )
-      cov_id_error_list[[extractor]] <- cov_id
-      next
+
     }
-
-    # We map to the latest complete row
-    id_vec <- temp_df[[id_col]]
-    id_to_map_to <- max(id_vec[!(temp_df[[incomplete_col]]==incomplete_key)])
-
-    id_update_vec <- id_vec[id_vec!=id_to_map_to]
-    id_mapping_list[[as.character(id_to_map_to)]] <- id_update_vec
-    cov_id_vec <- c(cov_id_vec, cov_id)
-
-    cli_alert_info(
-      paste0(extractor, " has indicated that Covidence ID: ", cov_id,
-            " is a continuation. There are ", NROW(temp_df), " REDCap entries with this ID.\n",
-            "The following ", id_col, " will be mapped to ", id_to_map_to, ": ",
-            paste(id_update_vec, collapse=", "))
-    )
-
+    prog_report_list[["cov_id_vec"]]=cov_id_vec
+    prog_report_list[["cov_id_error_list"]]=cov_id_error_list
+    prog_report_list[["id_mapping_list"]]=id_mapping_list
   }
-  prog_report_list <- list("cov_id_vec"=cov_id_vec,
-                           "cov_id_error_list"=cov_id_error_list,
-                           "id_mapping_list"=id_mapping_list)
+
   return (prog_report_list)
 }
 
