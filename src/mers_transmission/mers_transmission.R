@@ -170,11 +170,19 @@ p1_and_p2 <- forest_plot(d1_and_d2,
          linetype = "none",
          shape = "none")
 ## Overdispersion
-# access_id 064_004 has an upper limit of infinity, having checked the original paper, better to just remove it:
-d3 <- d3 |>
-  filter(access_param_id != "064_004")
-
 unique(d3$parameter_unit[!is.na(d3$parameter_unit)])
+# Now, Park (2016c) is a very different type of measure. It's not a k parameter.
+# It shouldn't be plotted alongside this, and rather, should have its own panel
+d3_Park <- filter(d3, access_param_id == "038_001")
+d3_Park$parameter_value_type <- "Unspecified"
+p3_Park <- forest_plot(d3_Park,'Overdispersion (Max # of secondary cases)',"population_group", c(70,85),
+                  qa_alpha = 0.3,
+                  text_size=text_size) +
+  guides(shape = guide_none(),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  "none")
+
 d3 <- d3 |>
   mutate(parameter_unit=ifelse(
     parameter_unit=="Max. nr. of cases superspreading (related to case)",
@@ -184,9 +192,7 @@ d3 <- d3 |>
     "Unspecified", parameter_value_type
   ))
 
-# Now, Park (2016c) is a very different type of measure. It's not a k parameter.
-# It shouldn't be plotted alongside this, and rather, should be probably just mentioned in the text instead
-d3_Park <- filter(d3, access_param_id == "038_001")
+
 d3 <- d3 |>
   filter(access_param_id != "038_001")
 
@@ -194,10 +200,27 @@ p3_all_qa <- forest_plot(d3,'Overdispersion',"population_group", c(-0.1,7),
                          qa_alpha = 0.3,
                   text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1))
+
+# Pull all population group colours
+all_pop_groups <- rbind(d1,d2,d3,d4,d5) |>
+  distinct(population_group) |>
+  arrange(population_group == "Other", population_group) |>
+  pull()
+arrow_df <- data.frame(x = 1.3, xend = 1.49,
+                       y = c(1), yend = c(1),
+                       population_group = "Other") |>
+  mutate(parameter_type=factor(population_group,
+                               levels=all_pop_groups))
 p3 <- forest_plot(filter(d3, qa_score >= 0.5),
-                  'Overdispersion',"population_group", c(-0.1,7),
+                  'Overdispersion (k)',"population_group", c(-0.1,7),
                          text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1)) +
+  geom_segment(
+    data = arrow_df,
+    aes(x = x, xend = xend, y = y, yend = yend, group=population_group),
+    arrow = arrow(type = "open", length = unit(0.20, "cm")),
+  ) +
+  coord_cartesian(xlim = c(-0.1, 1.5)) +
   scale_fill_lancet(
     palette = "lanonc",
     limits = full_levels,
@@ -375,13 +398,14 @@ unique(d8$parameter_unit[!is.na(d8$parameter_unit)])
 
 
 # Save plots
-design <- "AD
-AD
-BD
+design <- "AE
+AE
 BE
 CE
-CE"
-patchwork_trans <- p3+p4+p1_and_p2+p5_basic+p5_effective+plot_layout(design = design, guides = "collect")
+CF
+DF
+DF"
+patchwork_trans <- p3+p3_Park+p4+p1_and_p2+p5_basic+p5_effective+plot_layout(design = design, guides = "collect")
 patchwork_trans <- patchwork_trans + plot_annotation(tag_levels = 'A')
 ggsave("figure_trans.png", plot = patchwork_trans, width = 14, height = 10)
 ggsave("figure_trans.pdf", plot = patchwork_trans, width = 14, height = 10)
