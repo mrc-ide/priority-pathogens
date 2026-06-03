@@ -66,8 +66,20 @@ parameters[parameters$access_param_id=="271_001",
 parameters[parameters$access_param_id=="032_001",
            "parameter_unit"] <- "Days"
 
-#255_014 lists a delay of -5.9 days. Paper seems to corroborate. It might be a typo, but let's remove it:
-parameters <- filter(parameters, access_param_id != "255_014")
+#255_014 lists a delay of -5.9 days. That's because this individual had symptom onset AFTER hospital admission
+# Let's convert this to an "Other" human delay.
+#parameters <- filter(parameters, access_param_id != "255_014")
+#test <- filter(parameters, access_param_id == "255_014")
+
+parameters[parameters$access_param_id=="255_014",
+           "parameter_type"] <- "Human delay - other human delay (go to section)"
+parameters[parameters$access_param_id=="255_014",
+           "other_delay_start"] <- "Admission to hospital"
+parameters[parameters$access_param_id=="255_014",
+           "other_delay_end"] <- "symptom onset"
+parameters[parameters$access_param_id=="255_014",
+           "parameter_value"] <- -1*parameters[parameters$access_param_id=="255_014",
+                                               "parameter_value"]
 
 #261-001 extracts it's units as "Months", but it is also an "Other" delay, so look at this later
 #(It's high QA)
@@ -134,10 +146,10 @@ cat("Number of variability only rows:", varb_only_rows)
 # *------------------------------ Plot datasets -------------------------------*
 # Filter out the 4 variability only rows:
 #TODO: Return to this and think about maybe keeping
-parameters <- parameters |>
-  filter(!is.na(parameter_value) |
-           !is.na(parameter_lower_bound) |
-           !is.na(parameter_upper_bound))
+# parameters <- parameters |>
+#   filter(!is.na(parameter_value) |
+#            !is.na(parameter_lower_bound) |
+#            !is.na(parameter_upper_bound))
 
 #Let's re-assign all the country tags
 parameters <- parameters |>
@@ -232,6 +244,9 @@ d6 <- d6 |>
                                         "Admission>death",
                                         "Admission>discharge/recovery",
                                         "Time in care (length of stay)")))
+#Other delays
+d7 <- parameters |>
+  filter(tolower(parameter_type) %in% c('other human delay (go to section)'))
 # *---------------------------------- Plots -----------------------------------*
 lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 
@@ -466,3 +481,73 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       wrap_elements(full = p3_outcomes + theme(legend.position = c(0.85, 0.75))) +
       plot_layout(heights = c(1, 1, 1)) +
       plot_annotation(tag_levels = 'A')
+    ############################
+    #Other human delays
+
+# First, recode:
+    recode_delays <- c(
+      "Admission" = "Admission to care",
+      "Admission to hospital" = "Admission to care",
+      "Symptom Onset/Fever" = "Symptom onset",
+      "Onset" = "Symptom onset",
+      "Admission to ICU" = "Admission to Critical Care/ICU",
+      "symptom onset" = "Symptom onset",
+      "Symptom Onset" = "Symptom onset",
+      "Days from symptom onset to intubation, median (Q1, Q3)" = "Symptom onset",
+      "Days from the onset of symptoms to the emergency room, median (Q1, Q3)" = "Symptom onset",
+      "time to the emergency room" = "Admission to Critical Care/ICU",
+      "Diagnosis" = "Diagnosis/test result",
+      "Disease onset" = "Symptom onset",
+      "First positive RT-PCR test" = "Diagnosis/test result",
+      "Hospital admission" = "Admission to care",
+      "Hospitalisation" = "Admission to care",
+      "Hospitalization" = "Admission to care",
+      "case notification" = "Diagnosis/test result",
+      "Lab confirmation" = "Diagnosis/test result",
+      "Lab confirmation (WHO definition)" = "Diagnosis/test result",
+      "Laboratory confirmation" = "Diagnosis/test result",
+      "ICU Admission" = "Admission to Critical Care/ICU",
+      "ICU admission" = "Admission to Critical Care/ICU",
+      "MERS confirmation/test" = "Diagnosis/test result",
+      "Onset of illness" = "Symptom onset",
+      "Onset of symptoms" = "Symptom onset",
+      "Onset of Symptoms" = "Symptom onset",
+      "emergency room" = "Admission to Critical Care/ICU",
+      "Emergency room" = "Admission to Critical Care/ICU",
+      "intubation" = "Intubation",
+      "confirmation" = "Diagnosis/test result",
+      "Isolation unit" = "Isolation",
+      "Lab confirmation" = "Diagnosis/test result",
+      "Negative PCR Test (Sputum)" = "Negative test",
+      "Negative PCR" = "Negative test",
+      "negative swab" = "Negative test",
+      "peak viral load" = "Peak viral load",
+      "Virus detection" = "Diagnosis/test result",
+      "Symptom Onset while in Hospital" = "Symptom onset",
+      "Symtom onset" = "Symptom onset",
+      "the first PCR-positive result" = "Diagnosis/test result",
+      "Time intubated" = "Intubation",
+      "unspecified" = "Unspecified",
+      "NA" = "Unspecified",
+      "initiation of mechanical ventilation" = "Start of mechanical ventilation",
+      "Mechanical ventilator start" = "Start of mechanical ventilation",
+      "Ventilation support" = "Start of mechanical ventilation",
+      "Oxygen supplementation" = "Start of mechanical ventilation",
+      "Onset of ventilation" = "Start of mechanical ventilation",
+      "Time to RNA clearance" = "viral RNA clearance",
+      "End mechanical ventilation" = "End of mechanical ventilation",
+      "Case observation" = "Diagnosis/test result"
+    )
+
+    d7 <- d7 %>%
+      mutate(
+        other_delay_start = recode(other_delay_start, !!!recode_delays),
+        other_delay_end   = recode(other_delay_end, !!!recode_delays)
+      )
+
+    #First, how many unique combinations?
+    d7$parameter_type <- paste(d7$other_delay_start,
+                               d7$other_delay_end,
+                               sep = " > ")
+unique(d7$parameter_type)
+table(d7$parameter_type)
