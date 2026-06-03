@@ -113,6 +113,14 @@ param_cleaning <- function(df){
   #It shouldn't be extracted
   df <- filter(df, access_param_id != "401_003")
 
+  #064_004 is including an upper value of infinity. This was a modelling scenario and should be ignored as a value
+  # delete 064_004, and change the boundaries of 064_002
+  df <- filter(df, access_param_id != "064_004")
+  df[(df$access_param_id == "064_002"),
+     "parameter_lower_bound"] <- 0.019
+  df[(df$access_param_id == "064_002"),
+     "parameter_upper_bound"] <- 0.078
+
   # 391_001 is serology of blood donors, but pop_group is currently NA
   df[(df$access_param_id == "391_001"),
      "population_group"] <- "General population"
