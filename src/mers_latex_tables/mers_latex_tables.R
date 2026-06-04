@@ -86,6 +86,8 @@ mods$model_type  <- paste(mods$model_type, mods$stoch_deter, sep = " - ")
 
 # Substitutions
 model_type_replacements <- c("branching process - stochastic"="branching process",
+                             "branching process - na" = "branching process",
+                             "unspecified - na" = "unspecified",
                              " model"="")
 
 transmission_route_replacements <- c("human to human \\(direct contact\\)"="Human-human",
@@ -219,6 +221,85 @@ write.table(mods, file = "latex_models.csv", sep = ",",
 # parameter_paired
 # parameter_context_location_type
 parameters <- dfs$parameters
+# Recode some of the "other" human delays:
+# First, recode:
+recode_delays <- c(
+  "Admission" = "Admission to care",
+  "Admission to hospital" = "Admission to care",
+  "Symptom Onset/Fever" = "Symptom onset",
+  "Onset" = "Symptom onset",
+  "Admission to ICU" = "Admission to Critical Care/ICU",
+  "symptom onset" = "Symptom onset",
+  "Symptom Onset" = "Symptom onset",
+  "Days from symptom onset to intubation, median (Q1, Q3)" = "Symptom onset",
+  "Days from the onset of symptoms to the emergency room, median (Q1, Q3)" = "Symptom onset",
+  "time to the emergency room" = "Admission to Critical Care/ICU",
+  "Diagnosis" = "Diagnosis/test result",
+  "Disease onset" = "Symptom onset",
+  "First positive RT-PCR test" = "Diagnosis/test result",
+  "Hospital admission" = "Admission to care",
+  "Hospitalisation" = "Admission to care",
+  "Hospitalization" = "Admission to care",
+  "case notification" = "Diagnosis/test result",
+  "Lab confirmation" = "Diagnosis/test result",
+  "Lab confirmation (WHO definition)" = "Diagnosis/test result",
+  "Laboratory confirmation" = "Diagnosis/test result",
+  "ICU Admission" = "Admission to Critical Care/ICU",
+  "ICU admission" = "Admission to Critical Care/ICU",
+  "MERS confirmation/test" = "Diagnosis/test result",
+  "Onset of illness" = "Symptom onset",
+  "Onset of symptoms" = "Symptom onset",
+  "Onset of Symptoms" = "Symptom onset",
+  "emergency room" = "Admission to Critical Care/ICU",
+  "Emergency room" = "Admission to Critical Care/ICU",
+  "intubation" = "Intubation",
+  "confirmation" = "Diagnosis/test result",
+  "Isolation unit" = "Isolation",
+  "Lab confirmation" = "Diagnosis/test result",
+  "Negative PCR Test (Sputum)" = "Negative test",
+  "Negative PCR" = "Negative test",
+  "negative swab" = "Negative test",
+  "peak viral load" = "Peak viral load",
+  "Virus detection" = "Diagnosis/test result",
+  "Symptom Onset while in Hospital" = "Symptom onset",
+  "Symtom onset" = "Symptom onset",
+  "the first PCR-positive result" = "Diagnosis/test result",
+  "Time intubated" = "Intubation",
+  "unspecified" = "Unspecified",
+  "NA" = "Unspecified",
+  "initiation of mechanical ventilation" = "Start of mechanical ventilation",
+  "Mechanical ventilator start" = "Start of mechanical ventilation",
+  "Ventilation support" = "Start of mechanical ventilation",
+  "Oxygen supplementation" = "Start of mechanical ventilation",
+  "Onset of ventilation" = "Start of mechanical ventilation",
+  "Time to RNA clearance" = "viral RNA clearance",
+  "End mechanical ventilation" = "End of mechanical ventilation",
+  "Case observation" = "Diagnosis/test result",
+  "symtpom onset" = "Symptom onset",
+  "time to pneumonia" = "pneumonia development",
+  "mechanical ventilator end" = "End of mechanical ventilation",
+  "Other human delay (go to section)" = "Unspecified",
+  "Days from symptom onset to ICU admission, median (Q1, Q3)" = "Symptom onset",
+  "Begin mechanical ventilation" = "Start of mechanical ventilation",
+  "taking a sample which showed a negative result with RT-PCR for MERS-CoV" = "Negative test",
+  "Positive conversion of immunofluorescent antibody (IFA) titre (â‰¥1:640) for MERS-CoV" = "Positive IFA",
+  "Mechanical ventilator end" = "End of mechanical ventilation",
+  "End of ICU stay" = "Discharge from Critical Care/ICU",
+  "ICU Discharge/Death" = "Discharge from Critical Care/ICU",
+  "Time from entering ICU" = "Admission to Critical Care/ICU",
+  "Time to leaving ICU either by discharge or death" = "Time leaving ICU by discharge or death",
+  "Illness onset" = "Symptom onset",
+  "hospital admission" = "Admission to care",
+  "Mechanical Ventilation" = "Start of mechanical ventilation",
+  "Outcome (recovery or death)" = "Death or discharge",
+  "Notification to WHO" = "Case notification to WHO"
+)
+
+parameters <- parameters %>%
+  mutate(
+    other_delay_start = recode(other_delay_start, !!!recode_delays),
+    other_delay_end   = recode(other_delay_end, !!!recode_delays)
+  )
 
 # From Zika: round to 10 decimal places and remove any trailing zeroes
 parameters <- mutate_at(
@@ -238,7 +319,9 @@ p_unit_replacements <- c(
   "substitutions/site/year" = "s/s/y",
   "no units" = "",
   "percentage \\(%\\)" = "\\\\%",
-  "max. nr. of cases superspreading \\(related to case\\)"="mnc")
+  "max. nr. of cases superspreading \\(related to case\\)"="mnc"
+  #"unspecified" = ""
+  )
 
 unc_replacements <- c(
   " \\(paired\\)" = "",
@@ -299,7 +382,7 @@ for (i in 1:length(param_identifier)) {
   # Exponents
   # 5.6 exponent? Fixed (changed d to f -> for float exponents)
   parameters[[unit_col]] <- case_when(
-    parameters[[exp_col]] == 0 ~ parameters[[unit_col]],
+    is.na(parameters[[exp_col]]) | parameters[[exp_col]] == 0 ~ parameters[[unit_col]],
     parameters[[exp_col]] == -2 & unit_r_condition ~ "\\%",
     parameters[[exp_col]] == -3 & unit_r_condition ~ "per 1000",
     parameters[[exp_col]] == -4 & unit_r_condition ~ "per 10k",
@@ -316,10 +399,14 @@ for (i in 1:length(param_identifier)) {
     "")
 
   # Adding units to values
-  parameters[[value_col]] <-  ifelse(
+  parameters[[unit_col]] <- na_if(parameters[[unit_col]], "NA")
+  parameters[[unit_col]] <- replace_na(parameters[[unit_col]], "")
+
+  parameters[[value_col]] <- ifelse(
     parameters[[unit_col]] == "" | parameters[[unit_col]] == "Unspecified",
     parameters[[value_col]],
-    paste(parameters[[value_col]], parameters[[unit_col]], sep = " "))
+    paste(parameters[[value_col]], parameters[[unit_col]], sep = " ")
+  )
 
   if (id=="_2"){
     parameters[["parameter_2_value_type"]] <- str_replace_all(
@@ -509,7 +596,7 @@ parameters <- parameters |>
 trns_params <- parameters |>
   filter(
     grepl(paste0("Attack|Relative contribution|Growth rate|Reproduction|",
-                 "Mutations|Overdispersion|proportion of symptomatic cases"),
+                 "Mutations|Overdispersion|proportion of symptomatic cases|proportion of asymptomatic cases"),
           parameter_type, ignore.case = TRUE)) |>
   select(parameter_type, parameter_value, unc_type,
          method_disaggregated_by,
@@ -526,6 +613,7 @@ trns_params <- parameters |>
 trns_params_pt_replacements <- c(
   "Reproduction number \\(Basic R0\\)" = "Reproduction number R0",
   "Severity - proportion of symptomatic cases" = "Proportion of symptomatic cases",
+  "Severity - proportion of asymptomatic cases" = "Proportion of asymptomatic cases",
   "Mutations - evolutionary rate" = "Evolutionary rate",
   "Mutations - substitution rate" = "Substitution rate",
   # Only primary attack rate
@@ -548,6 +636,7 @@ trns_params$parameter_type <- factor(
              "Primary attack rate",
              "Secondary attack rate",
              "Proportion of symptomatic cases",
+             "Proportion of asymptomatic cases",
              "Relative contribution - human to human",
              "Relative contribution - zoonotic to human",
              "Evolutionary rate",
@@ -643,34 +732,73 @@ hdel_params$parameter_type <- str_to_sentence(hdel_params$parameter_type)
 
 hdel_params$parameter_value_type[hdel_params$parameter_value_type==""] <- "Unspecified"
 
-##TODO: This is obviously all specific to the 21 true categories for Nipah. The level setting won't work here
-hdel_params |>
-  distinct(parameter_type) |> print(n=21)
 
-##TODO: For Nipah, this would set the factor levels, but for MERS we have over a 100, and this command would set all not listed in these levels to NA
-# hdel_params$parameter_type <- factor(
-#   hdel_params$parameter_type,
-#   levels = c("Incubation period",
-#              "Onset - admission",
-#              "Onset - death",
-#              "Onset - recovery/death",
-#              "Onset - discharge/recovery",
-#              "Admission - death",
-#              "Admission - discharge/recovery",
-#              "Time in care (length of stay)",
-#              "Serial interval",
-#              "Onset - respiratory difficulty",
-#              "Onset - intubation",
-#              "Onset - fever with altered mental status",
-#              "Onset - nadir",
-#              "Onset - lymphopaenia",
-#              "Onset - thrombocytopaenia",
-#              "Onset - diagnosis/test result",
-#              "Duration of ventilation",
-#              "Duration of severe illness",
-#              "Duration of febrile illness",
-#              "Duration between initial neurological episodes",
-#              "Exposure - neurological episode"))
+hdel_params |>
+  distinct(parameter_type) |> print(n=63)
+
+hdel_params$parameter_type <- factor(
+  hdel_params$parameter_type,
+  levels = c("Incubation period",
+             "Infectious period",
+             "Onset - admission",
+             "Onset - death",
+             #"Onset - recovery/death",
+             "Onset - discharge/recovery",
+             "Admission - death",
+             "Admission - discharge/recovery",
+             "Time in care (length of stay)",
+             "Serial interval",
+             "Generation time",
+             "Admission to care : symptom onset",
+             "Admission to care : diagnosis/test result",
+             "Admission to care : laboratory confirmation (who definition)",
+             "Admission to care : admission to critical care/icu",
+             "Admission to care : corticosteroid initiation",
+             "Admission to care : isolation",
+             "Admission to care : defervescence",
+             "Admission to care : antiviral therapy",
+             "Admission to care : death or discharge",
+             "Admission to critical care/icu : discharge from critical care/icu",
+             "Admission to critical care/icu : corticosteroid initiation",
+             "Admission to critical care/icu : death",
+             "Admission to critical care/icu : time leaving icu by discharge or death",
+             "Admission to critical care/icu : viral clearance",
+             "Ventilation start : ventilation end",
+             "Start of mechanical ventilation : end of mechanical ventilation",
+             "Start of mechanical ventilation : corticosteroid initiation",
+             "Infectiousness : symptom onset",
+             "Isolation : end of isolation",
+             "Isolation : discharge from care/hospital",
+             "Symptom onset : diagnosis/test result",
+             "Symptom onset : test taken",
+             "Symptom onset : negative test",
+             "Symptom onset : positive ifa",
+             "Symptom onset : peak viral load",
+             "Symptom onset : notification",
+             "Symptom onset : case reporting",
+             "Symptom onset : case notification to who",
+             "Symptom onset : isolation",
+             "Symptom onset : intubation",
+             "Symptom onset : pneumonia development",
+             "Symptom onset : seeking care",
+             "Symptom onset : admission to care/hospitalisation",
+             "Symptom onset : admission to critical care/icu",
+             "Symptom onset : corticosteroid initiation",
+             "Symptom onset : initiation of antiviral treatment",
+             "Symptom onset : start of mechanical ventilation",
+             "Symptom onset : invasive mechanical ventilation",
+             "Symptom onset : death or discharge",
+             "Symptom onset : recovery/non-infectiousness",
+             "Diagnosis/test result : reporting by official entities",
+             "Diagnosis/test result : viral rna clearance",
+             "Diagnosis/test result : have detectable mers-cov antibodies",
+             "Diagnosis/test result : discharge from care/hospital",
+             "Diagnosis/test result : death",
+             "Viral rna detected : viral rna clearance",
+             "Recovery : test taken",
+             "Intubation : time extubated",
+             "Infection : recovery/non-infectiousness",
+             "Unspecified : symptom resolution"))
 
 hdel_params <- hdel_params[order(hdel_params$parameter_type,
                                  as.numeric(hdel_params$central),
@@ -728,11 +856,23 @@ cfrs_params <- cfrs_params |>
     parameter_value=str_replace_all(parameter_value, " unspecified", ""),
     # param_sort = coalesce(ifelse(parameter_value=="", NA, parameter_value),
     #                       central),
-    parameter_value=case_when(
-      parameter_value=="" & central!=""~paste0(
-        sprintf("%.1f", as.numeric(central)), "$^*$"),
-      parameter_value=="" ~ "",
-      TRUE~ sprintf("%.1f", as.numeric(parameter_value))),
+
+    #Convert to 1dp
+    parameter_value = case_when(
+      parameter_value == "" & central != "" ~ paste0(
+        sprintf("%.1f", as.numeric(central)), "$^*$"
+      ),
+      parameter_value == "" ~ "",
+      TRUE ~ str_replace_all(
+        parameter_value,
+        "(\\d+(?:\\.\\d+)?)",
+        function(x) sprintf("%.1f", as.numeric(x))
+      )
+    ),
+
+
+
+
     # CI to 1 decimal
     unc_type=str_replace_all(unc_type,
                              "(\\d+(?:\\.\\d+)?)",
