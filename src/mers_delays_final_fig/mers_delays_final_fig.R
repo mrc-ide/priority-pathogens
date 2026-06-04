@@ -536,7 +536,25 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       "Onset of ventilation" = "Start of mechanical ventilation",
       "Time to RNA clearance" = "viral RNA clearance",
       "End mechanical ventilation" = "End of mechanical ventilation",
-      "Case observation" = "Diagnosis/test result"
+      "Case observation" = "Diagnosis/test result",
+      "symtpom onset" = "Symptom onset",
+      "time to pneumonia" = "pneumonia development",
+      "mechanical ventilator end" = "End of mechanical ventilation",
+      "Other human delay (go to section)" = "Unspecified",
+      "Days from symptom onset to ICU admission, median (Q1, Q3)" = "Symptom onset",
+      "Begin mechanical ventilation" = "Start of mechanical ventilation",
+      "taking a sample which showed a negative result with RT-PCR for MERS-CoV" = "Negative test",
+      "Positive conversion of immunofluorescent antibody (IFA) titre (â‰¥1:640) for MERS-CoV" = "Positive IFA",
+      "Mechanical ventilator end" = "End of mechanical ventilation",
+      "End of ICU stay" = "Discharge from Critical Care/ICU",
+      "ICU Discharge/Death" = "Discharge from Critical Care/ICU",
+      "Time from entering ICU" = "Admission to Critical Care/ICU",
+      "Time to leaving ICU either by discharge or death" = "Time leaving ICU by discharge or death",
+      "Illness onset" = "Symptom onset",
+      "hospital admission" = "Admission to care",
+      "Mechanical Ventilation" = "Start of mechanical ventilation",
+      "Outcome (recovery or death)" = "Death or discharge",
+      "Notification to WHO" = "Case notification to WHO"
     )
 
     d7 <- d7 %>%
