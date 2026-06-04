@@ -109,6 +109,33 @@ param_cleaning <- function(df){
   df[(df$access_param_id == "229_003"),
      "genome_site"] <- "Unspecified"
 
+  #360_010 has been extracted as an "other" human delay, but it's hospital length of stay.
+  df[(df$access_param_id == "360_010"),
+     "parameter_type"] <- "Time in care (length of stay)"
+
+  #141_011, 164_020, 164_019 needs rewording it's other human delays:
+  df[(df$access_param_id == "141_011"),
+     "other_delay_start"] <- "Viral RNA detected"
+  df[(df$access_param_id == "141_011"),
+     "other_delay_end"] <- "viral RNA clearance"
+  df[(df$access_param_id == "164_020"),
+     "other_delay_start"] <- "Viral RNA detected"
+  df[(df$access_param_id == "164_020"),
+     "other_delay_end"] <- "viral RNA clearance"
+  df[(df$access_param_id == "164_019"),
+     "other_delay_start"] <- "Viral RNA detected"
+  df[(df$access_param_id == "164_019"),
+     "other_delay_end"] <- "viral RNA clearance"
+
+  #298_001 and _002 are "isolation duration"s
+  df[(df$access_param_id == "298_001"),
+     "other_delay_start"] <- "Isolation"
+  df[(df$access_param_id == "298_001"),
+     "other_delay_end"] <- "End of isolation"
+  df[(df$access_param_id == "298_002"),
+     "other_delay_start"] <- "Isolation"
+  df[(df$access_param_id == "298_002"),
+     "other_delay_end"] <- "End of isolation"
   #401_003 is strange, trying to capture a range of PRNT50 values,
   #It shouldn't be extracted
   df <- filter(df, access_param_id != "401_003")
