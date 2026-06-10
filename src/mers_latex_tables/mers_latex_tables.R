@@ -34,10 +34,10 @@ source("mers_functions.R")
 
 orderly_artefact(
   description="Merged single and double extracted data as csv and rds files",
-  c("latex_models.csv", "latex_delays.csv",
+  c("latex_models.csv", "latex_delays.csv", "latex_ifr.csv",
     "latex_riskfactors.csv", "latex_seroprevalence.csv", "latex_severity.csv",
     "latex_transmission.csv", "cleaning_models.csv", "cleaning_delays.csv",
-    "cleaning_riskfactors.csv",
+    "cleaning_riskfactors.csv", "cleaning_ifr.csv",
     "cleaning_seroprevalence.csv", "cleaning_severity.csv",
     "cleaning_transmission.csv")
 )
@@ -590,13 +590,14 @@ parameters <- parameters |>
 parameters <- parameters |>
   mutate(across(where(is.character), ~ gsub(",", ";", .)))
 
+
 # *------------------------------- Transmission -------------------------------*
 # Check what should still be added
 # No variability
 trns_params <- parameters |>
   filter(
     grepl(paste0("Attack|Relative contribution|Growth rate|Reproduction|",
-                 "Mutations|Overdispersion|proportion of symptomatic cases|proportion of asymptomatic cases"),
+                 "Mutations|Overdispersion|proportion of symptomatic cases|proportion of asymptomatic cases|symptomatic proportion|asymptomatic proportion"),
           parameter_type, ignore.case = TRUE)) |>
   select(parameter_type, parameter_value, unc_type,
          method_disaggregated_by,
@@ -613,7 +614,9 @@ trns_params <- parameters |>
 trns_params_pt_replacements <- c(
   "Reproduction number \\(Basic R0\\)" = "Reproduction number R0",
   "Severity - proportion of symptomatic cases" = "Proportion of symptomatic cases",
+  "Severity - symptomatic proportion of infections" = "Proportion of symptomatic cases",
   "Severity - proportion of asymptomatic cases" = "Proportion of asymptomatic cases",
+  "Severity - asymptomatic proportion of infections" = "Proportion of asymptomatic cases",
   "Mutations - evolutionary rate" = "Evolutionary rate",
   "Mutations - substitution rate" = "Substitution rate",
   # Only primary attack rate
@@ -648,6 +651,16 @@ trns_params <- trns_params[order(trns_params$parameter_type,
 trns_params <- trns_params |>
   select(-c(central))
 
+# Don't need "unspecified" for reproduction numbers.
+trns_params <- trns_params %>%
+  mutate(
+    parameter_value = if_else(
+      str_detect(parameter_type, "Reproduction number"),
+      str_remove(parameter_value, " unspecified"),
+      parameter_value
+    )
+  )
+
 # Cleaning table
 create_cleaning_table(trns_params, "cleaning_transmission.csv", articles)
 
@@ -664,6 +677,9 @@ trns_params <- trns_params |>
     "\\\\bfseries",
     "\\\\rowcolor{imperial_cool_grey!50}\\\\bfseries")
   )
+
+## Fix issue where a solo % messes up the LaTeX:
+trns_params$genome_site[trns_params$genome_site == "genome coverage of over 30%"] <- "genome coverage of over 30\\%"
 
 write.table(trns_params, file = "latex_transmission.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -907,7 +923,94 @@ cfrs_params <- cfrs_params |>
     "\\\\rowcolor{imperial_cool_grey!50}\\\\bfseries")
   )
 
+## Remove unneccessary * from the distribution column
+cfrs_params$unc_type <- gsub("\\$\\^\\*\\$", "", cfrs_params$unc_type)
+
 write.table(cfrs_params, file = "latex_severity.csv", sep = ",",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+# *----------------------------------- IFR ------------------------------------*
+ifrs_params <- parameters |>
+  filter(grepl("(IFR)", parameter_type, ignore.case = TRUE)) |>
+  mutate(parameter_type = ifelse(
+    parameter_type == 'Severity - infection fatality rate (IFR)',
+    'Infection fatality ratio',
+    parameter_type)) |>
+  select(parameter_value, unc_type,
+         parameter_2_value, unc_var_type,
+         method_disaggregated_by,
+         cfr_ifr_method, cfr_ifr_numerator,cfr_ifr_denominator,
+         population_country, dates,
+         population_sample_type, population_group,
+         parameter_notes, refs, central, id, access_param_id)
+
+ifrs_params[, c("parameter_value", "unc_type")] <- sapply(
+  c("parameter_value", "unc_type"),
+  function(col) gsub(" \\\\%", "", ifrs_params[[col]]))
+
+ifrs_params$population_country <- gsub(";", "\\, ",
+                                       ifrs_params$population_country)
+
+ifrs_params$cfr_ifr_method[ifrs_params$cfr_ifr_method==""] <- "Unspecified"
+ifrs_params$population_country[ifrs_params$population_country==""] <- "Unspecified"
+
+ifrs_params <- ifrs_params |>
+  mutate(# Add central to parameter_value with * and format all to 1 decimal
+    parameter_value=str_replace_all(parameter_value, " unspecified", ""),
+    # param_sort = coalesce(ifelse(parameter_value=="", NA, parameter_value),
+    #                       central),
+
+    #Convert to 1dp
+    parameter_value = case_when(
+      parameter_value == "" & central != "" ~ paste0(
+        sprintf("%.1f", as.numeric(central)), "$^*$"
+      ),
+      parameter_value == "" ~ "",
+      TRUE ~ str_replace_all(
+        parameter_value,
+        "(\\d+(?:\\.\\d+)?)",
+        function(x) sprintf("%.1f", as.numeric(x))
+      )
+    ),
+
+
+
+
+    # CI to 1 decimal
+    unc_type=str_replace_all(unc_type,
+                             "(\\d+(?:\\.\\d+)?)",
+                             function(x) sprintf("%.1f", as.numeric(x)))
+  )
+
+
+
+ifrs_params <- ifrs_params |>
+  arrange(tolower(population_country),
+          desc(as.numeric(central)))
+
+ifrs_params |>
+  filter(parameter_2_value != "" | unc_var_type != "") |>
+  NROW()
+
+ifrs_params <- ifrs_params |> select(-c(parameter_2_value,
+                                        unc_var_type))
+
+# Cleaning table
+create_cleaning_table(ifrs_params, "cleaning_ifr.csv", articles)
+
+ifrs_params <- ifrs_params |>
+  select(-c(parameter_notes, id, access_param_id, central))
+
+# Latex table
+ifrs_params <- insert_blank_rows(ifrs_params, "population_country")
+ifrs_params <- ifrs_params |>
+  mutate(parameter_value = str_replace(
+    parameter_value,
+    "\\\\bfseries",
+    "\\\\rowcolor{imperial_cool_grey!50}\\\\bfseries")
+  )
+
+write.table(ifrs_params, file = "latex_ifr.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # *--------------------------------- Serology ---------------------------------*

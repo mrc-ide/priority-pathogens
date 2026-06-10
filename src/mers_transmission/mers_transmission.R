@@ -19,6 +19,7 @@ source("mers_functions.R")
 
 orderly_artefact("MERS transmission figures",
                  c("figure_trans.png", "figure_trans.pdf",
+                   "figure_trans_all_qa.png", "figure_trans_all_qa.pdf",
                    "R_by_country.png", "R_by_country.pdf",
                    "R_by_sample_type.png", "R_by_sample_type.pdf"))
 
@@ -155,8 +156,12 @@ p2 <- forest_plot(filter(d2, qa_score >= 0.5),
 
 #Combine both genomic plots together
 d1_and_d2 <- rbind(d1,d2)
+d1_and_d2_all_qa <- d1_and_d2
 d1_and_d2 <- filter(d1_and_d2, qa_score >= 0.5)
 d1_and_d2 <- d1_and_d2 |>
+  mutate(parameter_type = str_remove(parameter_type, "Mutations - ") |>
+           str_to_sentence())
+d1_and_d2_all_qa <- d1_and_d2_all_qa |>
   mutate(parameter_type = str_remove(parameter_type, "Mutations - ") |>
            str_to_sentence())
 
@@ -169,6 +174,29 @@ p1_and_p2 <- forest_plot(d1_and_d2,
   guides(color = guide_legend(title = "Mutation Rate", order = 1),
          linetype = "none",
          shape = "none")
+
+p1_and_p2_all_qa <- forest_plot(d1_and_d2_all_qa,
+                         expression(Mutation~Rate~(s/s/y ~10^{-4})),
+                         custom_colours = c("#CBCE91", "#d3687f"),
+                         "parameter_type",c(-5,55),
+                         qa_alpha = 0.3,
+                         text_size=text_size) +
+  guides(color = guide_legend(title = "Mutation Rate", order = 1),
+         linetype = "none",
+         shape = "none")
+######################
+# Pull all population group colours
+all_pop_groups <- rbind(d1,d2,d3,d4,d5) |>
+  distinct(population_group) |>
+  arrange(population_group == "Other", population_group) |>
+  pull()
+
+lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
+names(custom_colour_pop_groups) <- all_pop_groups
+#Make "Other" the grey one
+custom_colour_pop_groups[7] <- "#ADB6B6FF"
+######################
 ## Overdispersion
 unique(d3$parameter_unit[!is.na(d3$parameter_unit)])
 # Now, Park (2016c) is a very different type of measure. It's not a k parameter.
@@ -177,6 +205,7 @@ d3_Park <- filter(d3, access_param_id == "038_001")
 d3_Park$parameter_value_type <- "Unspecified"
 p3_Park <- forest_plot(d3_Park,'Overdispersion (Max # of secondary cases)',"population_group", c(70,85),
                   qa_alpha = 0.3,
+                  custom_colours = custom_colour_pop_groups,
                   text_size=text_size) +
   guides(shape = guide_none(),
          fill =  guide_none(),
@@ -201,11 +230,8 @@ p3_all_qa <- forest_plot(d3,'Overdispersion',"population_group", c(-0.1,7),
                   text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1))
 
-# Pull all population group colours
-all_pop_groups <- rbind(d1,d2,d3,d4,d5) |>
-  distinct(population_group) |>
-  arrange(population_group == "Other", population_group) |>
-  pull()
+
+
 arrow_df <- data.frame(x = 1.3, xend = 1.49,
                        y = c(1), yend = c(1),
                        population_group = "Other") |>
@@ -213,6 +239,7 @@ arrow_df <- data.frame(x = 1.3, xend = 1.49,
                                levels=all_pop_groups))
 p3 <- forest_plot(filter(d3, qa_score >= 0.5),
                   'Overdispersion (k)',"population_group", c(-0.1,7),
+                  custom_colours = custom_colour_pop_groups,
                          text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1)) +
   geom_segment(
@@ -221,28 +248,23 @@ p3 <- forest_plot(filter(d3, qa_score >= 0.5),
     arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
   coord_cartesian(xlim = c(-0.1, 1.5)) +
-  scale_fill_lancet(
-    palette = "lanonc",
-    limits = full_levels,
-    breaks = full_levels[c(4,6)],
-    drop = TRUE,
-    labels = function(x) {
-      x[x == "Persons under investigation"] <-
-        "Persons under\ninvestigation"
-      x
-    }
+  guides(color = "none",
+         linetype = "none",
+         shape = "none")
+
+
+p3_all_qa <- forest_plot(d3,
+                  'Overdispersion (k)',"population_group", c(-0.1,7),
+                  qa_alpha = 0.3,
+                  custom_colours = custom_colour_pop_groups,
+                  text_size=text_size) +
+  guides(color = guide_legend(title = "Population Group", order = 1)) +
+  geom_segment(
+    data = arrow_df,
+    aes(x = x, xend = xend, y = y, yend = yend, group=population_group),
+    arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
-  scale_color_lancet(
-    palette = "lanonc",
-    limits = full_levels,
-    breaks = full_levels[c(4,6)],
-    drop = TRUE,
-    labels = function(x) {
-      x[x == "Persons under investigation"] <-
-        "Persons under\ninvestigation"
-      x
-    }
-  ) +
+  coord_cartesian(xlim = c(-0.1, 1.5)) +
   guides(color = "none",
          linetype = "none",
          shape = "none")
@@ -258,32 +280,22 @@ p4_all_qa <- forest_plot(d4, 'Attack Rate (%)', "population_group", c(-1,100),
                   qa_alpha = 0.3,
                   text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1))
+
 p4 <- forest_plot(filter(d4, qa_score >= 0.5),
                   'Attack Rate (%)', "population_group", c(-1,35),
+                  custom_colours = custom_colour_pop_groups,
                          text_size=text_size) +
   guides(color = guide_legend(title = "Population Group", order = 1)) +
-  scale_fill_lancet(
-    palette = "lanonc",
-    limits = full_levels,
-    breaks = full_levels[c(2,3,4)],
-    drop = TRUE,
-    labels = function(x) {
-      x[x == "Persons under investigation"] <-
-        "Persons under\ninvestigation"
-      x
-    }
-  ) +
-  scale_color_lancet(
-    palette = "lanonc",
-    limits = full_levels,
-    breaks = full_levels[c(2,3,4)],
-    drop = TRUE,
-    labels = function(x) {
-      x[x == "Persons under investigation"] <-
-        "Persons under\ninvestigation"
-      x
-    }
-  ) +
+  guides(color = "none",
+         linetype = "none",
+         shape = "none")
+
+p4_all_qa <- forest_plot(d4,
+                         'Attack Rate (%)', "population_group", c(-1,45),
+                         custom_colours = custom_colour_pop_groups,
+                         qa_alpha = 0.3,
+                         text_size=text_size) +
+  guides(color = guide_legend(title = "Population Group", order = 1)) +
   guides(color = "none",
          linetype = "none",
          shape = "none")
@@ -291,6 +303,11 @@ p4 <- forest_plot(filter(d4, qa_score >= 0.5),
 # Reproduction Number
 ####################
 unique(d5$parameter_unit[!is.na(d5$parameter_unit)])
+#Change the max likelihood points to "Other"
+d5 <- d5 |>
+  mutate(parameter_value_type=ifelse(parameter_value_type=="Maximum likelihood",
+                               "Other", parameter_value_type))
+
 d5$parameter_unit <- "No units"
 p5_all_qa <- forest_plot(d5,'Reproduction Number',"population_group", c(-0.1,30),
                   text_size=text_size,
@@ -326,17 +343,7 @@ d5_basic <- filter(d5, parameter_type %in% c("Reproduction number (Basic R0)" ,
                                              "Reproduction number (Basic R0) - Human"))
 d5_effective <- filter(d5, parameter_type %in% c("Reproduction number (Effective, Re)" ,
                                                  "Reproduction number (Effective, Re) - Human"))
-# Pull all population group colours
-all_pop_groups <- rbind(d1,d2,d3,d4,d5) |>
-  distinct(population_group) |>
-  arrange(population_group == "Other", population_group) |>
-  pull()
 
-lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
-custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
-names(custom_colour_pop_groups) <- all_pop_groups
-#Make "Other" the grey one
-custom_colour_pop_groups[7] <- "#ADB6B6FF"
 
 arrow_df <- data.frame(x = rep(8.9,2), xend = rep(9.9,2), y = c(1,13), yend = c(1,13),
                        population_group = rep("Other",2)) |>
@@ -355,6 +362,29 @@ p5_basic <- forest_plot(
     arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
   coord_cartesian(xlim = c(-0.1, 10)) +
+  guides(shape = "none",
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  guide_legend(title = "Population group", order=2))
+
+arrow_df <- data.frame(x = rep(10.9,3), xend = rep(11.95,3), y = c(1,2,33), yend = c(1,2,33),
+                       population_group = rep("Other",3)) |>
+  mutate(parameter_type=factor(population_group,
+                               levels=all_pop_groups))
+
+p5_basic_all_qa <- forest_plot(
+  d5_basic, "Basic Reproduction Number","population_group",
+  c(-0.1,30), custom_colours = custom_colour_pop_groups,
+  qa_alpha = 0.3,
+  text_size=text_size, sort=TRUE,
+  segment_show.legend = c(shape=FALSE, colour=TRUE)) +
+  scale_colour_manual(name = "Population group", values = custom_colour_pop_groups, drop = FALSE) +
+  geom_segment(
+    data = arrow_df,
+    aes(x = x, xend = xend, y = y, yend = yend, group=population_group),
+    arrow = arrow(type = "open", length = unit(0.20, "cm")),
+  ) +
+  coord_cartesian(xlim = c(-0.1, 12)) +
   guides(shape = "none",
          fill =  guide_none(),
          linetype = guide_none(),
@@ -379,6 +409,27 @@ p5_effective <- forest_plot(
          fill =  guide_none(),
          linetype = guide_none(),
          color =  "none")
+
+arrow_df <- data.frame(x = rep(10.9,2), xend = rep(11.95,2), y = c(1,7), yend = c(1,7),
+                       population_group = rep("Other",2)) |>
+  mutate(parameter_type=factor(population_group,
+                               levels=all_pop_groups))
+
+p5_effective_all_qa <- forest_plot(
+  d5_effective, "Effective Reproduction Number","population_group",
+  c(-0.1,30), custom_colours = custom_colour_pop_groups,
+  qa_alpha = 0.3,
+  text_size=text_size, sort=TRUE) +
+  geom_segment(
+    data = arrow_df,
+    aes(x = x, xend = xend, y = y, yend = yend, group=population_group),
+    arrow = arrow(type = "open", length = unit(0.20, "cm")),
+  ) +
+  coord_cartesian(xlim = c(-0.1, 12)) +
+  guides(shape = guide_legend(title = "Parameter type", order=1),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  "none")
 # Secondary Attack Rate
 #######################
 
@@ -386,7 +437,12 @@ unique(d7$parameter_unit[!is.na(d7$parameter_unit)])
 p7_all_qa <- forest_plot(d7,'Secondary Attack Rate (%)', "population_group",
                   c(0, 25),
                   text_size=text_size,
-                  qa_alpha =0.3)
+                  custom_colours = custom_colour_pop_groups,
+                  qa_alpha =0.3) +
+  guides(shape = guide_none(),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  "none")
 p7 <- forest_plot(filter(d7, qa_score >= 0.5),'Secondary Attack Rate (%)', "population_group",
                          c(0, 25),
                          text_size=text_size)
@@ -394,7 +450,18 @@ p7 <- forest_plot(filter(d7, qa_score >= 0.5),'Secondary Attack Rate (%)', "popu
 #Growth rate (r)
 ################
 unique(d8$parameter_unit[!is.na(d8$parameter_unit)])
-# These are all low QA so just ignore
+d8$parameter_unit[3] <- "Unspecified"
+# These are all low QA
+p8_all_qa <- forest_plot(d8,'Growth Rate', "population_group",
+                         c(0, 0.25),
+                         text_size=text_size,
+                         custom_colours = custom_colour_pop_groups,
+                         qa_alpha =0.3) +
+  guides(shape = guide_none(),
+         fill =  guide_none(),
+         linetype = guide_none(),
+         color =  "none")
+
 
 
 # Save plots
@@ -410,6 +477,21 @@ patchwork_trans <- patchwork_trans + plot_annotation(tag_levels = 'A')
 ggsave("figure_trans.png", plot = patchwork_trans, width = 14, height = 10)
 ggsave("figure_trans.pdf", plot = patchwork_trans, width = 14, height = 10)
 
+
+#All QA
+design <- "AF
+AF
+BF
+CF
+CF
+DG
+DG
+EG
+EH"
+patchwork_trans <- p3_all_qa+p3_Park+p4_all_qa+p7_all_qa+p1_and_p2_all_qa+p5_basic_all_qa+p5_effective_all_qa+p8_all_qa+plot_layout(design = design, guides = "collect")
+patchwork_trans <- patchwork_trans + plot_annotation(tag_levels = 'A')
+ggsave("figure_trans_all_qa.png", plot = patchwork_trans, width = 14, height = 14)
+ggsave("figure_trans_all_qa.pdf", plot = patchwork_trans, width = 14, height = 14)
 # *============================================================================*
 
 # Now we make some fancier R number plots

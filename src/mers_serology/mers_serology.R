@@ -8,6 +8,8 @@ library(patchwork)
 library(readr)
 library(stringr)
 library(tidyr)
+library(metafor)
+library(meta)
 
 # *--------------------------------- Orderly ----------------------------------*
 orderly_strict_mode()
@@ -72,6 +74,7 @@ sero_studies <- sero_studies |>
                       "Other", "Unspecified")))
 
 # Remove the low-QA studies now
+sero_studies_all <- sero_studies
 sero_studies <- filter(sero_studies, qa_score >= 0.5)
 
 # *---------------------------------- Plots -----------------------------------*
@@ -96,13 +99,51 @@ ggsave(paste0("sero_apx_col_assay_general.png"),
 sero_studies <- sero_studies |>
   mutate(population_country=ifelse(population_country=="China; Nigeria",
                                    "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Türkiye",
+                                   "Other", population_country)) |>
   mutate(population_country=ifelse(population_country=="Egypt",
                                    "Other (MENAP)", population_country)) |>
   mutate(population_country=ifelse(population_country=="Germany; Netherlands; Qatar",
                                    "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Germany",
+                                   "Other", population_country)) |>
   mutate(population_country=ifelse(population_country=="Jordan",
                                    "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Iraq",
+                                   "Other (MENAP)", population_country)) |>
   mutate(population_country=ifelse(population_country=="Kenya",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Sierra Leone",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Malaysia",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Morocco",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Nigeria",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Pakistan",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="United States of America",
+                                   "Other", population_country))
+# And for all QA too:
+sero_studies_all <- sero_studies_all |>
+  mutate(population_country=ifelse(population_country=="China; Nigeria",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Türkiye",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Egypt",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Germany; Netherlands; Qatar",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Germany",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Jordan",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Iraq",
+                                   "Other (MENAP)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Kenya",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Sierra Leone",
                                    "Other", population_country)) |>
   mutate(population_country=ifelse(population_country=="Malaysia",
                                    "Other", population_country)) |>
@@ -117,6 +158,12 @@ sero_studies <- sero_studies |>
 #Set my preferred factor levels:
 sero_studies$population_country <- factor(
   sero_studies$population_country,
+  levels = c("Saudi Arabia", "United Arab Emirates", "Qatar",
+             "Republic of Korea", "Other (MENAP)", "Other")  # <- your desired order
+)
+#And for all QA:
+sero_studies_all$population_country <- factor(
+  sero_studies_all$population_country,
   levels = c("Saudi Arabia", "United Arab Emirates", "Qatar",
              "Republic of Korea", "Other (MENAP)", "Other")  # <- your desired order
 )
@@ -179,3 +226,54 @@ ggsave(paste0("sero_apx_col_assay_patchwork.png"),
 ggsave(paste0("sero_apx_col_assay_patchwork.pdf"),
        plot = sero_apx_1, width = 32, height = 30)
 
+#################
+#And the all QA version:
+p1_all_qa <- forest_plot(sero_studies_all, 'Serology (%)', 'parameter_type', c(-4,104),
+                  qa_alpha = 0.3, text_size = 28, sort=TRUE, point_size=6) +
+  #This facets by country, but atm, that's so many countries that the plot is a mess
+  ggforce::facet_col(facets = vars(population_country),
+                     scales = "free_y",
+                     space = "free") +
+  guides(fill = guide_none(),
+         linetype = guide_none(),
+         color = guide_legend(title = "Assay", order =2),
+         shape = guide_legend(title = "Parameter type", order =1)) +
+  theme(legend.position = c(0.82, 0.91))
+
+p2_all_qa <- forest_plot(sero_studies_all, 'Serology (%)', 'parameter_type', c(-4,104),
+                  qa_alpha = 0.3, text_size = 28, sort=TRUE, point_size=6) +
+  ggforce::facet_col(facets = vars(population_group),
+                     scales = "free_y",
+                     space = "free") +
+  guides(fill = guide_none(),
+         linetype = guide_none(),
+         color = guide_legend(title = "Assay", order =2),
+         shape = guide_legend(title = "Parameter type", order =1)) +
+  theme(legend.position = c(0.84, 0.45))
+
+sero_apx_1 <-  (p1_all_qa+ theme(legend.position = c(0.76, 0.94)) |
+                  p2_all_qa  + guides(color=guide_none(), shape=guide_none())) +
+  plot_annotation(tag_levels = "A")
+
+ggsave(paste0("sero_apx_col_assay_patchwork_all_qa.png"),
+       plot = sero_apx_1, width = 32, height = 33)
+ggsave(paste0("sero_apx_col_assay_patchwork_all_qa.pdf"),
+       plot = sero_apx_1, width = 32, height = 37)
+
+####### Meta Analysis
+# Plot colour
+imperial_khaki <- "#EFE58B"
+text_size <- 15
+lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+meta_digits <- 2
+
+# sero_meta <- metaprop_wrap(
+#   sero_studies, subgroup = 'population_group', plot_pooled = TRUE,
+#   sort_by_subg = TRUE, plot_study = FALSE, digits = meta_digits,
+#   colour = imperial_khaki,
+#   width = 9500, height = 6000, resolution = 1000)
+#
+# ggsave(file.path("figures", "figure_3_meta_country_extracted_outbreak.pdf"),
+#        sero_meta$plot, width = 12, height = 6)
+# ggsave(file.path("figures", "figure_3_meta_country_extracted_outbreak.png"),
+#        sero_meta$plot, width = 12, height = 6)

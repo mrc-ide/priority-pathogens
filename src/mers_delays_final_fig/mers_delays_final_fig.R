@@ -93,6 +93,7 @@ parameters <- parameters |>
 all_delays <- filter(parameters, parameter_class == "Human delay")
 
 #Filter out all low-QA
+all_delays_all_qa <- all_delays
 all_delays <- filter(all_delays, qa_score >= 0.5)
 
 table(all_delays$parameter_type)
@@ -108,11 +109,12 @@ all_delay_types <- c("Incubation period", #27
                      "Admission to care>death", #1
                      "Symptom onset>discharge/recovery", #6
                      "Admission to care>discharge/recovery", #1
-                     "Infectious period" #None
+                     "Infectious period", #None
+                     "Generation time"
 )
 parameters <- parameters |>
   filter(parameter_type %in% all_delay_types)
-parameters <- filter(parameters, qa_score >= 0.5)
+#parameters <- filter(parameters, qa_score >= 0.5)
 # *--------------------------------- Summary ----------------------------------*
 num_delays <- NROW(parameters)
 
@@ -161,16 +163,30 @@ parameters <- parameters |>
                                    "Other (Middle East)", population_country)) |>
   mutate(population_country=ifelse(population_country=="Democratic People's Republic of Korea; Republic of Korea; Saudi Arabia",
                                    "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="France; Iran (Islamic Republic of); Italy; Jordan; Qatar; Saudi Arabia; Tunisia; United Arab Emirates; United Kingdom of Great Britain and Northern Ireland",
+                                   "Global", population_country)) |>
+  mutate(population_country=ifelse(population_country=="France; Italy; Tunisia; United Kingdom of Great Britain and Northern Ireland",
+                                   "Global", population_country)) |>
+  mutate(population_country=ifelse(population_country=="France; Iran (Islamic Republic of); Jordan; Saudi Arabia; United Arab Emirates",
+                                   "Global", population_country)) |>
   mutate(population_country=ifelse(population_country=="Oman",
                                    "Other (Middle East)", population_country)) |>
   mutate(population_country=ifelse(population_country=="Oman; Saudi Arabia",
                                    "Other (Middle East)", population_country)) |>
   mutate(population_country=ifelse(population_country=="Qatar",
                                    "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Jordan",
+                                   "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Jordan; Kuwait; Oman; Qatar; Saudi Arabia; United Arab Emirates; Yemen",
+                                   "Other (Middle East)", population_country)) |>
   mutate(population_country=ifelse(population_country=="United Arab Emirates",
                                    "Other (Middle East)", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Iran (Islamic Republic of); Jordan; Philippines; Republic of Korea; Saudi Arabia; United Arab Emirates",
+                                   "Other", population_country)) |>
   mutate(population_country=ifelse(population_country=="Republic of Korea; Saudi Arabia",
                                    "Other", population_country)) |>
+  mutate(population_country=ifelse(is.na(population_country), #I checked these, for two of the papers it's mostly Saudi, but we can't be sure of the other data
+                                   "Unspecified", population_country)) |>
   mutate(population_country=ifelse(!is.na(population_location) & population_location=="Global linelist",
                                    "Global linelist", population_country))
 
@@ -247,6 +263,13 @@ d6 <- d6 |>
 #Other delays
 d7 <- parameters |>
   filter(tolower(parameter_type) %in% c('other human delay (go to section)'))
+
+# Generation time
+d8 <- parameters |>
+  filter(tolower(parameter_type) %in% c("generation time"))
+# Infectious period
+d9 <- parameters |>
+  filter(tolower(parameter_type) %in% c("infectious period"))
 # *---------------------------------- Plots -----------------------------------*
 lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
 
@@ -261,7 +284,7 @@ all_country_groups <- bind_rows(d1, d6) |>
   arrange(population_country) |>
   pull()
 #Change order:
-all_country_groups2 <- c(all_country_groups[2:4], all_country_groups[1])
+all_country_groups2 <- c(all_country_groups[1],all_country_groups[5:6], all_country_groups[2:4], all_country_groups[7])
 
 country_colours <- lanonc_colours[seq_along(all_country_groups2)]
 country_colours <- setNames(country_colours, all_country_groups2)
@@ -273,7 +296,7 @@ d1$population_country <- factor(d1$population_country,
 d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_country_groups))
 
       p1_incb <- forest_plot(
-        d1, "Incubation period (days)",
+        filter(d1, qa_score >= 0.5), "Incubation period (days)",
         "population_country", c(0,22), text_size=text_size, segment_show.legend = c(shape=FALSE, colour=TRUE, fill = TRUE),
         sort=TRUE, custom_colours = country_colours)
 
@@ -287,6 +310,25 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
           linetype = guide_legend(title = "", order = 2)
         )
 
+      p1_incb_all_qa <- forest_plot(
+        d1, "Incubation period (days)",
+        "population_country", c(0,22),
+        qa_alpha = 0.3, text_size=text_size, segment_show.legend = c(shape=FALSE, colour=TRUE, fill = TRUE),
+        sort=TRUE, custom_colours = country_colours)
+
+      p1_incb_all_qa <- p1_incb_all_qa +
+        scale_colour_manual(name = "Country", values = country_colours, drop = TRUE) +
+        scale_fill_manual(name = "Country", values = country_colours, drop = TRUE) +
+        guides(
+          color = guide_legend(title = "Country", order = 1),
+          fill  = guide_none(),
+          shape = guide_legend(title = "", order = 3),
+          linetype = guide_legend(title = "", order = 2)
+        )
+
+      ggsave("SI_delay_incb.png", plot = p1_incb_all_qa, width = 14, height = nrow(d1)*0.3)
+      ggsave("SI_delay_incb.pdf", plot = p1_incb_all_qa, width = 14, height = nrow(d1)*0.3)
+
       saveRDS(d1, "incubation_period_df.rds")
       ggsave("p1_incubation_period.pdf",
              plot = p1_incb,
@@ -296,12 +338,12 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
              width = 11, height = 9)
 
 
-      d8_plot <- d6 |> filter(parameter_type=="Time in care (length of stay)")
-      d8_plot_label <- "time_in_care"
-      d8_x_axis_label <- 'Time in care (days)'
-      xlim_d8 <- c(0,100)
+      tic_plot <- d6 |> filter(parameter_type=="Time in care (length of stay)")
+      tic_plot_label <- "time_in_care"
+      tic_x_axis_label <- 'Time in care (days)'
+      xlim_tic <- c(0,100)
 
-      d8_plot <- d8_plot |> mutate(population_country = factor(population_country, levels = all_country_groups))
+      tic_plot <- tic_plot |> mutate(population_country = factor(population_country, levels = all_country_groups))
 
 
       # all_groups <- rbind(d4_plot, d8_plot) |>
@@ -313,8 +355,8 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       # custom_colours <- setNames(custom_colours, all_groups)
 
     p2_time_in_care <- forest_plot(
-      d8_plot,
-      d8_x_axis_label, "population_country", xlim_d8,
+      filter(tic_plot, qa_score >= 0.5),
+      tic_x_axis_label, "population_country", xlim_tic,
       text_size = text_size, sort=TRUE,
       segment_show.legend = c(shape=FALSE, colour=TRUE),
       custom_colours = country_colours)
@@ -324,6 +366,25 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       guides(shape = guide_none(), linetype = guide_none(),
              color = guide_legend(title = "Country"))
 
+    p2_time_in_care_all_qa <- forest_plot(
+      tic_plot,
+      tic_x_axis_label, "population_country", xlim_tic,
+      qa_alpha = 0.3,
+      text_size = text_size, sort=TRUE,
+      segment_show.legend = c(shape=FALSE, colour=TRUE),
+      custom_colours = country_colours)
+
+    p2_time_in_care_all_qa <- p2_time_in_care_all_qa +
+      scale_colour_manual(name = "Country", values = country_colours, drop = TRUE) +
+      guides(
+        color = guide_legend(title = "Country", order = 1),
+        fill  = guide_none(),
+        shape = guide_legend(title = "", order = 3),
+        linetype = guide_legend(title = "", order = 2)
+      )
+
+    ggsave("SI_delay_tic.png", plot = p2_time_in_care_all_qa, width = 14, height = nrow(tic_plot)*0.3)
+    ggsave("SI_delay_tic.pdf", plot = p2_time_in_care_all_qa, width = 14, height = nrow(tic_plot)*0.3)
 
     # send linerange to the back
     # Keep forest plot point geom last to maintain plot order
@@ -341,7 +402,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       xlim <- c(-2, 200)
 
       all_groups <- d6 |>
-        filter(qa_score>=0.5) |>
+        #filter(qa_score>=0.5) |>
         filter(parameter_type %in% c("Onset>admission",
                                      "Onset>severe illness",
                                      "Onset>recovery/death",
@@ -366,13 +427,8 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                                               "Death", "Discharge/recovery")))
 
       p3_outcomes <- forest_plot(
-        d6 |> filter(qa_score>= 0.5) |>
-          #REMOVE THIS TO GO BACK TO ORIGINAL
-          filter(parameter_type %in% c("Onset>admission")),#,
-                                       #"Onset>severe illness",
-                                       #"Onset>recovery/death",
-                                       #"Onset>discharge/recovery")),
-        #'Symptom onset-to-outcome (days)',
+        d4 |> filter(qa_score>= 0.5) |>
+          filter(parameter_type %in% c("Admission")),
         'Symptom onset-to-hospital admission (days)',
         #"parameter_type",
         "population_country",
@@ -399,11 +455,35 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                color = guide_none()) +
         theme(legend.position = c(0.85, 0.75))
 
-      ###
+
+      arrow_df_1 <- data.frame(x = rep(14.5,3), xend = rep(14.9,3), y = c(1,16,21), yend = c(1,16,21),
+                               parameter_type = rep("Discharge/recovery",3)) |>
+        mutate(parameter_type=factor(parameter_type,
+                                     levels=c("Admission", "Severe illness",
+                                              "Death", "Discharge/recovery")))
+
+      p3_outcomes_all_qa <- forest_plot(
+        d4 |>
+          filter(parameter_type %in% c("Admission")),
+        'Symptom onset-to-hospital admission (days)',
+        #"parameter_type",
+        "population_country",
+        xlim, text_size = text_size, sort=TRUE,
+        qa_alpha = 0.3,
+        custom_colours = country_colours) +#custom_colours) +
+        geom_segment(
+          data = arrow_df_1,
+          aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+          arrow = arrow(type = "open", length = unit(0.20, "cm")),
+        ) +
+        coord_cartesian(xlim = c(-0.5, 15))
+
+
+      ############################
       p4_outcomes <- forest_plot(
-        d6 |> filter(qa_score>= 0.5) |>
+        d4 |> filter(qa_score>= 0.5) |>
           #REMOVE THIS TO GO BACK TO ORIGINAL
-          filter(parameter_type %in% c("Onset>discharge/recovery")),
+          filter(parameter_type %in% c("Discharge/recovery")),
         'Symptom onset-to-discharge/recovery (days)',
         "population_country", xlim, text_size = text_size, sort=TRUE,
         custom_colours = country_colours) +
@@ -428,6 +508,81 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                color = guide_none()) +
         theme(legend.position = c(0.85, 0.75))
       ###
+
+      p4_outcomes_all_qa <- forest_plot(
+        d4 |>
+          #REMOVE THIS TO GO BACK TO ORIGINAL
+          filter(parameter_type %in% c("Discharge/recovery")),
+        'Symptom onset-to-discharge/recovery (days)',
+        "population_country", xlim, text_size = text_size, sort=TRUE,
+        qa_alpha = 0.3,
+        custom_colours = country_colours) +
+        geom_segment(
+          data = arrow_df,
+          aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+          arrow = arrow(type = "open", length = unit(0.20, "cm")),
+        ) +
+        coord_cartesian(xlim = c(-0.5, 45))
+      #################################################################
+      arrow_df <- data.frame(x = rep(33.7,2), xend = rep(34.7,2), y = c(8,10), yend = c(8,10),
+                             parameter_type = rep("Discharge/recovery",2)) |>
+        mutate(parameter_type=factor(parameter_type,
+                                     levels=c("Admission", "Severe illness",
+                                              "Death", "Discharge/recovery")))
+      #Remove 037_004 because it's just that a patient "died within 2 weeks", not good enough to extract in my books.
+      d4 <- filter(d4, access_param_id != "037_004")
+
+      p4_outcomes_death <- forest_plot(
+        d4 |> filter(qa_score>= 0.5) |>
+          #REMOVE THIS TO GO BACK TO ORIGINAL
+          filter(parameter_type %in% c("Death")),
+        'Symptom onset-to-death (days)',
+        "population_country", c(-2,400), text_size = text_size, sort=TRUE,
+        custom_colours = country_colours) +
+        geom_segment(
+          data = arrow_df,
+          aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+          arrow = arrow(type = "open", length = unit(0.20, "cm")),
+        ) +
+        coord_cartesian(xlim = c(-0.5, 35))
+
+      ggsave("p4_outcomes.pdf",
+             plot = p4_outcomes_death,
+             width = 15, height = 17)
+      ggsave("p4_outcomes_death.png",
+             plot = p4_outcomes,
+             width = 15, height = 17)
+
+      p4_outcomes_death <-
+        p4_outcomes_death +
+        guides(shape =  guide_none(),
+               linetype = guide_none(),
+               color = guide_none()) +
+        theme(legend.position = c(0.85, 0.75))
+      #
+      arrow_df <- data.frame(x = rep(33.7,4), xend = rep(34.7,4), y = c(8,11,15,17), yend = c(8,11,15,17),
+                             parameter_type = rep("Discharge/recovery",4)) |>
+        mutate(parameter_type=factor(parameter_type,
+                                     levels=c("Admission", "Severe illness",
+                                              "Death", "Discharge/recovery")))
+
+      p4_outcomes_death_all_qa <- forest_plot(
+        d4 |>
+          #REMOVE THIS TO GO BACK TO ORIGINAL
+          filter(parameter_type %in% c("Death")),
+        'Symptom onset-to-death (days)',
+        "population_country", c(-2,400), text_size = text_size, sort=TRUE,
+        qa_alpha = 0.3,
+        custom_colours = country_colours) +
+        geom_segment(
+          data = arrow_df,
+          aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+          arrow = arrow(type = "open", length = unit(0.20, "cm")),
+        ) +
+        coord_cartesian(xlim = c(-0.5, 35))
+
+
+      #################################################################
 
   common_left_legend <- theme(
     legend.position = "right",
@@ -458,20 +613,171 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
 
 
 
-# Stick all 4 together:
+# Stick all 5 together:
 
     delays_plot <-  (p1_incb /#+
       p3_outcomes /
         p4_outcomes /
         p2_time_in_care) +
-      plot_layout(heights = c(26, 24, 6, 26), #, widths = c(1, 1)
+      plot_layout(heights = c(26, 24, 6, 13, 26), #, widths = c(1, 1)
+                  guides = "collect") +
+      plot_annotation(tag_levels = 'A')
+
+    ggsave("mers_delays_small.pdf", plot = delays_plot,
+           width = 25, height = 27)
+    ggsave("mers_delays_small.png", plot = delays_plot,
+           width = 25, height = 27)
+
+    delays_plot <-  (p1_incb /#+
+                       p3_outcomes /
+                       p4_outcomes /
+                       p4_outcomes_death /
+                       p2_time_in_care) +
+      plot_layout(heights = c(26, 24, 6, 13, 26), #, widths = c(1, 1)
                   guides = "collect") +
       plot_annotation(tag_levels = 'A')
 
     ggsave("mers_delays.pdf", plot = delays_plot,
-           width = 25, height = 27)
+           width = 25, height = 35)
     ggsave("mers_delays.png", plot = delays_plot,
-           width = 25, height = 27)
+           width = 25, height = 35)
+
+    design <- "AC
+AC
+AC
+BD
+BE
+BE"
+    patchwork_delay <- p1_incb+p2_time_in_care+p3_outcomes+p4_outcomes+p4_outcomes_death+plot_layout(design = design, guides = "collect")
+    patchwork_delay <- patchwork_delay + plot_annotation(tag_levels = 'A')
+    ggsave("mers_delays_alt.pdf", plot = patchwork_delay,
+           width = 25, height = 20)
+    ggsave("mers_delays_alt.png", plot = patchwork_delay,
+           width = 25, height = 20)
+
+    ######################
+    #SI from symptom onset:
+    p4_outcomes_all_qa <- p4_outcomes_all_qa +
+      guides(shape =  guide_none(),
+             linetype = guide_none(),
+             color = guide_none()) +
+      theme(legend.position = c(0.85, 0.75))
+
+    p4_outcomes_death_all_qa <- p4_outcomes_death_all_qa +
+      guides(shape =  guide_none(),
+             linetype = guide_none(),
+             color = guide_none()) +
+      theme(legend.position = c(0.85, 0.75))
+
+    delays_plot <-  (p3_outcomes_all_qa /
+                       p4_outcomes_all_qa /
+                       p4_outcomes_death_all_qa) +
+      plot_layout(heights = c(34, 9, 17), #, widths = c(1, 1)
+                  guides = "collect") +
+      plot_annotation(tag_levels = 'A')
+
+    ggsave("SI_delay_from_onset.pdf", plot = delays_plot,
+           width = 25, height = 20)
+    ggsave("SI_delay_from_onset.png", plot = delays_plot,
+           width = 25, height = 20)
+
+  #######################################
+    # SI from admission
+    d3 <- filter(d3, parameter_type != "Time in care")
+
+    arrow_df_1 <- data.frame(x = rep(23.5,1), xend = rep(24.9,1), y = c(1), yend = c(1),
+                             parameter_type = rep("Discharge/recovery",1)) |>
+      mutate(parameter_type=factor(parameter_type,
+                                   levels=c("Admission", "Severe illness",
+                                            "Death", "Discharge/recovery")))
+
+    p4_admission <- forest_plot(
+      d3 |>
+        filter(parameter_type %in% c("Discharge/recovery")),
+      'Hospital admission-to-discharge/recovery (days)',
+      #"parameter_type",
+      "population_country",
+      xlim, text_size = text_size, sort=TRUE,
+      qa_alpha = 0.3,
+      custom_colours = country_colours) +#custom_colours) +
+      geom_segment(
+        data = arrow_df_1,
+        aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+        arrow = arrow(type = "open", length = unit(0.20, "cm")),
+      ) +
+      coord_cartesian(xlim = c(-0.5, 25))
+
+    p4_admission2 <- forest_plot(
+      d3 |>
+        filter(parameter_type %in% c("Death")),
+      'Hospital admission-to-death (days)',
+      #"parameter_type",
+      "population_country",
+      xlim, text_size = text_size, sort=TRUE,
+      qa_alpha = 0.3,
+      custom_colours = country_colours) +#custom_colours) +
+      # geom_segment(
+      #   data = arrow_df_1,
+      #   aes(x = x, xend = xend, y = y, yend = yend, group=parameter_type),
+      #   arrow = arrow(type = "open", length = unit(0.20, "cm")),
+      # ) +
+      coord_cartesian(xlim = c(-0.5, 75))
+
+    p4_admission2 <-
+      p4_admission2 +
+      guides(shape =  guide_none(),
+             linetype = guide_none(),
+             color = guide_none()) +
+      theme(legend.position = c(0.85, 0.75))
+
+
+    delays_plot <-  (p4_admission /
+                       p4_admission2) +
+      plot_layout(heights = c(4, 2), #, widths = c(1, 1)
+                  guides = "collect") +
+      plot_annotation(tag_levels = 'A')
+
+    ggsave("SI_delay_from_admission.pdf", plot = delays_plot,
+           width = 25, height = 8)
+    ggsave("SI_delay_from_admission.png", plot = delays_plot,
+           width = 25, height = 8)
+
+    #####################################################
+    # Generation Time
+    p5_gen <- forest_plot(
+      d8,
+      'Generation time (days)',
+      #"parameter_type",
+      "population_country",
+      xlim, text_size = text_size, sort=TRUE,
+      qa_alpha = 0.3,
+      custom_colours = country_colours) +#custom_colours) +
+      coord_cartesian(xlim = c(-0.5, 25))
+
+
+    #####################################################
+    # Serial Interval
+    p_serial <- forest_plot(
+      d5,
+      'Serial Interval (days)',
+      #"parameter_type",
+      "population_country",
+      xlim, text_size = text_size, sort=TRUE,
+      qa_alpha = 0.3,
+      custom_colours = country_colours) +#custom_colours) +
+      coord_cartesian(xlim = c(-0.5, 25)) +
+      scale_colour_manual(name = "Country", values = country_colours, drop = TRUE) +
+      guides(
+        color = guide_legend(title = "Country", order = 1),
+        fill  = guide_none(),
+        shape = guide_legend(title = "", order = 3),
+        linetype = guide_legend(title = "", order = 2)
+      )
+
+    ggsave("SI_delay_serial.pdf", plot = p_serial,
+           width = 25, height = 9)
+    ggsave("SI_delay_serial.png", plot = p_serial,
+           width = 25, height = 9)
 
     ########
     delays_plot <- (
@@ -554,6 +860,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       "hospital admission" = "Admission to care",
       "Mechanical Ventilation" = "Start of mechanical ventilation",
       "Outcome (recovery or death)" = "Death or discharge",
+      "death or discharge" = "Death or discharge",
       "Notification to WHO" = "Case notification to WHO"
     )
 
@@ -569,3 +876,111 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                                sep = " > ")
 unique(d7$parameter_type)
 table(d7$parameter_type)
+
+
+library(ggalluvial)
+
+# Count transitions
+#d7 <- filter(d7, other_delay_start != "Viral RNA detected")
+flows <- d7 %>%
+  count(other_delay_start, other_delay_end)
+
+test <- d7
+test$other_delay_start <- as.factor(test$other_delay_start)
+test$other_delay_end <- as.factor(test$other_delay_end)
+
+levs <- union(levels(test$other_delay_start), levels(test$other_delay_end))
+flows <- test %>%
+  mutate(other_delay_start = factor(other_delay_start, levels = levs),
+         other_delay_end = factor(other_delay_end, levels = levs)) %>%
+  count(other_delay_start, other_delay_end, name = "n")
+
+library(ggfittext)
+library(grid)
+
+#We remove some that only have 1 start point:
+test2 <- filter(d7, !(other_delay_start %in% c("Infection", "Infectiousness",
+                                               "Intubation", "Recovery")) )
+
+test2$other_delay_start <- as.factor(test2$other_delay_start)
+test2$other_delay_end <- as.factor(test2$other_delay_end)
+
+levs <- union(levels(test2$other_delay_start), levels(test2$other_delay_end))
+flows2 <- test2 %>%
+  mutate(other_delay_start = factor(other_delay_start, levels = levs),
+         other_delay_end = factor(other_delay_end, levels = levs)) %>%
+  count(other_delay_start, other_delay_end, name = "n")
+
+p <- ggplot(flows2,
+            aes(axis1 = other_delay_start,
+                axis2 = other_delay_end,
+                y = n)) +
+  geom_alluvium(aes(fill = other_delay_start),
+                width = 0.6,
+                alpha = 0.85,
+                discern = TRUE) +
+  geom_stratum(width = 0.6, fill = "grey95", colour = "grey40") +
+  # geom_text(stat = "stratum",
+  #           aes(label = after_stat(stratum))) +
+  ggfittext::geom_fit_text(
+    stat = "stratum",
+    aes(label = after_stat(stratum)),
+    size = 42,
+    min.size = 2,
+    #max.size = 20,
+    grow = FALSE
+  ) +
+  scale_fill_brewer(palette = "Paired") +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    legend.title = element_text(size = 42),
+    legend.text = element_text(size = 26),
+    axis.text.y = element_text(size = 38),
+    axis.title.y = element_text(size = 30),
+    legend.key.size = unit(2, "cm"),
+    panel.grid = element_blank()
+  ) +
+  labs(fill = "Other human delay \nstart point",
+       y = "Count")
+
+
+ggsave(
+  "other_delay_flow.png",
+  plot = p,
+  width = 40,
+  height = 30,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  "other_delay_flow.pdf",
+  plot = p,
+  width = 40,
+  height = 30,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
+
+
+library(knitr)
+library(kableExtra)
+
+tab <- flows |>
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    caption = "Transition counts",
+    longtable = FALSE
+  ) |>
+  kable_styling(
+    latex_options = c("hold_position")
+  )
+
+save_kable(tab, "other_delays_table.tex")

@@ -50,7 +50,7 @@ unique(filter(parameters, parameter_class == "Severity")$parameter_type)
 table(filter(parameters, parameter_class == "Severity")$parameter_type)
 
 #Filter out low QA now
-parameters <- filter(parameters, qa_score >= 0.5)
+#parameters <- filter(parameters, qa_score >= 0.5)
 
 #For now, map ratio to rate and symptomatics together
 #Stick asymptomatics together too
@@ -75,7 +75,7 @@ d1 <- d1 |>
   mutate(population_group = ifelse(is.na(population_group), "Unspecified", population_group))
 
 # Immediately remove the low-QA studies
-d1 <- filter(d1, qa_score >= 0.5)
+#d1 <- filter(d1, qa_score >= 0.5)
 
 # We have 8 parameters with NA for unit
 # d1_no_unit <- d1 |>
@@ -136,7 +136,7 @@ d1 <- d1 |>
   mutate(population_country=ifelse(population_country=="Algeria; Austria; Bahrain; China; Egypt; France; Germany; Greece; Iran (Islamic Republic of); Italy; Jordan; Kuwait; Lebanon; Malaysia; Netherlands; Oman; Philippines; Qatar; Republic of Korea; Saudi Arabia; Thailand; Tunisia; Türkiye; United Arab Emirates; United Kingdom of Great Britain and Northern Ireland; United States of America; Yemen",
                                    "Global", population_country)) |>
   mutate(population_country=ifelse(population_country=="Austria; France; Germany; Greece; Italy; Netherlands; Spain; United Kingdom of Great Britain and Northern Ireland",
-                                   "Europe", population_country)) |>
+                                   "Other", population_country)) |>
   mutate(population_country=ifelse(population_country=="Bahrain; Egypt; Iran (Islamic Republic of); Jordan; Kuwait; Lebanon; Oman; Qatar; Saudi Arabia; United Arab Emirates; Yemen",
                                    "Middle East", population_country)) |>
   mutate(population_country=ifelse(population_country=="China; Malaysia; Philippines; Republic of Korea; Thailand; Türkiye",
@@ -147,6 +147,24 @@ d1 <- d1 |>
                                    "Middle East", population_country)) |>
   mutate(population_country=ifelse(population_country=="Oman; Saudi Arabia",
                                    "Middle East", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Oman",
+                                   "Middle East", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Iran (Islamic Republic of); Jordan; Philippines; Republic of Korea; Saudi Arabia; United Arab Emirates",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Qatar",
+                                   "Middle East", population_country)) |>
+  mutate(population_country=ifelse(is.na(population_country),
+                                   "Unspecified", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Jordan",
+                                   "Middle East", population_country)) |>
+  mutate(population_country=ifelse(population_country=="France; Germany; Italy; Jordan; Qatar; Saudi Arabia; Tunisia; United Arab Emirates; United Kingdom of Great Britain and Northern Ireland",
+                                   "Global", population_country)) |>
+  mutate(population_country=ifelse(population_country=="France; Jordan; Saudi Arabia; United Kingdom of Great Britain and Northern Ireland",
+                                   "Other", population_country)) |>
+  mutate(population_country=ifelse(population_country=="Jordan; Qatar; Saudi Arabia; Tunisia; United Arab Emirates",
+                                   "Middle East", population_country)) |>
+  mutate(population_country=ifelse(population_country=="France; Iran (Islamic Republic of); Italy; Jordan; Qatar; Saudi Arabia; Tunisia; United Arab Emirates; United Kingdom of Great Britain and Northern Ireland",
+                                   "Global", population_country)) |>
   mutate(population_country=ifelse(population_country=="Republic of Korea; Saudi Arabia",
                                    "Other", population_country))
 
@@ -334,7 +352,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   names(custom_colour_countries) <- all_countries
 
   plot_list[["qa_filtered"]][["meta"]][["m2"]] <- metaprop_wrap(
-    dataframe = d1, subgroup = NA,
+    dataframe = filter(d1, qa_score >= 0.5), subgroup = NA,
     plot_pooled = TRUE, sort_by_subg = TRUE,
     plot_study = TRUE, digits = meta_digits,
     colour = imperial_khaki,
@@ -348,7 +366,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
          width = 8.5, height = 18)
 
   plot_list[["qa_filtered"]][["meta"]][["m3"]] <- metaprop_wrap(
-    dataframe = d1, subgroup = "cfr_denom_cat", plot_pooled = TRUE,
+    dataframe = filter(d1,qa_score>=0.5), subgroup = "cfr_denom_cat", plot_pooled = TRUE,
     sort_by_subg = FALSE, plot_study = TRUE, digits = meta_digits,
     colour = imperial_khaki, width = 9500, height = 22000, resolution = 1000)
 
@@ -360,7 +378,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
          width = 8, height = 20)
 
   plot_list[["qa_filtered"]][["meta"]][["m4"]] <- metaprop_wrap(
-    dataframe = d1, subgroup = "population_group", plot_pooled = TRUE,
+    dataframe = filter(d1, qa_score >= 0.5), subgroup = "population_group", plot_pooled = TRUE,
     sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
     colour = imperial_khaki, width = 9500, height = 22000, resolution = 1000)
 
@@ -373,7 +391,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
 
   # And by country,
   plot_list[["qa_filtered"]][["meta"]][["m5"]] <- metaprop_wrap(
-    dataframe = filter(d1, population_country %in% c("Republic of Korea", "Saudi Arabia")
+    dataframe = filter(filter(d1, qa_score >= 0.5), population_country %in% c("Republic of Korea", "Saudi Arabia")
                        ), subgroup = "population_country", plot_pooled = TRUE,
     sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
     colour = imperial_khaki, width = 9000, height = 20000, resolution = 1000)
@@ -390,13 +408,33 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   text_size <- 28
 
   plot_list[["qa_filtered"]][["forest"]][["p_cfr_2"]] <- forest_plot(
-    d1, "Case-Fatality Ratio (%)","population_group",
+    filter(d1, qa_score >= 0.5), "Case-Fatality Ratio (%)","population_group",
     c(-10,110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
            fill =  guide_none(),
            linetype = guide_none(),
            color =  guide_legend(title = "Population group", order=2))
+
+  cfr_pop_group_all_qa <- forest_plot(
+    d1, "Case-Fatality Ratio (%)","population_group",
+    qa_alpha = 0.3,
+    c(-10,110), custom_colours = custom_colour_pop_groups,
+    text_size=text_size, sort=TRUE) +
+    guides(shape = guide_legend(title = "Parameter type", order=1),
+           fill =  guide_none(),
+           linetype = guide_none(),
+           color =  guide_legend(title = "Population group", order=2))
+
+  cfr_country_all_qa <- forest_plot(
+    d1, "Case-Fatality Ratio (%)","population_country",
+    qa_alpha = 0.3,
+    c(-10,110), custom_colours = custom_colour_countries,
+    text_size=text_size, sort=TRUE) +
+    guides(shape = guide_legend(title = "Parameter type", order=1),
+           fill =  guide_none(),
+           linetype = guide_none(),
+           color =  guide_legend(title = "Population country", order=2))
 
   cfr_pop_group <- plot_list[["qa_filtered"]][["forest"]][["p_cfr_2"]] +
     scale_shape_manual(values = rep(23, 5),  # force all types to same shape
@@ -412,7 +450,21 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
          plot =  plot_list[["qa_filtered"]][["forest"]][["p_cfr_2"]],
          width = 20, height = 25)
 
+  ggsave("figures/cfr_pop_group_all_qa.pdf",
+         plot =  cfr_pop_group_all_qa,
+         width = 20, height = 36)
+  ggsave("figures/cfr_pop_group_all_qa.png",
+         plot =  cfr_pop_group_all_qa,
+         width = 20, height = 36)
+  ggsave("figures/cfr_country_all_qa.pdf",
+         plot =  cfr_country_all_qa,
+         width = 20, height = 36)
+  ggsave("figures/cfr_country_all_qa.png",
+         plot =  cfr_country_all_qa,
+         width = 20, height = 36)
+
   d1_simplified_country <- d1 %>%
+    filter(qa_score >= 0.5) %>%
     mutate(population_country = case_when(
       population_country %in% c("Republic of Korea", "Saudi Arabia") ~ population_country,
       TRUE ~ "Other"
@@ -427,7 +479,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
                                                      "Other"))
 
   plot_list[["qa_filtered"]][["forest"]][["p_cfr_3"]] <- forest_plot(
-    d1, "Case-Fatality Ratio (%)","population_sample_type",
+    filter(d1, qa_score >= 0.5), "Case-Fatality Ratio (%)","population_sample_type",
     c(-10,110), #custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
@@ -481,7 +533,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   names(custom_colour_countries) <- all_countries
 
   plot_list[["qa_filtered"]][["forest"]][["p_prop_1"]] <- forest_plot(
-    d2, "Percentage of Symptomatic Cases (%)", "population_country",
+    filter(d2, qa_score >= 0.5), "Percentage of Symptomatic Cases (%)", "population_country",
     c(-10, 110), custom_colours = custom_colour_countries,
     text_size=text_size, sort=TRUE) +
     guides(color = guide_legend(title = "Population country", order=2),
@@ -496,7 +548,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
          width = 16, height = 10)
 
   plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]] <- forest_plot(
-    d2, "Percentage of Symptomatic Cases (%)", "population_group",
+    filter(d2, qa_score >= 0.5), "Percentage of Symptomatic Cases (%)", "population_group",
     c(-10, 110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(color = guide_legend(title = "Population group", order=2),
@@ -510,6 +562,21 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
          plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
          width = 16, height = 10)
 
+  sympt_all_qa <- forest_plot(
+    d2, "Percentage of Symptomatic Cases (%)", "population_group",
+    qa_alpha = 0.3,
+    c(-10, 110), custom_colours = custom_colour_pop_groups,
+    text_size=text_size, sort=TRUE) +
+    guides(color = guide_legend(title = "Population group", order=2),
+           linetype = guide_none(),
+           shape = guide_legend(title = "Parameter type", order=1))
+  ggsave("figures/sympt_all_qa.png",
+         plot =  sympt_all_qa,
+         width = 16, height = 8)
+  ggsave("figures/sympt_all_qa.pdf",
+         plot =  sympt_all_qa,
+         width = 16, height = 8)
+
   #And ASYMPTOMATIC
 
   all_countries <- d3 |>
@@ -518,7 +585,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
     pull()
 
   plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]] <- forest_plot(
-    d3, "Percentage of Asymptomatic Cases (%)", "population_group",
+    filter(d3, qa_score >= 0.5), "Percentage of Asymptomatic Cases (%)", "population_group",
     c(-10, 110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(color = guide_legend(title = "Population group", order=2),
@@ -531,6 +598,21 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   ggsave("figures/figure_4_forest_prop_pop_group.png",
          plot =  plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]],
          width = 16, height = 10)
+
+  asympt_all_qa <- forest_plot(
+    d3, "Percentage of Asymptomatic Cases (%)", "population_group",
+    qa_alpha = 0.3,
+    c(-10, 110), custom_colours = custom_colour_pop_groups,
+    text_size=text_size, sort=TRUE) +
+    guides(color = guide_legend(title = "Population group", order=2),
+           linetype = guide_none(),
+           shape = guide_legend(title = "Parameter type", order=1))
+  ggsave("figures/asympt_all_qa.png",
+         plot =  asympt_all_qa,
+         width = 16, height = 9)
+  ggsave("figures/asympt_all_qa.pdf",
+         plot =  asympt_all_qa,
+         width = 16, height = 9)
 
   # Combine the two onto one plot:
   d3_flipped <- d3
@@ -545,6 +627,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
 
   d2_and_3 <- rbind(d2, d3_flipped)
   d2_and_3 <- d2_and_3 |>
+    filter(qa_score >= 0.5) |>
     mutate(parameter_value_type = case_type)
 
   #There are two instances where a paper reports both % sympt and asympt, thus doubling up, we filter these out:
@@ -628,7 +711,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
                                               "Other", "Unspecified")))
 
   IFR_plot <- forest_plot(
-    d4, "Infection Fatality Ratio (%)","population_group",
+    filter(d4, qa_score >= 0.5), "Infection Fatality Ratio (%)","population_group",
     c(-10,110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
@@ -647,6 +730,29 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   ggsave("figures/figure_5_IFR_pop_group.png",
          plot =  IFR_plot,
          width = 16, height = 6)
+
+  IFR_plot_all_qa <- forest_plot(
+    d4, "Infection Fatality Ratio (%)","population_group",
+    qa_alpha = 0.3,
+    c(-10,110), custom_colours = custom_colour_pop_groups,
+    text_size=text_size, sort=TRUE) +
+    guides(shape = guide_legend(title = "Parameter type", order=1),
+           fill =  guide_none(),
+           linetype = guide_none(),
+           color =  guide_legend(title = "Population type", order=2)) +
+    scale_shape_manual(values = rep(23, 5),  # force all types to same shape
+                       breaks = c("Mean", "Median", "Unspecified", "Other",
+                                  "Central - unspecified")) +
+    guides(color = guide_legend(title = "Population group", order=2),
+           linetype = guide_none(),
+           shape = guide_none())
+
+  ggsave("figures/IFR_all_qa.pdf",
+         plot =  IFR_plot_all_qa,
+         width = 16, height = 3)
+  ggsave("figures/IFR_all_qa.png",
+         plot =  IFR_plot_all_qa,
+         width = 16, height = 3)
 
   #Combine my three plots of interest
   layout <- "
