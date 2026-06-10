@@ -23,11 +23,11 @@ outbreaks  <- tibble()
 models     <- read_csv("models.csv")
 parameters <- read_csv("params.csv")
 
-dfs <- curation(articles, outbreaks, models, parameters, plotting = TRUE)
+#dfs <- curation(articles, outbreaks, models, parameters, plotting = TRUE)
 
-articles   <- dfs$articles
-articles   <- epireview::assign_qa_score(articles = articles)$articles
-qa_scores  <- articles |> dplyr::select(covidence_id,qa_score)
+#articles   <- dfs$articles
+#articles   <- epireview::assign_qa_score(articles = articles)$articles
+#qa_scores  <- articles |> dplyr::select(covidence_id,qa_score)
 
 
 mers_articles <- articles[,c("id", "covidence_id","pathogen",
@@ -50,9 +50,11 @@ colnames(mers_articles) <- c("id", "covidence_id","pathogen",
                              "double_extracted", "article_label"
 )
 
+mers_articles$paper_copy_only <- mers_articles$paper_copy_only == "Yes"
+
 write.csv(mers_articles, "mers_articles.csv", row.names = FALSE)
 
-parameters <- dfs$parameters
+#parameters <- dfs$parameters
 mers_parameters <- parameters[,c("id", "parameter_data_id", "covidence_id", "pathogen",
                              "parameter_type", "parameter_value", "exponent",
                              "parameter_unit",	"parameter_lower_bound",	"parameter_upper_bound",
@@ -124,10 +126,12 @@ mers_parameters$method_disaggregated <- mers_parameters$method_disaggregated == 
 mers_parameters$method_disaggregated_only <- mers_parameters$method_disaggregated_only == "Yes"
 mers_parameters$genomic_sequence_available <- mers_parameters$genomic_sequence_available == "Yes"
 
+mers_parameters$population_study_end_year[mers_parameters$population_study_end_year == "xxxx"] <- NA
+mers_parameters$population_study_start_year[mers_parameters$population_study_start_year == "xxxx"] <- NA
 
 write.csv(mers_parameters, "mers_parameters.csv", row.names = FALSE)
 
-models <- dfs$models
+#models <- dfs$models
 
 mers_models <- models[,c(
   "id",	"model_data_id",	"covidence_id",	"pathogen",	"model_type",

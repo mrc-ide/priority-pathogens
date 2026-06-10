@@ -16,8 +16,14 @@ article_cleaning <- function(df){
 
 
   #Paper 12025 has NA as surname, replace as "Korea CDC"
-  df[is.na(article_df$first_author_surname),
+  df[is.na(df$first_author_surname),
      "first_author_surname"] <- "Korea CDC"
+
+  #Two papers have "-" in the issue column, remove those
+  df$issue[df$issue == "-"] <- NA
+
+  #Two papers have "Journal Article" in the issue column, remove those
+  df$issue[df$issue == "Journal Article"] <- NA
 
   return (df)
 }
