@@ -14,6 +14,11 @@ article_cleaning <- function(df){
            first_author_surname = str_to_title(first_author_surname)) |>
     mutate(journal = sub("^The\\s+", "", journal, useBytes = TRUE))
 
+
+  #Paper 12025 has NA as surname, replace as "Korea CDC"
+  df[is.na(article_df$first_author_surname),
+     "first_author_surname"] <- "Korea CDC"
+
   return (df)
 }
 
@@ -109,9 +114,56 @@ param_cleaning <- function(df){
   df[(df$access_param_id == "229_003"),
      "genome_site"] <- "Unspecified"
 
+  ## 320_002 has population_group as NA
+  ## This breaks forest_plot, so we change it to "Unspecified"
+  df[df$access_param_id=="320_002",
+             "population_group"] <- "Unspecified"
+
+  #390_002 and 390_003 are "per days", we have to change their parameter_unit to "Days" to not break forest_plot
+  df[df$access_param_id=="390_002",
+             "parameter_unit"] <- "Days"
+  df[df$access_param_id=="390_003",
+             "parameter_unit"] <- "Days"
+
+  #271-001 is a gamma distribution but with reported mean 6.99 (unspecified units)
+  #It's also low-QA. For now I'm going to manually change it to days though
+  df[df$access_param_id=="271_001",
+             "parameter_unit"] <- "Days"
+
+  #032-001 is also "Unspecified"
+  #It's a decent study, but never explicity SAYS "Days"
+  df[df$access_param_id=="032_001",
+             "parameter_unit"] <- "Days"
+
+  #255_014 lists a delay of -5.9 days. That's because this individual had symptom onset AFTER hospital admission
+  # Let's convert this to an "Other" human delay.
+  #parameters <- filter(parameters, access_param_id != "255_014")
+  #test <- filter(parameters, access_param_id == "255_014")
+
+  df[df$access_param_id=="255_014",
+             "parameter_type"] <- "Human delay - other human delay (go to section)"
+  df[df$access_param_id=="255_014",
+             "other_delay_start"] <- "Admission to hospital"
+  df[df$access_param_id=="255_014",
+             "other_delay_end"] <- "symptom onset"
+  df[df$access_param_id=="255_014",
+             "parameter_value"] <- -1*df[df$access_param_id=="255_014",
+                                                 "parameter_value"]
+
+
+  # 037_004 should be removed. It just says a patient "died within 2 weeks", not clear enough to extract:
+  df <- filter(df, access_param_id != "037_004")
+
   #360_010 has been extracted as an "other" human delay, but it's hospital length of stay.
   df[(df$access_param_id == "360_010"),
-     "parameter_type"] <- "Time in care (length of stay)"
+     "parameter_type"] <- "Human delay - time in care (length of stay)"
+
+  #228_007 is incorrectly marked in the parameter_type
+  df[(df$access_param_id == "228_007"),
+     "parameter_type"] <- "Human delay - other human delay (go to section)"
+  #035_001 is incorrectly marked in the parameter_type
+  df[(df$access_param_id == "035_001"),
+     "parameter_type"] <- "Human delay - other human delay (go to section)"
 
   #141_011, 164_020, 164_019 needs rewording it's other human delays:
   df[(df$access_param_id == "141_011"),

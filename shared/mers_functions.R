@@ -15,6 +15,9 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     rename(refs = new_refs) |>
     mutate(refs = str_to_title(refs))
 
+  # Specifically catch the Korea CDC issue:
+  articles$refs[articles$refs == "Korea Cdc (2015)"] <- "Korea CDC (2015)"
+
   if(dim(outbreaks)[1]>0)
   {
     outbreaks  <- outbreaks |>

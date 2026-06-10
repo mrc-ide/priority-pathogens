@@ -43,7 +43,7 @@ orderly_run("db_cleaning",list(pathogen="MERS", debug_mode=TRUE))
 # *------------------------------- Latex tables -------------------------------*
 # Add cleaning mode
 orderly_run("mers_latex_tables", list(pathogen="MERS"))
-
+orderly_run("mers_epireview_output", list(pathogen="MERS"))
 # *---------------------------- Plots and analysis ----------------------------*
 orderly_run("mers_summary", list(pathogen="MERS"))
 orderly_run("mers_supp_tables", list(pathogen="MERS"))
