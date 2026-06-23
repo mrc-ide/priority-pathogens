@@ -14,7 +14,7 @@ library(png)
 library(grid)
 library(patchwork)
 library(gridExtra)
-library(orderly2)
+library(orderly)
 library(countrycode)
 
 #orderly preparation
@@ -181,7 +181,8 @@ CZSplot_noqa <- forest_plot_zika(CZS_rate %>% arrange(central) ,
                             custom_colours = cols) +
   theme(legend.position = 'inside', legend.position.inside =  c(.66, 0.36))
 # ggsave(filename = 'CZS_plot_loc_country.svg', CZSplot, height =26, width = 14, bg = 'white')
-ggsave(filename = 'CZS_plot_loc_country.pdf', CZSplot, height =24, width = 15, bg = 'white')
+ggsave(filename = 'CZS_plot_loc_country.pdf', CZSplot, height =24, width = 15, bg = 'white', device = cairo_pdf)
+ggsave(filename = 'CZS_plot_loc_country.eps', CZSplot, height =24, width = 15, bg = 'white', device = cairo_ps)
 # ggsave(filename = 'CZS_plot_loc_country_noqa.svg', CZSplot_noqa, height =32, width = 16, bg = 'white')
 ggsave(filename = 'CZS_plot_loc_country_noqa.pdf', CZSplot_noqa, height =32, width = 16, bg = 'white')
 
@@ -360,7 +361,8 @@ metaanalysis_CZS_trimester <- metaprop_wrap(dataframe = CZSqa ,
 CZS_meta_trimester <- metaanalysis_CZS_trimester$plot
 
 ggsave(filename = "CZS_metaanalysis_trimester.svg", plot = CZS_meta_trimester, width = 5, height = 9)
-ggsave(filename = "CZS_metaanalysis_trimester.pdf", plot = CZS_meta_trimester, width = 5, height = 9)
+ggsave(filename = "CZS_metaanalysis_trimester.pdf", plot = CZS_meta_trimester, width = 5, height = 9, device = cairo_pdf)
+ggsave(filename = "CZS_metaanalysis_trimester.eps", plot = CZS_meta_trimester, width = 9, height = 5, device = cairo_ps, dpi = 500)
 
 metaanalysis_CZS_trimester_noqa <- metaprop_wrap(dataframe = CZS_meta_noqa,
                                             plot_pooled = FALSE, subgroup = 'trimester_exposed',

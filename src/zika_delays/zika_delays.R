@@ -14,7 +14,7 @@ library(png)
 library(grid)
 library(patchwork)
 library(gridExtra)
-library(orderly2)
+library(orderly)
 library(countrycode)
 
 #orderly preparation
@@ -391,7 +391,8 @@ CCDD
 EEEE"
 delays_plot <-  incp2 +  IP_forest  + lat_onset_serialplt + outcome_forest + eip_forest+
   plot_layout(design = layout) + plot_annotation(tag_levels = 'A')
-ggsave("delays.png", plot = delays_plot, width = 24, height = 25, bg = 'white')
+ggsave("delays.png", plot = delays_plot, width = 24, height = 25, bg = 'white', device = cairo_pdf)
+ggsave("delays.eps", plot = delays_plot, width = 24, height = 25, bg = 'white', device = cairo_ps)
 ggsave("delays.pdf", plot = delays_plot, width = 24, height = 25, bg = 'white')
 
 delays_plotSI <-  incp2_noqa + IP_forest_noqa + lat_onset_serialplt_noqa + outcome_forest_noqa + eip_forest_noqa +

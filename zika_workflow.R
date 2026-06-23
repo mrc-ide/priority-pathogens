@@ -4,7 +4,7 @@
 # install.packages("orderly2", repos = c("https://mrc-ide.r-universe.dev", "https://cloud.r-project.org"))
 # remotes::install_github("mrc-ide/orderly.sharedfile")
 #orderly2::orderly_init(".")
-library(orderly2)
+library(orderly)
 library(optparse)
 library(ids)
 library(zip)
@@ -90,9 +90,9 @@ orderly_run("zika_compilation", parameters = list(pathogen = "ZIKA"))
 ##############
 
 # Data curation for analysis
-orderly2::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
+orderly::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
                                                           plotting = TRUE))
-orderly2::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
+orderly::orderly_run('zika_prep_data', parameters = list(pathogen = 'ZIKA',
                                                           plotting = FALSE))
 
 # Delay figures

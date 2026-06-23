@@ -3,7 +3,7 @@
 # install.packages('rio')
 library(dplyr)
 library(janitor)
-library(orderly2)
+library(orderly)
 library(readr)
 library(stringr)
 library(stringi)
@@ -237,12 +237,12 @@ saveRDS(params_clean, 'parameters.rds')
 params_clean_epireview <- params_clean %>%
   select(-pathogen, -starts_with('parameter_2'), -delay_start, -access_param_id,
          -other_delay_start, -other_delay_end, -method_2_from_supplement,
-         -starts_with('distribution_2'), -exponent_2, inverse_param_2, name_data_entry,
+         -starts_with('distribution_2'), -exponent_2, -inverse_param_2, -name_data_entry,
          -other_delay) %>%
   mutate(prnt_on_elisa = ifelse(prnt_on_elisa == 'V', TRUE, ifelse(prnt_on_elisa == 'F', FALSE, NA)))
 
 articles_qa_epireview <- articles_qa %>%
-  select(-name_data_entry, -covidence_id_text, -qa_denominator, -qa_numerator, -qa_score)
+  select(-name_data_entry, -notes, -covidence_id_text, -qa_denominator, -qa_numerator, -qa_score)
 
 write_csv(articles_qa_epireview, 'zika_articles.csv')
 write_csv(models_clean, 'zika_models.csv')

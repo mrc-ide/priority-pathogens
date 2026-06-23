@@ -5,6 +5,7 @@
 # as well as the ad-hoc data cleaning in each of the analysis orderly tasks
 library(dplyr)
 library(stringr)
+library(readr)
 
 #orderly preparation
 orderly_strict_mode()

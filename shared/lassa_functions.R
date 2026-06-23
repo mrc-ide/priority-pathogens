@@ -534,6 +534,8 @@ metaprop_wrap <- function(dataframe, subgroup,
                      method.tau = "ML")
 
     png(file = "temp.png", width = width, height = height, res = resolution)
+    # postscript("CZS_metaanalysis_trimester.eps", width = 15, height = 37, horizontal = FALSE)
+    # pdf("CZS_metaanalysis_trimester.pdf", width = 10, height = 15)
     forest(mtan, layout = "RevMan5",
            overall = plot_pooled, pooled.events = TRUE,
            print.subgroup.name = FALSE, sort.subgroup = sort_by_subg,
@@ -543,9 +545,12 @@ metaprop_wrap <- function(dataframe, subgroup,
            col.diamond.lines = "black",col.diamond.common = colour, col.diamond.random = colour,
            col.subgroup = "black", col.inside = "black",
            weight.study = "same", #col.square.lines = "green", col.square = "blue", #not working
-           at = at, xlim = xlim, xlab=xlabel, fontsize=11)
+           at = at, xlim = xlim, xlab=xlabel, fontsize = 11)
+           # fontsize=9,  # Reduce font size
+           # spacing = 0.7,  # Reduce spacing between studies
+           # squaresize = 0.5)
     dev.off()
-  } else {
+    } else {
     mtan <- metaprop(data = dataframe,
                      studlab = dataframe[[studylabels]],
                      event = cfr_ifr_numerator,
