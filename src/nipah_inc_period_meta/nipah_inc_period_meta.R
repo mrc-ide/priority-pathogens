@@ -1,0 +1,100 @@
+library(dplyr)
+library(grid)
+library(meta)
+library(orderly2)
+library(patchwork)
+library(readr)
+library(stringr)
+library(tidyr)
+
+orderly_dependency(
+  "db_cleaning", "latest(parameter:pathogen == 'NIPAH')",
+  c("articles.csv", "outbreaks.csv", "models.csv", "params.csv")
+)
+
+orderly_shared_resource("nipah_functions.R")
+
+source("nipah_functions.R")
+# *------------------------------ Data curation -------------------------------*
+articles <- read_csv("articles.csv")
+outbreaks <- read_csv("outbreaks.csv")
+models <- read_csv("models.csv")
+parameters <- read_csv("params.csv")
+
+dfs <- curation(articles, outbreaks, models, parameters, plotting = TRUE)
+
+parameters <- dfs$parameters
+
+# No sample size 139_004 (although median (range))
+params_in <- parameters |>
+  filter(parameter_type == 'Human delay - incubation period',
+         !is.na(population_sample_size),
+         parameter_value_type=="Mean" &
+           grepl(x = tolower(parameter_2_value_type),
+                 pattern = "standard deviation") |
+           parameter_value_type=="Median" &
+           grepl(x = tolower(parameter_2_value_type),
+                 pattern = "iqr") |
+           parameter_value_type == "Median" &
+           grepl(x = tolower(parameter_2_value_type),
+             pattern = "range")) |>
+  mutate(duplicate_incp = case_when(
+    access_param_id %in% c("138_020", "138_3141") ~ "Known",
+    TRUE~"False"))
+
+params_in <- params_in |>
+  filter(duplicate_incp!="Known")
+
+# params_in$parameter_uncertainty_type <- 'range'
+params_in$parameter_uncertainty_type <- params_in$parameter_2_value_type
+params_in$parameter_uncertainty_lower_value <- params_in$parameter_2_lower_bound
+params_in$parameter_uncertainty_upper_value <- params_in$parameter_2_upper_bound
+
+incp_meta_result <-
+  metamean_wrap(dataframe = params_in, estmeansd_method = "Cai",
+                plot_study = TRUE, digits = 3, lims = c(2,15),
+                colour = "dodgerblue3", label = "Median Incubation Period (days)",
+                width = 11000, height = 4200, resolution = 1000)
+
+imperial_khaki <- "#EFE58B"
+
+saveRDS(incp_meta_result, file = "incp_meta_result.rds")
+png("incp_meta_analysis.png", width = 12750, height = 4600,
+    res = 1000)
+
+# can't get size by square size right but the random effects look similar and
+# this is what we focus on
+forest(incp_meta_result$result, layout = "Revman5",
+       colgap.forest.left = "3mm",
+       leftcols = c("studlab", "mean", "sd",
+                    "n", "w.common",
+                    "w.random", "effect.ci"),
+       leftlabs = c("Study", "Mean", "SD", "Total", "Weight  \n(common)",
+                    "Weight  \n(random)", ""),
+       colgap.left = "7mm",
+       smlab.pos = 4,
+       overall = TRUE, pooled.events = TRUE,
+       print.subgroup.name = FALSE, sort.subgroup = TRUE,
+       study.results = TRUE,
+       digits = 3,
+       digits.sd = 3,
+       showweights = TRUE,
+       col.diamond.lines = "black",col.diamond.common = "dodgerblue3",
+       col.diamond.random = "dodgerblue3",
+       col.square = imperial_khaki, col.square.lines = "black",
+       col.study = "black", col.subgroup = "black",
+       col.inside = "black", weight.study = "same",
+       xlim = c(2,12),
+       xlab="Mean incubation period (days)",
+       fs.predict.labels = 11.5,
+       fs.hetstat=11,
+       fs.test.subgroup = 11,
+       fs.axis = 11,
+       fontsize = 14,
+       plotwidth = "72.5mm",
+       spacing = 1.2)
+
+dev.off()
+
+orderly_artefact(files = c("incp_meta_result.rds",
+                           "incp_meta_analysis.png"))

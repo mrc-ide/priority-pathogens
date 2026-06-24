@@ -54,23 +54,38 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
         ifelse(parameter_unit %in% "Weeks", 7, 1))
     ) |>
     mutate(parameter_unit = ifelse(parameter_unit %in% "Weeks", "Days", parameter_unit)) |>
-    mutate(no_unc = is.na(parameter_uncertainty_lower_value) & is.na(parameter_uncertainty_upper_value), #store uncertainty in pu_lower and pu_upper
-           custom_se = case_when(str_detect(str_to_lower(parameter_2_value_type),"standard deviation") & no_unc & !is.na(population_sample_size) ~ parameter_2_value/sqrt(population_sample_size),
-                                 TRUE ~ NA),
+    mutate(no_unc = (is.na(parameter_uncertainty_lower_value) &
+                       is.na(parameter_uncertainty_upper_value)),
+           custom_se = ifelse(
+             str_detect(str_to_lower(parameter_2_value_type),"standard deviation") &
+               no_unc &
+               !is.na(population_sample_size),
+             parameter_2_value/sqrt(population_sample_size),
+             NA),
+           # needs to be in order for case when - assumes that if there is an SE
+           # that will be used first else use the custom SE.
+           unc_inferred_from_se = str_detect(str_to_lower(parameter_uncertainty_single_type), "standard error") & no_unc,
+           unc_inferred_from_custom = !is.na(custom_se) & no_unc,
            parameter_uncertainty_lower_value = case_when(
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"standard error") & no_unc ~ parameter_value-parameter_uncertainty_single_value,
-             !is.na(custom_se) & no_unc ~ parameter_value-custom_se,
-             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.05, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),
-             TRUE ~ parameter_uncertainty_lower_value),
+             unc_inferred_from_se ~ parameter_value - parameter_uncertainty_single_value,
+             # unc_inferred_from_custom ~ parameter_value - custom_se,
+             TRUE ~ parameter_uncertainty_lower_value
+           ),
            parameter_uncertainty_upper_value = case_when(
-             str_detect(str_to_lower(parameter_uncertainty_single_type),"standard error") & no_unc ~ parameter_value+parameter_uncertainty_single_value,
-             !is.na(custom_se) & no_unc ~ parameter_value+custom_se,
-             str_detect(str_to_lower(distribution_type),"gamma") & no_unc ~ qgamma(0.95, shape = (distribution_par1_value/distribution_par2_value)^2, rate = distribution_par1_value/distribution_par2_value^2),
-             TRUE ~ parameter_uncertainty_upper_value)) |>
+             unc_inferred_from_se ~ parameter_value + parameter_uncertainty_single_value,
+             # unc_inferred_from_custom ~ parameter_value + custom_se,
+             TRUE ~ parameter_uncertainty_upper_value
+           ),
+           uncertainty_inferred_flag = case_when(
+             unc_inferred_from_se ~ "inferred from SE",
+             # unc_inferred_from_custom ~ "inferred from custom SE",
+             TRUE ~ NA
+           )) |>
     mutate(central = coalesce(parameter_value,
-                              100*cfr_ifr_numerator/cfr_ifr_denominator,
-                              0.5*(parameter_lower_bound+parameter_upper_bound))) |>
-    dplyr::select(-c(no_unc))
+                              100*cfr_ifr_numerator/cfr_ifr_denominator),
+           central_range_midpoint = 0.5*(parameter_lower_bound+parameter_upper_bound)) |>
+    dplyr::select(-c(no_unc, unc_inferred_from_se, unc_inferred_from_custom,
+                     custom_se))
 
   if (plotting) {
     parameters <- param4plot
@@ -79,6 +94,7 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
     if(sum(check_param_id)==dim(parameters)[1])
     {
       parameters$central <- param4plot$central
+      parameters$central_range_midpoint <- param4plot$central_range_midpoint
     } else {
       errorCondition('parameters not in right order to match')
     }
@@ -88,9 +104,6 @@ data_curation <- function(articles, outbreaks, models, parameters, plotting,swit
   {
     outbreaks  <- outbreaks  |> mutate(outbreak_location  = str_replace_all(outbreak_location, "\xe9" , "é"))
   }
-
-  # parameters <- parameters |> mutate(parameter_type     = str_replace_all(parameter_type, "\x96" , "–"),
-  #                                     population_country = str_replace_all(population_country, c("昼㸴" = "ô", "�" = "ô")))
 
   if(switch_first_surname)   # this is due to legacy access database issue
   {
@@ -551,7 +564,11 @@ metagen_wrap <- function(dataframe, estmeansd_method,
 metaprop_wrap <- function(dataframe, subgroup,
                           plot_pooled, sort_by_subg, plot_study, digits, colour,
                           width, height, resolution,
-                          at = seq(0,1,by=0.2), xlim = c(0,1)){
+                          at = seq(0,1,by=0.2), xlim = c(0,1),
+                          colour_square=NA){
+  if (is.na(colour_square)){
+    colour_sqaure=colour
+  }
 
   stopifnot(length(unique(dataframe$parameter_unit[!is.na(dataframe$parameter_unit)])) == 1)#values must have same units
 
@@ -581,7 +598,7 @@ metaprop_wrap <- function(dataframe, subgroup,
            digits = digits,
            col.diamond.lines = "black",col.diamond.common = colour,
            col.diamond.random = colour,
-           col.square = colour, col.square.lines = "black",
+           col.square = colour_square, col.square.lines = "black",
            col.study = "black", col.subgroup = "black",
            col.inside = "black", weight.study = "same",
            at = at, xlim = xlim, xlab="Case Fatality Ratio",
@@ -608,7 +625,7 @@ metaprop_wrap <- function(dataframe, subgroup,
            digits = digits,
            col.diamond.lines = "black",col.diamond.common = colour,
            col.diamond.random = colour,
-           col.square = colour, col.square.lines = "black",
+           col.square = colour_square, col.square.lines = "black",
            col.subgroup = "black", col.inside = "black", weight.study = "same",
            at = at, xlim = xlim, xlab="Case Fatality Ratio",
            fs.predict.labels = 11.5,

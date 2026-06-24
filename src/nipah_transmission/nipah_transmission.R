@@ -8,7 +8,7 @@ library(readr)
 library(stringr)
 
 # *--------------------------------- Orderly ----------------------------------*
-orderly_parameters(pathogen = NULL)
+pathogen <- orderly_parameters(pathogen = "NIPAH")
 
 orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "outbreaks.csv", "models.csv", "params.csv"))
@@ -42,9 +42,13 @@ parameters <- dfs$parameters |>
 parameters <- parameters  |>
   mutate(population_group = factor(
     population_group,
-    levels = c(sort(setdiff(unique(population_group),
-                            c("Other", "Unspecified"))),
-               "Other", "Unspecified")))
+    levels=c("General population",
+               sort(setdiff(unique(population_group),
+                            c("General population", "Other", "Unspecified"))
+               ),
+               "Other", "Unspecified"
+    )),
+    parameter_value = coalesce(parameter_value, central))  #NOTE
 
 d1 <- parameters |> filter(parameter_type == "Mutations - evolutionary rate")
 d2 <- parameters |> filter(parameter_type == "Mutations - substitution rate")
@@ -77,12 +81,6 @@ d1 <- d1 |>
 
 d1 <- d1 |> arrange(genome_site,-central)
 
-# TODO: check Upper and lower bound - zero out for now
-d2 <- d2 |>
-  mutate(across(
-    c(parameter_upper_bound, parameter_lower_bound),
-    ~ ifelse(covidence_id == 2760, NA, .)))
-
 d2 <- d2 |> arrange(genome_site,-central)
 
 # Different from SARS and Lassa
@@ -105,26 +103,45 @@ d5 <- d5 |>
 
 # *---------------------------------- Plots -----------------------------------*
 # Plot properties
-text_size <- 12
-
+text_size <- 20
+point_size <- 4.5
 # Get custom colours so that genome has different colours
-lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+bmj_colours <- ggsci::pal_bmj("default")(9)
+temp <- bmj_colours[4]
+bmj_colours[4] <- bmj_colours[6]
+bmj_colours[6] <- temp
 
-all_pop_groups <- bind_rows(d3, d4, d5, d5) |>
+temp <- bmj_colours[1]
+bmj_colours[1] <- bmj_colours[2]
+bmj_colours[2] <- temp
+
+all_pop_groups <- parameters |>
+  filter(!is.na(population_group)) |>
   distinct(population_group) |>
-  # arrange alphabetically but put other last
-  arrange(population_group == "Other", population_group) |>
+  arrange(desc(population_group == "General population"),
+          population_group == "Unspecified", population_group == "Other",
+          population_group) |>
   pull()
 
-custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
+all_pop_groups <- levels(all_pop_groups)
+
+custom_colour_pop_groups <- bmj_colours[seq_along(all_pop_groups)]
 names(custom_colour_pop_groups) <- all_pop_groups
+
+unique_groups_in_plot <- unique(bind_rows(d3, d4, d5, d5)$population_group)
+
+custom_colour_pop_groups <- (custom_colour_pop_groups[all_pop_groups %in% (unique_groups_in_plot)])
+
+bind_rows(d3, d4, d5, d5) |> distinct(population_group)
+
+nejm_colours <-  c("#7876B1FF", "#EE4C97FF", "#EFE58B","#6F99ADFF")
 
 all_genomes <- bind_rows(d1, d2) |>
   distinct(genome_site) |>
   pull()
 
-custom_colour_genome_groups <- lanonc_colours[length(all_pop_groups) +
-                                                seq_along(all_genomes)]
+custom_colour_genome_groups <- nejm_colours[length(all_genomes) +
+                                              seq_along(all_genomes)]
 names(custom_colour_genome_groups) <- all_genomes
 
 # Approach to getting unified axes is very hacky... :(
@@ -145,10 +162,13 @@ for (i in seq_along(qa_thresh_vec)){
                       filter(qa_score>qa_threshold),
                     expression(Substitution~Rate~(s/s/y ~10^{-4})),
                     "genome_site",
-                    c(-0.01,16), custom_colours = custom_colour_genome_groups,
+                    c(-0.01,145), custom_colours = custom_colour_genome_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
                     text_size=text_size, qa_alpha=qa_alpha,
-                    sort=TRUE) +
+                    sort=TRUE, point_size=point_size) +
+    coord_cartesian(xlim = c(0, 16)) +
+    annotate("segment", x = 15.5, xend = 15.9, y = 2, yend = 2,
+      arrow = arrow(type = "open", length = unit(0.2, "cm"))) +
     scale_y_discrete(labels = function(x) parse(text = x)) +
     scale_color_manual(values=custom_colour_genome_groups,
                        limits=names(custom_colour_genome_groups)) +
@@ -161,7 +181,7 @@ for (i in seq_along(qa_thresh_vec)){
                                   fill = custom_colour_genome_groups)),
            shape=guide_none())
 
-  # p2 <- forest_plot(d2 |> filter(qa_score>qa_threshold),
+    # p2 <- forest_plot(d2 |> filter(qa_score>qa_threshold),
   #                   expression(Substitution~Rate~(s/s/y ~10^{-4})),
   #                   "genome_site",
   #                   c(0,16), custom_colours = custom_colour_genome_groups,
@@ -175,7 +195,7 @@ for (i in seq_along(qa_thresh_vec)){
                     "population_group", c(0,35),
                     custom_colours = custom_colour_pop_groups,
                     text_size=text_size, qa_alpha=qa_alpha,
-                    sort=TRUE) +
+                    sort=TRUE, point_size=point_size) +
     guides(color = guide_none(),
            linetype = guide_none(),
            shape = guide_none())
@@ -184,7 +204,8 @@ for (i in seq_along(qa_thresh_vec)){
                     "Attack Rate (%)",
                     "population_group",
                     c(-0.01,3), custom_colours = custom_colour_pop_groups,
-                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
+                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE,
+                    point_size=point_size) +
     guides(color = guide_none(),
            linetype = guide_none(),
            shape = guide_none())
@@ -194,7 +215,8 @@ for (i in seq_along(qa_thresh_vec)){
                     "population_group",
                     c(0, 1.5), custom_colours = custom_colour_pop_groups,
                     segment_show.legend=c(color=TRUE, shape=FALSE),
-                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE) +
+                    text_size=text_size, qa_alpha=qa_alpha, sort=TRUE,
+                    point_size=point_size) +
     scale_color_manual(values=custom_colour_pop_groups,
                        limits=names(custom_colour_pop_groups)) +
     scale_fill_manual(values=custom_colour_pop_groups,
@@ -204,21 +226,52 @@ for (i in seq_along(qa_thresh_vec)){
            color = guide_legend(
              title = "Population type", order = 2,
              override.aes = list(fill = custom_colour_pop_groups)),
-           shape=guide_legend(title = "Parameter type", order=1))
+           shape=guide_legend(title = "Parameter type", order=1,
+                              override.aes = list(size = 3.5)))
 
-  p5 <- p5 + theme(legend.position = c(0.835, 0.3))
-  p1 <- p1 + theme(legend.position = c(0.875, 0.85))
+  p5 <- p5 + theme(legend.position = c(0.835, 0.25),
+                   legend.spacing=unit(2, "mm"),
+                   legend.key.height = unit(0.5, "cm"),
+                   legend.margin=margin(0, 0, 0, 10),
+                   legend.text = element_text(size = 11),
+                   legend.title = element_text(size = 13))
+  p1 <- p1 + theme(legend.position = c(0.875, 0.875),
+                   legend.spacing=unit(2, "mm"),
+                   legend.key.height = unit(0.5, "cm"),
+                   legend.margin=margin(0, 0, 0, 0),
+                   legend.text = element_text(size = 11),
+                   legend.title = element_text(size = 13))
   # Save plots
   patchwork <- (p5 + p3 + p4 + p1) +
-    plot_layout(ncol = 2, widths = c(1,1))
+    plot_layout(ncol = 2, widths = c(1, 1))
 
   patchwork <- patchwork +
     plot_annotation(tag_levels = "A") +
-    plot_layout(byrow = FALSE)
+    plot_layout(byrow = FALSE) &
+    theme(plot.tag.position = "topleft",
+          plot.tag = element_text(size = 22))
 
   ggsave(paste0("figure_",label,"trans.png"),
-         plot = patchwork, width = 17, height = 10)
+         plot = patchwork, width = 21, height = 12)
   ggsave(paste0("figure_",label,"trans.pdf"),
-         plot = patchwork, width = 17, height = 10)
+         plot = patchwork, width = 21, height = 12)
+
+  # For lancet
+  ggsave(paste0("figure_",label,"trans_panel_A.pdf"),
+         plot = p5 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
+  ggsave(paste0("figure_",label,"trans_panel_B.pdf"),
+         plot = p3 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
+  ggsave(paste0("figure_",label,"trans_panel_C.pdf"),
+         plot = p4 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
+  ggsave(paste0("figure_",label,"trans_panel_D.pdf"),
+         plot = p1 +
+           theme(plot.margin = margin(15, 15, 15, 15)),
+         width = 10, height = 6)
 }
 # *============================================================================*
