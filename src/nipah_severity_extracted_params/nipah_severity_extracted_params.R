@@ -6,7 +6,7 @@ library(grid)
 library(lubridate)
 library(metafor)
 library(meta)
-library(orderly2)
+library(orderly)
 library(patchwork)
 library(readr)
 library(stringr)
@@ -451,14 +451,15 @@ p1 <- forest(
   overall = TRUE, pooled.events = TRUE,
   print.subgroup.name = FALSE, sort.subgroup = TRUE,
   study.results = TRUE,
-  digits = 3,
+  digits = 1,
+  pscale = 100,
   col.diamond.lines = "black",
   col.diamond.common = diamond_colour,
   col.diamond.random = diamond_colour,
   col.square = square_colour, col.square.lines = "black",
   col.study = "black", col.subgroup = "black",
   col.inside = "black", weight.study = "same",
-  at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio",
+  at = seq(0,100,by=20), xlim = c(0,100), xlab="Case Fatality Ratio (%)",
   fs.predict.labels = 14.5,
   fs.hetstat=14,
   fs.test.subgroup = 14,
