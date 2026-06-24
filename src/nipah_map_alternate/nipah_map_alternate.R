@@ -40,19 +40,26 @@ orderly_shared_resource("World_Bank_Official_Boundaries_adm2/")
 orderly_shared_resource("World_Bank_Official_Boundaries_Ocean_Mask/")
 
 # prepare shapefiles for maps
-l0_in <- readRDS("l0_shapefile_with_cases_and_deaths.rds")
-l1_in <- readRDS("l1_shapefile_with_cases_and_deaths.rds")
-l2_in <- readRDS("l2_shapefile_with_cases_and_deaths.rds")
-om <- read_sf("World_Bank_Official_Boundaries_Ocean_Mask/WB_GAD_ocean_mask.shp")
+sf_use_s2(FALSE)
+simplify_tol <- 0.01
+l0_in <- readRDS("l0_shapefile_with_cases_and_deaths.rds") %>% st_simplify(preserveTopology = TRUE, dTolerance = simplify_tol) %>% st_make_valid()
+l1_in <- readRDS("l1_shapefile_with_cases_and_deaths.rds") %>% st_simplify(preserveTopology = TRUE, dTolerance = simplify_tol) %>% st_make_valid()
+l2_in <- readRDS("l2_shapefile_with_cases_and_deaths.rds") %>% st_simplify(preserveTopology = TRUE, dTolerance = simplify_tol) %>% st_make_valid()
+om <- read_sf("World_Bank_Official_Boundaries_Ocean_Mask/WB_GAD_ocean_mask.shp") %>% st_simplify(preserveTopology = TRUE, dTolerance = simplify_tol) %>% st_make_valid()
 
 # Calculate centroids
-sf_use_s2(FALSE)
 l0_centroids <- filter(
   l0_in, COUNTRY %in% c( "Singapore")
 ) %>% st_centroid()
 
+district_locs <- locations_with_cases_and_deaths %>%
+  filter(mapped_to_district) %>% pull(map_location)
+non_district_locs <- locations_with_cases_and_deaths %>%
+  filter(!mapped_to_district) %>% pull(map_location)
+
 l1_centroids <- filter(
-  l1_in, COUNTRY %in% c("India", "Bangladesh", "Malaysia", "Singapore", "Philippines")
+  l1_in, COUNTRY %in% c("India", "Bangladesh", "Malaysia", "Singapore", "Philippines"),
+  NAM_1 %in% non_district_locs
 ) %>% st_centroid()
 
 l2_centroids <- filter(l2_in, NAM_2 %in% locations_with_cases_and_deaths$map_location) %>%

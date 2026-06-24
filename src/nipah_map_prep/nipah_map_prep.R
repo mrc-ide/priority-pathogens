@@ -100,7 +100,7 @@ location_mapping <- tribble(
   "Rajshahi District", "BGD", "Rajshahi", "Rajshahi", NA,
   "Lalmohirhat", "BGD", "Lalmonirhat", "Rangpur", "Common misspelling of Lalmonirhat",
   "Comilla", "BGD", "Cumilla", "Chittagong", "Alternate spelling",
-  "Joypurhat", "BGD", "Joypurhat", "Rajshahi", NA,
+  "Joypurhat", "BGD", "Jaipurhat", "Rajshahi", "Shapefile uses Jaipurhat spelling",
   "Bogra", "BGD", "Bogra", "Rajshahi", NA,
   "Jessore", "BGD", "Jashore", "Khulna", "Official spelling update",
   "Goalando", "BGD", "Rajbari", "Dhaka", "Subdistrict of Rajbari",
@@ -112,14 +112,16 @@ location_mapping <- tribble(
   "Rangpur Division", "BGD", NA, "Rangpur", "Division-level entry",
   "Dhaka Division", "BGD", NA, "Dhaka", "Division-level entry",
   "Khulna Division", "BGD", NA, "Khulna", "Division-level entry",
+  "Mymensingh District", "BGD", "Mymensingh", "Mymensingh",
+  "District with same name as division",
   "Mymensingh Division", "BGD", NA, "Mymensingh", "Division-level entry",
 
-                                        # ---- India ----
+  # ---- India ----
   "Siliguri", "IND", "Siliguri", "West Bengal", NA,
+  "Nadia", "IND", "Nadia", "West Bengal", NA,
   "Nearby Districts Of Kozhikode", "IND", "Kozhikode", "Kerala", "Primary reference district",
   "Kerela", "IND", NA, "Kerala", "Common misspelling",
   "West Bangal", "IND", NA, "West Bengal", "Common misspelling",
-
   # ---- Malaysia ----
   "Seremban Hospital", "MYS", "Seremban", "Negeri Sembilan", NA,
   "Kuala Lumpur Hospital", "MYS", "Kuala Lumpur", "Kuala Lumpur", NA,
@@ -165,9 +167,9 @@ locations_with_cases_and_deaths <- subcolumns_outbreak %>%
   ) %>%
   left_join(location_mapping, by = c("outbreak_location" = "location")) %>%
   mutate(map_location = coalesce(district, division_or_state, outbreak_location),
-         outbreak_country) %>%
+         mapped_to_district = !is.na(district)) %>%
   ungroup() |>
-  dplyr::select(outbreak_country, map_location, tot_cases, tot_deaths)
+  dplyr::select(outbreak_country, map_location, mapped_to_district, tot_cases, tot_deaths)
 
 locations_with_cases_and_deaths$tot_cases_binned <-
   cut(locations_with_cases_and_deaths$tot_cases, breaks = c(1, 10, 30, 45, 235),
@@ -256,7 +258,7 @@ l2 <- left_join(
     by = c("NAM_1" = "map_location", "COUNTRY" = "outbreak_country")) %>%
   left_join(
     rename(
-      locations_with_cases_and_deaths , tc_l0 = tot_cases, td_l0 = tot_deaths,
+      locations_with_cases_and_deaths, tc_l0 = tot_cases, td_l0 = tot_deaths,
       tc_l0_binned = tot_cases_binned
     ),
     by = c("COUNTRY" = "map_location")) %>%

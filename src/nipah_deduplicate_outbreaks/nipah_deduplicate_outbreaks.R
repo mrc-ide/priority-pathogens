@@ -98,8 +98,20 @@ outbreaks <- outbreaks %>%
   filter(!EXCLUDE)
 
 ## Fix the location name for covidence id 184
-outbreaks$outbreak_location[outbreaks$covidence_id == 184] <- "Darjeeling;Siliguri"
+outbreaks$outbreak_location[outbreaks$covidence_id == 184] <- "Darjeeling"
 outbreaks$outbreak_location[outbreaks$covidence_id == 3065] <- "Kozhikode"
+outbreaks$outbreak_location[outbreaks$covidence_id == 828] <- "Nadia" # Manually checked Arankalle (2011); refers to Nadia district
+
+## Manually checked Kulkarni (2013): Rangpur, Rajshahi, and Mymensingh refer
+## to districts not divisions. Add "District" to disambiguate from division
+## names in shapefiles.
+kulkarni_idx <- outbreaks$covidence_id == 1150
+outbreaks$outbreak_location[kulkarni_idx] <- str_replace_all(
+  outbreaks$outbreak_location[kulkarni_idx],
+  c("\\bRangpur\\b" = "Rangpur District",
+    "\\bRajshahi\\b" = "Rajshahi District",
+    "\\bMymensingh\\b" = "Mymensingh District")
+)
 
 subcolumns_outbreak <- outbreaks %>%
   dplyr::select(outbreak_country, outbreak_location, outbreak_source,
