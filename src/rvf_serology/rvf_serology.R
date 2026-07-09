@@ -55,10 +55,6 @@ cat("Number of extracted serology rows with no unit: ", sero_no_unit_row_count)
 sero_studies_not_percentage <- sero_studies |>
   filter(parameter_unit=="No units" | is.na(parameter_unit))
 
-#401_003 is strange, trying to capture a range of PRNT50 values, I (TR) say cut it for now but can discuss
-sero_studies <- sero_studies |>
-  filter(access_param_id != "401_003")
-
 # All the others are cases of having numerator and denominator, but not specific central value (though a couple of people have put 0)
 
 # Assumption: parameter unit is always a percentage
@@ -92,34 +88,12 @@ ggsave(paste0("sero_apx_col_assay_general.png"),
        plot = p1, width = 19, height = 23)
 
 
-#Rename country tags:
-sero_studies <- sero_studies |>
-  mutate(population_country=ifelse(population_country=="China; Nigeria",
-                                   "Other", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Egypt",
-                                   "Other (MENAP)", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Germany; Netherlands; Qatar",
-                                   "Other", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Jordan",
-                                   "Other (MENAP)", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Kenya",
-                                   "Other", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Malaysia",
-                                   "Other", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Morocco",
-                                   "Other (MENAP)", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Nigeria",
-                                   "Other", population_country)) |>
-  mutate(population_country=ifelse(population_country=="Pakistan",
-                                   "Other (MENAP)", population_country)) |>
-  mutate(population_country=ifelse(population_country=="United States of America",
-                                   "Other", population_country))
 #Set my preferred factor levels:
-sero_studies$population_country <- factor(
-  sero_studies$population_country,
-  levels = c("Saudi Arabia", "United Arab Emirates", "Qatar",
-             "Republic of Korea", "Other (MENAP)", "Other")  # <- your desired order
-)
+# sero_studies$population_country <- factor(
+#   sero_studies$population_country,
+#   levels = c("Saudi Arabia", "United Arab Emirates", "Qatar",
+#              "Republic of Korea", "Other (MENAP)", "Other")  # <- your desired order
+# )
 
 p1 <- forest_plot(sero_studies, 'Serology (%)', 'parameter_type', c(-4,104),
                   qa_alpha = 0.3, text_size = 28, sort=TRUE, point_size=6) +

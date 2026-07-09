@@ -1,6 +1,7 @@
 library(orderly)
-
-#remotes::install_github("mrc-ide/orderly.sharedfile")
+# 
+# remotes::install_github("mrc-ide/orderly.sharedfile")
+# orderly::orderly_init()
 
 # *--------------------------- Download REDCap data ---------------------------*
 # Downloads the data report from REDCap
@@ -19,9 +20,9 @@ orderly_run("db_redcap_download",list(pathogen="RVF"))
 # Requires:
 #   - target_table.csv (relative path: shared/redcap_data/target_table.csv)
 #   - mapping_table.csv
-#     (relative path: shared/redcap_data/nipah/mapping_table.csv)
+#     (relative path: shared/redcap_data/rvf/mapping_table.csv)
 #   - config.yaml that specifies how to run the task
-#     (relative path: src/db_extraction_prep/redcap_task/nipah/config.yaml)
+#     (relative path: src/db_extraction_prep/redcap_task/rvf/config.yaml)
 orderly_run("db_extraction_prep",list(pathogen="RVF",
                                       orderly_download_dependency=TRUE))
 
@@ -51,15 +52,21 @@ orderly_run("rvf_latex_tables", list(pathogen="RVF"))
 
 
 # *---------------------------- Plots and analysis ----------------------------*
+# Summary plots 
+orderly_run("rvf_summary", list(pathogen="RVF"))
 
 # Serology plots
 orderly_run("rvf_serology", list(pathogen="RVF"))
 
-# current error - mismatch parameters?
+# Transmission (and severity) plots
 orderly_run("rvf_transmission", list(pathogen="RVF"))
 
+# Delay plots 
+orderly_run("rvf_delays", list(pathogen="RVF"))
 
-orderly_run("rvf_summary", list(pathogen="RVF"))
+# Risk factor plots
+orderly_run("rvf_risk_factors", list(pathogen="RVF"))
+
 
 
 

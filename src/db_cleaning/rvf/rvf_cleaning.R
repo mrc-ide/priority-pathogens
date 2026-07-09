@@ -24,6 +24,9 @@ article_cleaning <- function(df){
 }
 
 model_cleaning <- function(df){
+  # fix model type
+  df$model_type[which(df$covidence_id==1669)] <- "Compartmental"
+  
   return (df)
 }
 
