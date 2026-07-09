@@ -7,6 +7,7 @@ library(patchwork)
 library(readr)
 library(stringr)
 library(ggbreak)
+library(epireview)
 
 
 # *--------------------------------- Orderly ----------------------------------*
@@ -20,7 +21,8 @@ source("rvf_functions.R")
 
 orderly_artefact(description="RVF delay figures",
                  c("figure_delays.pdf",
-                   "figure_delays.png"))
+                   "figure_delays.png",
+                   "figure_delays.RData"))
 
 
 # *------------------------------ Data curation -------------------------------*
@@ -67,6 +69,8 @@ all_delay_types <- c("Incubation period", #0
 parameters <- parameters |>
   filter(parameter_type %in% all_delay_types)
 parameters_qa <- filter(parameters, qa_score >= 0.5)
+
+write.csv(all_delays,row.names = FALSE,"delays.csv")
 
 
 # *--------------------------------- Summary ----------------------------------*
@@ -199,9 +203,141 @@ p6 <- forest_plot(df=d6,
                   qa_alpha =0.3) 
 
 
-
 # Save transmission plots
 patchwork_delays <- p1+p2+p3+p5+p6+p4+plot_layout(ncol=1)
 patchwork_delays <- patchwork_delays + plot_annotation(tag_levels = 'A')
-ggsave("figure_delays.png", plot = patchwork_delays, width = 10, height = 15)
-ggsave("figure_delays.pdf", plot = patchwork_delays, width = 10, height = 15)
+
+########################################################################################
+########## Combine all delays 
+
+
+
+
+
+delays_data <- parameters |> filter(tolower(parameter_type) %in% c('incubation period',
+                                                                   'symptom onset>admission to care',
+                                                                   'symptom onset>discharge/recovery',
+                                                                   'symptom onset>death',
+                                                                   'symptom onset/fever>discharge or death',
+                                                                   'admission to care>death')) |> mutate(
+                                                                     parameter_type_general = case_when(
+                                                                       tolower(parameter_type)=='incubation period' ~ "Incubation period",
+                                                                       .default = "Human delay"
+                                                                     )
+                                                                   )|>
+      mutate(parameter_type_general=factor(parameter_type_general, levels=c("Incubation period", "Human delay")), 
+             parameter_type = ifelse(parameter_type=='Symptom onset/fever>discharge or death','Symptom onset/fever>discharge/death',parameter_type ))
+
+
+# add atrix to Mohammed (2010) for HIV positive group 
+delays_data$refs[which(delays_data$access_param_id%in%c("659_003","659_005"))] <- paste(delays_data$refs[which(delays_data$access_param_id%in%c("659_003","659_005"))], "*", sep="")
+
+
+#"#F8766D" "#CD9600" "#7CAE00" "#00BE67" "#00BFC4" "#00A9FF" "#C77CFF" "#FF61CC" 
+country_colours <- c("Egypt" = "#00BE67" ,
+                     "Saudi Arabia"=  "#00BFC4" ,
+                     "South Africa" =  "#00A9FF" ,
+                     "Uganda" = "#C77CFF" ,
+                     "United Republic of Tanzania"  = "#FF61CC" 
+)
+
+
+human_delays <- delays_data|>#filter(parameter_type_general=="Human delay")|>
+  mutate(start_delay = sub(">.*", "", parameter_type), end_delay = str_extract(parameter_type, "[^>]+$"), 
+         parameter_type = factor(parameter_type, levels =c("Incubation period","Symptom onset>admission to care","Symptom onset>death",
+                                                           "Symptom onset>discharge/recovery", "Symptom onset/fever>discharge/death",
+                                                           "Admission to care>death") ))
+
+
+delays_all_qa_facet <- forest_plot(df=human_delays,
+                                label="Delay (days)",
+                                color_column = "population_country", 
+                                custom_colours = country_colours, 
+                                lims = c(-5,125),
+                                text_size=text_size,
+                                segment_show.legend = NA,
+                                sort=TRUE,
+                                qa_alpha =0.3) +
+  theme(legend.position = "bottom",legend.direction = "vertical",plot.subtitle = element_text(
+    hjust = 0.16
+    # face = "bold",
+    # size = 14,
+    # margin = margin(b = 10)
+  ),axis.text.x.top = element_blank(),
+  axis.ticks.x.top = element_blank(),
+  axis.title.x.top = element_blank()) +
+  facet_wrap(~parameter_type, ncol=1, scales="free") +
+  scale_x_continuous(limits = c(0,125), expand = c(0, 0), n.breaks=20) 
+  
+
+delays_all_qa_facet_breaks <- forest_plot(df=human_delays,
+                                   label="Delay (days)",
+                                   color_column = "population_country", 
+                                   custom_colours = country_colours, 
+                                   lims = c(0,125),
+                                   text_size=text_size,
+                                   segment_show.legend = NA,
+                                   sort=TRUE,
+                                   qa_alpha =0.3) +
+  scale_x_continuous(limits = c(0,125)) +
+  scale_x_break(c(40, 110), scales=0.25) + scale_x_continuous(limits = c(0,125), breaks = c(0, 10, 20, 30, 40, 50,
+                                                                                             100, 110, 120, 130)) +
+  theme(legend.position = "bottom",legend.direction = "vertical",                # Legend at bottom
+        axis.title.x = element_text(margin = margin(t = 10, b = 0)), # Add space above label
+        plot.margin = margin(10, 10, 10, 10) )  +   # Adjust plot margins) +       # Reduce spacing inside legend) +
+  facet_wrap(~parameter_type, ncol=1, scales="free")
+
+delays_all_qa_human_breaks <- forest_plot(df=human_delays|> filter(parameter_type_general=="Human delay"),
+                                  label= "Delay (days)",
+                                  color_column = "population_country", 
+                                  custom_colours = country_colours,
+                                  lims = c(0,125),
+                                  text_size=text_size,
+                                  segment_show.legend = NA,
+                                  sort=TRUE,
+                                  qa_alpha =0.3) +
+  theme(legend.position = "bottom",legend.direction = "vertical",                # Legend at bottom
+        axis.title.x = element_text(margin = margin(t = 10, b = 0)), # Add space above label
+        plot.margin = margin(10, 10, 10, 10)) +       # Adjust plot margins) +
+  facet_wrap(~parameter_type, ncol=1, scales="free") +
+  scale_x_break(c(40, 110), scales=0.25) + scale_x_continuous(limits = c(0,125), breaks = c(0, 10, 20, 30, 40, 50,
+                                                                                             100, 110, 120, 130)) +
+  theme(legend.position = "bottom",legend.direction = "vertical",plot.subtitle = element_text(
+    hjust = 0.16
+    # face = "bold",
+    # size = 14,
+    # margin = margin(b = 10)
+  ),axis.text.x.top = element_blank(),
+  axis.ticks.x.top = element_blank(),
+  axis.title.x.top = element_blank()) + guides(shape = "none", linetype = "none", colour="none")
+
+
+
+delays_all_qa_incubation <- forest_plot(df=delays_data|>filter(parameter_type_general=="Incubation period"),
+                                     label=NULL,
+                                     color_column = "population_country", 
+                                     custom_colours = country_colours,
+                                     lims = c(0,10),
+                                     text_size=text_size,
+                                     segment_show.legend = NA,
+                                     sort=TRUE,
+                                     qa_alpha =0.3) + 
+  theme(legend.position = "bottom",legend.direction = "horizontal", plot.subtitle = element_text(
+    #hjust = 0.5,
+    # face = "bold",
+    # size = 14,
+    # margin = margin(b = 10)
+  )) + facet_wrap(~parameter_type_general) + scale_x_continuous(limits = c(0,10), breaks = c(0, 2, 4, 6, 8,10))
+
+delays_all_qa <- delays_all_qa_incubation + delays_all_qa_human_breaks + plot_layout(ncol=1, heights=c(1.3,5))
+delays_all_qa <- delays_all_qa + plot_annotation(tag_levels = 'A')
+
+# Fugure with x-axis breaks
+ggsave("figure_breaks.png", plot = delays_all_qa, width = 10, height = 10)
+ggsave("figure_breaks.pdf", plot = delays_all_qa, width = 10, height = 10)
+# Figure with all delays facet
+ggsave("figure_facet.png", plot = delays_all_qa_facet, width = 10, height = 10)
+ggsave("figure_facet.pdf", plot = delays_all_qa_facet, width = 10, height = 10)
+
+save(file="figure_delays.RData",delays_all_qa_facet_breaks, delays_all_qa,delays_all_qa_incubation,delays_all_qa_facet, delays_all_qa_human_breaks)
+

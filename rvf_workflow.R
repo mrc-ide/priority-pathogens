@@ -58,11 +58,11 @@ orderly_run("rvf_summary", list(pathogen="RVF"))
 # Serology plots
 orderly_run("rvf_serology", list(pathogen="RVF"))
 
+# Delay plots (must run before transmission)
+orderly_run("rvf_delays", list(pathogen="RVF"))
+
 # Transmission (and severity) plots
 orderly_run("rvf_transmission", list(pathogen="RVF"))
-
-# Delay plots 
-orderly_run("rvf_delays", list(pathogen="RVF"))
 
 # Risk factor plots
 orderly_run("rvf_risk_factors", list(pathogen="RVF"))

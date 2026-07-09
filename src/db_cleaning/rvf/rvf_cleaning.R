@@ -72,7 +72,7 @@ param_cleaning <- function(df){
   # Needs to be numeric for downstream tasks.
   
   # Covidence 1168 to be removed. No sampling time risk factor.
-  df <- df[-which(df$population_sample_size=="various"),]
+  # df <- df[-which(df$population_sample_size=="various"),]
   
   df <- df %>%
     mutate(
@@ -155,13 +155,15 @@ param_cleaning <- function(df){
                                            paste(tolower(other_delay_start), ">", tolower(other_delay_end), sep=""),
                                    .default=parameter_type))
  
-   # Symptom Onset/Fever to Discharge or death - covidence 1767 -  "Other" population group is 
+  # Symptom Onset/Fever to Discharge or death - covidence 1767 -  "Other" population group is 
   # HIV positive individuals
   df <-mutate(df, 
               population_group=case_when((population_group=="Other")&tolower(parameter_type) %in% 
-                                           c('symptom onset/fever>discharge or death') ~
+                                           c('symptom onset/fever>discharge or death','Human delay - symptom onset>admission to care') ~
                                            "Persons with confirmed HIV",
       .default = population_group))
+  
+  
   
   
   
@@ -176,8 +178,92 @@ param_cleaning <- function(df){
                parameter_statistical_approach = case_when(is.na(parameter_statistical_approach) ~ "Unspecified",
                                                           .default = parameter_statistical_approach))
   
-
+  #########################################################################################
+  # CFR cleaning - gender ratio extracted in covidence 1853 instead of CFR
   
+  df$parameter_value[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- 26
+  df$parameter_unit[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- "Percentage (%)"
+  df$parameter_lower_bound[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- 20
+  df$parameter_uncertainty_type[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- NA
+  df$parameter_uncertainty_lower_value[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- NA
+  df$parameter_uncertainty_upper_value[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- NA
+ # df$parameter_bounds[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- "20 - 48"
+ # df$comb_par1_uncertainty[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- NA
+ # df$comb_par1_uncertainty_type[which(df$covidence_id=="1853"&df$parameter_type=="Severity - case fatality ratio (CFR)")] <- NA
+  
+  
+  #########################################################################################
+  # CFR cleaning - population group & sample type
+  
+  # Population Group
+  # covidence 1853
+  df$population_group[which(df$access_param_id=="643_004")] <- "Persons with symptoms" # from "General Population"
+  # covidence 1701
+  df$population_group[which(df$access_param_id=="586_002")] <- "Persons with symptoms" # from "Persons under investigation"
+  # covidence 5272
+  df$population_group[which(df$access_param_id=="613_003")] <- "Persons with symptoms" # from "Persons under investigation"
+  # covidence 1496
+  df$population_group[which(df$access_param_id=="533_001")] <- "Persons with symptoms" # from "Persons under investigation"
+  # covidence 1774
+  df$population_group[which(df$access_param_id=="661_001")] <- "Persons with symptoms" # from "Persons under investigation"
+  # covidence 1814
+  df$population_group[which(df$access_param_id=="665_001")] <- "Persons with symptoms" # from "Persons under investigation"
+  # covidence 1790
+  df$population_group[which(df$access_param_id=="646_001")] <- "Persons with symptoms" # from "Persons under investigation"
+  # covidence 5255
+  df$population_group[which(df$access_param_id=="611_001")] <- "Persons with symptoms" # from "Persons under investigation"
+  # covidence 3061
+  df$population_group[which(df$access_param_id=="710_001")] <- "Persons with symptoms" # from "Unspecified"
+  # covidence 1760
+  df$population_group[which(df$access_param_id=="652_002")] <- "Persons under investigation" # from "General population"
+  # covidence 1817
+  df$population_group[which(df$access_param_id=="637_001")] <- "Persons under investigation" # from "Unspecified"
+  
+  # Population Sample Type
+  # covidence 5127
+  df$population_sample_type[which(df$access_param_id=="608_001")] <- "Population based" # from "Unspecified"
+  # covidence 5509
+  df$population_sample_type[which(df$access_param_id=="589_003")] <- "Population based" # from "Community based"
+  # covidence 3061
+  df$population_sample_type[which(df$access_param_id=="710_001")] <- "Population based" # from "NA"
+  # covidence 1817
+  df$population_sample_type[which(df$access_param_id=="637_001")] <- "Mixed settings" # from "Hospital based"
+  
+  
+  
+  #########################################################################################
+  # Risk factors - covidence #6042 population_group and popluation_sample_type is NA but should be "Mixed groups" & "Population based"
+  
+  df$population_sample_type[which(df$covidence_id=="6042")] <- "Population based"
+  df$population_group[which(df$covidence_id=="6042")] <- "Mixed groups"
+  
+  #########################################################################################
+  # change all Camel contact risk factors to animal contact
+  
+  df$riskfactor_name[which(df$access_param_id=="598_003")] <- "Age,Contact with animal,Other,Location (geographic)"
+  df$riskfactor_name[which(df$access_param_id=="514_006")] <- "Close contact,Contact with animal,Sex,Environmental,Other"
+  df$riskfactor_name[which(df$access_param_id=="717_002")] <- "Sex,Contact with animal,Consumption of animal product"
+
+  #########################################################################################
+  # Delay cleaning 
+  # Covidence 1539 - same delay extracted twice - remove median and keep mean
+  df <- df[-which(df$access_param_id=="618_005"),]
+  
+  #########################################################################################
+  # Delay cleaning - population group & sample type
+  
+  # covidence 1402
+  # Population Group
+  df$population_group[which(df$access_param_id=="600_001")] <- "Persons under investigation" # from "NA"
+  # Population Sample Type
+  df$population_sample_type[which(df$access_param_id=="600_001")] <- "Unspecified" # from "NA"
+  
+  # covidence 2714
+  # Population Group
+  df$population_group[which(df$access_param_id=="692_001")] <- "Persons under investigation" # from "Other"
+  # Population Sample Type
+  df$population_sample_type[which(df$access_param_id=="692_001")] <- "Community based" # from "Other"
+
   return (df)
 }
 # *============================================================================*
