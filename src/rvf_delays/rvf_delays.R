@@ -248,96 +248,90 @@ human_delays <- delays_data|>#filter(parameter_type_general=="Human delay")|>
                                                            "Symptom onset>discharge/recovery", "Symptom onset/fever>discharge/death",
                                                            "Admission to care>death") ))
 
+## plot with x-axis break
+types <- unique(human_delays$parameter_type)
+resolved_strip <- calc_element("strip.text", theme_minimal(base_size = text_size))
 
-delays_all_qa_facet <- forest_plot(df=human_delays,
-                                label="Delay (days)",
-                                color_column = "population_country", 
-                                custom_colours = country_colours, 
-                                lims = c(-5,125),
-                                text_size=text_size,
-                                segment_show.legend = NA,
-                                sort=TRUE,
-                                qa_alpha =0.3) +
-  theme(legend.position = "bottom",legend.direction = "vertical",plot.subtitle = element_text(
-    hjust = 0.16
-    # face = "bold",
-    # size = 14,
-    # margin = margin(b = 10)
-  ),axis.text.x.top = element_blank(),
-  axis.ticks.x.top = element_blank(),
-  axis.title.x.top = element_blank()) +
-  facet_wrap(~parameter_type, ncol=1, scales="free") +
-  scale_x_continuous(limits = c(0,125), expand = c(0, 0), n.breaks=20) 
-  
+plots <- lapply(types, function(pt) {
+  sub_df <- human_delays[human_delays$parameter_type == pt, ]
+  if(pt==types[6]){
+    sub_df$parameter_unit <- sub_df$parameter_2_unit
+    x_lab <- "Delays (days)"
+  }
+  p <- forest_plot(df = sub_df, label = "Delay (days)",
+                   color_column = "population_country",
+                   custom_colours = country_colours,
+                   lims = c(0, 125), text_size = text_size,
+                   sort = TRUE, qa_alpha = 0.3) +
+    scale_x_break(c(40, 110), scales = 0.25) +
+    scale_x_continuous(limits = c(0, 125),
+                       breaks = c(0,10,20,30,40,50,100,110,120,130)) +
+    ggtitle(pt) +               # replaces the facet strip
+    theme(legend.position = "none", plot.title = element_text(
+      size   = resolved_strip$size,
+      face   = resolved_strip$face,
+      colour = resolved_strip$colour,
+      hjust  = 0.5
+    ),
+    plot.margin = margin(5, 10, 5, 10)) + 
+    labs(x=NULL)
+  p
+})
 
-delays_all_qa_facet_breaks <- forest_plot(df=human_delays,
-                                   label="Delay (days)",
-                                   color_column = "population_country", 
-                                   custom_colours = country_colours, 
-                                   lims = c(0,125),
-                                   text_size=text_size,
-                                   segment_show.legend = NA,
-                                   sort=TRUE,
-                                   qa_alpha =0.3) +
-  scale_x_continuous(limits = c(0,125)) +
-  scale_x_break(c(40, 110), scales=0.25) + scale_x_continuous(limits = c(0,125), breaks = c(0, 10, 20, 30, 40, 50,
-                                                                                             100, 110, 120, 130)) +
-  theme(legend.position = "bottom",legend.direction = "vertical",                # Legend at bottom
-        axis.title.x = element_text(margin = margin(t = 10, b = 0)), # Add space above label
-        plot.margin = margin(10, 10, 10, 10) )  +   # Adjust plot margins) +       # Reduce spacing inside legend) +
-  facet_wrap(~parameter_type, ncol=1, scales="free")
-
-delays_all_qa_human_breaks <- forest_plot(df=human_delays|> filter(parameter_type_general=="Human delay"),
-                                  label= "Delay (days)",
-                                  color_column = "population_country", 
-                                  custom_colours = country_colours,
-                                  lims = c(0,125),
-                                  text_size=text_size,
-                                  segment_show.legend = NA,
-                                  sort=TRUE,
-                                  qa_alpha =0.3) +
-  theme(legend.position = "bottom",legend.direction = "vertical",                # Legend at bottom
-        axis.title.x = element_text(margin = margin(t = 10, b = 0)), # Add space above label
-        plot.margin = margin(10, 10, 10, 10)) +       # Adjust plot margins) +
-  facet_wrap(~parameter_type, ncol=1, scales="free") +
-  scale_x_break(c(40, 110), scales=0.25) + scale_x_continuous(limits = c(0,125), breaks = c(0, 10, 20, 30, 40, 50,
-                                                                                             100, 110, 120, 130)) +
-  theme(legend.position = "bottom",legend.direction = "vertical",plot.subtitle = element_text(
-    hjust = 0.16
-    # face = "bold",
-    # size = 14,
-    # margin = margin(b = 10)
-  ),axis.text.x.top = element_blank(),
-  axis.ticks.x.top = element_blank(),
-  axis.title.x.top = element_blank()) + guides(shape = "none", linetype = "none", colour="none")
+# add x-axis label 
+plots[[6]] <- plots[[6]] +
+  labs(x="Delay (days)")
+library(cowplot)
 
 
+library(grid)
 
-delays_all_qa_incubation <- forest_plot(df=delays_data|>filter(parameter_type_general=="Incubation period"),
-                                     label=NULL,
-                                     color_column = "population_country", 
-                                     custom_colours = country_colours,
-                                     lims = c(0,10),
-                                     text_size=text_size,
-                                     segment_show.legend = NA,
-                                     sort=TRUE,
-                                     qa_alpha =0.3) + 
-  theme(legend.position = "bottom",legend.direction = "horizontal", plot.subtitle = element_text(
-    #hjust = 0.5,
-    # face = "bold",
-    # size = 14,
-    # margin = margin(b = 10)
-  )) + facet_wrap(~parameter_type_general) + scale_x_continuous(limits = c(0,10), breaks = c(0, 2, 4, 6, 8,10))
+# find the longest y-axis label across ALL panels combined
+max_label_width <- max(sapply(plots, function(p) {
+  # extract the labels used in that plot's data
+  labs <- unique(p$data$refs)  # adjust to whatever column holds your y-axis labels
+  max(nchar(labs))
+}))
 
-delays_all_qa <- delays_all_qa_incubation + delays_all_qa_human_breaks + plot_layout(ncol=1, heights=c(1.3,5))
-delays_all_qa <- delays_all_qa + plot_annotation(tag_levels = 'A')
+# apply an identical left margin to every plot, sized generously for the longest label
+plots <- lapply(plots, function(p) {
+  p + theme(plot.margin = margin(5, 10, 5, 5 + max_label_width * 2.2)) 
+  # the *2.2 multiplier is a rough points-per-character estimate at your text_size;
+  # tune this by eye rather than trusting it exactly
+})
+
+# NOW grab each one as a grob, using the SAME width/height for every capture
+target_width  <- 10   # inches, matching your final save width
+target_height <- 2    # inches per panel, matching final save height / n_panels
+# convert each ggbreak plot into a fully-rendered grob
+plots_as_grobs <- lapply(plots, function(p) {
+  grid.grabExpr(print(p), width = target_width, height = target_height)
+})
+
+
+# stack plots
+stacked_delay <- plot_grid(
+  plotlist = plots_as_grobs,     # your list of legend-less broken-axis plots
+  ncol = 1, 
+ # rel_heights = c(1.3, 1.3, 1.2, 1.2, 1.1, 1.3),
+  align = "v"           # align panels vertically so x-axes line up
+)
+
+# add legend space
+text_box <- textGrob("place holder", gp = gpar(fontsize = 16))
+delays_final <- plot_grid(
+  stacked_delay, text_box,
+  ncol = 1, 
+  rel_heights = c(1, 0.1)   # tune this ratio to give the legend enough room
+)
+
 
 # Fugure with x-axis breaks
-ggsave("figure_breaks.png", plot = delays_all_qa, width = 10, height = 10)
-ggsave("figure_breaks.pdf", plot = delays_all_qa, width = 10, height = 10)
-# Figure with all delays facet
-ggsave("figure_facet.png", plot = delays_all_qa_facet, width = 10, height = 10)
-ggsave("figure_facet.pdf", plot = delays_all_qa_facet, width = 10, height = 10)
+ggsave("figure_breaks.png", plot = stacked_delay, width = 10, height = 10)
+ggsave("figure_breaks.pdf", plot = stacked_delay, width = 10, height = 10)
+# # Figure with all delays facet
+# ggsave("figure_facet.png", plot = delays_all_qa_facet, width = 10, height = 10)
+# ggsave("figure_facet.pdf", plot = delays_all_qa_facet, width = 10, height = 10)
 
-save(file="figure_delays.RData",delays_all_qa_facet_breaks, delays_all_qa,delays_all_qa_incubation,delays_all_qa_facet, delays_all_qa_human_breaks)
+save(file="figure_delays.RData",delays_final,stacked_delay)
 
