@@ -125,9 +125,11 @@ data_curation <- function(
   if (plotting) {
     parameters <- param4plot
   } else {
-    check_param_id <- (parameters$parameter_data_id ==
-      param4plot$parameter_data_id) # check that parameter data ids didn't get scrambled
-    if (sum(check_param_id) == dim(parameters)[1]) {
+    check_param_id <- identical(
+      parameters$parameter_data_id,
+      param4plot$parameter_data_id
+    )
+    if (check_param_id) {
       parameters$central <- param4plot$central
       parameters$central_range_midpoint <- param4plot$central_range_midpoint
     } else {
