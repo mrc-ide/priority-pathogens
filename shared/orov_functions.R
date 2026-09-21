@@ -410,6 +410,9 @@ insert_blank_rows <- function(dataframe, column) {
   tlabels <- as.character(unique(dataframe[[column]]))
 
   df_split <- split(dataframe, dataframe[[column]])
+  # Empty groups cause the outer rbind below to fail ->
+  # drop them first since there's nothing to display for them
+  df_split <- df_split[vapply(df_split, nrow, integer(1)) > 0]
 
   dataframe <- do.call(
     rbind,
