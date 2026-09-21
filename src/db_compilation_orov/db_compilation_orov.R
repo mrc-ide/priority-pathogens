@@ -67,7 +67,7 @@ articles <- articles %>%
       select(., qa_m1, qa_m2, qa_a3, qa_a4, qa_d5, qa_d6, qa_d7) == "Yes",
       na.rm = TRUE
     ),
-    qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
+    article_qa_score = ifelse(total_qa > 0, yes_score / total_qa * 100, NA)
   ) %>%
   select(-c(total_qa, yes_score))
 
