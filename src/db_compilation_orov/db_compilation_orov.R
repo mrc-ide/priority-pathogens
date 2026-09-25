@@ -137,7 +137,13 @@ parameters <- parameters |>
     parameter_value_type = case_when(
       parameter_value_type == "NA" ~ "Unspecified",
       .default = parameter_value_type
-    )
+    ),
+    parameter_value_type_2 = case_when(
+      parameter_value_type_2 == "IQR (paired or unpaired)" ~ "IQR",
+      parameter_value_type_2 == "Range (paired)" ~ "Range",
+      .default = parameter_value_type_2
+    ),
+    parameter_paired = parameter_paired %in% c("Yes", "TRUE")
   )
 
 # rename columns to match naming convention expected by orov_functions.R
