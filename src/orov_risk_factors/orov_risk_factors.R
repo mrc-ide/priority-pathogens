@@ -204,6 +204,9 @@ risk_table %>% ungroup() %>% filter(sex_ind==1)
 risk_table %>% ungroup() %>% filter(sex_ind==1) %>% select(covidence_id) %>% unique()
 
 
+## Other check
+risk_table |> filter(!is.na(other_ind)) 
+
 risk_table_filt <- risk_table %>% 
   filter(
     riskfactor_outcome %in% c("Infection","Serology","Presence of Oropouche"))
