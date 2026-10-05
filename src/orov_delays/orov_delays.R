@@ -48,12 +48,6 @@ parameters <- parameters |>
     )
   )
 
-# manual fix
-# check covidence ID 17 Moreira 2024. 5 days (SD 3.04) listed in db as onset to discharge but is onset to recovery
-parameters |>
-  mutate(parameter_type = case_when(covidence_id == 17 & parameter_type == "Human delay - symptom onset>discharge/recovery" 
-                                     ~ "Human delay - Symptom Onset/Fever>Symptom Resolution",
-                                    .default = parameter_type)) -> parameters
 
 d1 <- parameters |> 
   filter(parameter_class == "Delays") %>% 
