@@ -2,7 +2,7 @@
 
 library(tidyverse)
 library(forcats)
-library(orderly2)
+library(orderly)
 
 orderly_strict_mode()
 orderly2::orderly_parameters(pathogen = "OROV")
@@ -10,10 +10,9 @@ orderly2::orderly_parameters(pathogen = "OROV")
 orderly2::orderly_artefact(description = "inputs folder",
                            files = "inputs/")
 
-# did not like latest(parameter:pathogen == this:pathogen) - fix in future - seems to have resolved itself for now...
 orderly_dependency(
   name = "db_compilation_orov",
-  query = "latest(parameter:pathogen == this:pathogen)",
+  query = "latest()",
   files = c("inputs/articles.csv"="articles.csv",
             "inputs/parameters.csv"="parameters.csv",
             "inputs/outbreaks.csv"="outbreaks.csv"))
@@ -24,36 +23,30 @@ articles <- read.csv("inputs/articles.csv")
 outbreaks <- read.csv("inputs/outbreaks.csv")
 parameters <- read.csv("inputs/parameters.csv")
 
-## risk factors
-# parameters %>% filter(parameter_type_broad=="Risk factors") %>% View()
-# parameters %>% filter(parameter_type_broad=="Risk factors") %>% nrow()
-# parameters %>% filter(parameter_type_broad=="Risk factors") %>% select(parameter_context_human) %>% unique()
-# parameters %>% filter(parameter_type_broad=="Risk factors") %>% select(population_country) %>% unique()
-# parameters %>% filter(parameter_type_broad=="Risk factors") %>% select(riskfactor_adjusted) %>% mutate(riskfactor_adjusted=factor(riskfactor_adjusted)) %>% summary()
-# parameters %>% filter(parameter_type_broad=="Risk factors") %>% select(riskfactor_outcome) %>% mutate(riskfactor_outcome = factor(riskfactor_outcome)) %>% summary()
 
+## risk factors
 risk_params <- parameters %>%
   filter(grepl("Risk factors", parameter_type, ignore.case = TRUE)) %>%
-  select(covidence_id,access_param_id,riskfactor_outcome,
-         riskfactor_name,	riskfactor_occupation, riskfactor_significant,
+  select(covidence_id,access_param_id,riskfactor_outcome, 
+         riskfactor_name,	riskfactor_occupation, riskfactor_significant, 
          riskfactor_adjusted, population_sample_size,
          population_country, #dates,
          population_sample_type, population_group,parameter_context_human,
         article_qa_score,population_study_start_year,
         population_study_end_year,
         article_label,parameter_notes)
+#write.csv(risk_params,row.names = FALSE,"risk_factors_for_writing.csv")
 
 risk_params <- merge(risk_params,
-  articles %>% select(covidence_id,year_publication),
-  by="covidence_id") 
-# write.csv(risk_params,row.names = FALSE,"risk_factors_for_writing.csv")
+                     articles %>% select(covidence_id,year_publication),
+                     by="covidence_id") 
 
-# what is happening in terms of number of obs per paper
+# number of obs per paper
 risk_params %>% group_by(covidence_id) %>% 
   summarise(n = length(covidence_id)) %>% 
   arrange(-n)
 
-## risk factor specific categorisations can go here
+## risk factor specific categorisations 
 risk_params <- risk_params %>% mutate(riskfactor_name = case_when(
   covidence_id==9~"Environmental factors",
   covidence_id==28&riskfactor_name=="Age,Sex,Other"~"Age,Sex,Symptoms",
@@ -91,86 +84,11 @@ risk_params <- risk_params %>% mutate(riskfactor_name = case_when(
 )
 )
 
-
-# risk_table <- risk_params %>%
-#   separate_longer_delim(riskfactor_name, delim = ";") %>% 
-#   mutate(population_sample_size = replace_na(as.double(population_sample_size),0),
-#          riskfactor_adjusted    = case_when(riskfactor_adjusted=='' ~ 'Unspecified',
-#                                             TRUE ~ riskfactor_adjusted)) %>%
-#   group_by(riskfactor_outcome,riskfactor_name,riskfactor_significant,riskfactor_adjusted,
-#            parameter_context_human) %>%
-#   summarise(n=n(),
-#             pop_size = sum(population_sample_size)) %>%
-#   unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ") %>% arrange(-n)
-
-#text_size <- 20
 custom_colours <- c('Significant / Adjusted'='blue4', 'Significant / Not adjusted' = 'lightblue', 'Significant / Unspecified'='blue',
                     'Not significant / Adjusted'='darkred', 'Not significant / Not adjusted' = 'pink', 'Not significant / Unspecified'='red',
                     'Unspecified / Adjusted'='grey70', 'Unspecified / Not adjusted' = 'grey50', 'Unspecified / Unspecified'='grey30')
 
 
-
-# # Infection
-# risk_table_plt_infection <- risk_table %>% filter(riskfactor_outcome=='Infection') %>%
-#   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
-#   geom_bar( stat='identity',position = position_dodge(preserve = "single")) +
-#   scale_color_manual(values = custom_colours) +
-#   scale_fill_manual(values = custom_colours) + xlab('') + ylab('') + theme_light() + 
-#   theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
-#          strip.text = element_text( color = "black"),          
-#          strip.background =element_rect(fill="grey90"),
-#          text = element_text(size = text_size),
-#          legend.position = 'none')
-# 
-# 
-# # Serology
-# risk_table_plt_serology <- risk_table %>% filter(riskfactor_outcome=='Serology') %>%
-#   ggplot(aes(x=riskfactor_name,y=n,col=`Significant / Adjusted`, fill=`Significant / Adjusted`)) + 
-#   geom_bar( stat='identity',position = position_dodge(preserve = "single")) + 
-#   theme_light()+
-#   scale_color_manual(values = custom_colours) +
-#   scale_fill_manual(values = custom_colours) + xlab('') + ylab('')  + 
-#   theme( axis.text.x = element_text( angle = 25, hjust = 1, size = text_size ),
-#          strip.text = element_text( color = "black"),          
-#          strip.background =element_rect(fill="grey90"),
-#          text = element_text(size = text_size),
-#          legend.position = 'none') 
-# 
-# cowplot::plot_grid(risk_table_plt_infection,
-#                    risk_table_plt_serology,
-#                    nrow=2)
-
-
-# ## how many of each of the different outcomes
-# risk_params %>% select(riskfactor_outcome) %>% group_by(riskfactor_outcome) %>%
-#   summarise(length(riskfactor_outcome))
-# 
-# risk_params %>% filter(parameter_context_human=="Human") %>% select(riskfactor_outcome) %>% group_by(riskfactor_outcome) %>%
-#   summarise(length(riskfactor_outcome))
-# 
-# # how many adjusted
-# risk_params %>% select(riskfactor_adjusted) %>% group_by(riskfactor_adjusted) %>%
-#   summarise(length(riskfactor_adjusted))
-
-# 
-# # whats happening with infection
-# risk_params %>% filter(riskfactor_outcome=="Infection")
-# 
-# # whats happening with serology
-# risk_params %>% filter(riskfactor_outcome=="Serology")
-# 
-# # what is happening with occupation
-# risk_params %>% filter(grepl("Occupation",riskfactor_name))
-# 
-# # what is the deal with animals
-# risk_params %>% filter(parameter_context_human=="Not human")
-# 
-# # how is quality looking 
-# risk_params %>% select(article_qa_score) %>% unlist() %>% mean()
-
-## want to have a table where we have the risk factors individually, and tell us how many times it appears and in which of the 4 categorisations
-#risk_table$riskfactor_name %>% unique()
-# Age, Sex, Occupation, Symptoms, Environmental factors, Time, Location, Agricultural activities, comorbidities
 
 risk_table <- risk_params %>% mutate(
   age_ind = case_when(
@@ -230,8 +148,9 @@ risk_table <- risk_params %>% mutate(
   group_by(riskfactor_outcome,riskfactor_name,riskfactor_significant,
            riskfactor_adjusted,
            parameter_context_human) %>%
-           unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
-write.csv(risk_table,"risk_table.csv",row.names = FALSE) 
+  unite(`Significant / Adjusted`,riskfactor_significant:riskfactor_adjusted, remove = FALSE, sep = " / ")
+#write.csv(risk_table,"risk_table.csv",row.names = FALSE) 
+
 
 ## what are the most common risk factors considered
 risk_table %>% ungroup() %>% 
@@ -263,7 +182,12 @@ risk_table %>% ungroup() %>% filter(year_publication>=2020) %>%
          symptoms_ind,arbo_ind,non_arbo_ind,animal_cont_ind,race_ind,
          env_ind,agr_ind,vect_det_ind,travel_ind,housing_ind,comorb_ind) %>% colSums(.,na.rm=TRUE) %>% sum()
 
-risk_table %>% ungroup() %>% select(riskfactor_outcome) %>% mutate(riskfactor_outcome=factor(riskfactor_outcome)) %>% summary()
+
+risk_table %>% filter(riskfactor_outcome==unique(risk_table$riskfactor_outcome)[3]) %>% ungroup() %>%
+  select(age_ind,sex_ind,occ_ind,time_ind,location_ind,
+         symptoms_ind,arbo_ind,non_arbo_ind,animal_cont_ind,race_ind,
+         env_ind,agr_ind,vect_det_ind,travel_ind,housing_ind,comorb_ind) %>% colSums(.,na.rm=TRUE) %>% sum()
+
 
 ## how many studies have an other left
 risk_table %>% ungroup() %>% filter(other_ind==1) %>% select(covidence_id) %>% unique()
@@ -280,15 +204,18 @@ risk_table %>% ungroup() %>% filter(sex_ind==1)
 risk_table %>% ungroup() %>% filter(sex_ind==1) %>% select(covidence_id) %>% unique()
 
 
+## Other check
+risk_table |> filter(!is.na(other_ind)) 
+
 risk_table_filt <- risk_table %>% 
   filter(
     riskfactor_outcome %in% c("Infection","Serology","Presence of Oropouche"))
 rf_for_plot <- rbind(
   risk_table_filt %>% filter(age_ind==1) %>% 
-  group_by(`Significant / Adjusted`,
-           riskfactor_outcome) %>%
-  mutate(count = nrow(`Significant / Adjusted`),
-         label = "Age"),
+    group_by(`Significant / Adjusted`,
+             riskfactor_outcome) %>%
+    mutate(count = nrow(`Significant / Adjusted`),
+           label = "Age"),
   risk_table_filt %>% filter(sex_ind==1) %>% 
     group_by(`Significant / Adjusted`,
              riskfactor_outcome) %>%
@@ -395,7 +322,7 @@ rf_for_plot <- rbind(
          riskfactor_broad_cat = factor(
            riskfactor_broad_cat,
            levels = c("Individual-level","Population-level"))
-         )
+  )
 
 
 ggplot(rf_for_plot %>% filter(label!="Other"),
@@ -409,19 +336,6 @@ ggplot(rf_for_plot %>% filter(label!="Other"),
   scale_x_continuous(breaks = c(0,2,4,6,8,10))+
   scale_y_discrete(limits=rev)+
   guides(fill=guide_legend(nrow=3,byrow=TRUE))
-ggsave("rf_plot.png",width=7,height=5)
 
-
-## analysis
-
-# how many risk factors
-rf_for_plot %>% nrow()
-
-# remove other and then check how many adjusted
-
-
-risk_params %>% ungroup() %>% select(article_label) %>% filter(article_label>=2020) %>% nrow()
-
-
-
+ggsave("figure_SI_risk_main.pdf",width=10,height=8)
 
