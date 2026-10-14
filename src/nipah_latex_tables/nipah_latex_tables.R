@@ -186,17 +186,22 @@ mods <- mods |>
          code=ifelse(model_readme=="No" | is.na(model_readme), code,
                      paste0(code, "$^+$")),
          code=ifelse(is.na(model_language), code, paste0(code, " (",
-                                                         model_language, ")"))
-         )
+                                                         model_language, ")")),
+         compartmental_type=factor(
+           compartmental_type,
+           levels = c(sort(setdiff(unique(compartmental_type),
+                                   c("Other", ""))), "Other", ""),
+         ))
 
 # Replace all remaining NAs with ""
 mods <- mods |>
   mutate_all(~ ifelse(is.na(.), "", .))
 
 # Ordering
-mods <- mods[order(mods$model_type,mods$transmission_route,
+mods <- mods[order(mods$model_type,
+                   mods$transmission_route,
                    mods$compartmental_type,
-                   mods$assumptions),]
+                   mods$interventions_type), ]
 
 mods <- mods |>
   # recoded theoretical model to match other pathogens
@@ -373,6 +378,10 @@ write.table(outs, file = "latex_outbreaks.csv", sep = ",",
 # parameter_context_location_type
 parameters <- dfs$parameters
 
+# Central range midpoint is used for sorting, but ranges should have displayed
+parameters <- parameters |> mutate(central=coalesce(central,
+                                                    central_range_midpoint))
+
 # From Zika: round to 10 decimal places and remove any trailing zeroes
 parameters <- mutate_at(
   parameters,
@@ -498,7 +507,7 @@ for (i in 1:length(param_identifier)) {
 
     parameters[[dist_par_type]] <- ifelse(
       !is.na(parameters[[dist_par_unc]]),
-      paste0(parameters[[dist_par_type]], "$^+$"),
+      paste0(parameters[[dist_par_type]], "$^$"),
       parameters[[dist_par_type]]
     )
   }
@@ -571,14 +580,30 @@ for (i in 1:length(param_identifier)) {
   # Since dist is favoured show dist but indicate that there is also uncertainty
   parameters[[combined_dist]] <- ifelse(
     !is.na(parameters[[combined_dist]]) & !is.na(parameters[[unc_type]]),
-    paste0(parameters[[combined_dist]], "$^*$"),
-    parameters[[unc_type]])
+    paste0(parameters[[combined_dist]], "$^#$"),
+    parameters[[combined_dist]])
 
-  # Favour distribution
-  parameters[[unc_type]] <- coalesce(parameters[[combined_dist]],
-                                     parameters[[unc_type]],
-                                     NA)
+  # Favour distribution only when it actually has values; since it's being
+  # overloaded to capture gamma dist for estimated Nikolay params we need better
+  # logic compared to using coalesce alone
+  parameters[[unc_type]] <- ifelse(!is.na(parameters[[dist_1]]) |
+                                     !is.na(parameters[[dist_2]]),
+                                   parameters[[combined_dist]],
+                                     parameters[[unc_type]])
 }
+
+# Manually add a + to variability to indicate that uncertainty is report since
+# we don't include this in the latex table due to sparsity
+parameters <- parameters |>
+  mutate(parameter_2_value=ifelse(unc_var_type!="",
+                     paste0(parameter_2_value,  "$^+$"),
+                     parameter_2_value))
+
+parameters <- parameters |>
+  mutate(refs=ifelse(access_param_id %in% c("138_3141", "138_2718"),
+                             paste0(refs,  "$^*$"),
+                     refs))
+
 
 # Dates
 parameters <- parameters |>

@@ -398,6 +398,7 @@ rf_facet_o4 <- option_4_table |>
     stat = "identity",
     width = 0.95,
     pattern_fill = "white",
+    pattern_color= "white",
     pattern_density = 0.3,
     pattern_spacing = 0.1,
     color="black",
@@ -408,6 +409,7 @@ rf_facet_o4 <- option_4_table |>
                               stat = "identity",
                               width = 0.95,
                               pattern_fill = "white",
+                              pattern_color= "white",
                               pattern_density = 0.3,
                               pattern_spacing = 0.1,
                               color="black",
@@ -418,6 +420,7 @@ rf_facet_o4 <- option_4_table |>
                               stat = "identity",
                               width = 0.95,
                               pattern_fill = "white",
+                              pattern_color= "white",
                               pattern_density = 0.3,
                               pattern_spacing = 0.1,
                               color="black",
@@ -429,14 +432,12 @@ rf_facet_o4 <- option_4_table |>
       "Adjusted" = "stripe",
       "Not adjusted" = "circle",
       "Unspecified" = "none"
-    ),
-    labels=c("Adjusted   ", "Not adjusted  ", "Unspecified")
-  ) +
+    ), labels=c("Adjusted   ", "Not adjusted  ", "Unspecified")) +
   scale_fill_manual(
     name = "Significant",
     values = c(
       'Significant' = colour_palette[3],
-      'Not significant' = colour_palette[7],
+      'Not significant' = colour_palette[2],
       'Unspecified' = 'gray70'
     )
   ) +
@@ -465,7 +466,7 @@ rf_facet_o4 <- option_4_table |>
                           pattern = c("none", "none", "none"))
     ),
     pattern = guide_legend(nrow = 1, override.aes = list(
-      fill = c("white", "white", "white"),
+      fill = c("black", "black", "black"),
       pattern_density = 0.3,
       pattern_spacing = 0.03,
       pattern_key_scale_factor = 0.5))) +

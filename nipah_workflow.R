@@ -6,7 +6,10 @@ library(orderly2)
 #   - A REDCap api
 #   - nipah_config.yaml.that specifies how to run the task
 #     (relative path: src/db_redcap_download/download_config/nipah_config.yaml)
-orderly_run("db_redcap_download",list(pathogen="NIPAH"))
+
+# NOTE: IF YOU ARE A PERG MEMBER WITH A REDCAP API KEY PLEASE UNCOMMENT THE
+#       LINE BELOW AND SET 'orderly_download_dependency=TRUE' IN LINE 24
+# orderly_run("db_redcap_download",list(pathogen="NIPAH"))
 
 # *----------------- Prepare data to generate extraction csvs -----------------*
 # Prepares the REDCap data so that double and single extraction csvs can be
@@ -18,7 +21,7 @@ orderly_run("db_redcap_download",list(pathogen="NIPAH"))
 #   - config.yaml that specifies how to run the task
 #     (relative path: src/db_extraction_prep/redcap_task/nipah/config.yaml)
 orderly_run("db_extraction_prep",list(pathogen="NIPAH",
-                                      orderly_download_dependency=TRUE))
+                                      orderly_download_dependency=FALSE))
 
 # *------------------------- Generate extraction csvs -------------------------*
 # Extracts double and single extraction csvs used the .rds file from
@@ -42,27 +45,35 @@ orderly_run("db_cleaning",list(pathogen="NIPAH", debug_mode=TRUE))
 orderly_run("nipah_latex_tables", list(pathogen="NIPAH"))
 
 # *---------------------------- Plots and analysis ----------------------------*
-orderly_run("nipah_serology", list(pathogen="NIPAH"))
+# Serology
+orderly_run("nipah_serology")
 
-# orderly_run("nipah_map", list(pathogen="NIPAH"))
+# Maps
+orderly_run("nipah_deduplicate_outbreaks")
+orderly_run("nipah_map_prep")
+orderly_run("nipah_map_alternate")
 
+orderly_run("nipah_iedcr_map_prep")
+orderly_run("nipah_map_alternate_iedcr")
+
+# Severity
+orderly_run("nipah_severity_extracted_params", list(pathogen="NIPAH"))
+orderly_run("nipah_severity_extracted_outbreaks", list(pathogen="NIPAH"))
+orderly_run("nipah_severity_IEDCR", list(pathogen="NIPAH"))
+
+# Transmission
 orderly_run("nipah_transmission", list(pathogen="NIPAH"))
 
-orderly_run("nipah_severity", list(pathogen="NIPAH"))
+# Delays
+orderly_run("nipah_inc_period_meta")
+orderly_run("nipah_delays")
 
-orderly_run("nipah_bsl_data_synthesis", list(pathogen="NIPAH"))
+# Risk factors
+orderly_run("nipah_risk_factors", list(pathogen="NIPAH"))
 
-# I assume the issue below is caused by the BSL library and other packages will
-# explicitly reference MASS when a function is needed
-# MASS::select masks dplyr::select
-# MASS::area masks patchwork::select
-select <- dplyr::select
-area <- patchwork::area
-
-orderly_run("nipah_delays", list(pathogen="NIPAH"))
-
+# SI summary plots
 orderly_run("nipah_summary", list(pathogen="NIPAH"))
 
+# SI summary tables
 orderly_run("nipah_supp_tables", list(pathogen="NIPAH"))
 
-orderly_run("nipah_risk_factors", list(pathogen="NIPAH"))

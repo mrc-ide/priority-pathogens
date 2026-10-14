@@ -709,26 +709,51 @@ param_cleaning <- function(df){
 
   # Split 2931 incubation row
   hd_2931_incp_row_filter <- df$access_param_id=="138_016"
+  # TODO:
+  df[hd_2931_incp_row_filter, "parameter_notes"] <-
+    "Mean is also 13 days. 95% quantile is 16 days which corresponds to Gamma
+  distribution provided. Note, the relates to the empirical distribution.
+  The Gamma distribution is extracted from supp section 5.
+  Sample is secondary cases for whom a single infector could be identified.
+  Figure 1 in the main text has a bar chart of the serial interval."
 
   new_2931_incp_row <- df[hd_2931_incp_row_filter, ]
   new_2931_incp_row$parameter_data_id  <- generate_new_id(
     df, "parameter_data_id", 10)
   # No corresponding redcap entry so make an ID
+
   new_2931_incp_row$access_param_id  <- "138_3141"
   new_2931_incp_row$parameter_value <- 9.7
   new_2931_incp_row$parameter_value_type <- "Mean"
-
   new_2931_incp_row$parameter_statistical_approach <- "Estimated model parameter"
-  new_2931_incp_row$parameter_paired <- "No"
-  new_2931_incp_row$parameter_2_unit <- NA
-  new_2931_incp_row$method_2_from_supplement <- NA
-  new_2931_incp_row$parameter_2_statistical_approach <- NA
+  new_2931_incp_row$parameter_2_uncertainty_type <- ""
+  new_2931_incp_row$parameter_uncertainty_lower_value <- 9.1
+  new_2931_incp_row$parameter_uncertainty_upper_value <- 10.4
 
-  new_2931_incp_row$parameter_2_value_type <- NA
+  new_2931_incp_row$distribution_par1_type <- NA
+  new_2931_incp_row$distribution_par1_value <- NA
+  new_2931_incp_row$distribution_par1_uncertainty <- NA
+  new_2931_incp_row$distribution_par2_type <- NA
+  new_2931_incp_row$distribution_par2_value <- NA
+  new_2931_incp_row$distribution_par2_uncertainty <- NA
+
+  new_2931_incp_row$parameter_paired <- "Yes"
+  new_2931_incp_row$parameter_2_value_type <- "Standard deviation (Sd)"
+  new_2931_incp_row$parameter_2_value <- 2.2
+  new_2931_incp_row$parameter_2_unit <- "Days"
+  new_2931_incp_row$method_2_from_supplement <- "Yes"
+  new_2931_incp_row$parameter_2_statistical_approach <- "Estimated model parameter"
+  new_2931_incp_row$parameter_2_uncertainty_type <- "CRI95%"
+  new_2931_incp_row$parameter_2_uncertainty_lower_value <- 1.7
+  new_2931_incp_row$parameter_2_uncertainty_upper_value <- 2.8
+  new_2931_incp_row$distribution_2_type <- new_2931_incp_row$distribution_type
+  # TODO
+  # new_2931_incp_row$parameter_notes <- NA
+
   new_2931_incp_row$parameter_2_lower_bound <- NA
   new_2931_incp_row$parameter_2_upper_bound <- NA
 
-  # Remove dist param values
+  # Remove dist param values from existing row
   df[hd_2931_incp_row_filter, "distribution_type"] <- NA
   df[hd_2931_incp_row_filter, "distribution_par1_type"] <- NA
   df[hd_2931_incp_row_filter, "distribution_par1_value"] <- NA
@@ -742,26 +767,40 @@ param_cleaning <- function(df){
   # Split 2931 serial interval row
   hd_2931_si_row_filter <- df$access_param_id=="138_015"
 
+  # Missing method from supplement
+  df[hd_2931_si_row_filter, "method_from_supplement"] <- "Yes"
+
   new_2931_si_row <- df[hd_2931_si_row_filter, ]
   new_2931_si_row$parameter_data_id  <- generate_new_id(
     df, "parameter_data_id", 10)
 
   # No corresponding redcap entry so make an ID
   new_2931_si_row$access_param_id  <- "138_2718"
-  new_2931_si_row$parameter_value <- 13
-  new_2931_si_row$parameter_value_type <- "Median"
-
+  new_2931_si_row$parameter_value <- 12.7
+  new_2931_si_row$parameter_value_type <- "Mean"
   new_2931_si_row$parameter_statistical_approach <- "Estimated model parameter"
-  new_2931_si_row$parameter_paired <- "No"
-  new_2931_si_row$parameter_2_unit <- NA
-  new_2931_si_row$method_2_from_supplement <- NA
-  new_2931_si_row$parameter_2_statistical_approach <- NA
 
-  new_2931_si_row$parameter_2_value_type <- NA
+  new_2931_si_row$distribution_par1_type <- NA
+  new_2931_si_row$distribution_par1_value <- NA
+  new_2931_si_row$distribution_par1_uncertainty <- NA
+  new_2931_si_row$distribution_par2_type <- NA
+  new_2931_si_row$distribution_par2_value <- NA
+  new_2931_si_row$distribution_par2_uncertainty <- NA
+
+  new_2931_si_row$parameter_paired <- "Yes"
+  new_2931_si_row$parameter_2_value_type <- "Standard deviation (Sd)"
+  new_2931_si_row$parameter_2_value <- 3
+  new_2931_si_row$parameter_2_unit <- "Days"
+  new_2931_si_row$method_2_from_supplement <- "Yes"
+  new_2931_si_row$parameter_2_statistical_approach <- "Estimated model parameter"
+  new_2931_si_row$distribution_2_type <- new_2931_si_row$distribution_type
+
   new_2931_si_row$parameter_2_lower_bound <- NA
   new_2931_si_row$parameter_2_upper_bound <- NA
 
-  # Remove dist param values
+  # Remove dist param values from existing row
+  df[hd_2931_si_row_filter, "method_2_from_supplement"] <- "Yes"
+
   df[hd_2931_si_row_filter, "distribution_type"] <- NA
   df[hd_2931_si_row_filter, "distribution_par1_type"] <- NA
   df[hd_2931_si_row_filter, "distribution_par1_value"] <- NA

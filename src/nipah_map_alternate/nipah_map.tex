@@ -1,0 +1,33 @@
+\documentclass[tikz]{standalone}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\begin{document}
+\begin{tikzpicture}
+
+% Define positions and sizes
+\def\mapwidth{6cm}
+\def\mapheight{5cm}
+\def\hspace{0.3cm}
+\def\vspace{0.3cm}
+
+% Top row
+\node[inner sep=0] (india) at (0,0) 
+     {\includegraphics[width=\mapwidth,height=\mapheight]{pindia_bangladesh.png}};
+\node[inner sep=0] (malaysia) at (\mapwidth+\hspace,0) 
+     {\includegraphics[width=\mapwidth,height=\mapheight]{pkerala.png}};
+
+% Bottom row
+\node[inner sep=0] (kerala) at (0,-\mapheight-\vspace) 
+     {\includegraphics[width=\mapwidth,height=\mapheight]{pmalaysia_singapore.png}};
+\node[inner sep=0] (philippines) at (\mapwidth+\hspace,-\mapheight-\vspace) 
+     {\includegraphics[width=\mapwidth,height=\mapheight]{pphilippines.png}};
+
+% Legend (centered below or to the right)
+     \node[below=2mm of philippines,inner sep=0] (legend) at (\mapwidth/2+\hspace/2,-2*\mapheight-2*\vspace) 
+    {\includegraphics[height=3cm]{map_legend.png}};
+
+% Optional: Add labels
+    \node[left=2mm of india, font=\small\bfseries] {(A)};
+\end{tikzpicture}
+\end{document}
