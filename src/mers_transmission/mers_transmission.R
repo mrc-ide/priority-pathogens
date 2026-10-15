@@ -552,6 +552,7 @@ dR0 <- dR0 |>
   ))
 
 dR0 <- dR0 |> arrange(population_country, central)
+full_levels <- c(full_levels, "Unspecified")
 pR0 <- forest_plot(filter(dR0, qa_score >= 0.5),'Basic Reproduction Number (R_0)', "population_country", #"method_moment_value",
                   c(0, 30),
                   text_size=text_size) +
@@ -562,13 +563,13 @@ pR0 <- forest_plot(filter(dR0, qa_score >= 0.5),'Basic Reproduction Number (R_0)
   scale_fill_lancet(
     palette = "lanonc",
     limits = full_levels,
-    breaks = full_levels[c(3,4,6)],
+    breaks = full_levels[c(3,4,6,7)],
     drop = TRUE,
   ) +
   scale_color_lancet(
     palette = "lanonc",
     limits = full_levels,
-    breaks = full_levels[c(3,4,6)],
+    breaks = full_levels[c(3,4,6,7)],
     drop = TRUE
   )
 

@@ -141,6 +141,12 @@ param_cleaning <- function(df){
   df[df$access_param_id=="032_001",
              "parameter_unit"] <- "Days"
 
+  #404_002 and 404_001 are unspecified countries, not ROK
+  df[df$access_param_id=="404_001",
+     "population_country"] <- "Unspecified"
+  df[df$access_param_id=="404_002",
+     "population_country"] <- "Unspecified"
+
   #255_014 lists a delay of -5.9 days. That's because this individual had symptom onset AFTER hospital admission
   # Let's convert this to an "Other" human delay.
   #parameters <- filter(parameters, access_param_id != "255_014")
