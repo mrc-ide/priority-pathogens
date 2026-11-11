@@ -37,7 +37,7 @@ orderly_run("db_double",list(pathogen="RVF"))
 
 # *-------------------------- Generate final dataset --------------------------*
 # Merge double_extraction, fixing, and single extraction files to create a final
-# dataset
+# data set
 orderly_run("db_compilation", list(pathogen="RVF"))
 
 # *-------------------------------- Clean data --------------------------------*

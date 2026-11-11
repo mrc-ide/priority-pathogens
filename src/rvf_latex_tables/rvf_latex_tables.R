@@ -26,7 +26,7 @@ pars <- orderly_parameters(pathogen = NULL)
 orderly_dependency(
   "db_cleaning",
   "latest(parameter:pathogen == this:pathogen)",
-  c("articles.csv", "models.csv", "params.csv"))
+  c("articles.csv", "models.csv", "params.csv", "outbreaks.csv"))
 
 orderly_shared_resource("rvf_functions.R"="rvf_functions.R")
 
@@ -44,7 +44,7 @@ orderly_artefact(
 # *------------------------------- Read in data -------------------------------*
 articles <- read_csv("articles.csv")
 models <- read_csv("models.csv")
-outbreaks <- tibble()
+outbreaks <- read_csv("outbreaks.csv")
 parameters <- read_csv("params.csv")
 
 # TODO: Check data_curation
@@ -52,7 +52,6 @@ dfs <- data_curation(articles, outbreaks,models,parameters, plotting = FALSE)
 
 # *================================== Models ==================================*
 models <- dfs$models
-
 mods <- models |>
   filter(!is.na(refs) |
            !(is.na(model_type) & is.na(covidence_id))
@@ -89,7 +88,7 @@ model_type_replacements <- c("branching process - stochastic"="branching process
                              " model"="")
 
 transmission_route_replacements <- c("human to human \\(direct contact\\)"="Human-human",
-                                     "vector/animal"="animal",
+                                     "vector/animal"="Vector/Animal",
                                      "animal to human"="animal-human",
                                      "unspecified"="",
                                      "^;|;$"="")
@@ -213,12 +212,101 @@ write.table(mods, file = "latex_models.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 
+
 # *================================ Parameters ================================*
 # *----------------------------- General cleaning -----------------------------*
 # Parameters not mapped:
 # parameter_paired
 # parameter_context_location_type
-parameters <- dfs$parameters
+
+# ADD QA SCORES
+articles   <- dfs$articles
+articles   <- epireview::assign_qa_score(articles = articles)$articles
+qa_scores  <- articles |> dplyr::select(covidence_id,qa_score)
+
+parameters <- dfs$parameters |>
+  left_join(qa_scores)|>
+  mutate(qa_ind = ifelse(qa_score>0.5,"High QA (> 0.5)","Low QA"))|>
+  mutate(parameter_type = case_when(parameter_type=="symptom onset/fever>discharge or death"~ "Human delay - symptom onset/fever>discharge or death", .default = parameter_type))|>
+  mutate(parameter_class = case_when(
+    parameter_class %in% c("Attack rate") ~ "Other transmission parameters",
+    TRUE ~ parameter_class))
+
+# count each parameter - class catogories 
+count_parameters <- parameters |>
+  mutate(parameter_type_broad = str_extract(parameter_type, "[^-]+")) 
+count_all_parameters_broad <- count_parameters|> 
+  group_by(parameter_type_broad, qa_ind)|> summarise(parameters=n()) |>
+  pivot_wider(names_from = c(qa_ind),
+              values_from = parameters,
+              names_prefix = "Parameters: ")
+# unique studies for each outcome 
+study_count_broad <- count_parameters |>
+  distinct(covidence_id, parameter_type_broad, qa_ind) |>
+  group_by(parameter_type_broad, qa_ind)|> 
+  count(parameter_type_broad, name = "study_count") |>
+  pivot_wider(names_from = c(qa_ind),
+              values_from = study_count,
+              names_prefix = "Study: ")
+# combine into table summary 
+count_study_parameters_broad<- full_join(count_all_parameters_broad, study_count_broad, by = c("parameter_type_broad"))
+count_study_parameters_broad[is.na(count_study_parameters_broad)]<-0
+count_study_parameters_broad <- count_study_parameters_broad |> mutate(`Study: Total`=`Study: Low QA`+`Study: High QA (> 0.5)`,
+                                                                   `Parameters: Total`=`Parameters: Low QA`+`Parameters: High QA (> 0.5)`)
+count_study_parameters_broad <- count_study_parameters_broad|>mutate(`Study: Low QA`=NULL,`Parameters: Low QA`=NULL )
+count_study_parameters_broad <- count_study_parameters_broad[,c(1,5,4,2,3)]
+# Add column totals 
+totals <- matrix(c("Total",as.numeric(colSums(count_study_parameters_broad[,2:5]))), nrow=1)|>as_tibble()|>mutate(V2=as.integer(V2),
+                                                                                                                  V3=as.integer(V3),
+                                                                                                                  V4=as.integer(V4),
+                                                                                                                  V5=as.integer(V5))
+colnames(totals) <- colnames(count_study_parameters_broad)
+count_study_parameters_broad_total <- rbind(count_study_parameters_broad, totals)
+# check not double counting studies 
+study_count_total <- count_parameters |>
+  distinct(covidence_id, qa_ind) |>
+  group_by(qa_ind)|> 
+  count(name = "study_count") |>
+  pivot_wider(names_from = c(qa_ind),
+              values_from = study_count,
+              names_prefix = "Study: ")
+#Total unique studies 
+count_study_parameters_broad_total[9,3] <- sum(study_count_total)
+count_study_parameters_broad_total[9,5] <- study_count_total[1]
+
+# Table for SI
+write.table(count_study_parameters_broad_total, file = "count_all_parameters_broad.csv", sep = ",",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+
+
+# count each parameter - type catogories 
+count_all_parameters_type <- count_parameters|> 
+  group_by(parameter_type, qa_ind)|> summarise(parameters=n()) |>
+  pivot_wider(names_from = c(qa_ind),
+              values_from = parameters,
+              names_prefix = "Parameters: ")
+# unique studies for each outcome 
+study_count_type <- count_parameters |>
+  distinct(covidence_id, parameter_type, qa_ind) |>
+  group_by(parameter_type, qa_ind)|> 
+  count(parameter_type, name = "study_count") |>
+  pivot_wider(names_from = c(qa_ind),
+              values_from = study_count,
+              names_prefix = "Study: ")
+# combine into table summary 
+count_study_parameters_type<- full_join(count_all_parameters_type, study_count_type, by = c("parameter_type"))
+count_study_parameters_type[is.na(count_study_parameters_type)]<-0
+count_study_parameters_type <- count_study_parameters_type |> mutate(`Study: Total`=`Study: Low QA`+`Study: High QA (> 0.5)`,
+                                                                       `Parameters: Total`=`Parameters: Low QA`+`Parameters: High QA (> 0.5)`)
+count_study_parameters_type <- count_study_parameters_type|>mutate(`Study: Low QA`=NULL,`Parameters: Low QA`=NULL )
+count_study_parameters_type <- count_study_parameters_type[,c(1,5,4,2,3)]
+# Table for SI
+write.table(count_study_parameters_type, file = "count_all_parameters.csv", sep = ",",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+
+
 
 # From Zika: round to 10 decimal places and remove any trailing zeroes
 parameters <- mutate_at(
@@ -510,7 +598,8 @@ parameters <- parameters |>
 trns_params <- parameters |>
   filter(
     grepl(paste0("Attack|Relative contribution|Growth rate|Reproduction|",
-                 "Mutations|Overdispersion|proportion of symptomatic cases"),
+                 "Mutations|Overdispersion|proportion of symptomatic cases|",
+                 "symptomatic proportion"),
           parameter_type, ignore.case = TRUE)) |>
   select(parameter_type, parameter_value, unc_type,
          method_disaggregated_by,
@@ -526,7 +615,7 @@ trns_params <- parameters |>
 
 trns_params_pt_replacements <- c(
   "Reproduction number \\(Basic R0\\)" = "Reproduction number R0",
-  "Severity - proportion of symptomatic cases" = "Proportion of symptomatic cases",
+  "Severity - symptomatic proportion of infections" = "Proportion of symptomatic infections",
   "Mutations - evolutionary rate" = "Evolutionary rate",
   "Mutations - substitution rate" = "Substitution rate",
   # Only primary attack rate
@@ -541,16 +630,9 @@ trns_params |> count(parameter_type)
 trns_params$parameter_type <- factor(
   trns_params$parameter_type,
   levels = c("Reproduction number R0",
-             "Reproduction number R0 - Human",
-             "Reproduction number (Effective; Re)",
-             "Reproduction number (Effective; Re) - Human",
-             "Overdispersion",
-             "Growth rate (r)",
              "Primary attack rate",
-             "Secondary attack rate",
-             "Proportion of symptomatic cases",
-             "Relative contribution - human to human",
              "Relative contribution - zoonotic to human",
+             "Proportion of symptomatic infections",
              "Evolutionary rate",
              "Substitution rate"))
 
@@ -579,6 +661,8 @@ trns_params <- trns_params |>
 
 write.table(trns_params, file = "latex_transmission.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+
 # *------------------------------- Human delays -------------------------------*
 hdel_params <- parameters |>
   filter(grepl("delay", parameter_type, ignore.case = TRUE)) |>
@@ -596,31 +680,12 @@ hdel_params$parameter_type <- sub(">", " - ", hdel_params$parameter_type)
 hdel_params$parameter_type <- str_to_title(hdel_params$parameter_type)
 hdel_params$parameter_type <- gsub("  \\(.*?\\)", "", hdel_params$parameter_type)
 
-# These were specific to Nipah and don't necessarily to relate to MERS
-hdel_params <- hdel_params |> mutate(parameter_type = case_when(
-  (other_delay_start =="symptom onset" & other_delay_end == "confirmation") ~ "Onset - confirmation", #(or Symptom onset>diagnosis/test result)
-  (other_delay_start =="symptom onset" & other_delay_end == "notification") ~ "Onset - notification",
-  (other_delay_start =="Infectiousness" & other_delay_end == "Illness onset") ~ "Infectiousness - illness onset",
-  (other_delay_start =="Illness onset" & other_delay_end == "Diagnosis/test result") ~ "Onset - Diagnosis/test result",
-  (other_delay_start =="Onset" & other_delay_end == "Diagnosis/test result") ~ "Onset - Diagnosis/test result",
-  (other_delay_start =="Admission to hospital" & other_delay_end == "Admission to Critical Care/ICU") ~ "Admission To Care - Admission to Critical Care/ICU",
-  (other_delay_start =="Admission to ICU" & other_delay_end == "Discharge from Critical Care/ICU") ~ "Admission to ICU - Discharge from Critical Care/ICU",
-  (other_delay_start =="Ventilation start" & other_delay_end == "Ventilation end") ~ "Time in mechanical ventilation",
-  (other_delay_start =="Admission to ICU" & other_delay_end == "Death") ~ "Admission to ICU - Death",
-  #Nipah ones...
-  (other_delay_start =="Start of severe illness" & other_delay_end == "End of severe illness (recovery or death)") ~ "Duration of severe illness",
-  (other_delay_start =="Begin ventilation" & other_delay_end == "End ventilation") ~ "Duration of ventilation",
-  (other_delay_start =="Onset of ventilation" & other_delay_end == "End of ventilation") ~ "Duration of ventilation",
-  (other_delay_start =="First neurological episode" & other_delay_end == "Second neurological episode") ~ "Duration between initial neurological episodes",
-  (other_delay_start =="Exposure/Infection" & other_delay_end == "Neurological episode") ~ "Exposure - neurological episode",
-  TRUE ~ parameter_type))
-
 
 #This for now will redefine the "other" human delays
 ##TODO: Might want to consider something cleaner here, like manually re-writing as above
 hdel_params <- hdel_params |> mutate(
-  other = paste(other_delay_start, ":", other_delay_end),
-  parameter_type = coalesce(na_if(other, " : "),
+  other = paste(other_delay_start, "-", other_delay_end),
+  parameter_type = coalesce(na_if(other, " - "),
                             parameter_type)
 )
 
@@ -646,32 +711,9 @@ hdel_params$parameter_value_type[hdel_params$parameter_value_type==""] <- "Unspe
 
 ##TODO: This is obviously all specific to the 21 true categories for Nipah. The level setting won't work here
 hdel_params |>
-  distinct(parameter_type) |> print(n=21)
-
-##TODO: For Nipah, this would set the factor levels, but for MERS we have over a 100, and this command would set all not listed in these levels to NA
-# hdel_params$parameter_type <- factor(
-#   hdel_params$parameter_type,
-#   levels = c("Incubation period",
-#              "Onset - admission",
-#              "Onset - death",
-#              "Onset - recovery/death",
-#              "Onset - discharge/recovery",
-#              "Admission - death",
-#              "Admission - discharge/recovery",
-#              "Time in care (length of stay)",
-#              "Serial interval",
-#              "Onset - respiratory difficulty",
-#              "Onset - intubation",
-#              "Onset - fever with altered mental status",
-#              "Onset - nadir",
-#              "Onset - lymphopaenia",
-#              "Onset - thrombocytopaenia",
-#              "Onset - diagnosis/test result",
-#              "Duration of ventilation",
-#              "Duration of severe illness",
-#              "Duration of febrile illness",
-#              "Duration between initial neurological episodes",
-#              "Exposure - neurological episode"))
+  distinct(parameter_type) 
+hdel_params <- hdel_params |> mutate(parameter_type = case_when(parameter_type=="Onset/fever - discharge or death" ~ "Onset/fever - discharge/death",
+  TRUE ~ parameter_type))
 
 hdel_params <- hdel_params[order(hdel_params$parameter_type,
                                  as.numeric(hdel_params$central),
@@ -859,19 +901,13 @@ risk_params |> count(riskfactor_outcome)
 risk_params$riskfactor_outcome <- factor(risk_params$riskfactor_outcome,
                                          levels = c("Infection",
                                                     "Severe disease",
-                                                    "Severe disease (in general population)",
                                                     "Serology",
                                                     "Death",
-                                                    "Death (in general population)",
-                                                    "Recovery",
                                                     "Other"),
                                          labels=c("Infection",
                                                   "Severe disease",
-                                                  "Severe disease",
                                                   "Serology",
                                                   "Death",
-                                                  "Death",
-                                                  "Recovery",
                                                   "Other"))
 
 risk_params$riskfactor_significant[risk_params$riskfactor_significant==""] <- "Unspecified"

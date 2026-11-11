@@ -3,6 +3,7 @@ library(orderly)
 library(readr)
 library(stringr)
 
+
 pars <- orderly_parameters(pathogen = NULL, debug_mode=FALSE)
 
 pathogen_config_case <- tolower(pars$pathogen)
@@ -14,6 +15,10 @@ pathogen_cleaning_filename <- file.path(
 orderly_resource(c("cleaning.R",
                    pathogen_config_filename,
                    pathogen_cleaning_filename))
+
+orderly2::orderly_shared_resource("all_genomic_data_wang_corrected.xlsx")
+
+
 source("cleaning.R")
 source(pathogen_config_filename)
 source(pathogen_cleaning_filename)

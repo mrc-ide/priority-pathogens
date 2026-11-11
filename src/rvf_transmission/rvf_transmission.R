@@ -18,7 +18,7 @@ library(scales)
 library(wesanderson)
 
 # *--------------------------------- Orderly ----------------------------------*
-pars <- orderly_parameters(pathogen = NULL)
+pars <- orderly_parameters(pathogen = "RVF")
 
 orderly_dependency("db_cleaning", "latest(parameter:pathogen == this:pathogen)",
                    c("articles.csv", "models.csv", "params.csv","outbreaks.csv"))
@@ -35,12 +35,48 @@ orderly_artefact("RVF transmission figures",
                    "R_by_country_all_qa.png", "R_by_country_all_qa.pdf",
                    "figure_severity_all_qa.png", "figure_severity_all_qa.pdf"))
 
+
+
 # *------------------------------ Data curation -------------------------------*
 articles   <- read_csv("articles.csv")
 outbreaks <- read_csv("outbreaks.csv")
 models     <- read_csv("models.csv")
 parameters <- read_csv("params.csv")
 
+# ### Correct covidence #5293 - mutation rate
+# library(readxl)
+# all_genomic_data_wang_corrected <- read_excel("all_genomic_data_wang_corrected.xlsx")
+# all_genomic_data_wang_corrected[all_genomic_data_wang_corrected=="NA"] <- NA
+# all_genomic_data_wang_corrected <- all_genomic_data_wang_corrected |> mutate(
+#   parameter_2_value = suppressWarnings(as.numeric(parameter_2_value)), 
+#                                        parameter_2_lower_bound = suppressWarnings(as.numeric(parameter_2_lower_bound)),
+#   parameter_2_upper_bound = suppressWarnings(as.numeric(parameter_2_upper_bound)),
+#   exponent_2 = suppressWarnings(as.numeric(exponent_2)),
+#   cfr_ifr_numerator = suppressWarnings(as.numeric(cfr_ifr_numerator)),
+#   cfr_ifr_denominator = suppressWarnings(as.numeric(cfr_ifr_denominator)) ,
+#   population_age_min = suppressWarnings(as.numeric(population_age_min)),
+#   population_age_max = suppressWarnings(as.numeric(population_age_max)),
+#   population_study_start_day = suppressWarnings(as.numeric(population_study_start_day)) ,
+#   population_study_end_day = suppressWarnings(as.character(population_study_end_day)) ,
+#   population_study_start_year = suppressWarnings(as.numeric(population_study_start_year)) ,
+#   population_study_end_year = suppressWarnings(as.numeric(population_study_end_year)),
+#   population_study_start_month = suppressWarnings(as.character(population_study_start_month)) ,
+#   population_study_end_month = suppressWarnings(as.character(population_study_end_month)),
+#   central = suppressWarnings(as.numeric(central)) # suppress warnings for coercion
+#   )
+# 
+# parameters_632_001 <- parameters|>filter(access_param_id=="632_001")
+# parameters_wang_fixed <- rbind(parameters_632_001,parameters_632_001,parameters_632_001)
+# parameters_wang_fixed[1,c(1:17,21:23,47:ncol(parameters))] <- all_genomic_data_wang_corrected[which(all_genomic_data_wang_corrected$access_param_id=="632_001"),c(1:17,21:23,47:ncol(all_genomic_data_wang_corrected))]
+# parameters_wang_fixed[2,c(1:17,21:23,47:ncol(parameters))] <- all_genomic_data_wang_corrected[which(all_genomic_data_wang_corrected$access_param_id=="632_002"),c(1:17,21:23,47:ncol(all_genomic_data_wang_corrected))]
+# parameters_wang_fixed[3,c(1:17,21:23,47:ncol(parameters))] <- all_genomic_data_wang_corrected[which(all_genomic_data_wang_corrected$access_param_id=="632_003"),c(1:17,21:23,47:ncol(all_genomic_data_wang_corrected))]
+# parameters_wang_fixed$ids[which(df$access_param_id=="632_001")] <- ids::random_id(1) # new random id
+# parameters_wang_fixed$ids[which(df$access_param_id=="632_002")] <- ids::random_id(1) # new random id
+# parameters_wang_fixed$ids[which(df$access_param_id=="632_003")] <- ids::random_id(1) # new random id
+# 
+# parameters <- rbind(parameters |> filter(access_param_id!="632_001"), parameters_wang_fixed)
+
+# curation function 
 dfs <- curation(articles, outbreaks, models, parameters, plotting = TRUE)
 
 articles   <- dfs$articles
@@ -69,7 +105,12 @@ parameters <- parameters  |>
     population_group,
     levels = c(sort(setdiff(unique(population_group),
                             c("Other", "Unspecified"))),
-               "Other", "Unspecified")))
+               "Other", "Unspecified")))|>
+  mutate(population_country=ifelse(population_country=="France", "France (Mayotte)", population_country))|>
+  mutate(population_country=ifelse(population_country=="Madagascar; South Africa", "Madagascar", population_country))|>
+  mutate(population_country=ifelse(is.na(population_country), "Unspecified", population_country))
+
+parameters <- parameters[order(parameters$population_country),]
 
 
 d1 <- parameters |> filter(parameter_type == 'Mutations - evolutionary rate')
@@ -79,7 +120,7 @@ d5 <- parameters |> filter(parameter_class == 'Reproduction number')
 
 d6 <- parameters |> filter(parameter_type == 'Severity - symptomatic proportion of infections')
 d7 <- parameters |> filter(parameter_type == 'Severity - case fatality ratio (CFR)')
-d8 <- parameters |> filter(parameter_type == 'Relative contribution - zoonotic to human')
+d8 <- parameters |> filter(parameter_type == 'Relative contribution - animal to vector')
 
 # For numerator/denominator calculations use central value 
 d6 <- d6 |> mutate(parameter_value=ifelse(is.na(parameter_value)&!is.na(cfr_ifr_numerator),central,parameter_value)) 
@@ -112,6 +153,20 @@ d5 <- d5 |> arrange(population_group, central)
 d6 <- d6 |> arrange(population_group, central)
 d7 <- d7 |> arrange(population_group, central)
 d8 <- d8 |> arrange(population_group, central)
+
+write.csv(d4,row.names = FALSE,"all_attack_rate_data.csv")
+
+
+#Country colour palette 
+country_names <- sort(c(unique(d7$population_country), "France (Mayotte)", "Rwanda"))
+# ggplot2 default discrete palette with 12 colours
+country_palette <- hue_pal()(length(country_names))
+# create palette
+names(country_palette) <- country_names
+country_palette <- c(country_palette, "Unspecified"="grey", "Various"="black" )
+# save colour palette to share
+
+save(country_palette, file="~/priority-pathogens/shared/country_palette.RData")
 
 # *---------------------------------- Plots -----------------------------------*
 # Set to 28 for other pathogens
@@ -168,7 +223,7 @@ genomic_all_qa <- forest_plot(genomic_da,
                          qa_alpha = 0.3,
                          text_size=text_size) +
   guides(color = guide_legend(title = "Gene", order = 1))+
-  facet_wrap(~parameter_type, ncol=1,scales="free_y")
+  facet_wrap( ~parameter_type, ncol=1,scales="free_y")
 
 
 ## Save all risk params
@@ -234,6 +289,7 @@ d7$deaths <- d7$cfr_ifr_numerator
 d7$deaths[is.na(d7$deaths)] <-0
 d7$parameter_uncertainty_lower_value_og <- d7$parameter_uncertainty_lower_value
 
+# Calculate binomial confidence interval for CFR
 d7$binom_ci_upper <- binom::binom.confint(
   x = d7$deaths,
   n = d7$cases,
@@ -278,7 +334,7 @@ cfr_all_qa_grid <- forest_plot_approach(df=d7, label='Case-Fatality Ratio (%)',
 ### forest plot - sample size ordering 
 
 d7$plot_alpha <- 1
-d7$segment_alpha <- 1
+d7$segment_alpha <- 0.75
   d7[d7$qa_score<=0.5, ]$plot_alpha <- cfr_qa_alpha
   d7[d7$qa_score<=0.5, ]$segment_alpha <- 0.65 * cfr_qa_alpha
 
@@ -371,18 +427,18 @@ p7 <- forest_plot_approach(filter(d7, qa_score >= 0.5),'Case-Fatality Ratio (%)'
                   c(0, 100),
                   text_size=text_size)
 
-# Relative contribution - zoonotic to human
+# Relative contribution - animal to vector
 ###########################################
 unique(d8$parameter_unit[!is.na(d8$parameter_unit)])
 # These are all low QA so just ignore
 p8_all_qa <- forest_plot_approach(d8,
-                         label='Relative contribution - zoonotic to human (%)', 
+                         label='Relative contribution - animal to vector (%)', 
                          color_column = "population_group",
                          lims=c(-5, 100),
                          text_size=text_size,
                          qa_alpha =0.3)
 p8 <- forest_plot_approach(filter(d8, qa_score >= 0.5),
-                  label = 'Relative contribution - zoonotic to human (%)',
+                  label = 'Relative contribution - animal to vector (%)',
                   color_column = "population_group",
                   lims=c(-5, 100),
                   text_size=text_size)
@@ -443,16 +499,15 @@ extracted_cfr <- d7 |>
                                 round((population_study_start_year + population_study_end_year) / 2),
                                 population_study_start_year)) |>
   mutate(study_midyear_cat = case_when(
-    study_midyear %in% 1990:1999 ~ "1990-1999",
+    study_midyear %in% 1950:1999 ~ "1950-1999",
     study_midyear %in% 2000:2009 ~ "2000-2009",
     study_midyear %in% 2010:2019 ~ "2010-2019",
-    study_midyear %in% 2020:2029 ~ "2020-Present",
+    study_midyear %in% 2020:2027 ~ "2020-Present",
     TRUE ~ "Unspecified")) |>
   mutate(cfr_denom_cat = case_when(
-    cfr_ifr_denominator %in% 1:29      ~ "Reported Cases < 30",
-    cfr_ifr_denominator %in% 30:99     ~ "Reported Cases = 30-99",
-    cfr_ifr_denominator %in% 100:399   ~ "Reported Cases = 100-399",
-    cfr_ifr_denominator %in% 400:18000   ~ "Reported Cases = 100-399",
+    cfr_ifr_denominator %in% 10:199      ~ "Reported Cases = 10-199",
+    cfr_ifr_denominator %in% 200:399   ~ "Reported Cases = 200-399",
+    cfr_ifr_denominator %in% 400:18000   ~ "Reported Cases = 400-18,000",
     TRUE ~ "Unspecified")) |>
   mutate(duplicate_cfr = "False")|>
   # # Deduplicating CFRs
@@ -469,7 +524,11 @@ extracted_cfr <- d7 |>
   #     "138_004", "151_004", "171_004", "173_001", "172_001", "179_001",
   #     "190_001") ~ "Assumed",
   #   TRUE ~ "False")) |>
-  mutate(population_group = factor(population_group,
+  mutate(
+    cfr_denom_cat = factor(cfr_denom_cat, levels=c("Reported Cases = 10-199",
+                                                               "Reported Cases = 200-399",
+                                                               "Reported Cases = 400-18,000") ),
+    population_group = factor(population_group,
                                    levels = c(sort(setdiff(unique(population_group),
                                                            c("Other", "Unspecified"))),
                                               "Other", "Unspecified")))
@@ -596,38 +655,36 @@ for (i in seq_along(qa_thresh_vec)){
   #        plot_list[[list_label]][["meta"]][["m4"]]$plot,
   #        width = 8.5, height = 7)
   
-  # Update to account for dedup:
-  extracted_cfr_filtered <-  extracted_cfr_filtered |>
-    mutate(cfr_denom_cat = ifelse(cfr_denom_cat=="Reported Cases = 100-329",
-                                  "Reported Cases = 100-250", cfr_denom_cat))
+  
   
   plot_list[[list_label]][["meta"]][["m3"]] <- metaprop_wrap(
     dataframe = extracted_cfr_filtered, subgroup = "cfr_denom_cat", plot_pooled = TRUE,
     sort_by_subg = FALSE, plot_study = TRUE, digits = meta_digits,
-    colour = imperial_khaki, width = 10500, height = 8000, resolution = 1000)
+    colour = imperial_khaki, width = 9000, height = 9000, resolution = 1100)
   
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_cfr_denom_cat.pdf")),
          plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 8, height = 6)
+         width = 9, height = 9)
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_cfr_denom_cat.png")),
          plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 8, height = 6)
+         width = 9, height = 9)
+  
   
   plot_list[[list_label]][["meta"]][["m4"]] <- metaprop_wrap(
     dataframe = extracted_cfr_filtered, subgroup = "population_group", plot_pooled = TRUE,
     sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-    colour = imperial_khaki, width = 10000, height = 9000, resolution = 1000)
+    colour = imperial_khaki, width = 12000, height = 12000, resolution = 1000)
   
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_population_group.pdf")),
          plot_list[[list_label]][["meta"]][["m4"]]$plot,
-         width = 7.3, height = 6)
+         width = 7, height = 6 )
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_population_group.png")),
          plot_list[[list_label]][["meta"]][["m4"]]$plot,
-         width = 7.3, height = 6)
+         width = 7, height = 6)
   
   # Forest plot
   plot_list[[list_label]][["forest"]][["p_cfr_1"]] <- forest_plot(
@@ -806,6 +863,8 @@ for (i in seq_along(qa_thresh_vec)){
   
 
 
+
+
 ##########################################################################################################
 ### Main figure plot  - FIGURE 4
 
@@ -816,76 +875,367 @@ for (i in seq_along(qa_thresh_vec)){
 # cfr_meta_analysis
 # genomic_all_qa 
 
-# Country colour palette 
-country_names <- sort(c(unique(d7$population_country), "France"))
-# ggplot2 default discrete palette with 12 colours
-country_palette <- hue_pal()(length(country_names))
-# create palette
-names(country_palette) <- country_names
-save(country_palette, file="~/priority-pathogens/shared/country_palette.RData")
-
-# genomics palette
-genomic_segments <- sort(unique(genomic_da$genome_site_clean))
-genomic_segments_palette <- wes_palette("GrandBudapest2", 4)
-names(genomic_segments_palette) <- genomic_segments
-# Delay plot
-load("~/priority-pathogens/src/rvf_transmission/figure_delays.RData")
-
-# fixe legend issue
-delay_legend <- cowplot::get_legend(delays_all_qa_facet_breaks+theme(legend.position = "bottom")+ guides( color = "none")+labs(colour=NULL))
-
-delay_plot<- cowplot::plot_grid(delays_all_qa_facet_breaks+theme(legend.position = "bottom") + guides( color = "none")+labs(colour=NULL) +
-                                  theme(legend.position = "bottom",                # Legend at bottom
-  axis.title.x = element_text(margin = margin(t = 10, b = 0)), # Add space above label
-  plot.margin = margin(10, 10, 10, 10)       # Adjust plot margins
-), 
-                                delay_legend,
-                      ncol=1, labels=c("","") , align = c("h"), 
-                      rel_heights = c(10,1))
+#
 
 
-# CRF meta analysis
+################    CRF meta analysis     #############
 cfr_meta_analysis <- plot_list[["all"]][["meta"]][["m1"]]$plot
 
 
-# Attack rates
-attackrate_all_qa <- forest_plot_approach(d4, 'Attack Rate (%)', "population_country", 
-                                          c(-3,20),
-                                          qa_alpha = 0.3,
-                                          custom_colours = country_palette,
-                                          text_size=text_size) + facet_wrap(~parameter_statistical_approach, 
-                                                                            scales="free_y", ncol=1)
+#############      Attack rates       ##################
 
-## CRF 
-cfr_all_qa_country <- forest_plot_approach(d7,'Case-Fatality Ratio (%)', "population_country",
-                                           c(-3, 110),
-                                           text_size=text_size,
-                                           custom_colours = country_palette,
-                                           qa_alpha =0.3)+
-  facet_wrap(~population_sample_type, 
-             ncol=1, scales="free_y")
+# Build the base plot first
+df <- d4 |> mutate(urefs = make.unique(refs)) |>
+  mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
+         uncertainty_present = (
+           !(is.na(parameter_uncertainty_lower_value) &
+               is.na(parameter_uncertainty_upper_value)))
+  )|>
+  arrange(desc(population_country)) |>
+  mutate(
+    urefs = fct_inorder(urefs)
+  )
 
-# Genomics
+attackrate_all_qa_base_plot <-  ggplot(df) +
+  geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
+                   y = urefs, yend = urefs, color = population_country),
+               linewidth=3) +
+  geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
+                    y = urefs, linetype="Uncertainty"),
+                width = 0.25, lwd=0.5, color = "black") +
+  geom_errorbar(data= df[!df$uncertainty_present,],
+                aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                    y = urefs, linetype="Variability"),
+                width = 0.25, lwd=0.5, color = "black",
+                lineend = "square") +
+  geom_errorbar(data= df[df$uncertainty_present,],
+                aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                    y = urefs, linetype="Variability"),
+                width = 0.25, lwd=0.5, color = "black",
+                lineend = "square", position = position_nudge(y=-0.25)) +
+  geom_point(aes(x = parameter_value, y = urefs,
+                 shape = parameter_statistical_approach, fill = population_country),
+             size = 3, stroke = 1, color = "black") +
+  # FIX? commented out to keep colours even if NA
+  scale_shape_manual(name = "Statistical approach",
+                     values = c(`Observed sample statistic` = 21,
+                                `Estimated parameter` = 22, 
+                                `Unknown` = 23, 
+                                `Unspecified` = 24, `Other`=25),
+                     breaks = c("Observed sample statistic", "Estimated parameter", "Unspecified", "Other",
+                                "Unknown")) +
+  scale_linetype_manual(name   = "Variation Type",
+                        values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                        breaks = c("Uncertainty", "Variability")) +
+  scale_x_continuous(limits = c(-1,30), expand = c(0, 0)) +
+  scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+  labs(x = 'Attack Rate (%)', y = NULL) +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+        text = element_text(size = text_size))
+
+# same urefs factor, same row order
+attackrate_all_qa_plot_df <- attackrate_all_qa_base_plot$data
+
+y_positions_location <- attackrate_all_qa_plot_df |>
+  ## this reflects the within facet order 
+  mutate(y_key = as.character(interaction(population_country, sep = "--"))) |>
+  # factor level order is preserved because country_location_label is already a factor
+  arrange(
+    desc(population_country),
+    interaction(factor(sub("--.*", "", y_key)), population_country),
+    .by_group = TRUE
+  ) |>
+  mutate(y_pos = row_number()) |>
+  ungroup()
+
+
+country_separators <- y_positions_location |>
+  group_by(population_country) |>
+  summarise(y_min = min(y_pos), y_max = max(y_pos), .groups = "drop") |>
+  arrange(y_min,desc(population_country), .by_group = TRUE) |>
+  mutate(y_sep = y_min - 0.5) |>
+  ungroup()
+
+attackrate_all_qa_country <- attackrate_all_qa_base_plot +
+  geom_segment(
+    data = country_separators |>
+      filter(y_min > min(y_min)) |>
+      ungroup(),
+    aes(y = y_sep, yend = y_sep, x = -Inf, xend = Inf),
+    color = "grey50", linewidth = 0.2, linetype = "solid",
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = country_separators, size = 2.5,
+    aes(y = y_max + 0.35, x = 0, label = population_country),
+    hjust = 0, vjust = 1, size = 1.1, fontface = "bold",
+    inherit.aes = FALSE
+  )
+
+attackrate_all_qa_country
+
+
+# attackrate_all_qa <- forest_plot_approach(d4, 'Attack Rate (%)', "population_country", 
+#                                           c(-1,20),
+#                                           custom_colours = country_palette,
+#                                           text_size=text_size) 
+# # + 
+#   facet_wrap(~parameter_statistical_approach, ncol=1,scales="free_y", space="free_y")
+  #facet_grid(parameter_statistical_approach ~ ., scales = "free_y", space = "free_y")
+
+
+
+
+
+#################                  CFR PLOT             ################################################
+
+# Build the base plot first
+df <- d7 |> mutate(study_midyear = ifelse(!is.na(population_study_start_year) & !is.na(population_study_end_year),
+                                  round((population_study_start_year + population_study_end_year) / 2),
+                                  population_study_start_year)) |>
+  arrange((population_sample_size)) |>
+  mutate(
+    urefs = fct_inorder(urefs)
+  )
+
+base_plot <-  ggplot(df) +
+  geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
+                   y = urefs, yend = urefs, color = population_country),
+               linewidth=3, alpha=0.75) +
+  geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
+                    y = urefs, linetype="Uncertainty"),
+                width = 0.25, lwd=0.5, color = "black") +
+  geom_errorbar(data= df[!df$uncertainty_present,],
+                aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                    y = urefs, linetype="Variability"),
+                width = 0.25, lwd=0.5, color = "black",
+                lineend = "square") +
+  geom_errorbar(data= df[df$uncertainty_present,],
+                aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+                    y = urefs, linetype="Variability"),
+                width = 0.25, lwd=0.5, color = "black",
+                lineend = "square", position = position_nudge(y=-0.25)) +
+  geom_point(aes(x = parameter_value, y = urefs,
+                 shape = parameter_statistical_approach, fill = population_country),
+             size = 3, stroke = 1, color = "black") +
+ # facet_grid(population_sample_type ~ ., scales = "free_y", space = "free_y") + # scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+  facet_wrap(~population_sample_type, scales = "free_y", space = "free_y") + # scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+  # FIX? commented out to keep colours even if NA
+  scale_shape_manual(name = "Statistical approach",
+                     values = c(`Observed sample statistic` = 21,
+                                `Estimated parameter` = 22, 
+                                `Unknown` = 23, 
+                                `Unspecified` = 24, `Other`=25),
+                     breaks = c("Observed sample statistic", "Estimated parameter", "Unspecified", "Other",
+                                "Unknown")) +
+  scale_linetype_manual(name   = "Variation Type",
+                        values = c("Uncertainty" = "solid","Variability" = "dashed"),
+                        breaks = c("Uncertainty", "Variability")) +
+  scale_x_continuous(limits = c(-6,110), expand = c(0, 0)) +
+  scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+  labs(x = "Case-Fatality Ratio (%)", y = NULL) +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+        text = element_text(size = text_size))
+
+# same urefs factor, same row order
+  plot_df <- base_plot$data
+
+y_positions_location <- plot_df |>
+  ## this reflects the within facet order 
+ mutate(y_key = as.character(interaction(population_sample_size, sep = "--"))) |>
+  distinct(population_sample_type,population_sample_size, y_key, population_country) |>
+  group_by(population_sample_type) |>
+  
+  # factor level order is preserved because country_location_label is already a factor
+  arrange(
+    population_sample_size, population_sample_type,
+    interaction(factor(sub("--.*", "", y_key)), population_sample_size),
+    .by_group = TRUE
+  ) |>
+  mutate(y_pos = row_number()) |>
+  ungroup()
+
+
+country_separators <- y_positions_location |>
+  group_by(population_sample_type, population_sample_size, population_country) |>
+  summarise(y_min = min(y_pos), y_max = max(y_pos), .groups = "drop") |>
+  group_by(population_sample_type) |>
+  arrange(population_sample_size,y_min, .by_group = TRUE) |>
+  mutate(y_sep = y_min - 0.5) |>
+  ungroup()
+
+cfr_all_final <- base_plot +
+  geom_segment(
+    data = country_separators |>
+      group_by(population_sample_type) |>
+      filter(y_min > min(y_min)) |>
+      ungroup(),
+    aes(y = y_sep, yend = y_sep, x = -Inf, xend = Inf),
+    color = "grey50", linewidth = 0.2, linetype = "solid",
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = country_separators, size = 2.5,
+    aes(y = y_max + 0.35, x = -5, label = population_country),
+    hjust = 0, vjust = 1, size = 1.1, fontface = "bold",
+    inherit.aes = FALSE
+  )
+
+cfr_all_final
+
+######################     Genomics plot      ############################################
+
+# Build the base plot first
+# fix country name issue - samples compared to sample from range of countries 
+genomic_da$population_country[which(genomic_da$access_param_id=="526_001")] <- "Various"
+genomic_da$population_country[which(genomic_da$access_param_id=="526_002")] <- "Various"
+genomic_da$population_country[which(genomic_da$access_param_id=="526_003")] <- "Various"
+genomic_da$population_country[which(genomic_da$access_param_id=="541_001")] <- "Various"
+genomic_da$population_country[which(genomic_da$access_param_id=="0688_0002")] <- "Various"
+genomic_da$population_country[which(genomic_da$access_param_id=="0688_0001")] <- "Various"
+genomic_da$population_country[which(genomic_da$access_param_id=="0688_0003")] <- "Various"
+genomic_da$population_country[which(genomic_da$access_param_id=="0716_0001")] <- "Various"
+
 genomic_da <- genomic_da|> mutate(genome_site_clean = case_when(genome_site%in%c("'Large' segment RNA-dependent RNA polymerase (RdRp",
-                                                                             "L segment", "gerne - L segment" ) ~ "L segment",
-                                                              genome_site%in%c("gene - M Segment", "M segment" ) ~ "M segment",
-                                                              genome_site%in%c("gene - S segment", "S segment" ) ~ "S segment",
-                                                              genome_site%in%c("Rates estimated per segment", "L; M; S" ) ~ "All segments"))
+                                                                                 "L segment", "gerne - L segment" ,"L") ~ "L segment",
+                                                                genome_site%in%c("gene - M Segment", "M segment","M" ) ~ "M segment",
+                                                                genome_site%in%c("gene - S segment", "S segment", "S" ) ~ "S segment",
+                                                                genome_site%in%c("Rates estimated per segment", "L; M; S" ) ~ "L/M/S"))|>
+  mutate(genome_site_clean = factor(genome_site_clean, levels = c( "L segment","M segment", "S segment", "L/M/S")))|>
+  mutate(urefs = make.unique(refs)) |>
+  mutate(urefs = factor(urefs, levels = rev(unique(urefs))),
+         uncertainty_present = (
+           !(is.na(parameter_uncertainty_lower_value) &
+               is.na(parameter_uncertainty_upper_value)))
+  )|>
+  mutate(
+    urefs = factor(urefs, levels = study_order)
+  )|>
+  arrange(desc(population_country)) |>
+  mutate(
+    urefs = (fct_inorder(urefs))
+  )
 
 
 
- genomic_all_qa <- forest_plot(genomic_da,
-                               expression(Substitution~Rate~(s/s/y ~10^{-4})),
-                               "genome_site_clean",c(-5,30),
-                               qa_alpha = 0.3,
-                               custom_colours = genomic_segments_palette,
+# 
+# base_plot <-  ggplot(genomic_da) +
+#   geom_segment(aes(x = parameter_lower_bound, xend = parameter_upper_bound,
+#                    y = urefs, yend = urefs, color = population_country),
+#                linewidth=3, alpha =  0.75) +
+#   geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
+#                     y = urefs, linetype="Uncertainty"),
+#                 width = 0.25, lwd=0.5, color = "black") +
+#   geom_errorbar(data= genomic_da[!genomic_da$uncertainty_present,],
+#                 aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+#                     y = urefs, linetype="Variability"),
+#                 width = 0.25, lwd=0.5, color = "black",
+#                 lineend = "square") +
+#   geom_errorbar(data= genomic_da[genomic_da$uncertainty_present,],
+#                 aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
+#                     y = urefs, linetype="Variability"),
+#                 width = 0.25, lwd=0.5, color = "black",
+#                 lineend = "square", position = position_nudge(y=-0.25)) +
+#   geom_point(aes(x = parameter_value, y = urefs,
+#                  shape = parameter_statistical_approach, fill = population_country),
+#              size = 3, stroke = 1, color = "black") +
+#   facet_grid(genome_site_clean ~ ., scales = "free_y", space = "free_y") + # scale_fill_lancet(palette = "lanonc") + scale_color_lancet(palette = "lanonc") +
+#   # FIX? commented out to keep colours even if NA
+#   scale_shape_manual(name = "Statistical approach",
+#                      values = c(`Observed sample statistic` = 21,
+#                                 `Estimated parameter` = 22, 
+#                                 `Unknown` = 23, 
+#                                 `Unspecified` = 24, `Other`=25),
+#                      breaks = c("Observed sample statistic", "Estimated parameter", "Unspecified", "Other",
+#                                 "Unknown")) +
+#   scale_linetype_manual(name   = "Variation Type",
+#                         values = c("Uncertainty" = "solid","Variability" = "dashed"),
+#                         breaks = c("Uncertainty", "Variability")) +
+#   scale_x_continuous(limits = c(-6,110), expand = c(0, 0)) +
+#   scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
+#   labs(x = "Case-Fatality Ratio (%)", y = NULL) +
+#   theme_minimal() +
+#   theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
+#         text = element_text(size = text_size))
+
+
+genomic_all_qa <- forest_plot_approach(genomic_da,
+                               expression(paste("Evolutionary/Substitution")~Rate~(s/s/y ~10^{-4})),
+                               "population_country",c(-1,30),
+                                custom_colours = country_palette,
                                text_size=text_size) +
-   guides(color = guide_legend(title = "Gene", order = 1))+
-   facet_wrap(~parameter_type, ncol=1,scales="free_y")
- 
+   facet_grid(genome_site_clean ~ ., scales = "free_y", space = "free_y")
+
  
 
-## COMBINE all plots
+# same urefs factor, same row order
+plot_df_genom <- genomic_all_qa$data
+
+y_positions_location <- plot_df_genom |>
+  ## this reflects the within facet order 
+  mutate(y_key = as.character(interaction(genome_site_clean,population_country, sep = "--"))) |>
+  #distinct(genome_site_clean, y_key, population_country) |>
+  group_by(genome_site_clean) |>
+  
+  # factor level order is preserved because country_location_label is already a factor
+  arrange(
+    desc(population_country), genome_site_clean,
+    interaction(factor(sub("--.*", "", y_key)), population_country),
+    .by_group = TRUE
+  ) |>
+  mutate(y_pos = rev(seq_len(dplyr::n()))) |>
+  ungroup()
+
+
+country_separators <- y_positions_location |>
+  group_by(genome_site_clean, population_country) |>
+  summarise(y_min = min(y_pos), y_max = max(y_pos), .groups = "drop") |>
+  group_by(genome_site_clean) |>
+  arrange(y_min,desc(population_country), .by_group = TRUE) |>
+  mutate(y_sep = y_min - 0.5) |>
+  ungroup()
+
+genomic_all_qa_country <- genomic_all_qa +
+  geom_segment(
+    data = country_separators |>
+      group_by(genome_site_clean) |>
+      filter(y_min > min(y_min)) |>
+      ungroup(),
+    aes(y = y_sep, yend = y_sep, x = -Inf, xend = Inf),
+    color = "grey50", linewidth = 0.2, linetype = "solid",
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = country_separators, size = 2.5,
+    aes(y = y_max + 0.35, x = 0, label = population_country),
+    hjust = 0, vjust = 1, size = 1.1, fontface = "bold",
+    inherit.aes = FALSE
+  )
+
+genomic_all_qa_country
+
+
+##########            Delay plot            ####################
+# load from delay task
+load("figure_delays.RData")
+
+# fix legend issue
+delay_legend <- cowplot::get_legend(delays_final+theme(legend.position = "bottom")+ guides( color = "none")+labs(colour=NULL))
+
+delay_plot<- cowplot::plot_grid(delays_final+theme(legend.position = "bottom") + guides( color = "none")+labs(colour=NULL) +
+                                  theme(legend.position = "bottom",                # Legend at bottom
+                                        axis.title.x = element_text(margin = margin(t = 10, b = 0)), # Add space above label
+                                        plot.margin = margin(10, 10, 10, 10)       # Adjust plot margins
+                                  ), 
+                                delay_legend,
+                                ncol=1, labels=c("","") , align = c("h"), 
+                                rel_heights = c(10,1))
+
+
+
+#####################         COMBINE all plots                 ###################################################################################################################
 
 # figure_4_top <- cowplot::plot_grid(attackrate_all_qa + theme(legend.box = "horizontal", legend.position = "bottom", legend.direction = "vertical")+ guides(colour = "none"), 
 #                                    genomic_all_qa+theme(legend.position = "bottom") + guides(shape = "none", linetype = "none",
@@ -908,19 +1258,22 @@ genomic_da <- genomic_da|> mutate(genome_site_clean = case_when(genome_site%in%c
 
 
 # Figure 4 left hand column
-figure_4_L <- cowplot::plot_grid(attackrate_all_qa + theme(legend.box = "horizontal", legend.position = "bottom", legend.direction = "vertical")+ guides(shape = "none", linetype = "none",
+figure_4_L <- cowplot::plot_grid(attackrate_all_qa_country + theme(legend.position = "none")+ guides(shape = "none", linetype = "none",
                                                                                                                                                          colour = "none"), 
-                                 delays_all_qa_facet + guides( color = "none")+labs(colour=NULL),
+                                 delays_final + guides( color = "none")+labs(colour=NULL),
                                    ncol=1, labels=c("A","B") , align = c("h"), 
-                                  rel_heights = c(1,3))
+                                  rel_heights = c(1.75,3))
 
 # Figure 4 right hand column
-figure_4_M <- cowplot::plot_grid(cfr_all_qa_country+theme(legend.position = "bottom") + guides(shape = "none", linetype = "none",
-                                                                                                    color = guide_legend(ncol = 4))+labs(colour=NULL),
-                                 genomic_all_qa+theme(legend.position = "bottom") + guides(shape = "none", linetype = "none",
-                                                                                           color = guide_legend(ncol = 4))+labs(colour=NULL),
-                                      ncol=1, labels=c("C","D"), align = c("h"), 
-                                 rel_heights = c(4,3) )
+cfr_C <- cfr_all_final+theme(legend.position = "none") + guides(shape = "none", linetype = "none",
+                                                             color = "none")+labs(colour=NULL)
+text_box <- textGrob("place holder", gp = gpar(fontsize = 16))
+
+figure_4_M <- cowplot::plot_grid(text_box,
+                                 genomic_all_qa_country+theme(legend.position = "none") + guides(shape = "none", linetype = "none",
+                                                                                           color = "none")+labs(colour=NULL),
+                                 ncol=1, labels=c("D","E"), align = c("h"), 
+                                 rel_heights = c(7.5,5) )
 
 
 # Plot for full colour legend
@@ -932,15 +1285,14 @@ colour_legend <- forest_plot_approach(full_join(d4,d7),
                                       qa_alpha =0.3)+
   facet_wrap(~parameter_type, 
              ncol=1, scales="free_y") +
-  theme(legend.position = "bottom") + 
-  guides(shape = "none", linetype = "none",
-         color = guide_legend(ncol = 4))+labs(colour=NULL)
+  theme(legend.position = "bottom" , legend.box = "horizontal") + 
+  guides(color = guide_legend(ncol = 4)) + 
+  labs(colour=NULL)
 
 # Save CFR meta analysis
-ggsave("figures/colour_legend_full.png", plot = colour_legend, width = 10, height = 15)
+ggsave("figures/colour_legend_full.png", plot = colour_legend, width = 17, height = 10)
 
 # Place holder for CFR meta analysis (add after in powerpoint)
-text_box <- textGrob("place holder", gp = gpar(fontsize = 16))
 ggsave(file.path("figures", "cfr_meta_analysis_country.pdf"),
        cfr_meta_analysis, width = 5, height = 6.5)
 ggsave(file.path("figures", "cfr_meta_analysis_country.png"),
@@ -948,10 +1300,11 @@ ggsave(file.path("figures", "cfr_meta_analysis_country.png"),
 
 
 # Figure 4
-figure_4 <-  cowplot::plot_grid(figure_4_L, figure_4_M,
-                                text_box,
-                                     nrow=1, labels=c("","","E"), rel_widths = c(1,1,1), align = c("hv"))
+figure_4 <-  cowplot::plot_grid(figure_4_L,
+                                cfr_C,
+                                figure_4_M,
+                                     nrow=1, labels=c("","C",""), rel_widths = c(1,1,1.25))
 # Save Figure 4
-ggsave("figures/figure_4.png", plot = figure_4, width = 30, height = 15)
-ggsave("figures/figure_4.pdf", plot = figure_4, width = 30, height = 15)
+ggsave("figures/figure_4.png", plot = figure_4, width = 20, height = 13)
+ggsave("figures/figure_4.pdf", plot = figure_4, width = 20, height = 13)
 

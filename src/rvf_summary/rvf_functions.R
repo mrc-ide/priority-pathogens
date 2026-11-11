@@ -144,17 +144,17 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                      y = urefs, yend = urefs, color = .data[[color_column]],),
                  linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      y = urefs, linetype="Uncertainty"),
-                  width = 0.25, lwd=0.5, color = "black", alpha=df$plot_alpha) +
+                      y = urefs, linetype="Uncertainty", color = "black"),
+                  width = 0.25, lwd=0.5, alpha=df$plot_alpha) +
     geom_errorbar(data= df[!df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability"),
-                  width = 0.25, lwd=0.5, color = "black",
+                      y = urefs, linetype="Variability", color = "black"),
+                  width = 0.25, lwd=0.5,
                   lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
     geom_errorbar(data= df[df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability"),
-                  width = 0.25, lwd=0.5, color = "black",
+                      y = urefs, linetype="Variability", color = "black"),
+                  width = 0.25, lwd=0.5,
                   lineend = "square", position = position_nudge(y=-0.25),
                   alpha=df[df$uncertainty_present,]$plot_alpha) +
     geom_point(aes(x = parameter_value, y = urefs,
@@ -163,7 +163,7 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
   
   if (all(df$parameter_class=="Reproduction number")) {
     gg <- gg +
-      geom_vline(xintercept = 1,linetype = "solid", colour = "dark grey")
+      geom_vline(xintercept = 1,linetype = "dotted", colour = "dark grey")
   }
   
   if(sum(!is.na(custom_colours)))
@@ -180,8 +180,8 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
-      scale_color_manual(values = custom_colours) +
-      scale_fill_manual(values = custom_colours) +
+      scale_color_manual(values = custom_colours, limits= names(custom_colours)) +
+      scale_fill_manual(values = custom_colours, limits= names(custom_colours)) +
       theme_minimal() +
       theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))
@@ -242,7 +242,9 @@ forest_plot_approach <- function(df, label, color_column, lims, text_size = 11,
                  is.na(parameter_uncertainty_upper_value)))
     )
   df$plot_alpha <- 1
-  df$segment_alpha <- 1
+  df$segment_alpha <- 0.75
+  df$bar_alpha <- 1
+  
   
   if(qa_alpha!=1){
     df[df$qa_score<=0.5, ]$plot_alpha <- qa_alpha
@@ -255,26 +257,25 @@ forest_plot_approach <- function(df, label, color_column, lims, text_size = 11,
                      y = urefs, yend = urefs, color = .data[[color_column]],),
                  linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      y = urefs, linetype="Uncertainty"),
-                  width = 0.25, lwd=0.5, color = "black", alpha=df$plot_alpha) +
+                      y = urefs, linetype="Uncertainty"), color = "black",
+                  width = 0.25, lwd=0.5, alpha=df$plot_alpha) +
     geom_errorbar(data= df[!df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability"),
-                  width = 0.25, lwd=0.5, color = "black",
-                  lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
+                      y = urefs, linetype="Variability"), color ="black",
+                  width = 0.25, lwd=0.5,
+                  lineend = "square") +
     geom_errorbar(data= df[df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability"),
-                  width = 0.25, lwd=0.5, color = "black",
-                  lineend = "square", position = position_nudge(y=-0.25),
-                  alpha=df[df$uncertainty_present,]$plot_alpha) +
+                      y = urefs, linetype="Variability"), color = "black",
+                  width = 0.25, lwd=0.5,
+                  lineend = "square", position = position_nudge(y=-0.25)) +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_statistical_approach, fill = .data[[color_column]]),
                alpha=df$plot_alpha, size = point_size, stroke = 1, color = "black")
   
   if (all(df$parameter_class=="Reproduction number")) {
     gg <- gg +
-      geom_vline(xintercept = 1,linetype = "solid", colour = "dark grey")
+      geom_vline(xintercept = 1,linetype = "dotted", colour = "dark grey")
   }
   
   if(sum(!is.na(custom_colours)))
@@ -293,8 +294,8 @@ forest_plot_approach <- function(df, label, color_column, lims, text_size = 11,
       scale_x_continuous(limits = lims, expand = c(0, 0)) +
       scale_y_discrete(labels = setNames(df$refs, df$urefs)) +
       labs(x = label, y = NULL) +
-      scale_color_manual(values = custom_colours) +
-      scale_fill_manual(values = custom_colours) +
+      scale_color_manual(values = custom_colours, limits= names(custom_colours)) +
+      scale_fill_manual(values = custom_colours, limits= names(custom_colours)) +
       theme_minimal() +
       theme(panel.border = element_rect(color = "black", linewidth = 1.25, fill = NA),
             text = element_text(size = text_size))

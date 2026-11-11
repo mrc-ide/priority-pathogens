@@ -144,16 +144,16 @@ forest_plot <- function(df, label, color_column, lims, text_size = 11,
                      y = urefs, yend = urefs, color = .data[[color_column]],),
                  linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      y = urefs, linetype="Uncertainty", color = .data[[color_column]],),
+                      y = urefs, linetype="Uncertainty", color = "black"),
                   width = 0.25, lwd=0.5, alpha=df$plot_alpha) +
     geom_errorbar(data= df[!df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability", color = .data[[color_column]],),
+                      y = urefs, linetype="Variability", color = "black"),
                   width = 0.25, lwd=0.5,
                   lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
     geom_errorbar(data= df[df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability", color = .data[[color_column]],),
+                      y = urefs, linetype="Variability", color = "black"),
                   width = 0.25, lwd=0.5,
                   lineend = "square", position = position_nudge(y=-0.25),
                   alpha=df[df$uncertainty_present,]$plot_alpha) +
@@ -242,7 +242,9 @@ forest_plot_approach <- function(df, label, color_column, lims, text_size = 11,
                  is.na(parameter_uncertainty_upper_value)))
     )
   df$plot_alpha <- 1
-  df$segment_alpha <- 1
+  df$segment_alpha <- 0.75
+  df$bar_alpha <- 1
+  
   
   if(qa_alpha!=1){
     df[df$qa_score<=0.5, ]$plot_alpha <- qa_alpha
@@ -255,19 +257,18 @@ forest_plot_approach <- function(df, label, color_column, lims, text_size = 11,
                      y = urefs, yend = urefs, color = .data[[color_column]],),
                  linewidth=3, alpha = df$segment_alpha, show.legend = segment_show.legend) +
     geom_errorbar(aes(xmin=parameter_uncertainty_lower_value, xmax=parameter_uncertainty_upper_value,
-                      y = urefs, linetype="Uncertainty", color = .data[[color_column]],),
+                      y = urefs, linetype="Uncertainty"), color = "black",
                   width = 0.25, lwd=0.5, alpha=df$plot_alpha) +
     geom_errorbar(data= df[!df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability", color = .data[[color_column]],),
+                      y = urefs, linetype="Variability"), color ="black",
                   width = 0.25, lwd=0.5,
-                  lineend = "square", alpha=df[!(df$uncertainty_present),]$plot_alpha) +
+                  lineend = "square") +
     geom_errorbar(data= df[df$uncertainty_present,],
                   aes(xmin=parameter_2_lower_bound, xmax=parameter_2_upper_bound,
-                      y = urefs, linetype="Variability", color = .data[[color_column]],),
+                      y = urefs, linetype="Variability"), color = "black",
                   width = 0.25, lwd=0.5,
-                  lineend = "square", position = position_nudge(y=-0.25),
-                  alpha=df[df$uncertainty_present,]$plot_alpha) +
+                  lineend = "square", position = position_nudge(y=-0.25)) +
     geom_point(aes(x = parameter_value, y = urefs,
                    shape = parameter_statistical_approach, fill = .data[[color_column]]),
                alpha=df$plot_alpha, size = point_size, stroke = 1, color = "black")
