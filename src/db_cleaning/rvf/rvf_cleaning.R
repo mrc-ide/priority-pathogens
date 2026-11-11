@@ -213,12 +213,20 @@ param_cleaning <- function(df){
   
   
   ######################################################################
-  # fix parameter types 
+  # Fix parameter types 
   
   df <- df |>
     mutate(parameter_type = case_when(parameter_type=="symptom onset/fever>discharge or death" ~ "Human delay - symptom onset/fever>discharge or death",
                                       parameter_type=="Relative contribution - zoonotic to human" ~ "Relative contribution - animal to vector",
                                       .default = parameter_type))
+  
+  #########################################################################################
+  # Relative contribution 
+  # 5845 - parameter extracted for both animal to vector and vector to animal contribution 
+  df <- df |> 
+    filter(!(covidence_id == 5845 & 
+           parameter_type == "Relative contribution - animal to vector" &
+           parameter_value%in%c(55,42)) )
   
   #########################################################################################
   # replace "Other" Risk factors
