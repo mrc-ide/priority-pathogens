@@ -72,7 +72,9 @@ quality <- quality |>
 
 quality$category <- factor(quality$category,
                            levels = c("Non-Modelling Studies",
-                                      "Modelling Studies"))
+                                      "Modelling Studies", "Both"))
+
+modelling_qa <- filter(quality, category%in%c("Modelling Studies", "Both"))
 
 answers <- quality |>
   filter(!is.na(year_publication) & !is.na(pathogen)) |> # no articles where this is true
@@ -355,17 +357,122 @@ p6 <-  models |>
   theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
         legend.position = "none")
 
-patchwork_S2 <- (p1 + p2 + p5 + p4 + p3 + p6) + plot_layout(ncol = 2, widths = c(1,1))
+p7 <- ggplot() +
+  geom_bar(data = models, aes(x = model_type, fill = model_spillover),
+           color = "black") +
+  scale_y_continuous(limits = c(0,20), breaks = seq(0,20,by = 5),
+                     expand = c(0,0)) +
+  scale_x_discrete(labels = c("Agent / individual based & compartmental" = "Agent / individual based\n& compartmental"))+
+  xlab("Model Type") + ylab("Model Count") +
+  scale_fill_manual(values = c("No" =  "#FDAF91FF",
+                               "Yes" = "#f0e68c" ),
+                    name = "Spillover modelled") +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
+
+p8 <- ggplot() +
+  geom_bar(data = models, aes(x = model_type, fill = model_vertical_trans),
+           color = "black") +
+  scale_y_continuous(limits = c(0,20), breaks = seq(0,20,by = 5),
+                     expand = c(0,0)) +
+  scale_x_discrete(labels = c("Agent / individual based & compartmental" = "Agent / individual based\n& compartmental"))+
+  xlab("Model Type") + ylab("Model Count") +
+  scale_fill_manual(values = c("No" =  "#FDAF91FF",
+                               "Yes" = "#f0e68c" ),
+                    name = "Vetical transmission modelled") +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
+
+
+p9 <- models |>
+  mutate(theoretical_model=factor(theoretical_model,
+                                  levels = c("No", "Yes"))) |>
+  ggplot(aes(x = theoretical_model, fill = model_spillover)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("No" =  "#FDAF91FF",
+                               "Yes" = "#f0e68c" ),
+                    name = "Spillover modelled") +
+  scale_x_discrete(labels = c("No" = "Fitted to Data",
+                              "Yes" = "Theoretical")) +
+  scale_y_continuous(limits = c(0,14), breaks = seq(0,45,by = 5),
+                     expand = c(0,0)) +
+  xlab("Model Calibration") + ylab("Model Count") +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
+
+
+
+p10 <- models |>
+  mutate(theoretical_model=factor(theoretical_model,
+                                  levels = c("No", "Yes"))) |>
+  ggplot(aes(x = theoretical_model, fill = model_vertical_trans)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("No" =  "#FDAF91FF",
+                               "Yes" = "#f0e68c" ),
+                    name = "Vetical transmission modelled") +
+  scale_x_discrete(labels = c("No" = "Fitted to Data",
+                              "Yes" = "Theoretical")) +
+  scale_y_continuous(limits = c(0,14), breaks = seq(0,45,by = 5),
+                     expand = c(0,0)) +
+  xlab("Model Calibration") + ylab("Model Count") +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
+
+
+p11 <- ggplot() +
+  geom_bar(data = models, aes(x = model_type, fill = model_seasonality),
+           color = "black") +
+  scale_y_continuous(limits = c(0,20), breaks = seq(0,20,by = 5),
+                     expand = c(0,0)) +
+  scale_x_discrete(labels = c("Agent / individual based & compartmental" = "Agent / individual based\n& compartmental"))+
+  xlab("Model Type") + ylab("Model Count") +
+  scale_fill_manual(values = c("No" =  "#FDAF91FF",
+                               "Yes" = "#f0e68c" ),
+                    name = "Seasonality modelled") +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
+
+p12 <- models |>
+  mutate(theoretical_model=factor(theoretical_model,
+                                  levels = c("No", "Yes"))) |>
+  ggplot(aes(x = theoretical_model, fill = model_seasonality)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("No" =  "#FDAF91FF",
+                               "Yes" = "#f0e68c" ),
+                    name = "Seasonality modelled") +
+  scale_x_discrete(labels = c("No" = "Fitted to Data",
+                              "Yes" = "Theoretical")) +
+  scale_y_continuous(limits = c(0,14), breaks = seq(0,45,by = 5),
+                     expand = c(0,0)) +
+  xlab("Model Calibration") + ylab("Model Count") +
+  theme_minimal() +
+  theme(panel.border = element_rect(color = "black", size = 1.25, fill = NA),
+        legend.position = c(0,1), legend.justification = c(0,1), legend.box.just = "left")
+
+
+
+patchwork_S2 <- (p1 + p2 + p5 + p4 + p3 + p6 +p7 +p9 +p8 + p10 +p11 +p12) + plot_layout(ncol = 2, widths = c(1,1))
 patchwork_S2 <- patchwork_S2 + plot_annotation(tag_levels = 'A')
 
 ggsave("figure_S2_models.pdf", plot = patchwork_S2, width = 16, height = 16)
+
+write.csv(models,row.names = FALSE,"all_models.csv")
+
 
 # *-------------------------------- Parameters --------------------------------*
 
 parameters <- dfs$parameters |>
   left_join(qa_scores) |>
   mutate(parameter_value = coalesce(parameter_value,central)) |>
-  arrange(desc(parameter_value))
+  arrange(desc(parameter_value))|>
+  mutate(parameter_type = case_when(parameter_type=="symptom onset/fever>discharge or death" ~ "Human delay - symptom onset/fever>discharge or death",
+                                    parameter_type=="Relative contribution - zoonotic to human" ~ "Relative contribution - animal to vector",
+                                    .default = parameter_type))
 
 parameters <- parameters |>
   mutate(parameter_class = case_when(
@@ -373,7 +480,7 @@ parameters <- parameters |>
     parameter_class == "Human delay" ~ "Delays",
     TRUE ~ parameter_class))
 
-#TODO: I'm going to assume there's more that we're missing here?
+#TODO: check nothing missing 
 parameters <- parameters |>
   mutate(
     parameter_type = case_when(
@@ -384,18 +491,20 @@ parameters <- parameters |>
       parameter_type == "Human delay - symptom onset>admission to care" ~ "Onset-to-admission",
       parameter_type == "Human delay - symptom onset>death" ~ "Onset-to-death",
       parameter_type == "Human delay - symptom onset>discharge/recovery" ~ "Onset-to-discharge/recovery",
+      parameter_type == "Human delay - symptom onset/fever>discharge or death" ~ "Onset/fever-to-discharge/death",
       parameter_type == "Human delay - time in care (length of stay)" ~ "Time in care",
       parameter_type == "Human delay - serial interval"~"Serial interval",
       parameter_type == "Human delay - generation time"~"Generation time",
       parameter_type == "Human delay - infectious period"~"Infectious period",
       parameter_type == "Mutations - evolutionary rate" ~ "Evolutionary rate",
       parameter_type == "Mutations - substitution rate" ~ "Substitution rate",
-      parameter_type == "Reproduction number (Basic R0)" ~ "Basic (R0)",
+      parameter_type == "Reproduction number (Basic R0)" ~ "Basic R0",
       parameter_type == "Seroprevalence - IFA" ~ "IFA test",
       parameter_type == "Seroprevalence - IgG" ~ "IgG test",
       parameter_type == "Seroprevalence - IgM" ~ "IgM test",
       parameter_type == "Seroprevalence - PRNT" ~ "PRNT",
       parameter_type == "Seroprevalence - Unspecified" ~ "Unspecified test",
+      parameter_type == "Relative contribution - animal to vector" ~ "Animal-to-Vector contribution",
       parameter_type == "Severity - case fatality rate (CFR)" ~ "Case fatality ratio (CFR)",
       parameter_type == "Severity - case fatality ratio (CFR)" ~ "Case fatality ratio (CFR)",
       parameter_type == "Severity - infection fatality ratio (IFR)" ~ "Infection fatality ratio (IFR)",
@@ -446,11 +555,13 @@ parameters <- parameters |>
 param_colour_palette <- c("Delays"=colour_palette[4],
                           "Mutations"=colour_palette[2],
                           "Other transmission parameters"=colour_palette[3],
-                          "Overdispersion"=colour_palette[6],
+                          "Relative contribution"=colour_palette[6],
                           "Reproduction number"=colour_palette[1],
                           "Risk factors"=colour_palette[5],
                           "Seroprevalence"=colour_palette[7],
                           "Severity"=colour_palette[8])
+# [1] "#00468BFF" "#ED0000FF" "#42B540FF" "#0099B4FF" "#925E9FFF" "#FDAF91FF"
+# [7] "#ffa500"   "#f0e68c"   "#1B1919FF" "#AD002AFF" "#ADB6B6FF"
 
 # Sort before plotting
 ordering <- parameters |>
