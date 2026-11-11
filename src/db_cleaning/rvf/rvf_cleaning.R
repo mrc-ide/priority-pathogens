@@ -924,56 +924,62 @@ param_cleaning <- function(df){
   ## Kenya (Western): 15/200 samples IgG: disag by ruminant exposure, age, gender, other (nomadic, behavioural traits, fever), 
   ## Kenya (Western): 0% 0/15 PRNT: sample is +ve IgG
   
+  
+  new_df <-
+    tribble(
+      ~"population_country", ~"population_location", ~"parameter_context_location_type", ~"population_sample_type", ~"population_group",
+      ~"parameter_value", ~"cfr_ifr_numerator", ~"cfr_ifr_denominator", ~"population_sample_size", ~"parameter_type",
+      ~"method_disaggregated", ~"method_disaggregated_only", ~"method_disaggregated_by",
+      ~"parameter_lower_bound", ~"parameter_upper_bound",
+      
+      "Madagascar", "Antsirabe; Antsohihy; Ihosy; Miandrivazo; Nosy Be; Toliara; Toliara II; Tsiroanomandidy", "districts", "Community based", "Mixed groups",
+      6.3, 8, 127, 127, "Seroprevalence - IgG",
+      "Yes", "No", "Age; Sex; Symptoms; Other",
+      0, 14.3,
+      
+      "Kenya", "Gababa; Haji Mohamed; Hathama Chari; Masalani (North Eastern province)", "villages", "Community based", "Mixed groups",
+      15.7, 36, 230, 230, "Seroprevalence - IgG",
+      "No", NA, NA,
+      NA, NA,
+      
+      "Kenya", "Gababa; Haji Mohamed; Hathama Chari; Masalani (North Eastern province)", "villages", "Community based", "Persons under investigation",
+      58.3, 21, 36, 36, "Seroprevalence - PRNT",
+      "Yes", "No", "Age; Sex; Symptoms; Other",
+      3.9, 23.5,
+      
+      "Kenya", "Gababa; Haji Mohamed; Hathama Chari; Masalani (North Eastern province)", "villages", "Community based", "Persons under investigation",
+      0, 0, 21, 21, "Seroprevalence - IgM",
+      "No", NA, NA,
+      NA, NA,
+      
+      "Kenya", "Western Province", "province", "Community based", "Mixed groups",
+      NA, 15, 200, 200, "Seroprevalence - IgG",
+      "Yes", "No", "Age; Sex; Symptoms; Other",
+      0, 13.3,
+      
+      "Kenya", "Western Province", "province", "Community based", "Persons under investigation",
+      0, 0, 15, 15, "Seroprevalence - PRNT",
+      "No", NA, NA,
+      NA, NA) |> 
+    mutate(covidence_id = 1660,
+           parameter_unit = "Percentage (%)",
+           access_param_id = "0683_0001-0683_0002-0683_0003-0683_0004",
+           parameter_data_id = "76cc6e957d99cb3fdfc75bf4757b808e-b6bc9c2514a86735fec3f643bcbca78f-683d71f5a9b2dd093cc02206deb75186-d091d776fcb3e5e1581676e259318a41") |> 
+    left_join(
+      df |> 
+        filter(covidence_id == 1660 & grepl("Seroprevalence", parameter_type)) |> 
+        select(-c(population_country, population_location, parameter_context_location_type, population_sample_type, population_group,
+                  parameter_value, cfr_ifr_numerator, cfr_ifr_denominator, population_sample_size, parameter_type, parameter_unit,
+                  method_disaggregated, method_disaggregated_only, method_disaggregated_by, parameter_notes,
+                  parameter_upper_bound,
+                  parameter_lower_bound,
+                  access_param_id, parameter_data_id)) |> unique(),
+      by = "covidence_id")|>mutate(parameter_notes=NA)
+  new_df$id <- ids::random_id(nrow(new_df)) # new random id
+  
   df <- df |> 
     filter(!(covidence_id == 1660 & grepl("Seroprevalence", parameter_type))) |> 
-    bind_rows(
-      tribble(
-        ~"population_country", ~"population_location", ~"parameter_context_location_type", ~"population_sample_type", ~"population_group",
-        ~"parameter_value", ~"cfr_ifr_numerator", ~"cfr_ifr_denominator", ~"population_sample_size", ~"parameter_type",
-        ~"method_disaggregated", ~"method_disaggregated_only", ~"method_disaggregated_by",
-        ~"parameter_lower_bound", ~"parameter_upper_bound",
-        
-        "Madagascar", "Antsirabe; Antsohihy; Ihosy; Miandrivazo; Nosy Be; Toliara; Toliara II; Tsiroanomandidy", "districts", "Community based", "Mixed groups",
-        6.3, 8, 127, 127, "Seroprevalence - IgG",
-        "Yes", "No", "Age; Sex; Symptoms; Other",
-        0, 14.3,
-        
-        "Kenya", "Gababa; Haji Mohamed; Hathama Chari; Masalani (North Eastern province)", "villages", "Community based", "Mixed groups",
-        15.7, 36, 230, 230, "Seroprevalence - IgG",
-        "No", NA, NA,
-        NA, NA,
-        
-        "Kenya", "Gababa; Haji Mohamed; Hathama Chari; Masalani (North Eastern province)", "villages", "Community based", "Persons under investigation",
-        58.3, 21, 36, 36, "Seroprevalence - PRNT",
-        "Yes", "No", "Age; Sex; Symptoms; Other",
-        3.9, 23.5,
-        
-        "Kenya", "Gababa; Haji Mohamed; Hathama Chari; Masalani (North Eastern province)", "villages", "Community based", "Persons under investigation",
-        0, 0, 21, 21, "Seroprevalence - IgM",
-        "No", NA, NA,
-        NA, NA,
-        
-        "Kenya", "Western Province", "province", "Community based", "Mixed groups",
-        NA, 15, 200, 200, "Seroprevalence - IgG",
-        "Yes", "No", "Age; Sex; Symptoms; Other",
-        0, 13.3,
-        
-        "Kenya", "Western Province", "province", "Community based", "Persons under investigation",
-        0, 0, 15, 15, "Seroprevalence - PRNT",
-        "No", NA, NA,
-        NA, NA) |> 
-        mutate(covidence_id = 1660,
-               parameter_unit = "Percentage (%)",
-               access_param_id = "0683_0001-0683_0002-0683_0003-0683_0004",
-               parameter_data_id = "76cc6e957d99cb3fdfc75bf4757b808e-b6bc9c2514a86735fec3f643bcbca78f-683d71f5a9b2dd093cc02206deb75186-d091d776fcb3e5e1581676e259318a41") |> 
-        left_join(
-          df |> 
-            filter(covidence_id == 1660 & grepl("Seroprevalence", parameter_type)) |> 
-            select(-c(population_country, population_location, parameter_context_location_type, population_sample_type, population_group,
-                      parameter_value, cfr_ifr_numerator, cfr_ifr_denominator, population_sample_size, parameter_type, parameter_unit,
-                      method_disaggregated, method_disaggregated_only, method_disaggregated_by, parameter_notes,
-                      access_param_id, parameter_data_id)) |> unique(),
-          by = "covidence_id"))
+    bind_rows(new_df)
   
   
   #######################################################################
