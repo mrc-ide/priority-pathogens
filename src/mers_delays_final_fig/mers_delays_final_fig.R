@@ -420,7 +420,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                                      levels=c("Admission", "Severe illness",
                                               "Death", "Discharge/recovery")))
 
-      arrow_df_1 <- data.frame(x = rep(14.5,2), xend = rep(14.9,2), y = c(1,17), yend = c(1,17),
+      arrow_df_1 <- data.frame(x = rep(14.5,2), xend = rep(14.9,2), y = c(1,16), yend = c(1,1),
                              parameter_type = rep("Discharge/recovery",2)) |>
         mutate(parameter_type=factor(parameter_type,
                                      levels=c("Admission", "Severe illness",
