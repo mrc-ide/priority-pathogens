@@ -125,6 +125,39 @@ param_cleaning <- function(df){
   df[df$access_param_id=="320_002",
              "population_group"] <- "Unspecified"
 
+  ## 364_001 has extracted as a rule of 3 when it's actually a range
+  ## It also has the wrong sample size
+  df[df$access_param_id=="364_001",
+     "parameter_lower_bound"] <- NA
+  df[df$access_param_id=="364_001",
+     "parameter_upper_bound"] <- NA
+  df[df$access_param_id=="364_001",
+     "parameter_uncertainty_type"] <- "Range"
+  df[df$access_param_id=="364_001",
+     "parameter_uncertainty_lower_value"] <- 2
+  df[df$access_param_id=="364_001",
+     "parameter_uncertainty_upper_value"] <- 177
+  df[df$access_param_id=="364_001",
+     "population_sample_size"] <- 38
+
+  ## 126_006 has the wrong sample size, listing the total cases, not the 36 that died
+  df[df$access_param_id=="126_006",
+     "population_sample_size"] <- 36
+
+  ## 222 three parameters have all extracted the wrong start year (2025 instead of 2017)
+  df[df$access_param_id=="222_001",
+     "population_study_start_year"] <- "2017"
+  df[df$access_param_id=="222_002",
+     "population_study_start_year"] <- "2017"
+  df[df$access_param_id=="222_003",
+     "population_study_start_year"] <- "2017"
+
+  ## 223 extracts as General population, but it's not, it's mixed groups
+  df[df$access_param_id=="223_001",
+     "population_group"] <- "Mixed groups"
+  df[df$access_param_id=="223_002",
+     "population_group"] <- "Mixed groups"
+
   #390_002 and 390_003 are "per days", we have to change their parameter_unit to "Days" to not break forest_plot
   df[df$access_param_id=="390_002",
              "parameter_unit"] <- "Days"
