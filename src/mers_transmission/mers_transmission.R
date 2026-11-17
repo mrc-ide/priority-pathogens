@@ -103,7 +103,19 @@ full_levels <- c("General population",
 
 # Generate plots
 #################
+######################
+# Pull all population group colours
+all_pop_groups <- rbind(d1,d2,d3,d4,d5) |>
+  distinct(population_group) |>
+  arrange(population_group == "Other", population_group) |>
+  pull()
 
+lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
+names(custom_colour_pop_groups) <- all_pop_groups
+#Make "Other" the grey one
+custom_colour_pop_groups[7] <- "#ADB6B6FF"
+######################
 # MERS hack:
 # We don't want NA in the p1 legend. Rather than reach into forest_plot, it's easier to just set Paden(2018) to "Whole Genome". It's not plotted anyway, just hides an NA from the plot.
 d1$genome_site[d1$covidence_id == 2350] <- "Whole Genome"
@@ -166,37 +178,46 @@ d1_and_d2_all_qa <- d1_and_d2_all_qa |>
            str_to_sentence())
 
 
+# p1_and_p2 <- forest_plot(d1_and_d2,
+#                          expression(Mutation~Rate~(s/s/y ~10^{-4})),
+#                          custom_colours = c("#CBCE91", "#d3687f"),
+#                          "parameter_type",c(-0.01,15),
+#                          text_size=text_size) +
+#   guides(color = guide_legend(title = "Mutation Rate", order = 1),
+#          linetype = "none",
+#          shape = "none")
+
 p1_and_p2 <- forest_plot(d1_and_d2,
                          expression(Mutation~Rate~(s/s/y ~10^{-4})),
-                         custom_colours = c("#CBCE91", "#d3687f"),
-                         "parameter_type",c(-0.01,15),
+                         custom_colours = custom_colour_pop_groups,
+                         "population_group",c(-0.01,15),
                          text_size=text_size) +
-  guides(color = guide_legend(title = "Mutation Rate", order = 1),
+  ggforce::facet_col(facets = vars(parameter_type), scales = "free_y", space = "free") +
+  guides(color = guide_legend(title = "Population group", order = 1),
          linetype = "none",
          shape = "none")
+
+# p1_and_p2_all_qa <- forest_plot(d1_and_d2_all_qa,
+#                          expression(Mutation~Rate~(s/s/y ~10^{-4})),
+#                          custom_colours = c("#CBCE91", "#d3687f"),
+#                          "parameter_type",c(-5,55),
+#                          qa_alpha = 0.3,
+#                          text_size=text_size) +
+#   guides(color = guide_legend(title = "Mutation Rate", order = 1),
+#          linetype = "none",
+#          shape = "none")
 
 p1_and_p2_all_qa <- forest_plot(d1_and_d2_all_qa,
-                         expression(Mutation~Rate~(s/s/y ~10^{-4})),
-                         custom_colours = c("#CBCE91", "#d3687f"),
-                         "parameter_type",c(-5,55),
-                         qa_alpha = 0.3,
-                         text_size=text_size) +
+                                expression(Mutation~Rate~(s/s/y ~10^{-4})),
+                                custom_colours = custom_colour_pop_groups,
+                                "population_group",c(-5,55),
+                                qa_alpha = 0.3,
+                                text_size=text_size) +
+  ggforce::facet_col(facets = vars(parameter_type), scales = "free_y", space = "free") +
   guides(color = guide_legend(title = "Mutation Rate", order = 1),
          linetype = "none",
          shape = "none")
-######################
-# Pull all population group colours
-all_pop_groups <- rbind(d1,d2,d3,d4,d5) |>
-  distinct(population_group) |>
-  arrange(population_group == "Other", population_group) |>
-  pull()
 
-lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
-custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
-names(custom_colour_pop_groups) <- all_pop_groups
-#Make "Other" the grey one
-custom_colour_pop_groups[7] <- "#ADB6B6FF"
-######################
 ## Overdispersion
 unique(d3$parameter_unit[!is.na(d3$parameter_unit)])
 # Now, Park (2016c) is a very different type of measure. It's not a k parameter.
@@ -407,7 +428,7 @@ p5_effective <- forest_plot(
   coord_cartesian(xlim = c(-0.1, 10)) +
   guides(shape = guide_legend(title = "Parameter type", order=1),
          fill =  guide_none(),
-         linetype = guide_none(),
+         linetype = guide_legend(title = "Interval type", order = 3),
          color =  "none")
 
 arrow_df <- data.frame(x = rep(10.9,2), xend = rep(11.95,2), y = c(1,7), yend = c(1,7),
@@ -428,7 +449,7 @@ p5_effective_all_qa <- forest_plot(
   coord_cartesian(xlim = c(-0.1, 12)) +
   guides(shape = guide_legend(title = "Parameter type", order=1),
          fill =  guide_none(),
-         linetype = guide_none(),
+         linetype = guide_legend(title = "Interval type", order = 3),
          color =  "none")
 # Secondary Attack Rate
 #######################
