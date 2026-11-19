@@ -158,6 +158,19 @@ param_cleaning <- function(df){
   df[df$access_param_id=="223_002",
      "population_group"] <- "Mixed groups"
 
+  # Korea CDC (2015), article 286, fitted log-normal distributions to the incubation period
+  # and serial interval, reporting a median alongside the 5th and 95th
+  # percentiles of each. These were extracted as three separate rows per
+  # parameter, so the same fit plots as three apparently independent estimates.
+  # Collapse the percentiles onto the median row as variability, retaining the
+  # 95% CI around each median, and drop the percentile rows.
+  df[(df$access_param_id == "286_001"), "parameter_2_lower_bound"] <- 2.27
+  df[(df$access_param_id == "286_001"), "parameter_2_upper_bound"] <- 13.48
+  df[(df$access_param_id == "286_002"), "parameter_2_lower_bound"] <- 6.15
+  df[(df$access_param_id == "286_002"), "parameter_2_upper_bound"] <- 20.65
+  df <- filter(df, !access_param_id %in% c("286_007", "286_008",
+                                           "286_009", "286_010"))
+
   #390_002 and 390_003 are "per days", we have to change their parameter_unit to "Days" to not break forest_plot
   df[df$access_param_id=="390_002",
              "parameter_unit"] <- "Days"
@@ -236,6 +249,9 @@ param_cleaning <- function(df){
   #401_003 is strange, trying to capture a range of PRNT50 values,
   #It shouldn't be extracted
   df <- filter(df, access_param_id != "401_003")
+
+  #195_002 is i) extracted as symptomatic prop. but it's actually asymptomatic, and ii) shouldn't have been double extracted anyway, so we remove it
+  df <- filter(df, access_param_id != "195_002")
 
   #064_004 is including an upper value of infinity. This was a modelling scenario and should be ignored as a value
   # delete 064_004, and change the boundaries of 064_002
