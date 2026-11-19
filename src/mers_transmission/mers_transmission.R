@@ -188,12 +188,12 @@ d1_and_d2_all_qa <- d1_and_d2_all_qa |>
 #          shape = "none")
 
 p1_and_p2 <- forest_plot(d1_and_d2,
-                         expression(Mutation~Rate~(s/s/y ~10^{-4})),
+                         expression(Viral~Evolution~(s/s/y ~10^{-4})),
                          custom_colours = custom_colour_pop_groups,
                          "population_group",c(-0.01,15),
                          text_size=text_size) +
   ggforce::facet_col(facets = vars(parameter_type), scales = "free_y", space = "free") +
-  guides(color = guide_legend(title = "Population group", order = 1),
+  guides(color =  "none", #guide_legend(title = "Population group", order = 1),
          linetype = "none",
          shape = "none")
 
@@ -365,9 +365,25 @@ d5_basic <- filter(d5, parameter_type %in% c("Reproduction number (Basic R0)" ,
 d5_effective <- filter(d5, parameter_type %in% c("Reproduction number (Effective, Re)" ,
                                                  "Reproduction number (Effective, Re) - Human"))
 
+simplify_country <- function(dat) {
+  dat |>
+    mutate(population_country = case_when(
+      population_country %in% c("Republic of Korea", "Saudi Arabia") ~ population_country,
+      TRUE ~ "Other"
+    )) |>
+    mutate(population_country = factor(
+      population_country,
+      levels = c("Republic of Korea", "Saudi Arabia", "Other"),
+      labels = c("RoK", "KSA", "Other")))
+}
 
-arrow_df <- data.frame(x = rep(8.9,2), xend = rep(9.9,2), y = c(1,13), yend = c(1,13),
-                       population_group = rep("Other",2)) |>
+d5_basic     <- simplify_country(d5_basic)
+d5_effective <- simplify_country(d5_effective)
+
+
+arrow_df <- data.frame(x = rep(8.9,2), xend = rep(9.9,2), y = c(1,7), yend = c(1,7),
+                       population_group = rep("Other",2),
+                       population_country = rep("RoK",2)) |>
   mutate(parameter_type=factor(population_group,
                                levels=all_pop_groups))
 
@@ -383,13 +399,17 @@ p5_basic <- forest_plot(
     arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
   coord_cartesian(xlim = c(-0.1, 10)) +
+
+  facet_grid(population_country ~ ., scales = "free_y", space = "free_y") +
+
   guides(shape = "none",
          fill =  guide_none(),
          linetype = guide_none(),
          color =  guide_legend(title = "Population group", order=2))
 
-arrow_df <- data.frame(x = rep(10.9,3), xend = rep(11.95,3), y = c(1,2,33), yend = c(1,2,33),
-                       population_group = rep("Other",3)) |>
+arrow_df <- data.frame(x = rep(10.9,3), xend = rep(11.95,3), y = c(1,12,1), yend = c(1,12,1),
+                       population_group = rep("Other",3),
+                       population_country = c("RoK", "RoK", "Other")) |>
   mutate(parameter_type=factor(population_group,
                                levels=all_pop_groups))
 
@@ -406,13 +426,17 @@ p5_basic_all_qa <- forest_plot(
     arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
   coord_cartesian(xlim = c(-0.1, 12)) +
+
+  facet_grid(population_country ~ ., scales = "free_y", space = "free_y") +
+
   guides(shape = "none",
          fill =  guide_none(),
          linetype = guide_none(),
          color =  guide_legend(title = "Population group", order=2))
 
-arrow_df <- data.frame(x = rep(8.9,2), xend = rep(9.9,2), y = c(1,6), yend = c(1,6),
-                       population_group = rep("Other",2)) |>
+arrow_df <- data.frame(x = rep(8.9,2), xend = rep(9.9,2), y = c(2,1), yend = c(2,1),
+                       population_group = rep("Other",2),
+                       population_country = c("RoK", "Other")) |>
   mutate(parameter_type=factor(population_group,
                                levels=all_pop_groups))
 
@@ -426,13 +450,17 @@ p5_effective <- forest_plot(
     arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
   coord_cartesian(xlim = c(-0.1, 10)) +
+
+  facet_grid(population_country ~ ., scales = "free_y", space = "free_y") +
+
   guides(shape = guide_legend(title = "Parameter type", order=1),
          fill =  guide_none(),
          linetype = guide_legend(title = "Interval type", order = 3),
          color =  "none")
 
-arrow_df <- data.frame(x = rep(10.9,2), xend = rep(11.95,2), y = c(1,7), yend = c(1,7),
-                       population_group = rep("Other",2)) |>
+arrow_df <- data.frame(x = rep(10.9,2), xend = rep(11.95,2), y = c(2,1), yend = c(2,1),
+                       population_group = rep("Other",2),
+                       population_country = c("RoK", "Other")) |>
   mutate(parameter_type=factor(population_group,
                                levels=all_pop_groups))
 
@@ -447,6 +475,9 @@ p5_effective_all_qa <- forest_plot(
     arrow = arrow(type = "open", length = unit(0.20, "cm")),
   ) +
   coord_cartesian(xlim = c(-0.1, 12)) +
+
+  facet_grid(population_country ~ ., scales = "free_y", space = "free_y") +
+
   guides(shape = guide_legend(title = "Parameter type", order=1),
          fill =  guide_none(),
          linetype = guide_legend(title = "Interval type", order = 3),
@@ -486,14 +517,26 @@ p8_all_qa <- forest_plot(d8,'Growth Rate', "population_group",
 
 
 # Save plots
-design <- "AE
+# design <- "AE
+# AE
+# BE
+# CE
+# CF
+# DF
+# DF"
+# patchwork_trans <- p3+p3_Park+p4+p1_and_p2+p5_basic+p5_effective+plot_layout(design = design, guides = "collect")
+# patchwork_trans <- patchwork_trans + plot_annotation(tag_levels = 'A')
+# ggsave("figure_trans.png", plot = patchwork_trans, width = 14, height = 10)
+# ggsave("figure_trans.pdf", plot = patchwork_trans, width = 14, height = 10)
+
+design <- "AC
+AC
+AD
 AE
 BE
-CE
-CF
-DF
-DF"
-patchwork_trans <- p3+p3_Park+p4+p1_and_p2+p5_basic+p5_effective+plot_layout(design = design, guides = "collect")
+BF
+BF"
+patchwork_trans <- p5_basic+p5_effective+p3+p3_Park+p4+p1_and_p2+plot_layout(design = design, guides = "collect")
 patchwork_trans <- patchwork_trans + plot_annotation(tag_levels = 'A')
 ggsave("figure_trans.png", plot = patchwork_trans, width = 14, height = 10)
 ggsave("figure_trans.pdf", plot = patchwork_trans, width = 14, height = 10)
