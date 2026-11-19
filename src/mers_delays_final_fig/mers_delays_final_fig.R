@@ -188,7 +188,42 @@ parameters <- parameters |>
   mutate(population_country=ifelse(is.na(population_country), #I checked these, for two of the papers it's mostly Saudi, but we can't be sure of the other data
                                    "Unspecified", population_country)) |>
   mutate(population_country=ifelse(!is.na(population_location) & population_location=="Global linelist",
-                                   "Global linelist", population_country))
+                                   "Global", population_country))
+
+# *--------------------- Country palette and plotting order -------------------*
+delay_country_colours <- c(
+  "Republic of Korea"   = "#E01A4F",  # rose red
+  "Saudi Arabia"        = "#00A878",  # jade green
+  "Global"              = "#48BFE3",  # bright cyan
+  "Other (Middle East)" = "#F79824",  # vivid orange
+  "Other"               = "#9B5DE5",  # bright violet
+  "Unspecified"         = "#8E9AAF"   # blue-grey
+)
+country_order   <- names(delay_country_colours)
+country_breaks  <- setdiff(country_order, "Unspecified")   # omit from legend
+country_colours <- delay_country_colours
+
+stopifnot(all(unique(parameters$population_country) %in% country_order))
+
+parameters <- parameters |>
+  mutate(population_country = factor(population_country, levels = country_order))
+
+# Country groups actually present in the high-QA panels of Figure 4
+fig4_types <- c("Incubation period",
+                "Time in care (length of stay)",
+                "Admission to care>discharge/recovery",
+                "Admission to care>death",
+                "Symptom onset>admission to care",
+                "Symptom onset>discharge/recovery",
+                "Symptom onset>death")
+
+country_breaks_hiqa <- parameters |>
+  filter(parameter_type %in% fig4_types, qa_score >= 0.5) |>
+  mutate(population_country = droplevels(population_country)) |>
+  pull(population_country) |>
+  levels() |>
+  setdiff("Unspecified")
+# -------------------------------------------------------------------------------
 
 # Incubation period
 d1 <- parameters %>% filter(tolower(parameter_type) == 'incubation period')  #26
@@ -260,6 +295,7 @@ d6 <- d6 |>
                                         "Admission>death",
                                         "Admission>discharge/recovery",
                                         "Time in care (length of stay)")))
+
 #Other delays
 d7 <- parameters |>
   filter(tolower(parameter_type) %in% c('other human delay (go to section)'))
@@ -278,22 +314,11 @@ text_size <- 28
 
       # Incubation period
 
-# Define ONE shared country colour palette from all data upfront
-all_country_groups <- bind_rows(d1, d6) |>
-  distinct(population_country) |>
-  arrange(population_country) |>
-  pull()
-#Change order:
-all_country_groups2 <- c(all_country_groups[1],all_country_groups[5:6], all_country_groups[2:4], all_country_groups[7])
-
-country_colours <- lanonc_colours[seq_along(all_country_groups2)]
-country_colours <- setNames(country_colours, all_country_groups2)
-
 d1$population_country <- factor(d1$population_country,
-                     levels = all_country_groups)
+                     levels = country_order)
 
 # Convert population_country to factor with ALL levels in both datasets
-d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_country_groups))
+d1 <- d1 |> mutate(population_country = factor(population_country, levels = country_order))
 
       p1_incb <- forest_plot(
         filter(d1, qa_score >= 0.5), "Incubation period (days)",
@@ -301,8 +326,8 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         sort=TRUE, custom_colours = country_colours)
 
       p1_incb <- p1_incb +
-        scale_colour_manual(name = "Country", values = country_colours, drop = FALSE) +
-        scale_fill_manual(name = "Country", values = country_colours, drop = FALSE) +
+        scale_colour_manual(name = "Country", values = country_colours, breaks = country_breaks_hiqa, drop = FALSE) +
+        scale_fill_manual(name = "Country", values = country_colours, breaks = country_breaks_hiqa, drop = FALSE) +
         guides(
           color = guide_legend(title = "Country", order = 1),
           fill  = guide_none(),
@@ -317,8 +342,8 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         sort=TRUE, custom_colours = country_colours)
 
       p1_incb_all_qa <- p1_incb_all_qa +
-        scale_colour_manual(name = "Country", values = country_colours, drop = TRUE) +
-        scale_fill_manual(name = "Country", values = country_colours, drop = TRUE) +
+        scale_colour_manual(name = "Country", values = country_colours, breaks = country_breaks, drop = TRUE) +
+        scale_fill_manual(name = "Country", values = country_colours, breaks = country_breaks, drop = TRUE) +
         guides(
           color = guide_legend(title = "Country", order = 1),
           fill  = guide_none(),
@@ -338,6 +363,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
              width = 11, height = 9)
 
 
+
       #tic_plot <- d6 |> filter(parameter_type=="Time in care (length of stay)")
       tic_plot <- d6 |>
         filter(parameter_type %in% c("Time in care (length of stay)",
@@ -355,7 +381,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       tic_x_axis_label <- 'Duration (days)'
       xlim_tic <- c(0,100)
 
-      tic_plot <- tic_plot |> mutate(population_country = factor(population_country, levels = all_country_groups))
+      tic_plot <- tic_plot |> mutate(population_country = factor(population_country, levels = country_order))
 
 
       # all_groups <- rbind(d4_plot, d8_plot) |>
@@ -375,7 +401,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
 
     p2_time_in_care <- p2_time_in_care +
       ggforce::facet_col(vars(parameter_type), scales = "free_y", space = "free") +
-      scale_colour_manual(name = "Country", values = country_colours, drop = FALSE) +
+      scale_colour_manual(name = "Country", values = country_colours, breaks = country_breaks_hiqa, drop = FALSE) +
       guides(shape = guide_none(),
              linetype = guide_none(),
              color = guide_legend(title = "Country"))
@@ -390,7 +416,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
 
     p2_time_in_care_all_qa <- p2_time_in_care_all_qa +
       ggforce::facet_col(vars(parameter_type), scales = "free_y", space = "free") +
-      scale_colour_manual(name = "Country", values = country_colours, drop = TRUE) +
+      scale_colour_manual(name = "Country", values = country_colours, breaks = country_breaks, drop = TRUE) +
       guides(
         color = guide_legend(title = "Country", order = 1),
         fill  = guide_none(),
@@ -435,7 +461,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                                      levels=c("Admission", "Severe illness",
                                               "Death", "Discharge/recovery")))
 
-      arrow_df_1 <- data.frame(x = rep(14.5,2), xend = rep(14.9,2), y = c(1,16), yend = c(1,16),
+      arrow_df_1 <- data.frame(x = rep(14.5,2), xend = rep(14.9,2), y = c(7,22), yend = c(7,22),
                              parameter_type = rep("Discharge/recovery",2)) |>
         mutate(parameter_type=factor(parameter_type,
                                      levels=c("Admission", "Severe illness",
@@ -471,7 +497,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         theme(legend.position = c(0.85, 0.75))
 
 
-      arrow_df_1 <- data.frame(x = rep(14.5,3), xend = rep(14.9,3), y = c(1,16,21), yend = c(1,16,21),
+      arrow_df_1 <- data.frame(x = rep(14.5,3), xend = rep(14.9,3), y = c(12,26,31), yend = c(12,26,31),
                                parameter_type = rep("Discharge/recovery",3)) |>
         mutate(parameter_type=factor(parameter_type,
                                      levels=c("Admission", "Severe illness",
@@ -524,6 +550,12 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         theme(legend.position = c(0.85, 0.75))
       ###
 
+      arrow_df <- data.frame(x = rep(43.7,2), xend = rep(44.7,2), y = c(7,8), yend = c(7,8),
+                             parameter_type = rep("Discharge/recovery",2)) |>
+        mutate(parameter_type=factor(parameter_type,
+                                     levels=c("Admission", "Severe illness",
+                                              "Death", "Discharge/recovery")))
+
       p4_outcomes_all_qa <- forest_plot(
         d4 |>
           #REMOVE THIS TO GO BACK TO ORIGINAL
@@ -539,7 +571,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         ) +
         coord_cartesian(xlim = c(-0.5, 45))
       #################################################################
-      arrow_df <- data.frame(x = rep(33.7,2), xend = rep(34.7,2), y = c(8,10), yend = c(8,10),
+      arrow_df <- data.frame(x = rep(33.7,2), xend = rep(34.7,2), y = c(10,12), yend = c(10,12),
                              parameter_type = rep("Discharge/recovery",2)) |>
         mutate(parameter_type=factor(parameter_type,
                                      levels=c("Admission", "Severe illness",
@@ -575,7 +607,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                color = guide_none()) +
         theme(legend.position = c(0.85, 0.75))
       #
-      arrow_df <- data.frame(x = rep(33.7,4), xend = rep(34.7,4), y = c(8,11,15,17), yend = c(8,11,15,17),
+      arrow_df <- data.frame(x = rep(33.7,4), xend = rep(34.7,4), y = c(2,5,13,16), yend = c(2,5,13,16),
                              parameter_type = rep("Discharge/recovery",4)) |>
         mutate(parameter_type=factor(parameter_type,
                                      levels=c("Admission", "Severe illness",
@@ -700,7 +732,7 @@ BE"
     # SI from admission
     d3 <- filter(d3, parameter_type != "Time in care")
 
-    arrow_df_1 <- data.frame(x = rep(23.5,1), xend = rep(24.9,1), y = c(1), yend = c(1),
+    arrow_df_1 <- data.frame(x = rep(23.5,1), xend = rep(24.9,1), y = c(2), yend = c(2),
                              parameter_type = rep("Discharge/recovery",1)) |>
       mutate(parameter_type=factor(parameter_type,
                                    levels=c("Admission", "Severe illness",
@@ -781,7 +813,7 @@ BE"
       qa_alpha = 0.3,
       custom_colours = country_colours) +#custom_colours) +
       coord_cartesian(xlim = c(-0.5, 25)) +
-      scale_colour_manual(name = "Country", values = country_colours, drop = TRUE) +
+      scale_colour_manual(name = "Country", values = country_colours, breaks = country_breaks, drop = TRUE) +
       guides(
         color = guide_legend(title = "Country", order = 1),
         fill  = guide_none(),
