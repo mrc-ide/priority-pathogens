@@ -306,8 +306,8 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         guides(
           color = guide_legend(title = "Country", order = 1),
           fill  = guide_none(),
-          shape = guide_legend(title = "", order = 3),
-          linetype = guide_legend(title = "", order = 2)
+          shape = guide_legend(title = "Parameter type", order = 2),
+          linetype = guide_legend(title = "Interval type", order = 3)
         )
 
       p1_incb_all_qa <- forest_plot(
@@ -322,8 +322,8 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
         guides(
           color = guide_legend(title = "Country", order = 1),
           fill  = guide_none(),
-          shape = guide_legend(title = "", order = 3),
-          linetype = guide_legend(title = "", order = 2)
+          shape = guide_legend(title = "Parameter type", order = 2),
+          linetype = guide_legend(title = "Interval type", order = 3)
         )
 
       ggsave("SI_delay_incb.png", plot = p1_incb_all_qa, width = 14, height = nrow(d1)*0.3)
@@ -338,9 +338,21 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
              width = 11, height = 9)
 
 
-      tic_plot <- d6 |> filter(parameter_type=="Time in care (length of stay)")
+      #tic_plot <- d6 |> filter(parameter_type=="Time in care (length of stay)")
+      tic_plot <- d6 |>
+        filter(parameter_type %in% c("Time in care (length of stay)",
+                                     "Admission>discharge/recovery",
+                                     "Admission>death")) |>
+        mutate(parameter_type = factor(
+          parameter_type,
+          levels = c("Time in care (length of stay)",
+                     "Admission>discharge/recovery",
+                     "Admission>death"),
+          labels = c("Time in care (length of stay)",
+                     "Admission to discharge or recovery",
+                     "Admission to death")))
       tic_plot_label <- "time_in_care"
-      tic_x_axis_label <- 'Time in care (days)'
+      tic_x_axis_label <- 'Duration (days)'
       xlim_tic <- c(0,100)
 
       tic_plot <- tic_plot |> mutate(population_country = factor(population_country, levels = all_country_groups))
@@ -362,8 +374,10 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       custom_colours = country_colours)
 
     p2_time_in_care <- p2_time_in_care +
+      ggforce::facet_col(vars(parameter_type), scales = "free_y", space = "free") +
       scale_colour_manual(name = "Country", values = country_colours, drop = FALSE) +
-      guides(shape = guide_none(), linetype = guide_none(),
+      guides(shape = guide_none(),
+             linetype = guide_none(),
              color = guide_legend(title = "Country"))
 
     p2_time_in_care_all_qa <- forest_plot(
@@ -375,12 +389,13 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
       custom_colours = country_colours)
 
     p2_time_in_care_all_qa <- p2_time_in_care_all_qa +
+      ggforce::facet_col(vars(parameter_type), scales = "free_y", space = "free") +
       scale_colour_manual(name = "Country", values = country_colours, drop = TRUE) +
       guides(
         color = guide_legend(title = "Country", order = 1),
         fill  = guide_none(),
-        shape = guide_legend(title = "", order = 3),
-        linetype = guide_legend(title = "", order = 2)
+        shape = guide_legend(title = "Parameter type", order = 2),
+        linetype = guide_legend(title = "Interval type", order = 3)
       )
 
     ggsave("SI_delay_tic.png", plot = p2_time_in_care_all_qa, width = 14, height = nrow(tic_plot)*0.3)
@@ -420,7 +435,7 @@ d1 <- d1 |> mutate(population_country = factor(population_country, levels = all_
                                      levels=c("Admission", "Severe illness",
                                               "Death", "Discharge/recovery")))
 
-      arrow_df_1 <- data.frame(x = rep(14.5,2), xend = rep(14.9,2), y = c(1,16), yend = c(1,1),
+      arrow_df_1 <- data.frame(x = rep(14.5,2), xend = rep(14.9,2), y = c(1,16), yend = c(1,16),
                              parameter_type = rep("Discharge/recovery",2)) |>
         mutate(parameter_type=factor(parameter_type,
                                      levels=c("Admission", "Severe illness",
