@@ -65,6 +65,7 @@ parameters$parameter_type <- gsub(" symptomatic proportion of infections",
 parameters$parameter_type <- gsub("asymptomatic proportion of infections",
                                   "proportion of asymptomatic cases",
                                   parameters$parameter_type)
+
 # *----------------------------- Data preparation -----------------------------*
 # Extracted CFRs parameters
 d1 <- parameters |>
@@ -332,13 +333,38 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   custom_colour_pop_groups <- lanonc_colours[seq_along(all_pop_groups)]
   names(custom_colour_pop_groups) <- all_pop_groups
 
-  all_sample_types <- rbind(d1,d2,d3) |>
-    distinct(population_sample_type) |>
-    arrange(population_sample_type == "Other", population_sample_type) |>
-    pull()
+  # Figure 5 sample-type palette. A plum sequential ramp, ordered by how
+  # selected the sample is (hospital-based = sickest and most selected,
+  # population-based = least). Deliberately a different hue family AND a
+  # different structure from Figure 3 (population group, ggsci lanonc) and
+  # Figure 4 (country), which are both saturated categorical sets.
+  sample_type_colours <- c(
+    "Hospital based"   = "#39FF14",  # neon green
+    "Contact based"    = "#A5005A",  # deep magenta
+    "Household based"  = "#FF96FF",  # orchid pink
+    "Mixed settings"   = "#1F51FF",  # neon blue
+    "Community based"  = "#A54B00",  # burnt sienna
+    "Population based" = "#FFD500",  # gold
+    "Other"            = "#FE019A",  # mid grey
+    "Unspecified"      = "#3D3D3D"   # charcoal
+  )
+  sample_type_order          <- names(sample_type_colours)
+  custom_colour_sample_types <- sample_type_colours
 
-  custom_colour_sample_types <- lanonc_colours[seq_along(all_sample_types)]
-  names(custom_colour_sample_types) <- all_sample_types
+  # NA -> "Unspecified", then order the factor so the ramp reads in sequence
+  fix_sample_type <- function(df) {
+    df |> mutate(population_sample_type = factor(
+      if_else(is.na(population_sample_type), "Unspecified",
+              as.character(population_sample_type)),
+      levels = sample_type_order))
+  }
+  d1 <- fix_sample_type(d1)
+  d2 <- fix_sample_type(d2)
+  d3 <- fix_sample_type(d3)
+
+  stopifnot(!anyNA(d1$population_sample_type),
+            !anyNA(d2$population_sample_type),
+            !anyNA(d3$population_sample_type))
 
   all_countries <- d1 |>
     distinct(population_country) |>
@@ -408,7 +434,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   text_size <- 28
 
   plot_list[["qa_filtered"]][["forest"]][["p_cfr_2"]] <- forest_plot(
-    filter(d1, qa_score >= 0.5), "Case-Fatality Ratio (%)","population_group",
+    filter(d1, qa_score >= 0.5), "Case Fatality Ratio (%)","population_group",
     c(-10,110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
@@ -417,7 +443,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
            color =  guide_legend(title = "Population group", order=2))
 
   cfr_pop_group_all_qa <- forest_plot(
-    d1, "Case-Fatality Ratio (%)","population_group",
+    d1, "Case Fatality Ratio (%)","population_group",
     qa_alpha = 0.3,
     c(-10,110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
@@ -427,7 +453,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
            color =  guide_legend(title = "Population group", order=2))
 
   cfr_country_all_qa <- forest_plot(
-    d1, "Case-Fatality Ratio (%)","population_country",
+    d1, "Case Fatality Ratio (%)","population_country",
     qa_alpha = 0.3,
     c(-10,110), custom_colours = custom_colour_countries,
     text_size=text_size, sort=TRUE) +
@@ -468,18 +494,34 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
     mutate(population_country = case_when(
       population_country %in% c("Republic of Korea", "Saudi Arabia") ~ population_country,
       TRUE ~ "Other"
-    )) %>%
-    mutate(population_sample_type = case_when(
-      is.na(population_sample_type) ~ "Unspecified",
-      TRUE ~ population_sample_type
-    ))
+    )) #%>%
+    # mutate(population_sample_type = case_when(
+    #   is.na(population_sample_type) ~ "Unspecified",
+    #   TRUE ~ population_sample_type
+    # ))
   d1_simplified_country$population_country <- factor(d1_simplified_country$population_country,
                                                      levels = c("Republic of Korea",
                                                      "Saudi Arabia",
                                                      "Other"))
 
+  # Naive CFRs from the two national line lists, drawn as reference lines on
+  # the corresponding facets only. RoK: 38/186 deaths, 2015 outbreak.
+  cfr_reference_lines <- data.frame(
+    population_country = factor(
+      c("Republic of Korea", "Saudi Arabia"),
+      levels = levels(d1_simplified_country$population_country)),
+    xintercept = c(100 * 38 / 186, 39)
+  )
+
+  cfr_vline <- geom_vline(
+    data = cfr_reference_lines,
+    aes(xintercept = xintercept),
+    inherit.aes = FALSE,
+    linetype = "dashed", colour = "grey30", linewidth = 0.6
+  )
+
   plot_list[["qa_filtered"]][["forest"]][["p_cfr_3"]] <- forest_plot(
-    filter(d1, qa_score >= 0.5), "Case-Fatality Ratio (%)","population_sample_type",
+    filter(d1, qa_score >= 0.5), "Case Fatality Ratio (%)","population_sample_type",
     c(-10,110), #custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
@@ -488,7 +530,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
            color =  guide_legend(title = "Population type", order=2))
 
   cfr_sample_type_facet <- forest_plot(
-    d1_simplified_country, "Case-Fatality Ratio (%)","population_sample_type",
+    d1_simplified_country, "Case Fatality Ratio (%)","population_sample_type",
     c(-10,110), custom_colours = custom_colour_sample_types,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
@@ -502,8 +544,10 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
            colour = "none") +
     facet_grid(population_country ~ ., scales = "free_y", space = "free_y")
 
+  cfr_sample_type_facet$layers <- c(list(cfr_vline), cfr_sample_type_facet$layers)
+
   cfr_sample_type <- forest_plot(
-    d1_simplified_country, "Case-Fatality Ratio (%)","population_sample_type",
+    d1_simplified_country, "Case Fatality Ratio (%)","population_sample_type",
     c(-10,110), custom_colours = custom_colour_sample_types,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
@@ -533,7 +577,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   names(custom_colour_countries) <- all_countries
 
   plot_list[["qa_filtered"]][["forest"]][["p_prop_1"]] <- forest_plot(
-    filter(d2, qa_score >= 0.5), "Percentage of Symptomatic Cases (%)", "population_country",
+    filter(d2, qa_score >= 0.5), "Percentage of Cases Symptomatic (%)", "population_country",
     c(-10, 110), custom_colours = custom_colour_countries,
     text_size=text_size, sort=TRUE) +
     guides(color = guide_legend(title = "Population country", order=2),
@@ -548,7 +592,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
          width = 16, height = 10)
 
   plot_list[["qa_filtered"]][["forest"]][["p_prop_2"]] <- forest_plot(
-    filter(d2, qa_score >= 0.5), "Percentage of Symptomatic Cases (%)", "population_group",
+    filter(d2, qa_score >= 0.5), "Percentage of Cases Symptomatic (%)", "population_group",
     c(-10, 110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
     guides(color = guide_legend(title = "Population group", order=2),
@@ -563,7 +607,7 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
          width = 16, height = 10)
 
   sympt_all_qa <- forest_plot(
-    d2, "Percentage of Symptomatic Cases (%)", "population_group",
+    d2, "Percentage of Cases Symptomatic (%)", "population_group",
     qa_alpha = 0.3,
     c(-10, 110), custom_colours = custom_colour_pop_groups,
     text_size=text_size, sort=TRUE) +
@@ -643,39 +687,42 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
     ungroup()
 
   combined_sympt_asympt_pop_group_plot <- forest_plot(
-    d2_and_3, "Percentage of Symptomatic Cases (%)", "population_group",
+    d2_and_3, "Percentage of Cases Symptomatic (%)", "population_group",
     c(-10, 110), custom_colours = custom_colour_pop_groups,
     segment_show.legend = c(shape=FALSE, colour=TRUE),
     text_size=text_size, sort=TRUE) +
     scale_shape_manual(
-      name   = "Case type",
-      values = c("Symptomatics" = 21, "1 - Asymptomatics" = 22)
+      name   = "Symptomatic estimate",
+      values = c("Symptomatics" = 21, "1 - Asymptomatics" = 24)
     ) +
     scale_colour_manual(name = "Population group", values = custom_colour_pop_groups, drop = FALSE) +
     guides(
       color    = guide_legend(title = "Population group", order = 2),
-      shape    = guide_legend(title = "Case type", order = 1),
+      shape    = guide_legend(title = "Symptomatic estimate", order = 1),
       linetype = guide_none()
     )
 
-  d2_and_3_ordered <- d2_and_3 %>%
-    mutate(population_sample_type = case_when(
-             is.na(population_sample_type) ~ "Unspecified",
-             TRUE ~ population_sample_type
-           ))
+  # d2_and_3_ordered <- d2_and_3 %>%
+  #   mutate(population_sample_type = case_when(
+  #            is.na(population_sample_type) ~ "Unspecified",
+  #            TRUE ~ population_sample_type
+  #          ))
+  d2_and_3_ordered <- d2_and_3
+
   combined_sympt_asympt_plot <- forest_plot(
-    d2_and_3_ordered, "Percentage of Symptomatic Cases (%)", "population_sample_type",
+    d2_and_3_ordered, "Percentage of Cases Symptomatic (%)", "population_sample_type",
     c(-10, 110), custom_colours = custom_colour_sample_types,
     segment_show.legend = c(shape=FALSE, colour=TRUE),
+    point_size = 5.5,
     text_size=text_size, sort=TRUE) +
     scale_shape_manual(
-      name   = "Case type",
-      values = c("Symptomatics" = 21, "1 - Asymptomatics" = 22)
+      name   = "Symptomatic estimate",
+      values = c("Symptomatics" = 21, "1 - Asymptomatics" = 24)
     ) +
     scale_colour_manual(name = "Population sample type", values = custom_colour_sample_types, drop = FALSE) +
     guides(
-      color    = guide_legend(title = "Population sample type", order = 2),
-      shape    = guide_legend(title = "Case type", order = 1),
+      color    = guide_legend(title = "Population sample \ntype", order = 1),
+      shape    = guide_legend(title = "Symptomatic \nestimate", order = 2),
       linetype = guide_none()
     )
   ############
@@ -710,9 +757,11 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
                                                            c("Other", "Unspecified"))),
                                               "Other", "Unspecified")))
 
+  d4 <- fix_sample_type(d4)
   IFR_plot <- forest_plot(
-    filter(d4, qa_score >= 0.5), "Infection Fatality Ratio (%)","population_group",
-    c(-10,110), custom_colours = custom_colour_pop_groups,
+    filter(d4, qa_score >= 0.5), "Infection Fatality Ratio (%)","population_sample_type",
+    c(-10,110), custom_colours = custom_colour_sample_types,
+    point_size = 5.5,
     text_size=text_size, sort=TRUE) +
     guides(shape = guide_legend(title = "Parameter type", order=1),
            fill =  guide_none(),
@@ -724,10 +773,10 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
     guides(shape = "none",
            colour = "none")
 
-  ggsave("figures/figure_5_IFR_pop_group.pdf",
+  ggsave("figures/figure_5_IFR_pop_sample_type.pdf",
          plot =  IFR_plot,
          width = 16, height = 6)
-  ggsave("figures/figure_5_IFR_pop_group.png",
+  ggsave("figures/figure_5_IFR_pop_sample_type.png",
          plot =  IFR_plot,
          width = 16, height = 6)
 
@@ -758,23 +807,48 @@ plot_list <- list("qa_filtered"=list("meta"=list(), "forest"=list()))
   layout <- "
 AB
 AC
+AD
 "
 
-  combined_plot <- cfr_sample_type_facet +#cfr_pop_group +
-    combined_sympt_asympt_plot + IFR_plot +
+  # combined_plot <- cfr_sample_type_facet +
+  #   IFR_plot + combined_sympt_asympt_plot + guide_area() +
+  #   plot_layout(
+  #     design  = layout,
+  #     guides  = "collect",
+  #     heights = c(6, 1.5, 1)
+  #   ) +
+  #   plot_annotation(tag_levels = "A")
+
+  layout <- "
+AB
+AC
+"
+
+  combined_plot <- cfr_sample_type_facet +
+    combined_sympt_asympt_plot + guide_area() +
     plot_layout(
       design  = layout,
       guides  = "collect",
-      heights = c(2, 1)   # relative heights of p2 vs p3, adjust as needed
+      heights = c(3, 1)
     ) +
     plot_annotation(tag_levels = "A")
 
+  combined_plot <- combined_plot & theme(
+    legend.box       = "horizontal",
+    legend.box.just  = "top",
+    legend.direction = "vertical",
+    legend.spacing.x = unit(1.5, "cm"),
+    legend.key.size  = unit(1.4, "cm"),
+    legend.text      = element_text(size = 30),
+    legend.title     = element_text(size = 34)
+  )
+
   ggsave("mers_severity.pdf",
          plot =  combined_plot,
-         width = 25, height = 27)
+         width = 25, height = 30)
   ggsave("mers_severity.png",
          plot =  combined_plot,
-         width = 25, height = 27)
+         width = 25, height = 30)
   ################################
   # ---------- CFR over study time intervals ----------
   # Build the plotting dataframe (reuses the same date-building logic as plot_df)
