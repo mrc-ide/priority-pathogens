@@ -533,6 +533,8 @@ extracted_cfr <- d7 |>
                                                            c("Other", "Unspecified"))),
                                               "Other", "Unspecified")))
 
+
+##################################################################################
 # *------------------------------ Meta-analysis -------------------------------*
 # Plot file structure - many plots created in this task so better to create a
 # folder structure
@@ -595,16 +597,16 @@ for (i in seq_along(qa_thresh_vec)){
   plot_list[[list_label]][["meta"]][["m1"]] <- metaprop_wrap(
     dataframe = extracted_cfr_filtered, subgroup = "population_country", plot_pooled = TRUE,
     sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-    colour = imperial_khaki, width = 12000, height = 14000, resolution = 1000)
+    colour = imperial_khaki, width = 15000, height = 25000, resolution = 1500)
   
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_population_country.pdf")),
          plot_list[[list_label]][["meta"]][["m1"]]$plot,
-         width = 5.8, height = 5)
+         width = 6, height = 8)
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_population_country.png")),
          plot_list[[list_label]][["meta"]][["m1"]]$plot,
-         width = 5.8, height = 5)
+         width = 6, height = 8)
   
   plot_list[[list_label]][["meta"]][["m2"]] <- metaprop_wrap(
     dataframe = extracted_cfr_filtered, subgroup = "study_midyear_cat",
@@ -632,11 +634,11 @@ for (i in seq_along(qa_thresh_vec)){
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_study_sample_type.pdf")),
          plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 8.5, height = 7)
+         width = 5, height = 5)
   ggsave(file.path(plot_type,
                    paste0("CFR_meta_study_sample_type.png")),
          plot_list[[list_label]][["meta"]][["m3"]]$plot,
-         width = 8.5, height = 7)
+         width = 5, height = 5)
   
   
   # plot_list[[list_label]][["meta"]][["m4"]] <- metaprop_wrap(
@@ -742,125 +744,126 @@ for (i in seq_along(qa_thresh_vec)){
 }
 
 
-# # *----------------------- CFR from extracted outbreaks -----------------------*
-# 
-# # Plot colour
-# imperial_khaki <- "#EFE58B"
-# text_size <- 15
-# lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
-# meta_digits <- 2
-# 
-# # data frame
-# cfr_from_outbreaks <- outbreaks
-# # get rid of NA cases;  cases_confirmed, outbreak_probable, cases_suspected, cases_unspecified, cases_asymptomatic
-# cfr_from_outbreaks$cases_confirmed_0 <- cfr_from_outbreaks$cases_confirmed 
-# cfr_from_outbreaks$cases_confirmed_0[is.na(cfr_from_outbreaks$cases_confirmed_0)] <- 0
-# cfr_from_outbreaks$outbreak_probable_0 <- cfr_from_outbreaks$outbreak_probable 
-# cfr_from_outbreaks$outbreak_probable_0[is.na(cfr_from_outbreaks$outbreak_probable_0)] <- 0
-# cfr_from_outbreaks$cases_suspected_0 <- cfr_from_outbreaks$cases_suspected 
-# cfr_from_outbreaks$cases_suspected_0[is.na(cfr_from_outbreaks$cases_suspected_0)] <- 0
-# cfr_from_outbreaks$cases_unspecified_0 <- cfr_from_outbreaks$cases_unspecified 
-# cfr_from_outbreaks$cases_unspecified_0[is.na(cfr_from_outbreaks$cases_unspecified_0)] <- 0
-# cfr_from_outbreaks$cases_asymptomatic_0 <- cfr_from_outbreaks$cases_asymptomatic 
-# cfr_from_outbreaks$cases_asymptomatic_0[is.na(cfr_from_outbreaks$cases_asymptomatic_0)] <- 0
-# 
+# *----------------------- CFR from extracted outbreaks -----------------------*
+
+# Plot colour
+imperial_khaki <- "#EFE58B"
+text_size <- 15
+lanonc_colours <- ggsci::pal_lancet("lanonc")(9)
+meta_digits <- 2
+
+# data frame
+cfr_from_outbreaks <- outbreaks
+# get rid of NA cases;  cases_confirmed, outbreak_probable, cases_suspected, cases_unspecified, cases_asymptomatic
+cfr_from_outbreaks$cases_confirmed_0 <- cfr_from_outbreaks$cases_confirmed
+cfr_from_outbreaks$cases_confirmed_0[is.na(cfr_from_outbreaks$cases_confirmed_0)] <- 0
+cfr_from_outbreaks$outbreak_probable_0 <- cfr_from_outbreaks$outbreak_probable
+cfr_from_outbreaks$outbreak_probable_0[is.na(cfr_from_outbreaks$outbreak_probable_0)] <- 0
+cfr_from_outbreaks$cases_suspected_0 <- cfr_from_outbreaks$cases_suspected
+cfr_from_outbreaks$cases_suspected_0[is.na(cfr_from_outbreaks$cases_suspected_0)] <- 0
+cfr_from_outbreaks$cases_unspecified_0 <- cfr_from_outbreaks$cases_unspecified
+cfr_from_outbreaks$cases_unspecified_0[is.na(cfr_from_outbreaks$cases_unspecified_0)] <- 0
+cfr_from_outbreaks$cases_asymptomatic_0 <- cfr_from_outbreaks$cases_asymptomatic
+cfr_from_outbreaks$cases_asymptomatic_0[is.na(cfr_from_outbreaks$cases_asymptomatic_0)] <- 0
+
+cfr_from_outbreaks <- cfr_from_outbreaks |>
+  mutate(outbreak_source = replace_na(outbreak_source, 'Unknown'),
+         total_cases = cases_confirmed_0 + outbreak_probable_0 + cases_suspected_0 + cases_unspecified_0 + cases_asymptomatic_0) |>
+  mutate(cfr_ifr_denominator = round(total_cases),
+         cfr_ifr_numerator = round(deaths),
+         CFR = cfr_ifr_numerator / cfr_ifr_denominator,
+         article_refs = refs,
+         refs = paste(outbreak_country, outbreak_location, sep = " |> "),
+         parameter_value = CFR,
+         parameter_unit = 'Percentage') |> arrange(desc(CFR)) |>
+  mutate(outbreak_source = case_when(str_detect(outbreak_source, 'Domestic animal' ) ~ 'Domestic animal',
+                                     str_detect(outbreak_source, 'Wild animal' ) ~ 'Wild animal',
+                                     TRUE ~ outbreak_source),
+         refs_full = refs,
+         refs = paste0(
+           trimws(str_extract(refs, "^[^|]+")), " |> ",
+           # first 3 letters of each word in location
+           str_to_upper(str_replace_all(str_extract(refs, "(?<=\\|>).*$"),
+                                        "\\b([A-Za-z]{1,3})[A-Za-z]*\\b",
+                                        "\\1")))
+  )
+
+# CFR so need deaths
+cfr_from_outbreaks <- cfr_from_outbreaks|>filter(cfr_ifr_numerator>0, !is.na(cfr_ifr_numerator), !covidence_id%in%c(1774, 1767,1678))
+# Overall
+cfr_outbreak_country <- metaprop_wrap(
+  cfr_from_outbreaks, subgroup = 'outbreak_country', plot_pooled = TRUE,
+  sort_by_subg = TRUE, plot_study = FALSE, digits = meta_digits,
+  colour = imperial_khaki,
+  width = 2700, height = 2500, resolution = 200)
+cfr_meta_analysis <- cfr_outbreak_country$plot
+
+#save figure
+ggsave(file.path("figure_meta_country_extracted_outbreak.pdf"),
+       cfr_outbreak_country$plot, width = 12, height = 6)
+ggsave(file.path("figure_meta_country_extracted_outbreak.png"),
+       cfr_outbreak_country$plot, width = 12, height = 6)
+
+# With study breakdown
+# Update refs for nicer study printing
+# max_width <- max(nchar(paste(cfr_from_outbreaks$outbreak_location,
+#                              cfr_from_outbreaks$outbreak_start_year)))
 # cfr_from_outbreaks <- cfr_from_outbreaks |>
-#   mutate(outbreak_source = replace_na(outbreak_source, 'Unknown'),
-#          total_cases = cases_confirmed_0 + outbreak_probable_0 + cases_suspected_0 + cases_unspecified_0 + cases_asymptomatic_0) |>
-#   mutate(cfr_ifr_denominator = round(total_cases),
-#          cfr_ifr_numerator = round(deaths),
-#          CFR = cfr_ifr_numerator / cfr_ifr_denominator,
-#          article_refs = refs,
-#          refs = paste(outbreak_country, outbreak_location, sep = " |> "),
-#          parameter_value = CFR,
-#          parameter_unit = 'Percentage') |> arrange(desc(CFR)) |>
-#   mutate(outbreak_source = case_when(str_detect(outbreak_source, 'Domestic animal' ) ~ 'Domestic animal',
-#                                      str_detect(outbreak_source, 'Wild animal' ) ~ 'Wild animal',
-#                                      TRUE ~ outbreak_source),
-#          refs_full = refs,
-#          refs = paste0(
-#            trimws(str_extract(refs, "^[^|]+")), " |> ",
-#            # first 3 letters of each word in location
-#            str_to_upper(str_replace_all(str_extract(refs, "(?<=\\|>).*$"),
-#                                         "\\b([A-Za-z]{1,3})[A-Za-z]*\\b",
-#                                         "\\1")))
-#   )
-# 
-# # CFR so need deaths 
-# cfr_from_outbreaks <- cfr_from_outbreaks|>filter(cfr_ifr_numerator>0, !is.na(cfr_ifr_numerator), !covidence_id%in%c(1774, 1767,1678))
-# # Overall
-# cfr_outbreak_country <- metaprop_wrap(
-#   cfr_from_outbreaks, subgroup = 'outbreak_country', plot_pooled = TRUE,
-#   sort_by_subg = TRUE, plot_study = FALSE, digits = meta_digits,
-#   colour = imperial_khaki,
-#   width = 2700, height = 2500, resolution = 200)
-# cfr_meta_analysis <- cfr_outbreak_country$plot
-# 
-# #save figure
-# ggsave(file.path("figure_meta_country_extracted_outbreak.pdf"),
-#        cfr_outbreak_country$plot, width = 12, height = 6)
-# ggsave(file.path("figure_meta_country_extracted_outbreak.png"),
-#        cfr_outbreak_country$plot, width = 12, height = 6)
-# 
-# # With study breakdown
-# # Update refs for nicer study printing
-# # max_width <- max(nchar(paste(cfr_from_outbreaks$outbreak_location,
-# #                              cfr_from_outbreaks$outbreak_start_year)))
-# # cfr_from_outbreaks <- cfr_from_outbreaks |>
-# #   mutate(refs = paste0(str_pad(paste(outbreak_location, outbreak_start_year),
-# #                                width = 40, side = "right"), " | ",
-# #                        article_refs))
-# 
-# cfr_outbreak_country_study <- metaprop_wrap(
-#   cfr_from_outbreaks,
-#   subgroup = 'outbreak_country', plot_pooled = TRUE,
-#   sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
-#   colour = imperial_khaki,
-#   width = 11000, height = 17000, resolution = 1000)
-# 
-# # Update plot to allow for new format
-# cfr_outbreak_country_study$result$article_refs <- cfr_from_outbreaks$article_refs
-# cfr_outbreak_country_study$result$studlab <- paste0(
-#   cfr_from_outbreaks$outbreak_start_year, ", ", cfr_from_outbreaks$outbreak_location)
-# 
-# colour <- imperial_khaki
-# png(file = "temp.png", width = 13000, height = 17000, res = 1000)
-# par(mar = c(2, 2, 2, 1))
-# cfr_outbreak_country_study_plot <- forest(cfr_outbreak_country_study$result, layout = "Revman5",
-#                                           leftcols = c("studlab", "article_refs", "event", "n", "effect.ci"),
-#                                           leftlabs = c("Outbreak", "Study", "Events", "Total"),
-#                                           just.addcols = "left",
-#                                           colgap.forest.left = "3mm",
-#                                           overall = TRUE, pooled.events = TRUE,
-#                                           print.subgroup.name = FALSE, sort.subgroup = TRUE,
-#                                           study.results = TRUE,
-#                                           digits = 2,
-#                                           col.diamond.lines = "black",col.diamond.common = colour,
-#                                           col.diamond.random = colour,
-#                                           col.square = colour, col.square.lines = "black",
-#                                           col.study = "black", col.subgroup = "black",
-#                                           col.inside = "black", weight.study = "same",
-#                                           at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio",
-#                                           fs.predict.labels = 11.5,
-#                                           fs.hetstat=11,
-#                                           fs.test.subgroup = 11,
-#                                           fs.axis = 11,
-#                                           fontsize = 14,
-#                                           plotwidth = "72.5mm")
-# dev.off()
-# 
-# pg <- png::readPNG("temp.png", native = TRUE)
-# file.remove("temp.png")
-# cfr_outbreak_country_study_plot <- wrap_elements(
-#   plot = rasterGrob(pg, interpolate = TRUE))
-# 
-# ggsave(file.path("figures", "SI_CFR_meta_country_extracted_outbreak.pdf"),
-#        cfr_outbreak_country_study_plot, width = 5, height = 6.5)
-# ggsave(file.path("figures", "SI_CFR_meta_country_extracted_outbreak.png"),
-#        cfr_outbreak_country_study_plot,width = 5, height = 6.5)
+#   mutate(refs = paste0(str_pad(paste(outbreak_location, outbreak_start_year),
+#                                width = 40, side = "right"), " | ",
+#                        article_refs))
+
+cfr_outbreak_country_study <- metaprop_wrap(
+  cfr_from_outbreaks,
+  subgroup = 'outbreak_country', plot_pooled = TRUE,
+  sort_by_subg = TRUE, plot_study = TRUE, digits = meta_digits,
+  colour = imperial_khaki,
+  width = 45000, height = 20000, resolution = 3000)
+
+# Update plot to allow for new format
+cfr_outbreak_country_study$result$article_refs <- cfr_from_outbreaks$article_refs
+cfr_outbreak_country_study$result$studlab <- paste0(
+  cfr_from_outbreaks$outbreak_start_year, ", ", cfr_from_outbreaks$outbreak_location)
+
+colour <- imperial_khaki
+png(file = "temp.png", width = 45000, height = 20000, res = 3000)
+par(mar = c(2, 2, 2, 1))
+cfr_outbreak_country_study_plot <- forest(cfr_outbreak_country_study$result, layout = "Revman5",
+                                          leftcols = c("studlab", "article_refs", "event", "n", "effect.ci"),
+                                          leftlabs = c("Outbreak", "Study", "Events", "Total"),
+                                          just.addcols = "left",
+                                          colgap.forest.left = "3mm",
+                                          overall = TRUE, pooled.events = TRUE,
+                                          print.subgroup.name = FALSE, sort.subgroup = TRUE,
+                                          study.results = TRUE,
+                                          digits = 2,
+                                          col.diamond.lines = "black",col.diamond.common = colour,
+                                          col.diamond.random = colour,
+                                          col.square = colour, col.square.lines = "black",
+                                          col.study = "black", col.subgroup = "black",
+                                          col.inside = "black", weight.study = "same",
+                                          at = seq(0,1,by=0.2), xlim = c(0,1), xlab="Case Fatality Ratio",
+                                          fs.predict.labels = 11.5,
+                                          fs.hetstat=11,
+                                          fs.test.subgroup = 11,
+                                          fs.axis = 11,
+                                          fontsize = 14,
+                                          plotwidth = "435mm")
+dev.off()
+
+pg <- png::readPNG("temp.png", native = TRUE)
+file.remove("temp.png")
+cfr_outbreak_country_study_plot <- wrap_elements(
+  plot = rasterGrob(pg, interpolate = TRUE))
+cfr_outbreak_country_study_plot
+
+ggsave(file.path("figures", "SI_CFR_meta_country_extracted_outbreak.pdf"),
+       cfr_outbreak_country_study_plot, width = 25, height = 10)
+ggsave(file.path("figures", "SI_CFR_meta_country_extracted_outbreak.png"),
+       cfr_outbreak_country_study_plot,width = 20, height = 10)
 
 
-  
+
 
 
 

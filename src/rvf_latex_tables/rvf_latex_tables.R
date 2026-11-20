@@ -301,6 +301,32 @@ count_study_parameters_type <- count_study_parameters_type |> mutate(`Study: Tot
                                                                        `Parameters: Total`=`Parameters: Low QA`+`Parameters: High QA (> 0.5)`)
 count_study_parameters_type <- count_study_parameters_type|>mutate(`Study: Low QA`=NULL,`Parameters: Low QA`=NULL )
 count_study_parameters_type <- count_study_parameters_type[,c(1,5,4,2,3)]
+count_study_parameters_type <- count_study_parameters_type|> mutate(
+  parameter_type = ifelse(
+    grepl(">", parameter_type, ignore.case = TRUE),
+    gsub(">", " to ", parameter_type, ignore.case = TRUE),
+    parameter_type
+  )
+)|> mutate(
+  parameter_type = ifelse(
+    grepl("admission to care", parameter_type, ignore.case = TRUE),
+    gsub("admission to care", "admission-to-care", parameter_type, ignore.case = TRUE),
+    parameter_type
+  )
+)|> mutate(
+  parameter_type = ifelse(
+    grepl("symptom onset", parameter_type, ignore.case = TRUE),
+    gsub("symptom onset", "symptom-onset", parameter_type, ignore.case = TRUE),
+    parameter_type
+  )
+)|> mutate(
+  parameter_type = ifelse(
+    grepl(" or death", parameter_type, ignore.case = TRUE),
+    gsub(" or death", "/death", parameter_type, ignore.case = TRUE),
+    parameter_type
+  )
+)
+
 # Table for SI
 write.table(count_study_parameters_type, file = "count_all_parameters.csv", sep = ",",
             row.names = FALSE, col.names = FALSE, quote = FALSE)

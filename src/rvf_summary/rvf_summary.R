@@ -476,7 +476,7 @@ parameters <- dfs$parameters |>
 
 parameters <- parameters |>
   mutate(parameter_class = case_when(
-    parameter_class %in% c("Attack rate") ~ "Other transmission parameters",
+    parameter_class %in% c("Attack rate") ~ "Attack rate",
     parameter_class == "Human delay" ~ "Delays",
     TRUE ~ parameter_class))
 
@@ -554,7 +554,7 @@ parameters <- parameters |>
 # Colour pal
 param_colour_palette <- c("Delays"=colour_palette[4],
                           "Mutations"=colour_palette[2],
-                          "Other transmission parameters"=colour_palette[3],
+                          "Attack rate"=colour_palette[3],
                           "Relative contribution"=colour_palette[6],
                           "Reproduction number"=colour_palette[1],
                           "Risk factors"=colour_palette[5],
