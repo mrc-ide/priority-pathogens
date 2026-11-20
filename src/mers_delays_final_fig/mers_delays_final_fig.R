@@ -190,6 +190,15 @@ parameters <- parameters |>
   mutate(population_country=ifelse(!is.na(population_location) & population_location=="Global linelist",
                                    "Global", population_country))
 
+# 389_010 (Alhumaid 2018) reports a median symptom onset-to-death of 5 days
+# alongside a range of 6 - 9 days, which cannot both be true. The central
+# estimate is kept as published and the impossible range suppressed here
+# rather than in db_cleaning, since 6 - 9 is genuinely what the paper reports.
+parameters[parameters$access_param_id == "389_010",
+           "parameter_2_lower_bound"] <- NA
+parameters[parameters$access_param_id == "389_010",
+           "parameter_2_upper_bound"] <- NA
+
 # *--------------------- Country palette and plotting order -------------------*
 delay_country_colours <- c(
   "Republic of Korea"   = "#E01A4F",  # rose red
