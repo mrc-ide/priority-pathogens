@@ -60,7 +60,7 @@ neat_orderly_output <- function(){
 
   param_count_qa <- parameters |>
     group_by(parameter_class) |>
-    filter(qa_score>0.5) |>
+    filter(qa_score>=0.5) |>
     summarise(n_param   = n(),
               n_article = length(unique(refs)),
               .groups="drop")
@@ -91,7 +91,7 @@ neat_orderly_output <- function(){
 
   param_count_qa_type <- parameters |>
     group_by(parameter_type) |>
-    filter(qa_score>0.5) |>
+    filter(qa_score>=0.5) |>
     summarise(n_param   = n(),
               n_article = length(unique(refs)),
               .groups="drop")
@@ -255,7 +255,7 @@ neat_orderly_output <- function(){
     filter(parameter_type=='Risk factors') |>
     mutate(riskfactor_significant = replace_na(riskfactor_significant,
                                                "Unspecified"),
-           qa_label = case_when(qa_score>0.5~'high_qa',
+           qa_label = case_when(qa_score>=0.5~'high_qa',
                                 TRUE ~ 'low_qa')) |>
     group_by(riskfactor_significant, qa_label) |>
     summarise(n_param   = n(),
@@ -265,7 +265,7 @@ neat_orderly_output <- function(){
 
   cli_h2("Serology high QA score (>0.5) by population group: \n")
   parameters |> filter(str_starts(parameter_type,'Seroprevalence ') ) |>
-    filter(qa_score>0.5) |>
+    filter(qa_score>=0.5) |>
     group_by(population_group) |>
     summarise(n_param   = n(),
               n_article = length(unique(refs)),
@@ -275,7 +275,7 @@ neat_orderly_output <- function(){
   cli_h2("Incubation period high QA score: \n")
   parameters |>
     filter(parameter_type == 'Human delay - incubation period' ) |>
-    filter(qa_score>0.5) |>
+    filter(qa_score>=0.5) |>
     summarise(n_param   = n(),
               n_article = length(unique(refs))) |>
     print()
