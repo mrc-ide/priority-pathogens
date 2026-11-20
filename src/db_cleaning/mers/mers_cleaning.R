@@ -265,6 +265,13 @@ param_cleaning <- function(df){
   df[(df$access_param_id == "391_001"),
      "population_group"] <- "General population"
 
+  # 367_001 and 367_002 are Population based, but
+  # population_sample_type is currently NA
+  df[(df$access_param_id == "367_001"),
+     "population_sample_type"] <- "Population based"
+  df[(df$access_param_id == "367_002"),
+     "population_sample_type"] <- "Population based"
+
   return (df)
 }
 # *============================================================================*
